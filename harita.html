@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harita · Kuryemi Bul</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="map.title">🗺️ Harita</h1><p data-i18n="map.lead">Kuryeleri, işletmeleri ve firmaları harita üzerinde gör; katmanları aç/kapat.</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <div class="map-wrap">
+                <aside class="map-side">
+                    <h3 data-i18n="map.layers">Katmanlar</h3>
+                    <label class="layer-toggle"><input type="checkbox" data-layer="kurye" checked>
+                        <span class="layer-dot" style="background:#FF6B35"></span> <span data-i18n="layer.couriers">Kuryeler</span></label>
+                    <label class="layer-toggle"><input type="checkbox" data-layer="isletme" checked>
+                        <span class="layer-dot" style="background:#2D6CDF"></span> <span data-i18n="layer.businesses">İşletmeler</span></label>
+                    <label class="layer-toggle"><input type="checkbox" data-layer="firma" checked>
+                        <span class="layer-dot" style="background:#1A1A2E"></span> <span data-i18n="layer.firms">Firmalar</span></label>
+                    <p class="pcard__sub" style="margin-top:14px" data-i18n="map.hint">İşaretçiye tıklayıp profile gidebilirsin.</p>
+                </aside>
+                <div id="map"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.initMap();</script>
+</body>
+</html>

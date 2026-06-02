@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurye Paneli · Kuryemi Bul</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="panel.kurye.title">🛵 Kurye Paneli</h1><p data-i18n="panel.kurye.lead">Profilin, başvuruların ve gelen teklifler tek ekranda. (Demo)</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <div class="dash">
+                <nav class="dash__nav">
+                    <button data-tab="ozet" class="is-active" data-i18n="tab.summary">📊 Özet</button>
+                    <button data-tab="basvuru" data-i18n="tab.myApplications">📨 Başvurularım</button>
+                    <button data-tab="teklif" data-i18n="tab.incomingOffers">✉️ Gelen Teklifler</button>
+                    <button data-tab="profil" data-i18n="tab.myProfile">👤 Profilim</button>
+                </nav>
+                <div>
+                    <section id="panel-ozet" class="dash__panel is-active">
+                        <div class="metric-row" id="kuryeMetrics"></div>
+                        <div class="panel-box"><h3 data-i18n="panel.welcome.t">👋 Hoş geldin!</h3><p class="pcard__sub" data-i18n="panel.welcome.d">Buradan başvurularını ve sana gelen teklifleri yönetebilirsin.</p></div>
+                    </section>
+                    <section id="panel-basvuru" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.myApplications">📨 Başvurularım</h3><div id="kuryeBasvuru"></div></div>
+                    </section>
+                    <section id="panel-teklif" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.incomingOffers">✉️ Gelen Teklifler</h3><div id="kuryeTeklif"></div></div>
+                    </section>
+                    <section id="panel-profil" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.myProfile">👤 Profilim</h3>
+                            <p class="pcard__sub" data-i18n="panel.myProfile.d">Örnek profilin nasıl göründüğünü incele:</p>
+                            <a class="btn btn--primary mt-24" href="profil-kurye.html?id=k1" data-i18n="btn.viewMyProfile">Genel Profilimi Gör →</a>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.initPanel("kurye");</script>
+</body>
+</html>

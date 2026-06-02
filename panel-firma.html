@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firma Paneli · Kuryemi Bul</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="panel.firma.title">🏢 Kurye Firması Paneli</h1><p data-i18n="panel.firma.lead">Personel havuzu, işletmelere teklif ve kurumsal ihaleler. (Demo)</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <div class="dash">
+                <nav class="dash__nav">
+                    <button data-tab="ozet" class="is-active" data-i18n="tab.summary">📊 Özet</button>
+                    <button data-tab="personel" data-i18n="tab.personnelPool">👥 Personel Havuzu</button>
+                    <button data-tab="teklif" data-i18n="tab.businessOffers">✉️ İşletme Teklifleri</button>
+                    <button data-tab="ihale" data-i18n="tab.tenders">🏛️ İhaleler</button>
+                </nav>
+                <div>
+                    <section id="panel-ozet" class="dash__panel is-active">
+                        <div class="metric-row" id="firmaMetrics"></div>
+                        <div class="panel-box"><h3 data-i18n="panel.quick.t">🚀 Hızlı İşlem</h3><p class="pcard__sub" data-i18n="panel.quick.fz">İşletmelere teklif gönder ya da personel havuzunu güçlendir.</p>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+                                <a class="btn btn--primary btn--sm" href="isletmeler.html" data-i18n="btn.businessPool">İşletme Havuzu</a>
+                                <a class="btn btn--light btn--sm" href="kuryeler.html" data-i18n="btn.courierPool">Kurye Havuzu</a>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="panel-personel" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.personnelPool">👥 Personel Havuzu</h3><div id="firmaPersonel"></div></div>
+                    </section>
+                    <section id="panel-teklif" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.businessOffers">✉️ İşletmelere/İşletmelerden Teklifler</h3><div id="firmaTeklif"></div></div>
+                    </section>
+                    <section id="panel-ihale" class="dash__panel">
+                        <div class="soon">
+                            <div class="soon__icon">🏛️</div>
+                            <h3 data-i18n="soon.tender.t">Kurumsal İhale Sistemi — Yakında</h3>
+                            <p data-i18n="soon.tender.d">Zincir restoranlar, market zincirleri ve e-ticaret şirketlerinin toplu kurye ihtiyaçları ihale olarak yayınlanacak; firmalar teklif verecek. Bu modül Faz 3'te aktifleşecek.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.initPanel("firma");</script>
+</body>
+</html>

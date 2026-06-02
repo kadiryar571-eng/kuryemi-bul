@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşletme Paneli · Kuryemi Bul</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="panel.isletme.title">📦 İşletme Paneli</h1><p data-i18n="panel.isletme.lead">İlanlarını yönet, havuzda kurye ara, başvuruları incele. (Demo)</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <div class="dash">
+                <nav class="dash__nav">
+                    <button data-tab="ozet" class="is-active" data-i18n="tab.summary">📊 Özet</button>
+                    <button data-tab="ilan" data-i18n="tab.myListings">📋 İlanlarım</button>
+                    <button data-tab="ara" data-i18n="tab.searchPool">🔎 Havuzda Ara</button>
+                    <button data-tab="basvuru" data-i18n="tab.applications">📨 Başvurular</button>
+                </nav>
+                <div>
+                    <section id="panel-ozet" class="dash__panel is-active">
+                        <div class="metric-row" id="isletmeMetrics"></div>
+                        <div class="panel-box"><h3 data-i18n="panel.quick.t">🚀 Hızlı İşlem</h3><p class="pcard__sub" data-i18n="panel.quick.iz">Yeni kurye bulmak için havuzda arama yap veya firmalardan toplu teklif al.</p>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+                                <a class="btn btn--primary btn--sm" href="kuryeler.html" data-i18n="btn.courierPool">Kurye Havuzu</a>
+                                <a class="btn btn--light btn--sm" href="firmalar.html" data-i18n="btn.firmPool">Firma Havuzu</a>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="panel-ilan" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.myListings">📋 İlanlarım</h3><div id="isletmeIlan"></div></div>
+                    </section>
+                    <section id="panel-ara" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.searchPool">🔎 Havuzda Kurye Ara</h3>
+                            <p class="pcard__sub" data-i18n="panel.searchPool.d">Tüm kurye havuzuna git, filtrele ve doğrudan teklif gönder.</p>
+                            <a class="btn btn--primary mt-24" href="kuryeler.html" data-i18n="btn.goCourierPool">Kurye Havuzuna Git →</a>
+                        </div>
+                    </section>
+                    <section id="panel-basvuru" class="dash__panel">
+                        <div class="panel-box"><h3 data-i18n="box.applications">📨 Gelen Başvurular & Teklifler</h3><div id="isletmeBasvuru"></div></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.initPanel("isletme");</script>
+</body>
+</html>

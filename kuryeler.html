@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurye Havuzu · Kuryemi Bul</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="pool.kurye.title">🛵 Kurye Havuzu</h1><p data-i18n="pool.kurye.lead">Bölge, şehir ve seviyeye göre kurye ara; profilini incele ve teklif gönder.</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <div class="toolbar">
+                <div class="search"><input type="search" id="fSearch" data-i18n-ph="pool.kurye.search" placeholder="İsim, şehir veya bölge ara…" aria-label="Ara"></div>
+                <select id="fSelect1" aria-label="Şehir"></select>
+                <select id="fSelect2" aria-label="Seviye"></select>
+            </div>
+            <p class="result-count" id="resultCount"></p>
+            <div class="pool-grid" id="poolGrid"></div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.renderPool("kurye");</script>
+</body>
+</html>

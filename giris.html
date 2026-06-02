@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş / Katıl · Kuryemi Bul</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="giris.title">Platforma Katıl</h1><p data-i18n="giris.lead">Rolünü seç, panele anında giriş yap. (Demo — gerçek kayıt yapılmaz.)</p></div>
+    </section>
+
+    <main class="section">
+        <div class="container">
+            <div class="form-card">
+                <div class="role-tabs" role="tablist" aria-label="Rol seçimi">
+                    <button class="role-tab is-active" role="tab" data-rol="kurye">🛵 <span data-i18n="role.kurye">Kurye</span></button>
+                    <button class="role-tab" role="tab" data-rol="isletme">📦 <span data-i18n="role.isletme">İşletme</span></button>
+                    <button class="role-tab" role="tab" data-rol="firma">🏢 <span data-i18n="role.firma">Kurye Firması</span></button>
+                </div>
+
+                <p class="form-card__intro" id="formIntro" data-i18n="giris.intro.kurye">Kurye olarak devam etmek için bilgilerini gir.</p>
+
+                <form id="joinForm" novalidate>
+                    <div class="form-grid">
+                        <div class="field"><label for="ad" id="adLabel" data-i18n="giris.label.kurye">Ad Soyad</label><input type="text" id="ad" data-i18n-ph="giris.ph.ad" placeholder="Örn. Ahmet Yılmaz" required></div>
+                        <div class="field"><label for="tel" data-i18n="giris.tel">Telefon</label><input type="tel" id="tel" data-i18n-ph="giris.ph.tel" placeholder="05XX XXX XX XX" required></div>
+                        <div class="field"><label for="email" data-i18n="giris.email">E-posta</label><input type="email" id="email" data-i18n-ph="giris.ph.email" placeholder="ornek@eposta.com" required></div>
+                        <div class="field"><label for="sehir" data-i18n="giris.city">Şehir</label><input type="text" id="sehir" data-i18n-ph="giris.ph.city" placeholder="Örn. İstanbul" required></div>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--lg btn--block" data-i18n="giris.submit">Panele Gir →</button>
+                    <p class="form-success" id="ok" hidden data-i18n="giris.ok">🎉 Hoş geldin! Paneline yönlendiriliyorsun…</p>
+                </form>
+            </div>
+
+            <p class="text-center mt-24" style="color:var(--muted)">
+                <span data-i18n="giris.exploreText">Sadece keşfetmek mi istiyorsun?</span> <a href="kuryeler.html" style="color:var(--orange);font-weight:700" data-i18n="giris.exploreLink">Havuzlara göz at</a>
+            </p>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var rol = "kurye";
+        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var tabs = document.querySelectorAll(".role-tab");
+        tabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                rol = tab.getAttribute("data-rol");
+                tabs.forEach(function (x) { x.classList.toggle("is-active", x === tab); });
+                document.getElementById("formIntro").textContent = t("giris.intro." + rol);
+                document.getElementById("adLabel").textContent = t("giris.label." + rol);
+            });
+        });
+        document.getElementById("joinForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (!this.checkValidity()) { this.reportValidity(); return; }
+            KB.setRole(rol);
+            document.getElementById("ok").hidden = false;
+            setTimeout(function () { location.href = KB.panelHref(); }, 1200);
+        });
+    })();
+    </script>
+</body>
+</html>

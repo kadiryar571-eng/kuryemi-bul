@@ -1,0 +1,336 @@
+/* ============================================================
+   Kuryemi Bul — app.js
+   Sayfa mantığı: havuz/filtre, profil, harita, panel, teklif modalı.
+   i18n.js, data.js ve components.js bu dosyadan önce yüklenmelidir.
+   ============================================================ */
+(function () {
+  'use strict';
+  var D = window.KB_DATA;
+  var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+
+  /* ============ TEKLİF MODALI ============ */
+  function ensureModal() {
+    if (document.getElementById("offerModal")) return;
+    var div = document.createElement("div");
+    div.className = "modal-overlay";
+    div.id = "offerModal";
+    div.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="offerTitle">' +
+        '<div class="modal__head"><h3 id="offerTitle">' + T("modal.title") + '</h3>' +
+          '<button class="modal__close" aria-label="' + T("modal.close") + '">&times;</button></div>' +
+        '<p class="modal__sub" id="offerSub"></p>' +
+        '<form id="offerForm">' +
+          '<div class="field"><label for="offerMsg">' + T("modal.msgLabel") + '</label>' +
+            '<textarea id="offerMsg" rows="3" placeholder="' + T("modal.msgPh") + '" required></textarea></div>' +
+          '<button type="submit" class="btn btn--primary btn--block">' + T("modal.send") + '</button>' +
+          '<p class="form-success" id="offerSuccess" hidden>' + T("modal.success") + '</p>' +
+        '</form>' +
+      '</div>';
+    document.body.appendChild(div);
+    div.querySelector(".modal__close").addEventListener("click", closeModal);
+    div.addEventListener("click", function (e) { if (e.target === div) closeModal(); });
+  }
+  function closeModal() {
+    var m = document.getElementById("offerModal");
+    if (m) m.classList.remove("is-open");
+  }
+  function openOfferModal(targetType, targetId) {
+    var role = KB.getRole();
+    if (role === "ziyaretci") { alert(T("modal.guest")); return; }
+    var target = KB.findById(
+      targetType === "kurye" ? D.kuryeler : targetType === "isletme" ? D.isletmeler : D.firmalar,
+      targetId
+    );
+    if (!target) return;
+    ensureModal();
+    var m = document.getElementById("offerModal");
+    document.getElementById("offerSub").innerHTML =
+      "<b>" + KB.esc(T("role." + role)) + "</b> → <b>" + KB.esc(target.ad) + "</b> (" + KB.esc(T("role." + targetType)) + ")";
+    var form = document.getElementById("offerForm");
+    var success = document.getElementById("offerSuccess");
+    success.hidden = true;
+    form.reset();
+    form.onsubmit = function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("offerMsg").value.trim();
+      if (!msg) return;
+      KB.addTeklif({
+        yon: role + "-" + targetType,
+        kimdenRol: role,
+        kimeTip: targetType,
+        kime: target.ad,
+        mesaj: msg
+      });
+      success.hidden = false;
+      setTimeout(closeModal, 1600);
+    };
+    m.classList.add("is-open");
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-teklif]");
+    if (btn) { e.preventDefault(); openOfferModal(btn.getAttribute("data-teklif"), btn.getAttribute("data-id")); }
+  });
+
+  /* ============ HAVUZ LİSTELEME ============ */
+  function teklifBtn(type, id) {
+    return '<button class="btn btn--light btn--sm" data-teklif="' + type + '" data-id="' + id + '">✉️ ' + T("btn.offer") + '</button>';
+  }
+  function viewBtn(page, id) {
+    return '<a class="btn btn--primary btn--sm" href="' + page + '?id=' + id + '">' + T("btn.viewProfile") + '</a>';
+  }
+
+  function kuryeCard(k) {
+    var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
+    return '<article class="pcard">' +
+      '<div class="pcard__top"><div class="avatar">' + KB.initials(k.ad) + '</div>' +
+        '<div><div class="pcard__name">' + KB.esc(k.ad) + '</div>' +
+          '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
+      '<div>' + KB.levelBadge(k.seviye) + ' ' + KB.stars(k.puan) + '</div>' +
+      '<div class="pcard__meta"><span class="chip">🛵 ' + KB.esc(k.arac) + '</span>' +
+        '<span class="chip">' + T("pcard.exp", { n: k.deneyim }) + '</span>' +
+        '<span class="chip">' + T("pcard.deliveries", { n: k.tamamlanan }) + '</span></div>' +
+      '<div class="pcard__foot">' + viewBtn("profil-kurye.html", k.id) + teklifBtn("kurye", k.id) + '</div>' +
+    '</article>';
+  }
+  function isletmeCard(i) {
+    return '<article class="pcard">' +
+      '<div class="pcard__top"><div class="avatar avatar--blue">' + KB.initials(i.ad) + '</div>' +
+        '<div><div class="pcard__name">' + KB.esc(i.ad) + '</div>' +
+          '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
+      '<p class="pcard__sub">' + KB.esc(i.aciklama) + '</p>' +
+      '<div class="pcard__meta"><span class="chip">📍 ' + KB.esc(i.bolge) + '</span>' +
+        '<span class="chip">' + T("pcard.openListings", { n: i.acikIlan }) + '</span></div>' +
+      '<div class="pcard__foot">' + viewBtn("profil-isletme.html", i.id) + teklifBtn("isletme", i.id) + '</div>' +
+    '</article>';
+  }
+  function firmaCard(f) {
+    return '<article class="pcard">' +
+      '<div class="pcard__top"><div class="avatar avatar--navy">' + KB.initials(f.ad) + '</div>' +
+        '<div><div class="pcard__name">' + KB.esc(f.ad) + '</div>' +
+          '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
+      '<p class="pcard__sub">' + KB.esc(f.aciklama) + '</p>' +
+      '<div>' + KB.stars(f.puan) + '</div>' +
+      '<div class="pcard__meta"><span class="chip">👥 ' + T("pcard.capacity", { n: f.kapasite }) + '</span></div>' +
+      '<div class="pcard__foot">' + viewBtn("profil-firma.html", f.id) + teklifBtn("firma", f.id) + '</div>' +
+    '</article>';
+  }
+
+  function renderPool(type) {
+    var grid = document.getElementById("poolGrid");
+    var countEl = document.getElementById("resultCount");
+    var search = document.getElementById("fSearch");
+    var sel1 = document.getElementById("fSelect1");
+    var sel2 = document.getElementById("fSelect2");
+    if (!grid) return;
+
+    var src = type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
+    var cardFn = type === "kurye" ? kuryeCard : type === "isletme" ? isletmeCard : firmaCard;
+
+    function uniq(getter) {
+      var s = {}; src.forEach(function (x) { [].concat(getter(x)).forEach(function (v) { if (v) s[v] = 1; }); });
+      return Object.keys(s).sort();
+    }
+    if (sel1) {
+      if (type === "firma") fillSelect(sel1, uniq(function (x) { return x.bolgeler; }));
+      else fillSelect(sel1, uniq(function (x) { return x.sehir; }));
+    }
+    if (type === "kurye" && sel2) fillSelect(sel2, ["standart", "profesyonel", "premium"],
+      { standart: T("level.standart"), profesyonel: T("level.profesyonel"), premium: T("level.premium") });
+    if (type === "isletme" && sel2) fillSelect(sel2, uniq(function (x) { return x.tur; }));
+
+    function apply() {
+      var q = (search && search.value || "").toLowerCase().trim();
+      var v1 = sel1 && sel1.value;
+      var v2 = sel2 && sel2.value;
+      var out = src.filter(function (x) {
+        var hay = (x.ad + " " + (x.sehir || "") + " " + (x.bolgeler ? x.bolgeler.join(" ") : "") + " " + (x.bolge || "") + " " + (x.tur || "") + " " + (x.aciklama || "")).toLowerCase();
+        if (q && hay.indexOf(q) === -1) return false;
+        if (v1) {
+          if (type === "firma") { if (x.bolgeler.indexOf(v1) === -1) return false; }
+          else if (x.sehir !== v1) return false;
+        }
+        if (v2) {
+          if (type === "kurye" && x.seviye !== v2) return false;
+          if (type === "isletme" && x.tur !== v2) return false;
+        }
+        return true;
+      });
+      grid.innerHTML = out.length ? out.map(cardFn).join("") :
+        '<div class="empty" style="grid-column:1/-1">' + T("common.noResult") + '</div>';
+      if (countEl) countEl.textContent = T("common.results", { n: out.length });
+    }
+    [search, sel1, sel2].forEach(function (el) { if (el) el.addEventListener("input", apply); });
+    apply();
+  }
+  function fillSelect(sel, values, labels) {
+    sel.innerHTML = '<option value="">' + T("common.all") + '</option>' + values.map(function (v) {
+      return '<option value="' + KB.esc(v) + '">' + KB.esc(labels && labels[v] ? labels[v] : v) + '</option>';
+    }).join("");
+  }
+
+  /* ============ PROFİL ============ */
+  function box(title, inner) { return '<div class="panel-box"><h3>' + title + '</h3>' + inner + '</div>'; }
+  function chips(arr) { return '<div class="taglist">' + arr.map(function (s) { return '<span class="chip">' + KB.esc(s) + '</span>'; }).join("") + '</div>'; }
+
+  function renderProfile(type) {
+    var host = document.getElementById("profileRoot");
+    if (!host) return;
+    var id = KB.getParam("id");
+    var src = type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
+    var x = KB.findById(src, id) || src[0];
+    if (!x) { host.innerHTML = '<div class="empty">' + T("empty.generic") + '</div>'; return; }
+
+    var avatarCls = type === "kurye" ? "" : type === "isletme" ? " avatar--blue" : " avatar--navy";
+    var sideExtra = "", body = "";
+
+    if (type === "kurye") {
+      sideExtra = '<div class="profile__badges">' + KB.levelBadge(x.seviye) + KB.stars(x.puan) + '</div>';
+      body =
+        box(T("prof.general"), '<dl class="kv">' +
+          '<dt>' + T("kv.city") + '</dt><dd>' + KB.esc(x.sehir) + '</dd>' +
+          '<dt>' + T("kv.vehicle") + '</dt><dd>' + KB.esc(x.arac) + '</dd>' +
+          '<dt>' + T("kv.exp") + '</dt><dd>' + x.deneyim + ' ' + T("unit.years") + '</dd>' +
+          '<dt>' + T("kv.completed") + '</dt><dd>' + x.tamamlanan + ' ' + T("unit.deliveries") + '</dd>' +
+          '<dt>' + T("kv.regions") + '</dt><dd>' + KB.esc(x.bolgeler.join(", ")) + '</dd></dl>') +
+        box(T("prof.certs"), x.sertifikalar.length ? chips(x.sertifikalar) : '<p class="pcard__sub">' + T("prof.noCert") + '</p>') +
+        box(T("prof.worked"), x.calistigi.length ? chips(x.calistigi) : '<p class="pcard__sub">' + T("prof.noHistory") + '</p>') +
+        box(T("prof.refs"), x.referanslar.length ?
+          '<ul class="reflist">' + x.referanslar.map(function (r) {
+            return '<li><span class="ref__name">' + KB.esc(r.ad) + '</span> <span class="ref__role">· ' + KB.esc(r.rol) + '</span><br>“' + KB.esc(r.not) + '”</li>';
+          }).join("") + '</ul>' : '<p class="pcard__sub">' + T("prof.noRef") + '</p>');
+    } else if (type === "isletme") {
+      sideExtra = '<div class="profile__badges"><span class="chip">' + KB.esc(x.tur) + '</span><span class="chip">' + T("pcard.openListings", { n: x.acikIlan }) + '</span></div>';
+      body =
+        box(T("prof.bizInfo"), '<dl class="kv">' +
+          '<dt>' + T("kv.type") + '</dt><dd>' + KB.esc(x.tur) + '</dd>' +
+          '<dt>' + T("kv.cityRegion") + '</dt><dd>' + KB.esc(x.sehir) + ' · ' + KB.esc(x.bolge) + '</dd>' +
+          '<dt>' + T("kv.openListing") + '</dt><dd>' + x.acikIlan + '</dd></dl>') +
+        box(T("prof.about"), '<p>' + KB.esc(x.aciklama) + '</p>') +
+        box(T("prof.need"), '<p>' + KB.esc(x.ihtiyac) + '</p>');
+    } else {
+      sideExtra = '<div class="profile__badges">' + KB.stars(x.puan) + '<span class="chip">' + x.kapasite + ' ' + T("unit.couriers") + '</span></div>';
+      body =
+        box(T("prof.firmInfo"), '<dl class="kv">' +
+          '<dt>' + T("kv.serviceRegions") + '</dt><dd>' + KB.esc(x.bolgeler.join(", ")) + '</dd>' +
+          '<dt>' + T("kv.capacity") + '</dt><dd>' + x.kapasite + ' ' + T("unit.couriers") + '</dd></dl>') +
+        box(T("prof.about"), '<p>' + KB.esc(x.aciklama) + '</p>') +
+        box(T("prof.services"), chips(x.hizmetler));
+    }
+
+    host.innerHTML =
+      '<div class="profile">' +
+        '<aside class="profile__card">' +
+          '<div class="avatar' + avatarCls + '">' + KB.initials(x.ad) + '</div>' +
+          '<div class="profile__name">' + KB.esc(x.ad) + '</div>' +
+          '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
+          sideExtra +
+          '<button class="btn btn--primary btn--block" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+        '</aside>' +
+        '<div class="profile__body">' + body + '</div>' +
+      '</div>';
+  }
+
+  /* ============ HARİTA ============ */
+  function initMap() {
+    var el = document.getElementById("map");
+    if (!el || typeof L === "undefined") return;
+    var map = L.map("map").setView([39.5, 33.5], 6);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap" }).addTo(map);
+
+    function mk(items, type, color, emoji) {
+      var group = L.layerGroup();
+      items.forEach(function (x) {
+        var icon = L.divIcon({
+          className: "", html: '<div style="background:' + color + ';width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.3);display:grid;place-items:center"><span style="transform:rotate(45deg);font-size:15px">' + emoji + '</span></div>',
+          iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -28]
+        });
+        var page = type === "kurye" ? "profil-kurye.html" : type === "isletme" ? "profil-isletme.html" : "profil-firma.html";
+        L.marker([x.lat, x.lng], { icon: icon }).addTo(group)
+          .bindPopup('<div class="map-popup"><b>' + KB.esc(x.ad) + '</b>' +
+            (x.sehir ? KB.esc(x.sehir) : KB.esc((x.bolgeler || []).join(", "))) +
+            '<br><a href="' + page + '?id=' + x.id + '">' + T("map.viewProfile") + '</a></div>');
+      });
+      return group;
+    }
+
+    var layers = {
+      kurye: mk(D.kuryeler, "kurye", "#FF6B35", "🛵"),
+      isletme: mk(D.isletmeler, "isletme", "#2D6CDF", "📦"),
+      firma: mk(D.firmalar, "firma", "#1A1A2E", "🏢")
+    };
+    Object.keys(layers).forEach(function (k) { layers[k].addTo(map); });
+    document.querySelectorAll("[data-layer]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var k = cb.getAttribute("data-layer");
+        if (cb.checked) layers[k].addTo(map); else map.removeLayer(layers[k]);
+      });
+    });
+  }
+
+  /* ============ PANEL / DASHBOARD ============ */
+  function metric(num, label) { return '<div class="metric"><div class="metric__num">' + num + '</div><div class="metric__label">' + label + '</div></div>'; }
+  function listRow(title, sub, right) {
+    return '<div class="list-row"><div class="list-row__main"><div class="list-row__title">' + title +
+      '</div><div class="list-row__sub">' + sub + '</div></div>' + (right || "") + '</div>';
+  }
+  function stateChip(durum) {
+    var key = durum || "pending";
+    return '<span class="chip">' + T("state." + key, {}) + '</span>';
+  }
+  function teklifList(filterFn) {
+    var all = D.teklifler.concat(KB.getTeklifler());
+    var rows = all.filter(filterFn);
+    if (!rows.length) return '<div class="empty">' + T("empty.offers") + '</div>';
+    return rows.map(function (t) {
+      var from = t.kimdenRol ? T("role." + t.kimdenRol) : (t.kimden || "");
+      var st = (t.durum && ["pending", "active", "published", "applied"].indexOf(t.durum) > -1) ? T("state." + t.durum) : T("state.pending");
+      return listRow(KB.esc(from) + " → " + KB.esc(t.kime),
+        KB.esc(t.mesaj || "") + " · " + KB.esc(t.tarih || ""),
+        '<span class="chip">' + st + '</span>');
+    }).join("");
+  }
+
+  function showPanel(key) {
+    document.querySelectorAll(".dash__panel").forEach(function (p) { p.classList.toggle("is-active", p.id === "panel-" + key); });
+    document.querySelectorAll(".dash__nav button").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-tab") === key); });
+  }
+  function initPanel(role) {
+    var nav = document.querySelector(".dash__nav");
+    if (!nav) return;
+    nav.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-tab]");
+      if (b) showPanel(b.getAttribute("data-tab"));
+    });
+
+    function mine(roleKey) { return function (t) { return t.kimdenRol === roleKey || t.kimeTip === roleKey; }; }
+    var offerCount = KB.getTeklifler().length + D.teklifler.length;
+
+    if (role === "kurye") {
+      setHTML("kuryeMetrics", metric("4.9", T("m.score")) + metric(T("level.premium"), T("m.level")) + metric("1.240", T("m.deliveries")) + metric(offerCount, T("m.offers")));
+      setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
+        return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');
+      }).join(""));
+      setHTML("kuryeTeklif", teklifList(mine("kurye")));
+    } else if (role === "isletme") {
+      setHTML("isletmeMetrics", metric("3", T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("12", T("m.meetings")) + metric("4.7", T("m.satisfaction")));
+      setHTML("isletmeIlan", D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
+        return listRow(KB.esc(i.baslik), T("soon.published") + " · " + KB.esc(i.tarih), '<span class="chip">' + T("state.active") + '</span>');
+      }).join(""));
+      setHTML("isletmeBasvuru", teklifList(mine("isletme")));
+    } else if (role === "firma") {
+      setHTML("firmaMetrics", metric("60", T("m.capacity")) + metric("4.8", T("m.score")) + metric(offerCount, T("m.offers")) + metric("2", T("m.tenders")));
+      setHTML("firmaPersonel", D.kuryeler.slice(0, 4).map(function (k) {
+        return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), KB.levelBadge(k.seviye));
+      }).join(""));
+      setHTML("firmaTeklif", teklifList(mine("firma")));
+    }
+    showPanel(nav.querySelector("button[data-tab]").getAttribute("data-tab"));
+  }
+  function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="empty">' + T("empty.generic") + '</div>'; }
+
+  /* ============ DIŞA AÇIM ============ */
+  window.KBApp = {
+    renderPool: renderPool, renderProfile: renderProfile,
+    initMap: initMap, initPanel: initPanel, openOfferModal: openOfferModal
+  };
+})();

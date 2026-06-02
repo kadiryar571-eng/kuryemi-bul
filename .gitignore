@@ -1,0 +1,11 @@
+# Claude Code yerel ayarları
+.claude/settings.local.json
+
+# Bağımlılıklar / derleme çıktıları (statik site için gerekmez ama güvenli)
+node_modules/
+dist/
+
+# OS / editör
+Thumbs.db
+.DS_Store
+.vscode/
