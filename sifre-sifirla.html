@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="sr.title">Yeni Şifre Belirle · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="sr.title">Yeni Şifre Belirle</h1><p data-i18n="sr.lead">Hesabın için yeni bir şifre oluştur.</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container container--narrow">
+            <div class="form-card">
+                <form id="srForm">
+                    <div class="field"><label for="srPass" data-i18n="sr.newPass">Yeni Şifre</label>
+                        <input type="password" id="srPass" minlength="6" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" required></div>
+                    <div class="field"><label for="srPass2" data-i18n="sr.newPass2">Yeni Şifre (tekrar)</label>
+                        <input type="password" id="srPass2" minlength="6" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" required></div>
+                    <button type="submit" class="btn btn--primary btn--lg btn--block" data-i18n="sr.save">Şifreyi Güncelle</button>
+                </form>
+                <p class="form-success" id="srMsg" hidden></p>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var form = document.getElementById("srForm");
+        var msg = document.getElementById("srMsg");
+        function showErr(text) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = text; }
+        function showOk(text) { msg.hidden = false; msg.style.color = ""; msg.textContent = text; }
+
+        async function start() {
+            if (window.KB && KB.ready) await KB.ready();
+            if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli.</p>'; return; }
+            // E-posta bağlantısından gelen kurtarma oturumu var mı? (detectSessionInUrl ile otomatik)
+            var u = await SB.getUser();
+            if (!u) { form.innerHTML = '<p class="empty">' + t("sr.invalid") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>'; return; }
+
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                var p1 = document.getElementById("srPass").value;
+                var p2 = document.getElementById("srPass2").value;
+                if (p1.length < 6) { showErr(t("sr.short")); return; }
+                if (p1 !== p2) { showErr(t("sr.mismatch")); return; }
+                try {
+                    var r = await SB.updatePassword(p1);
+                    if (r && r.error) { showErr(r.error.message || t("auth.errGeneric")); return; }
+                    showOk(t("sr.saved"));
+                    await SB.signOut();
+                    setTimeout(function () { location.href = "giris.html"; }, 1600);
+                } catch (err) { showErr(err.message || t("auth.errGeneric")); }
+            });
+        }
+        start();
+    })();
+    </script>
+</body>
+</html>

@@ -21,34 +21,48 @@
     <div id="app-header"></div>
 
     <section class="page-head">
-        <div class="container"><h1 data-i18n="giris.title">Platforma Katıl</h1><p data-i18n="giris.lead">Rolünü seç, panele anında giriş yap. (Demo — gerçek kayıt yapılmaz.)</p></div>
+        <div class="container"><h1 data-i18n="giris.title">Platforma Katıl</h1><p data-i18n="giris.lead">Rolünü seç, panele anında giriş yap.</p></div>
     </section>
 
     <main class="section">
         <div class="container">
             <div class="form-card">
-                <div class="role-tabs" role="tablist" aria-label="Rol seçimi">
-                    <button class="role-tab is-active" role="tab" data-rol="kurye">🛵 <span data-i18n="role.kurye">Kurye</span></button>
-                    <button class="role-tab" role="tab" data-rol="isletme">📦 <span data-i18n="role.isletme">İşletme</span></button>
-                    <button class="role-tab" role="tab" data-rol="firma">🏢 <span data-i18n="role.firma">Kurye Firması</span></button>
+                <div class="role-tabs" role="tablist" aria-label="Giriş / Kayıt">
+                    <button class="role-tab is-active" type="button" data-mode="login" data-i18n="auth.login">Giriş</button>
+                    <button class="role-tab" type="button" data-mode="register" data-i18n="auth.register">Kayıt Ol</button>
                 </div>
 
-                <p class="form-card__intro" id="formIntro" data-i18n="giris.intro.kurye">Kurye olarak devam etmek için bilgilerini gir.</p>
-
-                <form id="joinForm" novalidate>
-                    <div class="form-grid">
-                        <div class="field"><label for="ad" id="adLabel" data-i18n="giris.label.kurye">Ad Soyad</label><input type="text" id="ad" data-i18n-ph="giris.ph.ad" placeholder="Örn. Ahmet Yılmaz" required></div>
-                        <div class="field"><label for="tel" data-i18n="giris.tel">Telefon</label><input type="tel" id="tel" data-i18n-ph="giris.ph.tel" placeholder="05XX XXX XX XX" required></div>
-                        <div class="field"><label for="email" data-i18n="giris.email">E-posta</label><input type="email" id="email" data-i18n-ph="giris.ph.email" placeholder="ornek@eposta.com" required></div>
-                        <div class="field"><label for="sehir" data-i18n="giris.city">Şehir</label><input type="text" id="sehir" data-i18n-ph="giris.ph.city" placeholder="Örn. İstanbul" required></div>
+                <form id="authForm" novalidate>
+                    <div id="regFields" class="hidden">
+                        <div class="form-grid">
+                            <div class="field"><label for="aRole" data-i18n="auth.role">Rolün</label>
+                                <select id="aRole">
+                                    <option value="kurye" data-i18n="role.kurye">Kurye</option>
+                                    <option value="isletme" data-i18n="role.isletme">İşletme</option>
+                                    <option value="firma" data-i18n="role.firma">Kurye Firması</option>
+                                </select>
+                            </div>
+                            <div class="field"><label for="aName" data-i18n="auth.name">Ad Soyad / Firma Adı</label>
+                                <input type="text" id="aName" data-i18n-ph="auth.namePh" placeholder="Örn. Ahmet Yılmaz"></div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn--primary btn--lg btn--block" data-i18n="giris.submit">Panele Gir →</button>
-                    <p class="form-success" id="ok" hidden data-i18n="giris.ok">🎉 Hoş geldin! Paneline yönlendiriliyorsun…</p>
+                    <div class="form-grid">
+                        <div class="field"><label for="aEmail" data-i18n="auth.email">E-posta</label>
+                            <input type="email" id="aEmail" placeholder="ornek@eposta.com" required></div>
+                        <div class="field"><label for="aPass" data-i18n="auth.password">Şifre</label>
+                            <input type="password" id="aPass" minlength="6" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" required></div>
+                    </div>
+                    <button type="submit" id="aSubmit" class="btn btn--primary btn--lg btn--block" data-i18n="auth.loginBtn">Giriş Yap</button>
+                    <p class="text-center mt-24" id="forgotWrap">
+                        <a href="#" id="forgotLink" style="color:var(--muted);font-size:.9rem" data-i18n="auth.forgot">Şifremi unuttum?</a>
+                    </p>
+                    <p class="form-success" id="aMsg" hidden></p>
                 </form>
             </div>
 
             <p class="text-center mt-24" style="color:var(--muted)">
-                <span data-i18n="giris.exploreText">Sadece keşfetmek mi istiyorsun?</span> <a href="kuryeler.html" style="color:var(--orange);font-weight:700" data-i18n="giris.exploreLink">Havuzlara göz at</a>
+                <span data-i18n="giris.exploreText">Sadece keşfetmek mi istiyorsun?</span>
+                <a href="kuryeler.html" style="color:var(--orange);font-weight:700" data-i18n="giris.exploreLink">Havuzlara göz at</a>
             </p>
         </div>
     </main>
@@ -56,29 +70,86 @@
     <div id="app-footer"></div>
 
     <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
     <script src="assets/js/data.js"></script>
     <script src="assets/js/components.js"></script>
     <script src="assets/js/app.js"></script>
     <script>
     (function () {
-        var rol = "kurye";
         var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var mode = "login";
         var tabs = document.querySelectorAll(".role-tab");
-        tabs.forEach(function (tab) {
-            tab.addEventListener("click", function () {
-                rol = tab.getAttribute("data-rol");
-                tabs.forEach(function (x) { x.classList.toggle("is-active", x === tab); });
-                document.getElementById("formIntro").textContent = t("giris.intro." + rol);
-                document.getElementById("adLabel").textContent = t("giris.label." + rol);
-            });
-        });
-        document.getElementById("joinForm").addEventListener("submit", function (e) {
+        var regFields = document.getElementById("regFields");
+        var submit = document.getElementById("aSubmit");
+        var msg = document.getElementById("aMsg");
+
+        var forgotWrap = document.getElementById("forgotWrap");
+        function setMode(m) {
+            mode = m;
+            tabs.forEach(function (x) { x.classList.toggle("is-active", x.getAttribute("data-mode") === m); });
+            regFields.classList.toggle("hidden", m !== "register");
+            forgotWrap.classList.toggle("hidden", m === "register");
+            submit.textContent = t(m === "register" ? "auth.registerBtn" : "auth.loginBtn");
+            msg.hidden = true;
+        }
+        tabs.forEach(function (x) { x.addEventListener("click", function () { setMode(x.getAttribute("data-mode")); }); });
+
+        // Şifremi unuttum
+        document.getElementById("forgotLink").addEventListener("click", async function (e) {
             e.preventDefault();
-            if (!this.checkValidity()) { this.reportValidity(); return; }
-            KB.setRole(rol);
-            document.getElementById("ok").hidden = false;
-            setTimeout(function () { location.href = KB.panelHref(); }, 1200);
+            if (!(window.KB && KB.isOnline())) { showErr(t("auth.errGeneric")); return; }
+            var email = document.getElementById("aEmail").value.trim();
+            if (!email) { showErr(t("auth.resetEmailFirst")); return; }
+            try {
+                var r = await SB.resetPassword(email);
+                if (r && r.error) { showErr(r.error.message || t("auth.errGeneric")); return; }
+                showOk(t("auth.resetSent"));
+            } catch (err) { showErr(err.message || t("auth.errGeneric")); }
         });
+
+        function showErr(text) { msg.hidden = false; msg.style.background = "rgba(232,85,31,.1)"; msg.style.color = "#c0392b"; msg.style.borderColor = "rgba(232,85,31,.25)"; msg.textContent = text; }
+        function showOk(text) { msg.hidden = false; msg.style.background = ""; msg.style.color = ""; msg.style.borderColor = ""; msg.textContent = text; }
+
+        document.getElementById("authForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            var email = document.getElementById("aEmail").value.trim();
+            var pass = document.getElementById("aPass").value;
+            if (!email || pass.length < 6) { showErr(t("auth.errGeneric")); return; }
+
+            // Supabase bağlı değilse: demo fallback
+            if (!(window.KB && KB.isOnline())) {
+                var demoRole = mode === "register" ? document.getElementById("aRole").value : "kurye";
+                KB.setRole(demoRole); location.href = KB.panelHref(); return;
+            }
+
+            submit.disabled = true;
+            try {
+                if (mode === "register") {
+                    var role = document.getElementById("aRole").value;
+                    var ad = document.getElementById("aName").value.trim();
+                    var r = await SB.signUp(email, pass, role, ad);
+                    if (r.error) { showErr(r.error.message || t("auth.errGeneric")); submit.disabled = false; return; }
+                    if (r.data && r.data.session) {
+                        // Oturum açıldı (e-posta doğrulama kapalı) → profili tamamla
+                        showOk(t("auth.okRegister"));
+                        setTimeout(function () { location.href = "profil-duzenle.html"; }, 1200);
+                    } else {
+                        // E-posta doğrulama gerekli → kutuyu kontrol et, yönlendirme yok
+                        showOk(t("auth.okRegisterConfirm"));
+                        submit.disabled = false;
+                    }
+                } else {
+                    var r2 = await SB.signIn(email, pass);
+                    if (r2.error) { showErr(r2.error.message || t("auth.errGeneric")); submit.disabled = false; return; }
+                    var prof = await SB.myProfile();
+                    showOk(t("auth.okLogin"));
+                    setTimeout(function () { location.href = KB.roleToPanel(prof && prof.role); }, 1000);
+                }
+            } catch (err) { showErr(err.message || t("auth.errGeneric")); submit.disabled = false; }
+        });
+
+        setMode("login");
     })();
     </script>
 </body>

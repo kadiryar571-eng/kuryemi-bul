@@ -101,16 +101,12 @@
           '</button>' +
           '<nav class="nav" id="anaMenu" aria-label="Ana menü">' +
             navLinks +
-            '<span class="role-switch">' +
-              '<span class="role-switch__label">' + T("role.label") + '</span>' +
-              '<select id="roleSelect" aria-label="' + T("role.label") + '">' + roleOptions + '</select>' +
-            '</span>' +
             '<span class="theme-switch">' +
               '<span class="role-switch__label">🎨</span>' +
               '<select id="themeSelect" aria-label="' + T("theme.label") + '">' + themeOptions + '</select>' +
             '</span>' +
             '<button id="langToggle" class="lang-toggle" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
-            '<a href="' + panelHref() + '" class="btn btn--primary btn--sm nav__cta">' + panelLabel + '</a>' +
+            '<span id="authArea" class="auth-area"></span>' +
           '</nav>' +
         '</div>' +
       '</header>';
@@ -124,9 +120,6 @@
         navToggle.setAttribute("aria-expanded", open ? "true" : "false");
       });
     }
-    var roleSelect = document.getElementById("roleSelect");
-    if (roleSelect) roleSelect.addEventListener("change", function () { setRole(roleSelect.value); location.reload(); });
-
     var langToggle = document.getElementById("langToggle");
     if (langToggle && window.KBI18N) langToggle.addEventListener("click", function () { window.KBI18N.setLang(window.KBI18N.other()); });
 
@@ -221,12 +214,78 @@
     onScroll();
   }
 
+  /* ---------- Oturum (Supabase) ---------- */
+  var SESSION = { loaded: false, user: null, profile: null };
+
+  function isOnline() { return !!(window.SB && SB.isOn()); }
+  function roleToPanel(r) {
+    if (r === "kurye") return "panel-kurye.html";
+    if (r === "isletme") return "panel-isletme.html";
+    if (r === "firma") return "panel-firma.html";
+    return "giris.html";
+  }
+
+  async function loadSession() {
+    if (!isOnline()) { SESSION.loaded = true; return SESSION; }
+    try {
+      SESSION.user = await SB.getUser();
+      if (SESSION.user) SESSION.profile = await SB.myProfile();
+    } catch (e) { console.warn("Oturum yüklenemedi:", e); }
+    SESSION.loaded = true;
+    return SESSION;
+  }
+
+  // Oturum yüklemesini DOM'dan bağımsız olarak HEMEN başlat; KB.ready() bunu bekler.
+  // (init() DOMContentLoaded'a ertelenebildiği için burada başlatmak yarış koşulunu önler.)
+  var READY = isOnline() ? loadSession() : Promise.resolve(SESSION);
+
+  function buildAuthArea() {
+    if (!isOnline()) {
+      // Demo modu: eski rol anahtarı + Giriş/Panel
+      var role = getRole();
+      var roleOptions = ROLE_KEYS.map(function (k) {
+        return '<option value="' + k + '"' + (k === role ? " selected" : "") + '>' + T("role." + k) + '</option>';
+      }).join("");
+      var panelLabel = role === "ziyaretci" ? T("cta.signin") : T("cta.panel");
+      return '<span class="role-switch"><span class="role-switch__label">' + T("role.label") + '</span>' +
+        '<select id="roleSelect" aria-label="' + T("role.label") + '">' + roleOptions + '</select></span>' +
+        '<a href="' + panelHref() + '" class="btn btn--primary btn--sm nav__cta">' + panelLabel + '</a>';
+    }
+    if (SESSION.user) {
+      var nm = (SESSION.profile && SESSION.profile.ad) || SESSION.user.email || "Hesabım";
+      var ph = roleToPanel(SESSION.profile && SESSION.profile.role);
+      return '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
+        '<a href="profil-duzenle.html" class="user-chip" title="' + esc(SESSION.user.email || "") + '">👤 ' + esc(nm) + '</a>' +
+        '<button id="logoutBtn" type="button" class="lang-toggle">' + T("cta.signout") + '</button>';
+    }
+    return '<a href="giris.html" class="btn btn--primary btn--sm nav__cta">' + T("cta.signin") + '</a>';
+  }
+
+  function wireAuthArea() {
+    var roleSelect = document.getElementById("roleSelect");
+    if (roleSelect) roleSelect.addEventListener("change", function () { setRole(roleSelect.value); location.reload(); });
+    var logout = document.getElementById("logoutBtn");
+    if (logout) logout.addEventListener("click", async function () {
+      try { await SB.signOut(); } catch (e) {}
+      location.href = "index.html";
+    });
+  }
+
+  async function updateAuthArea() {
+    var area = document.getElementById("authArea");
+    if (!area) return;
+    if (isOnline()) { area.innerHTML = '<span class="user-chip">…</span>'; await READY; }
+    area.innerHTML = buildAuthArea();
+    wireAuthArea();
+  }
+
   function init() {
     var active = (location.pathname.split("/").pop() || "index.html");
     renderHeader(active);
     renderFooter();
     renderWhatsApp();
     renderToTop();
+    updateAuthArea();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
@@ -235,9 +294,15 @@
     ROLES: ROLES, t: T,
     getRole: getRole, setRole: setRole,
     getTeklifler: getTeklifler, addTeklif: addTeklif,
-    panelHref: panelHref,
+    panelHref: panelHref, roleToPanel: roleToPanel,
     waLink: waLink, waNumber: WA_NUMBER, email: EMAIL, telDisplay: TEL_DISPLAY,
     levelBadge: levelBadge, stars: stars,
-    getParam: getParam, findById: findById, initials: initials, esc: esc
+    getParam: getParam, findById: findById, initials: initials, esc: esc,
+    // oturum
+    isOnline: isOnline,
+    ready: function () { return READY || Promise.resolve(); },
+    session: function () { return SESSION; },
+    isAuthed: function () { return !!SESSION.user; },
+    currentRole: function () { return isOnline() ? (SESSION.profile && SESSION.profile.role) : getRole(); }
   };
 })();

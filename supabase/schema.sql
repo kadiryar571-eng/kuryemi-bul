@@ -14,8 +14,8 @@ create table if not exists public.profiles (
   role        text not null check (role in ('kurye','isletme','firma')),
   ad          text not null default '',
   sehir       text default '',
-  telefon     text default '',
-  email       text default '',
+  -- NOT: telefon/email burada DEĞİL — KVKK gereği ayrı public.profile_contacts
+  -- tablosunda tutulur (yalnız sahip + kabul edilmiş teklifin karşı tarafı okur).
   aciklama    text default '',
   lat         double precision,
   lng         double precision,
@@ -54,9 +54,20 @@ create table if not exists public.offers (
 create index if not exists offers_to_idx   on public.offers(to_user);
 create index if not exists offers_from_idx on public.offers(from_user);
 
+-- ---------- 2b) PROFILE_CONTACTS (korumalı iletişim — KVKK) ----------
+-- telefon/email public profiles'ta tutulmaz; burada tutulur ve RLS ile korunur.
+create table if not exists public.profile_contacts (
+  profile_id uuid primary key references public.profiles(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  telefon    text default '',
+  email      text default '',
+  updated_at timestamptz default now()
+);
+
 -- ---------- 3) RLS (satır bazlı güvenlik) ----------
-alter table public.profiles enable row level security;
-alter table public.offers   enable row level security;
+alter table public.profiles         enable row level security;
+alter table public.offers           enable row level security;
+alter table public.profile_contacts enable row level security;
 
 -- profiles: herkes okuyabilir (açık havuz)
 drop policy if exists profiles_select_all on public.profiles;
@@ -98,6 +109,43 @@ create policy offers_update_recipient on public.offers
     (select user_id from public.profiles where id = to_user) = auth.uid()
   );
 
+-- offers: taraflar kendi teklifini silebilir
+drop policy if exists offers_delete_party on public.offers;
+create policy offers_delete_party on public.offers
+  for delete using (
+    (select user_id from public.profiles where id = from_user) = auth.uid()
+    or (select user_id from public.profiles where id = to_user) = auth.uid()
+  );
+
+-- profile_contacts: sahip kendi iletişimini okur/yazar
+drop policy if exists contacts_select_own on public.profile_contacts;
+create policy contacts_select_own on public.profile_contacts
+  for select using (auth.uid() = user_id);
+
+drop policy if exists contacts_insert_own on public.profile_contacts;
+create policy contacts_insert_own on public.profile_contacts
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists contacts_update_own on public.profile_contacts;
+create policy contacts_update_own on public.profile_contacts
+  for update using (auth.uid() = user_id);
+
+-- profile_contacts: KABUL EDİLMİŞ teklifin karşı tarafı okuyabilir
+drop policy if exists contacts_select_accepted on public.profile_contacts;
+create policy contacts_select_accepted on public.profile_contacts
+  for select using (
+    exists (
+      select 1
+      from public.offers o
+      join public.profiles me on me.user_id = auth.uid()
+      where o.durum = 'accepted'
+        and (
+          (o.to_user   = me.id and o.from_user = public.profile_contacts.profile_id) or
+          (o.from_user = me.id and o.to_user   = public.profile_contacts.profile_id)
+        )
+    )
+  );
+
 -- ---------- 4) Yeni kullanıcı → otomatik profil ----------
 -- Kayıt sırasında signUp({ options:{ data:{ role, ad } } }) ile gelen
 -- meta veriden profiles satırı oluşturulur.
@@ -106,14 +154,21 @@ returns trigger
 language plpgsql
 security definer set search_path = public
 as $$
+declare
+  new_profile_id uuid;
 begin
-  insert into public.profiles (user_id, role, ad, email)
+  insert into public.profiles (user_id, role, ad)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'role', 'kurye'),
-    coalesce(new.raw_user_meta_data->>'ad', ''),
-    new.email
-  );
+    coalesce(new.raw_user_meta_data->>'ad', '')
+  )
+  returning id into new_profile_id;
+
+  insert into public.profile_contacts (profile_id, user_id, email)
+  values (new_profile_id, new.id, new.email)
+  on conflict (profile_id) do nothing;
+
   return new;
 end;
 $$;

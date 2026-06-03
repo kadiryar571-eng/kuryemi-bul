@@ -8,6 +8,25 @@
   var D = window.KB_DATA;
   var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
 
+  /* ============ VERİ KATMANI (online=Supabase / offline=demo) ============ */
+  function online() { return !!(window.KB && KB.isOnline && KB.isOnline()); }
+  async function loadPool(type) {
+    if (window.KB && KB.ready) await KB.ready();
+    if (online()) { try { return await SB.pool(type); } catch (e) { console.warn("pool:", e); } }
+    return type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
+  }
+  async function loadProfile(type, id) {
+    if (window.KB && KB.ready) await KB.ready();
+    if (online()) { try { var p = await SB.profileById(id); if (p) return p; } catch (e) { console.warn("profile:", e); } }
+    var src = type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
+    return KB.findById(src, id) || src[0];
+  }
+  async function loadOffers() {
+    if (window.KB && KB.ready) await KB.ready();
+    if (online()) { try { return await SB.myOffers(); } catch (e) { console.warn("offers:", e); } return []; }
+    return D.teklifler.concat(KB.getTeklifler());
+  }
+
   /* ============ TEKLİF MODALI ============ */
   function ensureModal() {
     if (document.getElementById("offerModal")) return;
@@ -34,33 +53,34 @@
     var m = document.getElementById("offerModal");
     if (m) m.classList.remove("is-open");
   }
-  function openOfferModal(targetType, targetId) {
-    var role = KB.getRole();
-    if (role === "ziyaretci") { alert(T("modal.guest")); return; }
-    var target = KB.findById(
-      targetType === "kurye" ? D.kuryeler : targetType === "isletme" ? D.isletmeler : D.firmalar,
-      targetId
-    );
+  async function openOfferModal(targetType, targetId) {
+    if (window.KB && KB.ready) await KB.ready();
+    var on = online();
+    if (on) {
+      if (!KB.isAuthed()) { alert(T("modal.guest")); location.href = "giris.html"; return; }
+    } else {
+      if (KB.getRole() === "ziyaretci") { alert(T("modal.guest")); return; }
+    }
+    var fromRole = on ? KB.currentRole() : KB.getRole();
+    var target = on ? await SB.profileById(targetId)
+      : KB.findById(targetType === "kurye" ? D.kuryeler : targetType === "isletme" ? D.isletmeler : D.firmalar, targetId);
     if (!target) return;
     ensureModal();
     var m = document.getElementById("offerModal");
     document.getElementById("offerSub").innerHTML =
-      "<b>" + KB.esc(T("role." + role)) + "</b> → <b>" + KB.esc(target.ad) + "</b> (" + KB.esc(T("role." + targetType)) + ")";
+      "<b>" + KB.esc(T("role." + fromRole)) + "</b> → <b>" + KB.esc(target.ad) + "</b> (" + KB.esc(T("role." + targetType)) + ")";
     var form = document.getElementById("offerForm");
     var success = document.getElementById("offerSuccess");
     success.hidden = true;
     form.reset();
-    form.onsubmit = function (e) {
+    form.onsubmit = async function (e) {
       e.preventDefault();
       var msg = document.getElementById("offerMsg").value.trim();
       if (!msg) return;
-      KB.addTeklif({
-        yon: role + "-" + targetType,
-        kimdenRol: role,
-        kimeTip: targetType,
-        kime: target.ad,
-        mesaj: msg
-      });
+      try {
+        if (on) { await SB.sendOffer(targetId, targetType, fromRole, msg); }
+        else { KB.addTeklif({ yon: fromRole + "-" + targetType, kimdenRol: fromRole, kimeTip: targetType, kime: target.ad, mesaj: msg }); }
+      } catch (err) { alert(err.message || "Hata"); return; }
       success.hidden = false;
       setTimeout(closeModal, 1600);
     };
@@ -115,7 +135,7 @@
     '</article>';
   }
 
-  function renderPool(type) {
+  async function renderPool(type) {
     var grid = document.getElementById("poolGrid");
     var countEl = document.getElementById("resultCount");
     var search = document.getElementById("fSearch");
@@ -123,7 +143,7 @@
     var sel2 = document.getElementById("fSelect2");
     if (!grid) return;
 
-    var src = type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
+    var src = await loadPool(type);
     var cardFn = type === "kurye" ? kuryeCard : type === "isletme" ? isletmeCard : firmaCard;
 
     function uniq(getter) {
@@ -172,12 +192,11 @@
   function box(title, inner) { return '<div class="panel-box"><h3>' + title + '</h3>' + inner + '</div>'; }
   function chips(arr) { return '<div class="taglist">' + arr.map(function (s) { return '<span class="chip">' + KB.esc(s) + '</span>'; }).join("") + '</div>'; }
 
-  function renderProfile(type) {
+  async function renderProfile(type) {
     var host = document.getElementById("profileRoot");
     if (!host) return;
     var id = KB.getParam("id");
-    var src = type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
-    var x = KB.findById(src, id) || src[0];
+    var x = await loadProfile(type, id);
     if (!x) { host.innerHTML = '<div class="empty">' + T("empty.generic") + '</div>'; return; }
 
     var avatarCls = type === "kurye" ? "" : type === "isletme" ? " avatar--blue" : " avatar--navy";
@@ -231,7 +250,7 @@
   }
 
   /* ============ HARİTA ============ */
-  function initMap() {
+  async function initMap() {
     var el = document.getElementById("map");
     if (!el || typeof L === "undefined") return;
     var map = L.map("map").setView([39.5, 33.5], 6);
@@ -240,6 +259,7 @@
     function mk(items, type, color, emoji) {
       var group = L.layerGroup();
       items.forEach(function (x) {
+        if (x.lat == null || x.lng == null) return;
         var icon = L.divIcon({
           className: "", html: '<div style="background:' + color + ';width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.3);display:grid;place-items:center"><span style="transform:rotate(45deg);font-size:15px">' + emoji + '</span></div>',
           iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -28]
@@ -253,10 +273,11 @@
       return group;
     }
 
+    var kData = await loadPool("kurye"), iData = await loadPool("isletme"), fData = await loadPool("firma");
     var layers = {
-      kurye: mk(D.kuryeler, "kurye", "#FF6B35", "🛵"),
-      isletme: mk(D.isletmeler, "isletme", "#2D6CDF", "📦"),
-      firma: mk(D.firmalar, "firma", "#1A1A2E", "🏢")
+      kurye: mk(kData, "kurye", "#FF6B35", "🛵"),
+      isletme: mk(iData, "isletme", "#2D6CDF", "📦"),
+      firma: mk(fData, "firma", "#1A1A2E", "🏢")
     };
     Object.keys(layers).forEach(function (k) { layers[k].addTo(map); });
     document.querySelectorAll("[data-layer]").forEach(function (cb) {
@@ -277,54 +298,118 @@
     var key = durum || "pending";
     return '<span class="chip">' + T("state." + key, {}) + '</span>';
   }
-  function teklifList(filterFn) {
-    var all = D.teklifler.concat(KB.getTeklifler());
-    var rows = all.filter(filterFn);
+  var KNOWN_STATES = ["pending", "active", "published", "applied", "accepted", "rejected"];
+  function offerAction(t) {
+    var durum = t.durum || "pending";
+    // Yalnız bana GELEN ve hâlâ BEKLEYEN teklifler kabul/ret edilebilir (RLS: alıcı günceller)
+    if (online() && t.gelen && durum === "pending") {
+      return '<span class="offer-act" data-offer-id="' + t.id + '" data-offer-karsi="' + (t.karsiId || "") + '">' +
+        '<button type="button" class="btn btn--primary btn--sm" data-offer-act="accepted">' + T("offer.accept") + '</button>' +
+        '<button type="button" class="btn btn--light btn--sm" data-offer-act="rejected">' + T("offer.reject") + '</button>' +
+        '</span>';
+    }
+    var st = KNOWN_STATES.indexOf(durum) > -1 ? T("state." + durum) : T("state.pending");
+    return '<span class="offer-act"><span class="chip">' + st + '</span></span>';
+  }
+  function contactLine(c) {
+    if (!c || (!c.telefon && !c.email)) return "";
+    return ' · 📞 ' + KB.esc(c.telefon || c.email);
+  }
+  function renderOfferRows(rows) {
     if (!rows.length) return '<div class="empty">' + T("empty.offers") + '</div>';
     return rows.map(function (t) {
       var from = t.kimdenRol ? T("role." + t.kimdenRol) : (t.kimden || "");
-      var st = (t.durum && ["pending", "active", "published", "applied"].indexOf(t.durum) > -1) ? T("state." + t.durum) : T("state.pending");
-      return listRow(KB.esc(from) + " → " + KB.esc(t.kime),
-        KB.esc(t.mesaj || "") + " · " + KB.esc(t.tarih || ""),
-        '<span class="chip">' + st + '</span>');
+      var who = t.kime ? (KB.esc(from) + " → " + KB.esc(t.kime)) : KB.esc(from);
+      var dir = (online() && typeof t.gelen === "boolean")
+        ? '<span class="chip chip--dir">' + (t.gelen ? "↓ " + T("offer.incoming") : "↑ " + T("offer.outgoing")) + '</span>'
+        : "";
+      var sub = KB.esc(t.mesaj || "") + " · " + KB.esc(t.tarih || "") + contactLine(t.iletisim);
+      return listRow(who, sub, dir + offerAction(t));
     }).join("");
   }
+  // Kabul/Reddet tıklamaları (online): durumu güncelle, satırı yerinde yenile
+  document.addEventListener("click", async function (e) {
+    var b = e.target.closest("[data-offer-act]");
+    if (!b) return;
+    var wrap = b.closest(".offer-act");
+    var id = wrap && wrap.getAttribute("data-offer-id");
+    var act = b.getAttribute("data-offer-act");
+    if (!id) return;
+    [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = true; });
+    try {
+      var r = await SB.updateOffer(id, act);
+      if (r && r.error) throw r.error;
+      wrap.innerHTML = '<span class="chip">' + T("state." + act) + '</span>';
+      // Kabul edilince karşı tarafın iletişimi artık görünür (RLS açar)
+      if (act === "accepted") {
+        var karsiId = wrap.getAttribute("data-offer-karsi");
+        try {
+          var c = await SB.contactOf(karsiId);
+          var subEl = wrap.closest(".list-row") && wrap.closest(".list-row").querySelector(".list-row__sub");
+          if (subEl && c && (c.telefon || c.email)) subEl.innerHTML += contactLine(c);
+        } catch (e) { /* iletişim okunamadıysa sessiz geç */ }
+      }
+    } catch (err) {
+      alert(err.message || T("offer.actErr"));
+      [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; });
+    }
+  });
 
   function showPanel(key) {
     document.querySelectorAll(".dash__panel").forEach(function (p) { p.classList.toggle("is-active", p.id === "panel-" + key); });
     document.querySelectorAll(".dash__nav button").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-tab") === key); });
   }
-  function initPanel(role) {
+  async function initPanel(role) {
     var nav = document.querySelector(".dash__nav");
     if (!nav) return;
     nav.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-tab]");
       if (b) showPanel(b.getAttribute("data-tab"));
     });
+    showPanel(nav.querySelector("button[data-tab]").getAttribute("data-tab"));
 
-    function mine(roleKey) { return function (t) { return t.kimdenRol === roleKey || t.kimeTip === roleKey; }; }
-    var offerCount = KB.getTeklifler().length + D.teklifler.length;
+    var offers = await loadOffers();
+    // Kabul edilmiş teklifler için karşı tarafın iletişimini önceden çek (RLS izin verirse)
+    if (online() && SB.contactOf) {
+      await Promise.all(offers.map(async function (o) {
+        if (o.durum === "accepted" && o.karsiId) {
+          try { var c = await SB.contactOf(o.karsiId); if (c) o.iletisim = c; } catch (e) {}
+        }
+      }));
+    }
+    function listFor(roleKey) {
+      var rows = online() ? offers : offers.filter(function (t) { return t.kimdenRol === roleKey || t.kimeTip === roleKey; });
+      return renderOfferRows(rows);
+    }
+    var offerCount = online() ? offers.length : (KB.getTeklifler().length + D.teklifler.length);
+    var prof = (online() && KB.session()) ? KB.session().profile : null;
 
     if (role === "kurye") {
-      setHTML("kuryeMetrics", metric("4.9", T("m.score")) + metric(T("level.premium"), T("m.level")) + metric("1.240", T("m.deliveries")) + metric(offerCount, T("m.offers")));
+      var pu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.9";
+      var sv = prof ? T("level." + (prof.seviye || "standart")) : T("level.premium");
+      var tm = prof ? (prof.tamamlanan || 0) : "1.240";
+      setHTML("kuryeMetrics", metric(pu, T("m.score")) + metric(sv, T("m.level")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")));
       setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');
       }).join(""));
-      setHTML("kuryeTeklif", teklifList(mine("kurye")));
+      setHTML("kuryeTeklif", listFor("kurye"));
     } else if (role === "isletme") {
-      setHTML("isletmeMetrics", metric("3", T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("12", T("m.meetings")) + metric("4.7", T("m.satisfaction")));
+      var ai = prof ? (prof.acikIlan || 0) : "3";
+      setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("12", T("m.meetings")) + metric("4.7", T("m.satisfaction")));
       setHTML("isletmeIlan", D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), T("soon.published") + " · " + KB.esc(i.tarih), '<span class="chip">' + T("state.active") + '</span>');
       }).join(""));
-      setHTML("isletmeBasvuru", teklifList(mine("isletme")));
+      setHTML("isletmeBasvuru", listFor("isletme"));
     } else if (role === "firma") {
-      setHTML("firmaMetrics", metric("60", T("m.capacity")) + metric("4.8", T("m.score")) + metric(offerCount, T("m.offers")) + metric("2", T("m.tenders")));
-      setHTML("firmaPersonel", D.kuryeler.slice(0, 4).map(function (k) {
+      var kp = prof ? (prof.kapasite || 0) : "60";
+      var fpu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.8";
+      setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")) + metric("2", T("m.tenders")));
+      var kuryeler = await loadPool("kurye");
+      setHTML("firmaPersonel", kuryeler.slice(0, 5).map(function (k) {
         return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), KB.levelBadge(k.seviye));
       }).join(""));
-      setHTML("firmaTeklif", teklifList(mine("firma")));
+      setHTML("firmaTeklif", listFor("firma"));
     }
-    showPanel(nav.querySelector("button[data-tab]").getAttribute("data-tab"));
   }
   function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="empty">' + T("empty.generic") + '</div>'; }
 

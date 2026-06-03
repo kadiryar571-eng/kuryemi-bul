@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="pe.title">Profilim · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="pe.title">Profilim</h1><p data-i18n="pe.lead">Bilgilerini doldur; havuzda böyle görüneceksin.</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container container--narrow">
+            <div class="form-card">
+                <form id="peForm"><p class="pcard__sub">…</p></form>
+                <p class="form-success" id="peMsg" hidden></p>
+                <p class="mt-24" id="peView" hidden><a class="btn btn--light btn--sm" id="peViewLink" href="#" data-i18n="pe.viewPublic">Herkese açık profilimi gör →</a></p>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var form = document.getElementById("peForm");
+        var msg = document.getElementById("peMsg");
+
+        function field(id, label, val, type) {
+            return '<div class="field"><label for="' + id + '">' + label + '</label>' +
+                '<input id="' + id + '" type="' + (type || "text") + '" value="' + (val == null ? "" : String(val).replace(/"/g, "&quot;")) + '"></div>';
+        }
+        function area(id, label, val) {
+            return '<div class="field field--full"><label for="' + id + '">' + label + '</label>' +
+                '<textarea id="' + id + '" rows="2">' + (val == null ? "" : String(val)) + '</textarea></div>';
+        }
+        function levelSelect(val) {
+            var opts = ["standart", "profesyonel", "premium"].map(function (s) {
+                return '<option value="' + s + '"' + (s === val ? " selected" : "") + '>' + t("level." + s) + '</option>';
+            }).join("");
+            return '<div class="field"><label for="pSeviye">' + t("pe.level") + '</label><select id="pSeviye">' + opts + '</select></div>';
+        }
+        function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+        function csv(id) { return val(id).split(",").map(function (s) { return s.trim(); }).filter(Boolean); }
+        function intv(id) { return parseInt(val(id), 10) || 0; }
+
+        async function start() {
+            if (window.KB && KB.ready) await KB.ready();
+            if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli (demo modu).</p>'; return; }
+            if (!KB.isAuthed()) { form.innerHTML = '<p class="empty">' + t("pe.loginRequired") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>'; return; }
+
+            var p = (KB.session() && KB.session().profile) || await SB.myProfile();
+            var role = p.role;
+            var html = '<div class="form-grid">';
+            html += field("pAd", t("pe.name"), p.ad);
+            html += field("pSehir", t("pe.city"), p.sehir);
+            html += field("pTel", t("pe.phone"), p.telefon);
+
+            if (role === "kurye") {
+                html += field("pArac", t("pe.vehicle"), p.arac);
+                html += field("pDeneyim", t("pe.exp"), p.deneyim, "number");
+                html += levelSelect(p.seviye);
+                html += field("pTamam", t("pe.completed"), p.tamamlanan, "number");
+                html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
+                html += field("pCert", t("pe.certs"), (p.sertifikalar || []).join(", "));
+            } else if (role === "isletme") {
+                html += field("pTur", t("pe.type"), p.tur);
+                html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
+                html += field("pAcik", t("pe.openListing"), p.acikIlan, "number");
+                html += field("pIhtiyac", t("pe.need"), p.ihtiyac);
+            } else {
+                html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
+                html += field("pKapasite", t("pe.capacity"), p.kapasite, "number");
+                html += field("pHizmet", t("pe.services"), (p.hizmetler || []).join(", "));
+            }
+            html += '</div>';
+            html += area("pAbout", t("pe.about"), p.aciklama);
+            html += '<button type="submit" class="btn btn--primary btn--lg btn--block">' + t("pe.save") + '</button>';
+            form.innerHTML = html;
+
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                var f = { ad: val("pAd"), sehir: val("pSehir"), telefon: val("pTel"), aciklama: val("pAbout") };
+                if (role === "kurye") {
+                    f.arac = val("pArac"); f.deneyim = intv("pDeneyim"); f.seviye = val("pSeviye");
+                    f.tamamlanan = intv("pTamam"); f.bolgeler = csv("pBolge"); f.sertifikalar = csv("pCert");
+                } else if (role === "isletme") {
+                    f.tur = val("pTur"); f.bolgeler = csv("pBolge"); f.acik_ilan = intv("pAcik"); f.ihtiyac = val("pIhtiyac");
+                } else {
+                    f.bolgeler = csv("pBolge"); f.kapasite = intv("pKapasite"); f.hizmetler = csv("pHizmet");
+                }
+                try {
+                    var saved = await SB.updateMyProfile(f);
+                    msg.hidden = false; msg.textContent = t("pe.saved");
+                    var pg = KB.roleToPanel(role).replace("panel-", "profil-");
+                    var link = document.getElementById("peViewLink");
+                    link.href = pg + "?id=" + saved.id;
+                    document.getElementById("peView").hidden = false;
+                } catch (err) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = err.message || "Hata"; }
+            });
+        }
+        start();
+    })();
+    </script>
+</body>
+</html>
