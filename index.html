@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="KuryemiBul — kuryeleri, kurye firmalarını ve kuryeye ihtiyaç duyan işletmeleri tek platformda buluşturan kurye ekosistem platformu.">
+    <meta name="description" content="Kuryemi Bul — işletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı. Kendi sürdürülebilir kurye havuzunu kur.">
     <title data-i18n="title.index">Kuryemi Bul · Kurye Ekosisteminin Buluşma Noktası</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Kuryemi Bul">
     <meta property="og:title" content="Kuryemi Bul · Kurye Ekosisteminin Buluşma Noktası">
-    <meta property="og:description" content="Kuryeleri, kurye firmalarını ve kuryeye ihtiyaç duyan işletmeleri tek platformda buluşturan kurye ekosistem platformu.">
+    <meta property="og:description" content="İşletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı.">
     <meta property="og:url" content="https://kadiryar571-eng.github.io/kuryemi-bul/">
     <meta property="og:image" content="https://kadiryar571-eng.github.io/kuryemi-bul/assets/og-cover.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:locale" content="tr_TR">
     <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
@@ -29,28 +30,99 @@
             </div>
             <div class="container hero__inner">
                 <span class="badge" data-i18n="hero.badge">🛵 Kurye Ekosisteminin Buluşma Noktası</span>
-                <h1 class="hero__title" data-i18n-html="hero.title">Kuryeni bul,<br><span class="accent">yükünü yola çıkar.</span></h1>
+                <h1 class="hero__title" data-i18n-html="hero.title">Kuryemi <span class="accent">Bul</span></h1>
                 <p class="hero__subtitle" data-i18n="hero.subtitle">
-                    KuryemiBul; kuryeleri, kurye firmalarını ve kuryeye ihtiyaç duyan işletmeleri
-                    tek platformda buluşturur. Kurye istihdamı, tedariki, performans yönetimi ve
-                    kurumsal süreçleri dijitalleştiren kapsamlı bir kurye ekosistemi.
+                    İşletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı.
+                    Anlık çözüm değil — kendi güvenilir ve sürdürülebilir kurye havuzunu kur.
                 </p>
                 <div class="hero__actions">
                     <a href="giris.html" class="btn btn--primary btn--lg" data-i18n="hero.cta1">🚀 Hemen Başla</a>
-                    <a href="harita.html" class="btn btn--ghost btn--lg" data-i18n="hero.cta2">🗺️ Haritada Keşfet</a>
+                    <a href="#harita" class="btn btn--ghost btn--lg" data-i18n="hero.cta2">📍 Haritada Keşfet</a>
                 </div>
-                <div class="stats" aria-label="İstatistikler">
-                    <div class="stat"><span class="stat__num">1.200+</span><span class="stat__label" data-i18n="stats.couriers">Aktif Kurye</span></div>
-                    <div class="stat__sep" aria-hidden="true"></div>
-                    <div class="stat"><span class="stat__num">350+</span><span class="stat__label" data-i18n="stats.businesses">İşletme</span></div>
-                    <div class="stat__sep" aria-hidden="true"></div>
-                    <div class="stat"><span class="stat__num">80+</span><span class="stat__label" data-i18n="stats.firms">Kurye Firması</span></div>
+                <div class="trust-row">
+                    <div class="trust"><span class="trust__ic">♻️</span><span><span class="trust__t" data-i18n="trust.t1">Sürdürülebilir Havuz</span><br><span class="trust__d" data-i18n="trust.d1">Tek seferlik değil, kalıcı kurye ağı</span></span></div>
+                    <div class="trust"><span class="trust__ic">📍</span><span><span class="trust__t" data-i18n="trust.t2">Konum Bazlı Eşleşme</span><br><span class="trust__d" data-i18n="trust.d2">Bölge ve yakınlık odaklı</span></span></div>
+                    <div class="trust"><span class="trust__ic">✅</span><span><span class="trust__t" data-i18n="trust.t3">Doğrulanmış Profiller</span><br><span class="trust__d" data-i18n="trust.d3">Seviye ve referans sistemi</span></span></div>
                 </div>
             </div>
         </section>
 
+        <!-- 3 KATEGORİ -->
+        <section class="section">
+            <div class="container">
+                <div class="section__head">
+                    <span class="eyebrow" data-i18n="cats.eyebrow">Üç Kategori, Tek Platform</span>
+                    <h2 class="section__title" data-i18n="cats.title">Nereden Başlamak İstersin?</h2>
+                    <p class="section__lead" data-i18n="cats.lead">Rolüne uygun havuza gir; ister keşfet ister doğrudan teklif gönder.</p>
+                </div>
+                <div class="cat-grid">
+                    <a class="cat-card" href="kuryeler.html">
+                        <div class="cat-card__ic">🛵</div>
+                        <h3 data-i18n="cat.kurye.t">Kurye Havuzu</h3>
+                        <p data-i18n="cat.kurye.d">Aktif kuryeleri keşfet, profil ve seviyelerini incele, havuzuna ekle.</p>
+                        <span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span>
+                    </a>
+                    <a class="cat-card" href="isletmeler.html">
+                        <div class="cat-card__ic">📦</div>
+                        <h3 data-i18n="cat.isletme.t">İşletme Havuzu</h3>
+                        <p data-i18n="cat.isletme.d">Kuryeye ihtiyaç duyan işletmeleri gör, ihtiyaca göre teklif gönder.</p>
+                        <span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span>
+                    </a>
+                    <a class="cat-card" href="firmalar.html">
+                        <div class="cat-card__ic">🏢</div>
+                        <h3 data-i18n="cat.firma.t">Kurye Firmaları</h3>
+                        <p data-i18n="cat.firma.d">Filo yöneten kurye firmalarıyla kurumsal ve toplu çözümler kur.</p>
+                        <span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FELSEFE / KONSEPT -->
+        <section class="section section--alt">
+            <div class="container">
+                <div class="concept">
+                    <div class="concept__text">
+                        <span class="eyebrow" data-i18n="concept.eyebrow">Yaklaşımımız</span>
+                        <h2 class="concept__title" data-i18n-html="concept.title">Anlık çözüm değil, <span class="accent">kendi kurye havuzun.</span></h2>
+                        <p data-i18n="concept.p1">Nasıl bir işletme her gün güvenebileceği sabit bir usta arıyorsa, kurye ihtiyacı da öyledir.</p>
+                        <p data-i18n="concept.p2">Kuryemi Bul; işletmelerin sürdürülebilir, güvenilir ve büyüyen bir kurye ağı oluşturmasını sağlar.</p>
+                        <ul class="concept__list">
+                            <li data-i18n="concept.li1">Güvenilir kuryelerle uzun vadeli çalış</li>
+                            <li data-i18n="concept.li2">Bölgesel ve sürdürülebilir kurye ağı</li>
+                            <li data-i18n="concept.li3">Tek platformda teklif, iletişim ve yönetim</li>
+                        </ul>
+                    </div>
+                    <div class="concept__visual">
+                        <p class="concept__quote" data-i18n="concept.quote">Sabit döner ustanı nasıl seçiyorsan, sabit kuryeni de öyle seç.</p>
+                        <p class="concept__by" data-i18n="concept.by">— Kuryemi Bul yaklaşımı</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HARİTA (seçmeli tek harita) -->
+        <section class="section" id="harita">
+            <div class="container">
+                <div class="section__head">
+                    <span class="eyebrow" data-i18n="homemap.eyebrow">Canlı Ağ</span>
+                    <h2 class="section__title" data-i18n="homemap.title">Haritada Keşfet</h2>
+                    <p class="section__lead" data-i18n="homemap.lead">Bir kategori seç; ağdaki konumları harita üzerinde gör.</p>
+                </div>
+                <div class="text-center">
+                    <div class="mapseg" role="tablist" aria-label="Harita kategorisi">
+                        <button type="button" class="is-active" data-mapseg="kurye">🛵 <span data-i18n="who.k.btn">Kurye Havuzu</span></button>
+                        <button type="button" data-mapseg="isletme">📦 <span data-i18n="who.i.btn">İşletme Havuzu</span></button>
+                        <button type="button" data-mapseg="firma">🏢 <span data-i18n="who.f.btn">Firma Havuzu</span></button>
+                    </div>
+                </div>
+                <div class="home-map__wrap"><div id="map"></div></div>
+                <p class="home-map__hint" data-i18n="map.hint">İşaretçiye tıklayıp profile gidebilirsin.</p>
+            </div>
+        </section>
+
         <!-- NASIL ÇALIŞIR -->
-        <section class="section" id="nasil">
+        <section class="section section--alt">
             <div class="container">
                 <div class="section__head">
                     <span class="eyebrow" data-i18n="how.eyebrow">Basit 3 adım</span>
@@ -65,39 +137,8 @@
             </div>
         </section>
 
-        <!-- KİMLER İÇİN -->
-        <section class="section section--alt" id="kimler">
-            <div class="container">
-                <div class="section__head">
-                    <span class="eyebrow" data-i18n="who.eyebrow">Tek platform, üç çözüm</span>
-                    <h2 class="section__title" data-i18n="who.title">Kimler İçin?</h2>
-                </div>
-                <div class="audience">
-                    <article class="aud-card">
-                        <div class="aud-card__icon">🛵</div><h3 data-i18n="who.k.title">Kuryeler İçin</h3>
-                        <p data-i18n="who.k.sub">Dijital kariyer alanın.</p>
-                        <ul class="ticks"><li data-i18n="who.k.l1">Profil & referans geçmişi</li><li data-i18n="who.k.l2">Seviye sistemi (Standart/Pro/Premium)</li><li data-i18n="who.k.l3">Yakınındaki ilanlar</li><li data-i18n="who.k.l4">Firma teklifleri</li></ul>
-                        <a href="kuryeler.html" class="btn btn--primary btn--block" data-i18n="who.k.btn">Kurye Havuzu</a>
-                    </article>
-                    <article class="aud-card aud-card--featured">
-                        <span class="aud-card__tag" data-i18n="who.i.tag">En çok tercih edilen</span>
-                        <div class="aud-card__icon">📦</div><h3 data-i18n="who.i.title">İşletmeler İçin</h3>
-                        <p data-i18n="who.i.sub">Kuryeni dakikalar içinde bul.</p>
-                        <ul class="ticks"><li data-i18n="who.i.l1">Havuzda arama & filtre</li><li data-i18n="who.i.l2">İlan ve teklif yönetimi</li><li data-i18n="who.i.l3">Kurye geçmişi & performans</li><li data-i18n="who.i.l4">Firmalardan teklif al</li></ul>
-                        <a href="isletmeler.html" class="btn btn--primary btn--block" data-i18n="who.i.btn">İşletme Havuzu</a>
-                    </article>
-                    <article class="aud-card">
-                        <div class="aud-card__icon">🏢</div><h3 data-i18n="who.f.title">Kurye Firmaları İçin</h3>
-                        <p data-i18n="who.f.sub">Filonu yönet, müşteri bul.</p>
-                        <ul class="ticks"><li data-i18n="who.f.l1">Personel havuzu</li><li data-i18n="who.f.l2">İşletmelere teklif</li><li data-i18n="who.f.l3">Hizmet bölgesi yönetimi</li><li data-i18n="who.f.l4">Kurumsal ihale (yakında)</li></ul>
-                        <a href="firmalar.html" class="btn btn--primary btn--block" data-i18n="who.f.btn">Firma Havuzu</a>
-                    </article>
-                </div>
-            </div>
-        </section>
-
         <!-- NEDEN -->
-        <section class="section" id="neden">
+        <section class="section">
             <div class="container">
                 <div class="section__head"><span class="eyebrow" data-i18n="why.eyebrow">Avantajlar</span><h2 class="section__title" data-i18n="why.title">Neden KuryemiBul?</h2></div>
                 <div class="features">
@@ -111,45 +152,13 @@
             </div>
         </section>
 
-        <!-- SSS -->
-        <section class="section section--alt" id="sss">
-            <div class="container container--narrow">
-                <div class="section__head"><span class="eyebrow" data-i18n="faq.eyebrow">Aklına takılanlar</span><h2 class="section__title" data-i18n="faq.title">Sık Sorulan Sorular</h2></div>
-                <div class="faq">
-                    <details class="faq__item"><summary data-i18n="faq.q1">KuryemiBul'a üyelik ücretli mi?</summary><p data-i18n="faq.a1">Kayıt ücretsizdir. Yalnızca tamamlanan işlerde şeffaf bir hizmet bedeli uygulanır.</p></details>
-                    <details class="faq__item"><summary data-i18n="faq.q2">Kurye seviyeleri nasıl belirlenir?</summary><p data-i18n="faq.a2">Deneyim, süreklilik, referanslar ve değerlendirmeler gibi objektif kriterlerle Standart, Profesyonel ve Premium seviyeleri oluşur.</p></details>
-                    <details class="faq__item"><summary data-i18n="faq.q3">Kurye firmaları nasıl katılır?</summary><p data-i18n="faq.a3">Firma profili oluşturup hizmet bölgelerini tanımlar, personel havuzunu yönetir ve işletmelere teklif gönderir.</p></details>
-                    <details class="faq__item"><summary data-i18n="faq.q4">Bu gerçek bir platform mu?</summary><p data-i18n="faq.a4">Evet. Beta aşamasındayız; kayıtlar ve profiller gerçektir. Yeni özellikler (bildirim, değerlendirme, ilan/ihale) eklenmeye devam ediyor.</p></details>
-                </div>
-            </div>
-        </section>
-
-        <!-- İLETİŞİM -->
-        <section class="section" id="iletisim">
-            <div class="container container--narrow">
-                <div class="section__head">
-                    <span class="eyebrow" data-i18n="contact.eyebrow">Bize Ulaşın</span>
-                    <h2 class="section__title" data-i18n="contact.title">Sorularını WhatsApp'tan Yanıtlayalım</h2>
-                    <p class="section__lead" data-i18n="contact.lead">Formu doldur, mesajın WhatsApp'a hazır gelsin; ya da doğrudan e-posta/telefon ile ulaş.</p>
-                </div>
-                <form id="contactForm" class="form-card" novalidate>
-                    <div class="form-grid">
-                        <div class="field"><label for="cName" data-i18n="contact.name">Adın</label><input id="cName" type="text" data-i18n-ph="contact.namePh" placeholder="Örn. Ahmet Yılmaz" required></div>
-                        <div class="field"><label for="cRole" data-i18n="contact.role">Rolün</label>
-                            <select id="cRole">
-                                <option value="kurye" data-i18n="role.kurye">Kurye</option>
-                                <option value="isletme" data-i18n="role.isletme">İşletme</option>
-                                <option value="firma" data-i18n="role.firma">Kurye Firması</option>
-                            </select>
-                        </div>
-                        <div class="field field--full"><label for="cMsg" data-i18n="contact.msg">Mesajın</label><textarea id="cMsg" rows="3" data-i18n-ph="contact.msgPh" placeholder="Nasıl yardımcı olabiliriz?" required></textarea></div>
-                    </div>
-                    <button type="submit" class="btn btn--primary btn--lg btn--block">💬 <span data-i18n="contact.send">WhatsApp'tan Gönder</span></button>
-                </form>
-                <div class="contact-cards">
-                    <a class="contact-card" id="cEmail" href="#"><span class="contact-card__ic">✉️</span><span><b data-i18n="contact.email">E-posta</b><br><span class="contact-card__v">—</span></span></a>
-                    <a class="contact-card" id="cPhone" href="#"><span class="contact-card__ic">📞</span><span><b data-i18n="contact.phone">Telefon</b><br><span class="contact-card__v">—</span></span></a>
-                    <a class="contact-card" id="cWa" href="#" target="_blank" rel="noopener"><span class="contact-card__ic">💬</span><span><b>WhatsApp</b><br><span class="contact-card__v" data-i18n="wa.tooltip">WhatsApp'tan yaz</span></span></a>
+        <!-- CTA BAND -->
+        <section class="section">
+            <div class="container">
+                <div class="concept__visual text-center" style="max-width:760px;margin:0 auto">
+                    <h2 class="section__title" data-i18n="ctaband.title">Kendi kurye ağını bugün kurmaya başla.</h2>
+                    <p class="section__lead" data-i18n="ctaband.lead">Kayıt ücretsiz. Rolünü seç, profilini oluştur, havuzunu büyüt.</p>
+                    <a class="btn btn--primary btn--lg mt-24" href="giris.html" data-i18n="ctaband.btn">🚀 Ücretsiz Katıl</a>
                 </div>
             </div>
         </section>
@@ -163,26 +172,7 @@
     <script src="assets/js/data.js"></script>
     <script src="assets/js/components.js"></script>
     <script src="assets/js/app.js"></script>
-    <script>
-    (function () {
-        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
-        // İletişim kartlarını doldur
-        var em = document.getElementById("cEmail"), ph = document.getElementById("cPhone"), wa = document.getElementById("cWa");
-        if (em) { em.href = "mailto:" + KB.email; em.querySelector(".contact-card__v").textContent = KB.email; }
-        if (ph) { ph.href = "tel:+" + KB.waNumber; ph.querySelector(".contact-card__v").textContent = KB.telDisplay; }
-        if (wa) { wa.href = KB.waLink(); }
-        // Form → WhatsApp'a ön-dolu mesaj
-        var f = document.getElementById("contactForm");
-        if (f) f.addEventListener("submit", function (e) {
-            e.preventDefault();
-            if (!f.checkValidity()) { f.reportValidity(); return; }
-            var ad = document.getElementById("cName").value.trim();
-            var rolKey = document.getElementById("cRole").value;
-            var msg = document.getElementById("cMsg").value.trim();
-            var text = "Merhaba, ben " + ad + " (" + t("role." + rolKey) + ").\n" + msg;
-            window.open(KB.waLink(text), "_blank", "noopener");
-        });
-    })();
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>KBApp.initHomeMap();</script>
 </body>
 </html>

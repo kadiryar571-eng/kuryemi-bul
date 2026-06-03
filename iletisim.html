@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title.iletisim">İletişim · Kuryemi Bul</title>
+    <meta name="description" content="Kuryemi Bul ile iletişime geç: WhatsApp, e-posta veya telefon. Sık sorulan sorular.">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Kuryemi Bul">
+    <meta property="og:title" content="İletişim · Kuryemi Bul">
+    <meta property="og:description" content="Kuryemi Bul ile iletişime geç: WhatsApp, e-posta veya telefon.">
+    <meta property="og:url" content="https://kadiryar571-eng.github.io/kuryemi-bul/iletisim.html">
+    <meta property="og:image" content="https://kadiryar571-eng.github.io/kuryemi-bul/assets/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container">
+            <h1 data-i18n="contact.title">Sorularını WhatsApp'tan Yanıtlayalım</h1>
+            <p data-i18n="contact.lead">Formu doldur, mesajın WhatsApp'a hazır gelsin; ya da doğrudan e-posta/telefon ile ulaş.</p>
+        </div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container container--narrow">
+            <form id="contactForm" class="form-card" novalidate>
+                <div class="form-grid">
+                    <div class="field"><label for="cName" data-i18n="contact.name">Adın</label><input id="cName" type="text" data-i18n-ph="contact.namePh" placeholder="Örn. Ahmet Yılmaz" required></div>
+                    <div class="field"><label for="cRole" data-i18n="contact.role">Rolün</label>
+                        <select id="cRole">
+                            <option value="kurye" data-i18n="role.kurye">Kurye</option>
+                            <option value="isletme" data-i18n="role.isletme">İşletme</option>
+                            <option value="firma" data-i18n="role.firma">Kurye Firması</option>
+                        </select>
+                    </div>
+                    <div class="field field--full"><label for="cMsg" data-i18n="contact.msg">Mesajın</label><textarea id="cMsg" rows="3" data-i18n-ph="contact.msgPh" placeholder="Nasıl yardımcı olabiliriz?" required></textarea></div>
+                </div>
+                <button type="submit" class="btn btn--primary btn--lg btn--block">💬 <span data-i18n="contact.send">WhatsApp'tan Gönder</span></button>
+            </form>
+
+            <div class="contact-cards">
+                <a class="contact-card" id="cEmail" href="#"><span class="contact-card__ic">✉️</span><span><b data-i18n="contact.email">E-posta</b><br><span class="contact-card__v">—</span></span></a>
+                <a class="contact-card" id="cPhone" href="#"><span class="contact-card__ic">📞</span><span><b data-i18n="contact.phone">Telefon</b><br><span class="contact-card__v">—</span></span></a>
+                <a class="contact-card" id="cWa" href="#" target="_blank" rel="noopener"><span class="contact-card__ic">💬</span><span><b>WhatsApp</b><br><span class="contact-card__v" data-i18n="wa.tooltip">WhatsApp'tan yaz</span></span></a>
+            </div>
+        </div>
+    </main>
+
+    <!-- SSS -->
+    <section class="section section--alt">
+        <div class="container container--narrow">
+            <div class="section__head"><span class="eyebrow" data-i18n="faq.eyebrow">Aklına takılanlar</span><h2 class="section__title" data-i18n="faq.title">Sık Sorulan Sorular</h2></div>
+            <div class="faq">
+                <details class="faq__item"><summary data-i18n="faq.q1">KuryemiBul'a üyelik ücretli mi?</summary><p data-i18n="faq.a1">Kayıt ücretsizdir. Yalnızca tamamlanan işlerde şeffaf bir hizmet bedeli uygulanır.</p></details>
+                <details class="faq__item"><summary data-i18n="faq.q2">Kurye seviyeleri nasıl belirlenir?</summary><p data-i18n="faq.a2">Deneyim, süreklilik, referanslar ve değerlendirmeler gibi objektif kriterlerle Standart, Profesyonel ve Premium seviyeleri oluşur.</p></details>
+                <details class="faq__item"><summary data-i18n="faq.q3">Kurye firmaları nasıl katılır?</summary><p data-i18n="faq.a3">Firma profili oluşturup hizmet bölgelerini tanımlar, personel havuzunu yönetir ve işletmelere teklif gönderir.</p></details>
+                <details class="faq__item"><summary data-i18n="faq.q4">Bu gerçek bir platform mu?</summary><p data-i18n="faq.a4">Evet. Beta aşamasındayız; kayıtlar ve profiller gerçektir. Yeni özellikler (bildirim, değerlendirme, ilan/ihale) eklenmeye devam ediyor.</p></details>
+            </div>
+        </div>
+    </section>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var em = document.getElementById("cEmail"), ph = document.getElementById("cPhone"), wa = document.getElementById("cWa");
+        if (em) { em.href = "mailto:" + KB.email; em.querySelector(".contact-card__v").textContent = KB.email; }
+        if (ph) { ph.href = "tel:+" + KB.waNumber; ph.querySelector(".contact-card__v").textContent = KB.telDisplay; }
+        if (wa) { wa.href = KB.waLink(); }
+        var f = document.getElementById("contactForm");
+        if (f) f.addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (!f.checkValidity()) { f.reportValidity(); return; }
+            var ad = document.getElementById("cName").value.trim();
+            var rolKey = document.getElementById("cRole").value;
+            var msg = document.getElementById("cMsg").value.trim();
+            var text = "Merhaba, ben " + ad + " (" + t("role." + rolKey) + ").\n" + msg;
+            window.open(KB.waLink(text), "_blank", "noopener");
+        });
+    })();
+    </script>
+</body>
+</html>

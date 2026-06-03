@@ -34,7 +34,7 @@
     { href: "isletmeler.html", key: "nav.businesses" },
     { href: "firmalar.html", key: "nav.firms" },
     { href: "harita.html", key: "nav.map" },
-    { href: "index.html#iletisim", key: "nav.contact" }
+    { href: "iletisim.html", key: "nav.contact" }
   ];
 
   // Sosyal medya hesaplari — adres girilince footer'da otomatik gorunur (bos = gizli)
@@ -83,10 +83,6 @@
 
     var panelLabel = role === "ziyaretci" ? T("cta.signin") : T("cta.panel");
     var otherLang = window.KBI18N ? window.KBI18N.other().toUpperCase() : "EN";
-    var theme = getTheme();
-    var themeOptions = THEME_KEYS.map(function (k) {
-      return '<option value="' + k + '"' + (k === theme ? " selected" : "") + '>' + T("theme." + k) + '</option>';
-    }).join("");
 
     host.innerHTML =
       '<div class="demo-banner">' + T("demo.banner") + '</div>' +
@@ -101,10 +97,6 @@
           '</button>' +
           '<nav class="nav" id="anaMenu" aria-label="Ana menü">' +
             navLinks +
-            '<span class="theme-switch">' +
-              '<span class="role-switch__label">🎨</span>' +
-              '<select id="themeSelect" aria-label="' + T("theme.label") + '">' + themeOptions + '</select>' +
-            '</span>' +
             '<button id="langToggle" class="lang-toggle" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
             '<span id="authArea" class="auth-area"></span>' +
           '</nav>' +
@@ -122,9 +114,6 @@
     }
     var langToggle = document.getElementById("langToggle");
     if (langToggle && window.KBI18N) langToggle.addEventListener("click", function () { window.KBI18N.setLang(window.KBI18N.other()); });
-
-    var themeSelect = document.getElementById("themeSelect");
-    if (themeSelect) themeSelect.addEventListener("change", function () { setTheme(themeSelect.value); });
   }
 
   /* ---------- Footer ---------- */
