@@ -44,7 +44,12 @@
 
       "btn.viewProfile": "Profili Gör", "btn.offer": "Teklif", "btn.sendOffer": "Teklif Gönder",
       "common.all": "Tümü", "common.results": "{n} sonuç gösteriliyor",
-      "common.noResult": "Sonuç bulunamadı. Filtreleri değiştir.", "common.back": "Geri",
+      "common.noResult": "Sonuç bulunamadı. Filtreleri değiştir.", "common.back": "Geri", "common.loading": "Yükleniyor…",
+      "acc.title": "Hesap", "acc.changePass": "Şifre Değiştir", "acc.newPass": "Yeni şifre (en az 6 karakter)",
+      "acc.changePassBtn": "Şifreyi Güncelle", "acc.passChanged": "✓ Şifren güncellendi.",
+      "acc.danger": "Tehlikeli alan", "acc.deleteData": "Profil verilerimi sil",
+      "acc.deleteDesc": "Profilin, iletişim bilgilerin, tekliflerin ve havuzun kalıcı olarak silinir.",
+      "acc.deleteConfirm": "Profil verilerin kalıcı olarak silinecek. Emin misin?", "acc.deleted": "Verilerin silindi.",
 
       "hero.badge": "🛵 Kurye Ekosisteminin Buluşma Noktası",
       "hero.title": "Kuryemi <span class=\"accent\">Bul</span>",
@@ -237,7 +242,12 @@
 
       "btn.viewProfile": "View Profile", "btn.offer": "Offer", "btn.sendOffer": "Send Offer",
       "common.all": "All", "common.results": "Showing {n} results",
-      "common.noResult": "No results found. Try changing the filters.", "common.back": "Back",
+      "common.noResult": "No results found. Try changing the filters.", "common.back": "Back", "common.loading": "Loading…",
+      "acc.title": "Account", "acc.changePass": "Change Password", "acc.newPass": "New password (min 6 chars)",
+      "acc.changePassBtn": "Update Password", "acc.passChanged": "✓ Your password has been updated.",
+      "acc.danger": "Danger zone", "acc.deleteData": "Delete my profile data",
+      "acc.deleteDesc": "Your profile, contact info, offers and pool will be permanently deleted.",
+      "acc.deleteConfirm": "Your profile data will be permanently deleted. Are you sure?", "acc.deleted": "Your data has been deleted.",
 
       "hero.badge": "🛵 The Meeting Point of the Courier Ecosystem",
       "hero.title": "Kuryemi <span class=\"accent\">Bul</span>",

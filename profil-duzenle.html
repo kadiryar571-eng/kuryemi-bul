@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="pe.title">Profilim · Kuryemi Bul</title>
     <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/logo.png">
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
@@ -21,6 +21,19 @@
                 <form id="peForm"><p class="pcard__sub">…</p></form>
                 <p class="form-success" id="peMsg" hidden></p>
                 <p class="mt-24" id="peView" hidden><a class="btn btn--light btn--sm" id="peViewLink" href="#" data-i18n="pe.viewPublic">Herkese açık profilimi gör →</a></p>
+            </div>
+
+            <div class="form-card mt-24" id="accCard" hidden>
+                <h3 style="margin-bottom:16px" data-i18n="acc.title">Hesap</h3>
+                <div class="field"><label for="accPass" data-i18n="acc.changePass">Şifre Değiştir</label>
+                    <input type="password" id="accPass" minlength="6" data-i18n-ph="acc.newPass" placeholder="Yeni şifre (en az 6 karakter)"></div>
+                <button type="button" id="accPassBtn" class="btn btn--light btn--sm mt-24" data-i18n="acc.changePassBtn">Şifreyi Güncelle</button>
+                <p class="form-success" id="accMsg" hidden></p>
+
+                <hr style="border:none;border-top:1px solid var(--line);margin:26px 0">
+                <h4 style="color:var(--danger);margin-bottom:6px" data-i18n="acc.danger">Tehlikeli alan</h4>
+                <p class="pcard__sub" data-i18n="acc.deleteDesc">Profilin, iletişim bilgilerin, tekliflerin ve havuzun kalıcı olarak silinir.</p>
+                <button type="button" id="accDelBtn" class="btn btn--ghost btn--sm mt-24" data-i18n="acc.deleteData">Profil verilerimi sil</button>
             </div>
         </div>
     </main>
@@ -71,6 +84,28 @@
             if (window.KB && KB.ready) await KB.ready();
             if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli (demo modu).</p>'; return; }
             if (!KB.isAuthed()) { form.innerHTML = '<p class="empty">' + t("pe.loginRequired") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>'; return; }
+
+            // Hesap kartı (şifre değiştir + verilerimi sil)
+            var accCard = document.getElementById("accCard");
+            if (accCard) {
+                accCard.hidden = false;
+                var accMsg = document.getElementById("accMsg");
+                document.getElementById("accPassBtn").addEventListener("click", async function () {
+                    var np = document.getElementById("accPass").value;
+                    if (np.length < 6) { accMsg.hidden = false; accMsg.style.color = "#c0392b"; accMsg.textContent = t("sr.short"); return; }
+                    try {
+                        var r = await SB.changePassword(np);
+                        if (r && r.error) throw r.error;
+                        accMsg.hidden = false; accMsg.style.color = ""; accMsg.textContent = t("acc.passChanged");
+                        document.getElementById("accPass").value = "";
+                    } catch (e) { accMsg.hidden = false; accMsg.style.color = "#c0392b"; accMsg.textContent = e.message || t("auth.errGeneric"); }
+                });
+                document.getElementById("accDelBtn").addEventListener("click", async function () {
+                    if (!confirm(t("acc.deleteConfirm"))) return;
+                    try { await SB.deleteMyData(); alert(t("acc.deleted")); location.href = "index.html"; }
+                    catch (e) { alert(e.message || t("auth.errGeneric")); }
+                });
+            }
 
             var p = (KB.session() && KB.session().profile) || await SB.myProfile();
             var role = p.role;

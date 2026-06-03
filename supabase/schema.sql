@@ -35,6 +35,7 @@ create table if not exists public.profiles (
   -- firma alanları
   kapasite    int default 0,
   hizmetler   text[] default '{}',
+  yayinda     boolean not null default false,  -- profil tamamlanınca true; havuzda görünürlük
   created_at  timestamptz default now()
 );
 create index if not exists profiles_role_idx on public.profiles(role);
@@ -208,6 +209,9 @@ values
   ('firma','Hız Kurye Lojistik', ARRAY['İstanbul Anadolu','İstanbul Avrupa'], 60,4.80,'150+ kuryelik filosuyla kurumsal teslimat çözümleri.', ARRAY['Aynı gün teslimat','Kurumsal anlaşma','Soğuk zincir'], 41.0082,28.9784),
   ('firma','Anadolu Express', ARRAY['Ankara','Eskişehir'], 35,4.50,'İç Anadolu bölgesinde hızlı dağıtım ağı.', ARRAY['Şehirler arası','Kurumsal anlaşma'], 39.9334,32.8597),
   ('firma','Ege Moto Kurye', ARRAY['İzmir','Manisa'], 28,4.70,'Ege bölgesinde motokurye ağı.', ARRAY['Aynı gün teslimat','Yoğun bölge desteği'], 38.4237,27.1428);
+
+-- Seed kayıtlar havuzda görünsün
+update public.profiles set yayinda = true where user_id is null;
 
 -- ---------- 6) POOL_MEMBERS ("Havuzum" — kayıtlı profiller) ----------
 create table if not exists public.pool_members (

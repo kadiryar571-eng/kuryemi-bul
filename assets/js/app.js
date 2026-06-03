@@ -188,6 +188,7 @@
     var sel1 = document.getElementById("fSelect1");
     var sel2 = document.getElementById("fSelect2");
     if (!grid) return;
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.loading") + '</div>';
 
     var src = await loadPool(type);
     await loadPoolSet();
@@ -475,6 +476,13 @@
     document.querySelectorAll(".dash__nav button").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-tab") === key); });
   }
   async function initPanel(role) {
+    if (window.KB && KB.ready) await KB.ready();
+    // Rol koruması: online'da giriş yoksa girişe, farklı roldeyse kendi paneline yönlendir
+    if (online()) {
+      if (!KB.isAuthed()) { location.href = "giris.html"; return; }
+      var myRole = KB.currentRole();
+      if (myRole && myRole !== role) { location.href = KB.roleToPanel(myRole); return; }
+    }
     var nav = document.querySelector(".dash__nav");
     if (!nav) return;
     nav.addEventListener("click", function (e) {

@@ -275,6 +275,15 @@
     if (isOnline()) { area.innerHTML = '<span class="user-chip">…</span>'; await READY; }
     area.innerHTML = buildAuthArea();
     wireAuthArea();
+    // Bildirim rozeti: bekleyen gelen teklif sayısı
+    if (isOnline() && SESSION.user && window.SB && SB.pendingOffersCount) {
+      SB.pendingOffersCount().then(function (n) {
+        if (n > 0) {
+          var cta = area.querySelector(".nav__cta");
+          if (cta) cta.insertAdjacentHTML("beforeend", ' <span class="badge-count">' + n + '</span>');
+        }
+      }).catch(function () {});
+    }
   }
 
   function init() {

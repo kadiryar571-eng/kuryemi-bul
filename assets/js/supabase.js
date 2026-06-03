@@ -86,6 +86,7 @@
     var telefon = fields.telefon;
     delete fields.telefon;
     delete fields.email;
+    fields.yayinda = true; // profil kaydedildi -> havuzda görünür
     var r = await client.from("profiles").update(fields).eq("user_id", u.id).select().maybeSingle();
     if (r.error) throw r.error;
     if (telefon !== undefined) {
@@ -109,7 +110,7 @@
 
   /* ---------- HAVUZ / PROFİL ---------- */
   async function pool(role) {
-    var r = await client.from("profiles").select("*").eq("role", role).order("puan", { ascending: false });
+    var r = await client.from("profiles").select("*").eq("role", role).eq("yayinda", true).order("puan", { ascending: false });
     if (r.error) throw r.error;
     return (r.data || []).map(fromDb);
   }
@@ -185,6 +186,31 @@
   async function updateOffer(id, durum) {
     return client.from("offers").update({ durum: durum }).eq("id", id);
   }
+  // Bana gelen, bekleyen teklif sayısı (bildirim rozeti için)
+  async function pendingOffersCount() {
+    var u = await getUser();
+    if (!u) return 0;
+    var me = await client.from("profiles").select("id").eq("user_id", u.id).maybeSingle();
+    if (!me.data) return 0;
+    var r = await client.from("offers").select("id", { count: "exact", head: true })
+      .eq("to_user", me.data.id).eq("durum", "pending");
+    return r.count || 0;
+  }
+
+  /* ---------- HESAP ---------- */
+  async function changePassword(newPass) {
+    return client.auth.updateUser({ password: newPass });
+  }
+  // Profil verilerini sil (profil + iletişim + teklifler + havuz kayıtları). Sonra çıkış.
+  async function deleteMyData() {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    await client.from("pool_members").delete().eq("owner_user", u.id);
+    var r = await client.from("profiles").delete().eq("user_id", u.id); // contacts/offers/pool member cascade
+    if (r.error) throw r.error;
+    await client.auth.signOut();
+    return true;
+  }
 
   window.SB = {
     isOn: isOn,
@@ -193,6 +219,7 @@
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById,
-    sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer
+    sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
+    changePassword: changePassword, deleteMyData: deleteMyData
   };
 })();
