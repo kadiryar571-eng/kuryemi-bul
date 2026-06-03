@@ -230,6 +230,13 @@ a { color: inherit; text-decoration: none; }
 .concept__quote { font-size: 1.15rem; font-style: italic; color: var(--navy); line-height: 1.7; }
 .concept__quote::before { content: "“"; font-size: 3rem; color: var(--accent); line-height: 0; vertical-align: -0.4em; margin-right: 6px; }
 .concept__by { margin-top: 18px; color: var(--muted); font-weight: 700; font-size: 0.9rem; }
+.concept__card-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 18px; }
+.concept__roles { list-style: none; display: grid; gap: 16px; }
+.concept__roles li { display: flex; align-items: flex-start; gap: 14px; }
+.concept__role-ic { flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.3rem; background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.20); }
+.concept__role-tx { display: flex; flex-direction: column; }
+.concept__role-tx b { font-size: 1rem; }
+.concept__role-d { color: var(--navy-soft); font-size: 0.9rem; }
 
 /* ===================== STEPS ===================== */
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
