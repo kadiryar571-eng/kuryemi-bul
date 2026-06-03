@@ -119,6 +119,40 @@
     return r.data ? fromDb(r.data) : null;
   }
 
+  /* ---------- HAVUZUM (kayıtlı profiller) ---------- */
+  async function poolIds() {
+    var u = await getUser();
+    if (!u) return [];
+    var r = await client.from("pool_members").select("member_id").eq("owner_user", u.id);
+    return (r.data || []).map(function (x) { return x.member_id; });
+  }
+  async function addToPool(memberId) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var r = await client.from("pool_members").insert({ owner_user: u.id, member_id: memberId });
+    if (r.error && r.error.code !== "23505") throw r.error; // 23505 = zaten ekli
+    return true;
+  }
+  async function removeFromPool(memberId) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var r = await client.from("pool_members").delete().eq("owner_user", u.id).eq("member_id", memberId);
+    if (r.error) throw r.error;
+    return true;
+  }
+  async function myPool() {
+    var u = await getUser();
+    if (!u) return [];
+    var r = await client.from("pool_members")
+      .select("created_at, profiles:member_id(*)")
+      .eq("owner_user", u.id)
+      .order("created_at", { ascending: false });
+    if (r.error) { console.warn("myPool:", r.error); return []; }
+    return (r.data || []).filter(function (row) { return row.profiles; }).map(function (row) {
+      var p = fromDb(row.profiles); p._addedAt = (row.created_at || "").slice(0, 10); return p;
+    });
+  }
+
   /* ---------- TEKLİFLER ---------- */
   async function sendOffer(toUserId, toRole, fromRole, mesaj) {
     var me = await myProfile();
@@ -157,6 +191,7 @@
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
     resetPassword: resetPassword, updatePassword: updatePassword,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
+    poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer
   };

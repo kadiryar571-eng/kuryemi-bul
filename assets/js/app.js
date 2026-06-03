@@ -27,6 +27,52 @@
     return D.teklifler.concat(KB.getTeklifler());
   }
 
+  /* ============ HAVUZUM (kayıtlı profiller) ============ */
+  var POOL = {}; // member_id -> true
+  function canPool() { return online() && window.KB && KB.isAuthed && KB.isAuthed(); }
+  async function loadPoolSet() {
+    POOL = {};
+    if (canPool()) { try { (await SB.poolIds()).forEach(function (id) { POOL[id] = true; }); } catch (e) {} }
+  }
+  function poolStar(id) {
+    if (!canPool()) return "";
+    var on = !!POOL[id];
+    return '<button type="button" class="pool-star' + (on ? " is-on" : "") + '" data-pool="' + id + '" title="' + T(on ? "pool.added" : "pool.add") + '" aria-label="' + T(on ? "pool.added" : "pool.add") + '">' + (on ? "★" : "☆") + '</button>';
+  }
+  function poolBtnFull(id) {
+    if (!canPool()) return "";
+    var on = !!POOL[id];
+    return '<button type="button" class="btn ' + (on ? "btn--light" : "btn--ghost") + ' btn--block mt-24 pool-toggle' + (on ? " is-on" : "") + '" data-pool="' + id + '">' + (on ? "★ " + T("pool.added") : "☆ " + T("pool.add")) + '</button>';
+  }
+  document.addEventListener("click", async function (e) {
+    var b = e.target.closest("[data-pool]");
+    if (!b) return;
+    e.preventDefault();
+    var id = b.getAttribute("data-pool");
+    var on = !!POOL[id];
+    b.disabled = true;
+    try {
+      if (on) { await SB.removeFromPool(id); POOL[id] = false; }
+      else { await SB.addToPool(id); POOL[id] = true; }
+      var nowOn = !on;
+      document.querySelectorAll('[data-pool="' + id + '"]').forEach(function (x) {
+        x.classList.toggle("is-on", nowOn);
+        if (x.classList.contains("pool-star")) { x.textContent = nowOn ? "★" : "☆"; x.title = T(nowOn ? "pool.added" : "pool.add"); }
+        else if (x.classList.contains("pool-toggle")) {
+          x.textContent = nowOn ? "★ " + T("pool.added") : "☆ " + T("pool.add");
+          x.classList.toggle("btn--light", nowOn); x.classList.toggle("btn--ghost", !nowOn);
+        }
+      });
+      // Havuzum sayfasındaysak ve çıkardıysak kartı kaldır
+      if (!nowOn && document.getElementById("myPoolGrid")) {
+        var card = b.closest(".pcard"); if (card) card.remove();
+        var grid = document.getElementById("myPoolGrid");
+        if (grid && !grid.querySelector(".pcard")) grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pool.empty") + '</div>';
+      }
+    } catch (err) { alert(err.message || "Hata"); }
+    b.disabled = false;
+  });
+
   /* ============ TEKLİF MODALI ============ */
   function ensureModal() {
     if (document.getElementById("offerModal")) return;
@@ -101,7 +147,7 @@
 
   function kuryeCard(k) {
     var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
-    return '<article class="pcard">' +
+    return '<article class="pcard">' + poolStar(k.id) +
       '<div class="pcard__top"><div class="avatar">' + KB.initials(k.ad) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(k.ad) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
@@ -113,7 +159,7 @@
     '</article>';
   }
   function isletmeCard(i) {
-    return '<article class="pcard">' +
+    return '<article class="pcard">' + poolStar(i.id) +
       '<div class="pcard__top"><div class="avatar avatar--blue">' + KB.initials(i.ad) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(i.ad) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
@@ -124,7 +170,7 @@
     '</article>';
   }
   function firmaCard(f) {
-    return '<article class="pcard">' +
+    return '<article class="pcard">' + poolStar(f.id) +
       '<div class="pcard__top"><div class="avatar avatar--navy">' + KB.initials(f.ad) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(f.ad) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
@@ -144,6 +190,7 @@
     if (!grid) return;
 
     var src = await loadPool(type);
+    await loadPoolSet();
     var cardFn = type === "kurye" ? kuryeCard : type === "isletme" ? isletmeCard : firmaCard;
 
     function uniq(getter) {
@@ -198,6 +245,7 @@
     var id = KB.getParam("id");
     var x = await loadProfile(type, id);
     if (!x) { host.innerHTML = '<div class="empty">' + T("empty.generic") + '</div>'; return; }
+    await loadPoolSet();
 
     var avatarCls = type === "kurye" ? "" : type === "isletme" ? " avatar--blue" : " avatar--navy";
     var sideExtra = "", body = "";
@@ -244,9 +292,31 @@
           '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
           sideExtra +
           '<button class="btn btn--primary btn--block" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+          poolBtnFull(x.id) +
         '</aside>' +
         '<div class="profile__body">' + body + '</div>' +
       '</div>';
+  }
+
+  /* ============ HAVUZUM SAYFASI ============ */
+  async function renderMyPool() {
+    var grid = document.getElementById("myPoolGrid");
+    if (!grid) return;
+    var countEl = document.getElementById("myPoolCount");
+    if (window.KB && KB.ready) await KB.ready();
+    if (!(online() && KB.isAuthed && KB.isAuthed())) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pe.loginRequired") +
+        '<br><a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
+      if (countEl) countEl.textContent = "";
+      return;
+    }
+    await loadPoolSet();
+    var list = await SB.myPool();
+    if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
+    if (!list.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pool.empty") + '</div>'; return; }
+    grid.innerHTML = list.map(function (x) {
+      return x.role === "kurye" ? kuryeCard(x) : x.role === "isletme" ? isletmeCard(x) : firmaCard(x);
+    }).join("");
   }
 
   /* ============ HARİTA ============ */
@@ -464,6 +534,7 @@
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
-    initMap: initMap, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal
+    initMap: initMap, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
+    renderMyPool: renderMyPool
   };
 })();

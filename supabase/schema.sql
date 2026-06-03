@@ -209,4 +209,22 @@ values
   ('firma','Anadolu Express', ARRAY['Ankara','Eskişehir'], 35,4.50,'İç Anadolu bölgesinde hızlı dağıtım ağı.', ARRAY['Şehirler arası','Kurumsal anlaşma'], 39.9334,32.8597),
   ('firma','Ege Moto Kurye', ARRAY['İzmir','Manisa'], 28,4.70,'Ege bölgesinde motokurye ağı.', ARRAY['Aynı gün teslimat','Yoğun bölge desteği'], 38.4237,27.1428);
 
--- Bitti. Tablolar: public.profiles, public.offers
+-- ---------- 6) POOL_MEMBERS ("Havuzum" — kayıtlı profiller) ----------
+create table if not exists public.pool_members (
+  id          uuid primary key default gen_random_uuid(),
+  owner_user  uuid not null references auth.users(id) on delete cascade,
+  member_id   uuid not null references public.profiles(id) on delete cascade,
+  created_at  timestamptz default now(),
+  unique (owner_user, member_id)
+);
+create index if not exists pool_owner_idx on public.pool_members(owner_user);
+alter table public.pool_members enable row level security;
+
+drop policy if exists pool_select_own on public.pool_members;
+create policy pool_select_own on public.pool_members for select using (owner_user = auth.uid());
+drop policy if exists pool_insert_own on public.pool_members;
+create policy pool_insert_own on public.pool_members for insert with check (owner_user = auth.uid());
+drop policy if exists pool_delete_own on public.pool_members;
+create policy pool_delete_own on public.pool_members for delete using (owner_user = auth.uid());
+
+-- Bitti. Tablolar: public.profiles, public.offers, public.profile_contacts, public.pool_members

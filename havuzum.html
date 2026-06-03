@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title.havuzum">Havuzum · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container">
+            <h1 data-i18n="pool.title">Havuzum</h1>
+            <p data-i18n="pool.lead">Kaydettiğin kurye, işletme ve firmalar tek yerde.</p>
+        </div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <p class="result-count" id="myPoolCount"></p>
+            <div class="pool-grid" id="myPoolGrid"></div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.renderMyPool();</script>
+</body>
+</html>

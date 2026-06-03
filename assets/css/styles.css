@@ -287,6 +287,10 @@ a { color: inherit; text-decoration: none; }
     transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
 }
 .pcard:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: rgba(34,211,238,0.30); }
+.pool-star { position: absolute; top: 14px; right: 14px; z-index: 3; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 1.05rem; line-height: 1; cursor: pointer; transition: var(--transition); display: grid; place-items: center; }
+.pool-star:hover { border-color: var(--accent); color: var(--accent); }
+.pool-star.is-on { color: var(--gold); border-color: var(--gold); background: rgba(251,191,36,0.10); }
+.pool-toggle.is-on { color: var(--gold); border-color: var(--gold); }
 .pcard__top { display: flex; align-items: center; gap: 14px; }
 .avatar { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; color: var(--on-accent); background: var(--accent-grad); flex-shrink: 0; }
 .avatar--blue { background: linear-gradient(135deg, #3B82F6, #6366F1); color: #fff; }
@@ -539,6 +543,8 @@ a { color: inherit; text-decoration: none; }
 
 /* Oturum (auth) alanı */
 .auth-area { display: inline-flex; align-items: center; gap: 10px; }
+.auth-link { font-weight: 700; font-size: 0.9rem; color: var(--navy-soft); white-space: nowrap; transition: color var(--transition); }
+.auth-link:hover { color: var(--accent); }
 .user-chip { font-weight: 700; font-size: 0.85rem; color: var(--navy); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
 
 /* ===================== İLETİŞİM KARTLARI ===================== */

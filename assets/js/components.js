@@ -251,7 +251,8 @@
     if (SESSION.user) {
       var nm = (SESSION.profile && SESSION.profile.ad) || SESSION.user.email || "Hesabım";
       var ph = roleToPanel(SESSION.profile && SESSION.profile.role);
-      return '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
+      return '<a href="havuzum.html" class="auth-link">★ ' + T("nav.pool") + '</a>' +
+        '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
         '<a href="profil-duzenle.html" class="user-chip" title="' + esc(SESSION.user.email || "") + '">👤 ' + esc(nm) + '</a>' +
         '<button id="logoutBtn" type="button" class="lang-toggle">' + T("cta.signout") + '</button>';
     }

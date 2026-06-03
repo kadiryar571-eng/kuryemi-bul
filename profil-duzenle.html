@@ -57,6 +57,16 @@
         function csv(id) { return val(id).split(",").map(function (s) { return s.trim(); }).filter(Boolean); }
         function intv(id) { return parseInt(val(id), 10) || 0; }
 
+        // Şehir/bölge -> koordinat (OpenStreetMap Nominatim, ücretsiz)
+        async function geocode(q) {
+            try {
+                var r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=tr&accept-language=tr&q=" + encodeURIComponent(q));
+                var j = await r.json();
+                if (j && j[0]) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
+            } catch (e) {}
+            return null;
+        }
+
         async function start() {
             if (window.KB && KB.ready) await KB.ready();
             if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli (demo modu).</p>'; return; }
@@ -103,6 +113,15 @@
                     f.bolgeler = csv("pBolge"); f.kapasite = intv("pKapasite"); f.hizmetler = csv("pHizmet");
                 }
                 try {
+                    // Konum: şehir (+ ilk bölge) -> koordinat; haritada görünmek için
+                    if (f.sehir) {
+                        var q = ((f.bolgeler && f.bolgeler[0]) ? f.bolgeler[0] + ", " : "") + f.sehir + ", Türkiye";
+                        var loc = await geocode(q);
+                        if (loc) {
+                            f.lat = loc.lat + (Math.random() - 0.5) * 0.04; // küçük kayma: üst üste binmesin
+                            f.lng = loc.lng + (Math.random() - 0.5) * 0.04;
+                        }
+                    }
                     var saved = await SB.updateMyProfile(f);
                     msg.hidden = false; msg.textContent = t("pe.saved");
                     var pg = KB.roleToPanel(role).replace("panel-", "profil-");
