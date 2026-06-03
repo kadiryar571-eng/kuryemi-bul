@@ -8,7 +8,7 @@
 
   var DICT = {
     tr: {
-      "demo.banner": "🧪 Demo prototip — tüm veriler örnektir, gerçek değildir.",
+      "demo.banner": "🚀 Beta sürüm — yeni özellikler ekleniyor, geri bildirimin bizim için değerli.",
       "nav.home": "Ana Sayfa", "nav.couriers": "Kuryeler", "nav.businesses": "İşletmeler",
       "nav.firms": "Firmalar", "nav.map": "Harita", "nav.contact": "İletişim",
       "role.label": "Rol:", "role.ziyaretci": "Ziyaretçi", "role.kurye": "Kurye",
@@ -38,7 +38,7 @@
       "footer.discover": "Keşfet", "footer.couriersPool": "Kurye Havuzu",
       "footer.businessesPool": "İşletme Havuzu", "footer.firmsPool": "Firma Havuzu",
       "footer.map": "Harita", "footer.contact": "İletişim",
-      "footer.rights": "© Kuryemi Bul. Tüm hakları saklıdır. (Demo)",
+      "footer.rights": "© Kuryemi Bul. Tüm hakları saklıdır.",
 
       "level.standart": "Standart", "level.profesyonel": "Profesyonel", "level.premium": "Premium",
 
@@ -81,7 +81,7 @@
       "faq.q1": "KuryemiBul'a üyelik ücretli mi?", "faq.a1": "Kayıt ücretsizdir. Yalnızca tamamlanan işlerde şeffaf bir hizmet bedeli uygulanır.",
       "faq.q2": "Kurye seviyeleri nasıl belirlenir?", "faq.a2": "Deneyim, süreklilik, referanslar ve değerlendirmeler gibi objektif kriterlerle Standart, Profesyonel ve Premium seviyeleri oluşur.",
       "faq.q3": "Kurye firmaları nasıl katılır?", "faq.a3": "Firma profili oluşturup hizmet bölgelerini tanımlar, personel havuzunu yönetir ve işletmelere teklif gönderir.",
-      "faq.q4": "Bu bir demo mu?", "faq.a4": "Evet, şu an gördüğünüz Faz 1 prototipidir; tüm veriler örnektir. Gerçek altyapı sonraki fazda eklenecektir.",
+      "faq.q4": "Bu gerçek bir platform mu?", "faq.a4": "Evet. Beta aşamasındayız; kayıtlar ve profiller gerçektir. Yeni özellikler (bildirim, değerlendirme, ilan/ihale) eklenmeye devam ediyor.",
 
       "pool.kurye.title": "🛵 Kurye Havuzu", "pool.kurye.lead": "Bölge, şehir ve seviyeye göre kurye ara; profilini incele ve teklif gönder.", "pool.kurye.search": "İsim, şehir veya bölge ara…",
       "pool.isletme.title": "📦 İşletme Havuzu", "pool.isletme.lead": "Kurye ihtiyacı olan işletmeleri keşfet; türüne göre filtrele ve teklif gönder.", "pool.isletme.search": "İşletme, şehir veya tür ara…",
@@ -104,13 +104,13 @@
       "map.hint": "İşaretçiye tıklayıp profile gidebilirsin.", "map.viewProfile": "Profili Gör →",
 
       "modal.title": "Teklif Gönder", "modal.msgLabel": "Mesajın", "modal.msgPh": "Teklifini kısaca yaz...",
-      "modal.send": "Teklifi Gönder", "modal.success": "🎉 Teklif kaydedildi (demo). Panelinden takip edebilirsin.",
+      "modal.send": "Teklifi Gönder", "modal.success": "🎉 Teklif gönderildi! Panelinden takip edebilirsin.",
       "modal.guest": "Teklif göndermek için önce sağ üstten bir rol seç (Kurye / İşletme / Kurye Firması).",
       "modal.close": "Kapat",
 
-      "panel.kurye.title": "🛵 Kurye Paneli", "panel.kurye.lead": "Profilin, başvuruların ve gelen teklifler tek ekranda. (Demo)",
-      "panel.isletme.title": "📦 İşletme Paneli", "panel.isletme.lead": "İlanlarını yönet, havuzda kurye ara, başvuruları incele. (Demo)",
-      "panel.firma.title": "🏢 Kurye Firması Paneli", "panel.firma.lead": "Personel havuzu, işletmelere teklif ve kurumsal ihaleler. (Demo)",
+      "panel.kurye.title": "🛵 Kurye Paneli", "panel.kurye.lead": "Profilin, başvuruların ve gelen teklifler tek ekranda.",
+      "panel.isletme.title": "📦 İşletme Paneli", "panel.isletme.lead": "İlanlarını yönet, havuzda kurye ara, başvuruları incele.",
+      "panel.firma.title": "🏢 Kurye Firması Paneli", "panel.firma.lead": "Personel havuzu, işletmelere teklif ve kurumsal ihaleler.",
       "tab.summary": "📊 Özet", "tab.myApplications": "📨 Başvurularım", "tab.incomingOffers": "✉️ Gelen Teklifler",
       "tab.myProfile": "👤 Profilim", "tab.myListings": "📋 İlanlarım", "tab.searchPool": "🔎 Havuzda Ara",
       "tab.applications": "📨 Başvurular", "tab.personnelPool": "👥 Personel Havuzu",
@@ -136,8 +136,9 @@
       "empty.offers": "Henüz kayıt yok. Havuzdan teklif göndererek başlayabilirsin.", "empty.generic": "Kayıt yok.",
       "soon.tender.t": "Kurumsal İhale Sistemi — Yakında", "soon.tender.d": "Zincir restoranlar, market zincirleri ve e-ticaret şirketlerinin toplu kurye ihtiyaçları ihale olarak yayınlanacak; firmalar teklif verecek. Bu modül Faz 3'te aktifleşecek.",
       "soon.published": "Yayında",
+      "soon.feature": "🚧 Bu bölüm yakında: ilan & başvuru sistemi geliştiriliyor.",
 
-      "giris.title": "Platforma Katıl", "giris.lead": "Rolünü seç, panele anında giriş yap. (Demo — gerçek kayıt yapılmaz.)",
+      "giris.title": "Platforma Katıl", "giris.lead": "Rolünü seç, hesabını oluştur ya da giriş yap.",
       "giris.intro.kurye": "Kurye olarak devam etmek için bilgilerini gir.",
       "giris.intro.isletme": "İşletmen için kurye bulmak üzere bilgilerini gir.",
       "giris.intro.firma": "Kurye firman için platforma katıl.",
@@ -172,7 +173,7 @@
     },
 
     en: {
-      "demo.banner": "🧪 Demo prototype — all data is sample data, not real.",
+      "demo.banner": "🚀 Beta — new features are being added; your feedback matters to us.",
       "nav.home": "Home", "nav.couriers": "Couriers", "nav.businesses": "Businesses",
       "nav.firms": "Firms", "nav.map": "Map", "nav.contact": "Contact",
       "role.label": "Role:", "role.ziyaretci": "Guest", "role.kurye": "Courier",
@@ -202,7 +203,7 @@
       "footer.discover": "Discover", "footer.couriersPool": "Courier Pool",
       "footer.businessesPool": "Business Pool", "footer.firmsPool": "Firm Pool",
       "footer.map": "Map", "footer.contact": "Contact",
-      "footer.rights": "© Kuryemi Bul. All rights reserved. (Demo)",
+      "footer.rights": "© Kuryemi Bul. All rights reserved.",
 
       "level.standart": "Standard", "level.profesyonel": "Professional", "level.premium": "Premium",
 
@@ -245,7 +246,7 @@
       "faq.q1": "Is membership to KuryemiBul paid?", "faq.a1": "Registration is free. A transparent service fee applies only on completed jobs.",
       "faq.q2": "How are courier levels determined?", "faq.a2": "Standard, Professional and Premium levels are formed by objective criteria such as experience, continuity, references and ratings.",
       "faq.q3": "How do courier firms join?", "faq.a3": "They create a firm profile, define service areas, manage their personnel pool and send offers to businesses.",
-      "faq.q4": "Is this a demo?", "faq.a4": "Yes, what you see now is the Phase 1 prototype; all data is sample data. The real infrastructure will be added in the next phase.",
+      "faq.q4": "Is this a real platform?", "faq.a4": "Yes. We're in beta; registrations and profiles are real. New features (notifications, ratings, listings/tenders) keep being added.",
 
       "pool.kurye.title": "🛵 Courier Pool", "pool.kurye.lead": "Search couriers by region, city and level; review profiles and send offers.", "pool.kurye.search": "Search name, city or region…",
       "pool.isletme.title": "📦 Business Pool", "pool.isletme.lead": "Discover businesses that need couriers; filter by type and send offers.", "pool.isletme.search": "Search business, city or type…",
@@ -268,13 +269,13 @@
       "map.hint": "Click a marker to go to its profile.", "map.viewProfile": "View Profile →",
 
       "modal.title": "Send Offer", "modal.msgLabel": "Your message", "modal.msgPh": "Write your offer briefly...",
-      "modal.send": "Send Offer", "modal.success": "🎉 Offer saved (demo). You can track it from your panel.",
+      "modal.send": "Send Offer", "modal.success": "🎉 Offer sent! You can track it from your panel.",
       "modal.guest": "To send an offer, first pick a role from the top right (Courier / Business / Courier Firm).",
       "modal.close": "Close",
 
-      "panel.kurye.title": "🛵 Courier Panel", "panel.kurye.lead": "Your profile, applications and incoming offers in one screen. (Demo)",
-      "panel.isletme.title": "📦 Business Panel", "panel.isletme.lead": "Manage your listings, search the pool, review applications. (Demo)",
-      "panel.firma.title": "🏢 Courier Firm Panel", "panel.firma.lead": "Personnel pool, offers to businesses and corporate tenders. (Demo)",
+      "panel.kurye.title": "🛵 Courier Panel", "panel.kurye.lead": "Your profile, applications and incoming offers in one screen.",
+      "panel.isletme.title": "📦 Business Panel", "panel.isletme.lead": "Manage your listings, search the pool, review applications.",
+      "panel.firma.title": "🏢 Courier Firm Panel", "panel.firma.lead": "Personnel pool, offers to businesses and corporate tenders.",
       "tab.summary": "📊 Summary", "tab.myApplications": "📨 My Applications", "tab.incomingOffers": "✉️ Incoming Offers",
       "tab.myProfile": "👤 My Profile", "tab.myListings": "📋 My Listings", "tab.searchPool": "🔎 Search Pool",
       "tab.applications": "📨 Applications", "tab.personnelPool": "👥 Personnel Pool",
@@ -300,8 +301,9 @@
       "empty.offers": "No records yet. Start by sending an offer from the pool.", "empty.generic": "No records.",
       "soon.tender.t": "Corporate Tender System — Soon", "soon.tender.d": "Bulk courier needs of chain restaurants, market chains and e-commerce companies will be published as tenders; firms will bid. This module will go live in Phase 3.",
       "soon.published": "Published",
+      "soon.feature": "🚧 Coming soon: the listings & applications system is in development.",
 
-      "giris.title": "Join the Platform", "giris.lead": "Pick your role and sign into the panel instantly. (Demo — no real registration.)",
+      "giris.title": "Join the Platform", "giris.lead": "Pick your role, create an account or sign in.",
       "giris.intro.kurye": "Enter your details to continue as a courier.",
       "giris.intro.isletme": "Enter your details to find couriers for your business.",
       "giris.intro.firma": "Join the platform for your courier firm.",

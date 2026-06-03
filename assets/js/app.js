@@ -315,6 +315,7 @@
     if (!c || (!c.telefon && !c.email)) return "";
     return ' · 📞 ' + KB.esc(c.telefon || c.email);
   }
+  function soonInline() { return '<div class="empty">' + T("soon.feature") + '</div>'; }
   function renderOfferRows(rows) {
     if (!rows.length) return '<div class="empty">' + T("empty.offers") + '</div>';
     return rows.map(function (t) {
@@ -389,21 +390,24 @@
       var sv = prof ? T("level." + (prof.seviye || "standart")) : T("level.premium");
       var tm = prof ? (prof.tamamlanan || 0) : "1.240";
       setHTML("kuryeMetrics", metric(pu, T("m.score")) + metric(sv, T("m.level")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")));
-      setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
+      // İlan/başvuru sistemi henüz yok → online'da dürüstçe "yakında", offline demoda örnek
+      setHTML("kuryeBasvuru", online() ? soonInline() : D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');
       }).join(""));
       setHTML("kuryeTeklif", listFor("kurye"));
     } else if (role === "isletme") {
       var ai = prof ? (prof.acikIlan || 0) : "3";
-      setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("12", T("m.meetings")) + metric("4.7", T("m.satisfaction")));
-      setHTML("isletmeIlan", D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
+      // Görüşme/memnuniyet için gerçek veri yok → online'da "—"
+      setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric(online() ? "—" : "12", T("m.meetings")) + metric(online() ? "—" : "4.7", T("m.satisfaction")));
+      setHTML("isletmeIlan", online() ? soonInline() : D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), T("soon.published") + " · " + KB.esc(i.tarih), '<span class="chip">' + T("state.active") + '</span>');
       }).join(""));
       setHTML("isletmeBasvuru", listFor("isletme"));
     } else if (role === "firma") {
       var kp = prof ? (prof.kapasite || 0) : "60";
       var fpu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.8";
-      setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")) + metric("2", T("m.tenders")));
+      // İhale modülü Faz 3 → online'da "—"
+      setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")) + metric(online() ? "—" : "2", T("m.tenders")));
       var kuryeler = await loadPool("kurye");
       setHTML("firmaPersonel", kuryeler.slice(0, 5).map(function (k) {
         return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), KB.levelBadge(k.seviye));
