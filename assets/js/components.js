@@ -14,10 +14,10 @@
   var WA_NUMBER = "905455960360";          // 0545 596 0360
   var TEL_DISPLAY = "0545 596 0360";
   var EMAIL = "kadiryar571@gmail.com";
-  function waLink() {
-    var msg = lang() === "en"
+  function waLink(text) {
+    var msg = text || (lang() === "en"
       ? "Hello, I'd like to get information about KuryemiBul."
-      : "Merhaba, KuryemiBul hakkında bilgi almak istiyorum.";
+      : "Merhaba, KuryemiBul hakkında bilgi almak istiyorum.");
     return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(msg);
   }
 
@@ -33,8 +33,12 @@
     { href: "kuryeler.html", key: "nav.couriers" },
     { href: "isletmeler.html", key: "nav.businesses" },
     { href: "firmalar.html", key: "nav.firms" },
-    { href: "harita.html", key: "nav.map" }
+    { href: "harita.html", key: "nav.map" },
+    { href: "index.html#iletisim", key: "nav.contact" }
   ];
+
+  // Sosyal medya hesaplari — adres girilince footer'da otomatik gorunur (bos = gizli)
+  var SOCIAL = { instagram: "", x: "", linkedin: "" };
 
   /* ---------- localStorage durum ---------- */
   function getRole() { return localStorage.getItem("kb_rol") || "ziyaretci"; }
@@ -134,6 +138,10 @@
   function renderFooter() {
     var host = document.getElementById("app-footer");
     if (!host) return;
+    var socials = '<a href="' + waLink() + '" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>';
+    if (SOCIAL.instagram) socials += '<a href="' + SOCIAL.instagram + '" target="_blank" rel="noopener" aria-label="Instagram">📷</a>';
+    if (SOCIAL.x) socials += '<a href="' + SOCIAL.x + '" target="_blank" rel="noopener" aria-label="X">🐦</a>';
+    if (SOCIAL.linkedin) socials += '<a href="' + SOCIAL.linkedin + '" target="_blank" rel="noopener" aria-label="LinkedIn">💼</a>';
     host.innerHTML =
       '<footer class="footer">' +
         '<div class="container footer__inner">' +
@@ -155,12 +163,7 @@
             '<h4>' + T("footer.contact") + '</h4>' +
             '<p><a href="mailto:' + EMAIL + '">' + EMAIL + '</a></p>' +
             '<p><a href="tel:+' + WA_NUMBER + '">' + TEL_DISPLAY + '</a></p>' +
-            '<div class="socials" aria-label="Sosyal medya">' +
-              '<a href="' + waLink() + '" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>' +
-              '<a href="#" aria-label="Instagram">📷</a>' +
-              '<a href="#" aria-label="X">🐦</a>' +
-              '<a href="#" aria-label="LinkedIn">💼</a>' +
-            '</div>' +
+            '<div class="socials" aria-label="Sosyal medya">' + socials + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="footer__bottom"><p>' + new Date().getFullYear() + ' ' + T("footer.rights") + '</p></div>' +
@@ -204,11 +207,26 @@
     });
   }
 
+  /* ---------- Yukarı çık butonu ---------- */
+  function renderToTop() {
+    if (document.getElementById("toTop")) return;
+    var b = document.createElement("button");
+    b.id = "toTop"; b.className = "to-top"; b.type = "button";
+    b.setAttribute("aria-label", T("backtop.aria"));
+    b.innerHTML = "↑";
+    b.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    document.body.appendChild(b);
+    function onScroll() { b.classList.toggle("is-visible", window.scrollY > 400); }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
   function init() {
     var active = (location.pathname.split("/").pop() || "index.html");
     renderHeader(active);
     renderFooter();
     renderWhatsApp();
+    renderToTop();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
@@ -218,6 +236,7 @@
     getRole: getRole, setRole: setRole,
     getTeklifler: getTeklifler, addTeklif: addTeklif,
     panelHref: panelHref,
+    waLink: waLink, waNumber: WA_NUMBER, email: EMAIL, telDisplay: TEL_DISPLAY,
     levelBadge: levelBadge, stars: stars,
     getParam: getParam, findById: findById, initials: initials, esc: esc
   };

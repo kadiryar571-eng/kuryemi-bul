@@ -495,3 +495,34 @@ a { color: inherit; text-decoration: none; }
     background: var(--white); cursor: pointer;
 }
 .theme-switch select:focus { outline: none; border-color: var(--orange); }
+
+/* ===================== İLETİŞİM KARTLARI ===================== */
+.contact-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 22px; }
+.contact-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--white); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px; transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+.contact-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--orange); }
+.contact-card__ic { font-size: 1.6rem; }
+.contact-card b { font-size: 0.95rem; }
+.contact-card__v { color: var(--muted); font-size: 0.88rem; word-break: break-all; }
+@media (max-width: 700px) { .contact-cards { grid-template-columns: 1fr; } }
+
+/* ===================== YUKARI ÇIK BUTONU ===================== */
+.to-top {
+    position: fixed; left: 22px; bottom: 22px; z-index: 89;
+    width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--navy); color: #fff; font-size: 1.2rem; line-height: 1;
+    box-shadow: var(--shadow); opacity: 0; transform: translateY(12px); pointer-events: none;
+    transition: opacity var(--transition), transform var(--transition), background var(--transition);
+}
+.to-top.is-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.to-top:hover { background: var(--orange); }
+@media (max-width: 560px) { .to-top { left: 16px; bottom: 80px; width: 42px; height: 42px; } }
+
+/* ===================== 404 ===================== */
+.nf { min-height: 60vh; display: grid; place-items: center; text-align: center; padding: 60px 20px; }
+.nf__code { font-size: clamp(4rem, 18vw, 9rem); font-weight: 900; line-height: 1; color: var(--orange); letter-spacing: -2px; }
+.nf h1 { font-size: 1.6rem; margin: 8px 0 10px; }
+.nf p { color: var(--muted); max-width: 420px; margin: 0 auto 24px; }
