@@ -25,8 +25,8 @@
   var ROLES = { ziyaretci: "Ziyaretçi", kurye: "Kurye", isletme: "İşletme", firma: "Kurye Firması" };
   var THEME_KEYS = ["turuncu", "mavi", "mor", "yesil", "pembe"];
 
-  function getTheme() { return localStorage.getItem("kb_theme") || "turuncu"; }
-  function setTheme(tk) { localStorage.setItem("kb_theme", tk); document.documentElement.setAttribute("data-theme", tk); }
+  function getTheme() { return localStorage.getItem("kb_theme") === "light" ? "light" : "dark"; }
+  function setTheme(tk) { tk = (tk === "light" ? "light" : "dark"); localStorage.setItem("kb_theme", tk); document.documentElement.setAttribute("data-theme", tk); }
 
   var NAV = [
     { href: "index.html", key: "nav.home" },
@@ -89,7 +89,7 @@
       '<header class="header">' +
         '<div class="container header__inner">' +
           '<a href="index.html" class="logo" aria-label="Kuryemi Bul">' +
-            '<span class="logo__icon" aria-hidden="true">🛵</span>' +
+            '<img class="logo__img" src="assets/logo.png" alt="Kuryemi Bul">' +
             '<span class="logo__text">Kuryemi&nbsp;Bul</span>' +
           '</a>' +
           '<button class="nav-toggle" id="navToggle" aria-label="Menü" aria-expanded="false" aria-controls="anaMenu">' +
@@ -97,6 +97,7 @@
           '</button>' +
           '<nav class="nav" id="anaMenu" aria-label="Ana menü">' +
             navLinks +
+            '<button id="themeToggle" class="theme-toggle" aria-label="' + T("theme.toggle") + '" title="' + T("theme.toggle") + '">' + (getTheme() === "light" ? "🌙" : "☀️") + '</button>' +
             '<button id="langToggle" class="lang-toggle" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
             '<span id="authArea" class="auth-area"></span>' +
           '</nav>' +
@@ -114,6 +115,13 @@
     }
     var langToggle = document.getElementById("langToggle");
     if (langToggle && window.KBI18N) langToggle.addEventListener("click", function () { window.KBI18N.setLang(window.KBI18N.other()); });
+
+    var themeToggle = document.getElementById("themeToggle");
+    if (themeToggle) themeToggle.addEventListener("click", function () {
+      var next = getTheme() === "light" ? "dark" : "light";
+      setTheme(next);
+      themeToggle.textContent = next === "light" ? "🌙" : "☀️";
+    });
   }
 
   /* ---------- Footer ---------- */
@@ -129,7 +137,7 @@
         '<div class="container footer__inner">' +
           '<div class="footer__brand">' +
             '<a href="index.html" class="logo logo--light">' +
-              '<span class="logo__icon" aria-hidden="true">🛵</span>' +
+              '<img class="logo__img" src="assets/logo.png" alt="Kuryemi Bul">' +
               '<span class="logo__text">Kuryemi&nbsp;Bul</span>' +
             '</a>' +
             '<p>' + T("footer.tagline") + '</p>' +
@@ -275,6 +283,14 @@
     renderWhatsApp();
     renderToTop();
     updateAuthArea();
+    // Logo görseli yoksa (assets/logo.png eklenmediyse) 🛵 emojiye düş
+    document.querySelectorAll(".logo__img").forEach(function (im) {
+      im.addEventListener("error", function () {
+        var s = document.createElement("span");
+        s.className = "logo__icon"; s.setAttribute("aria-hidden", "true"); s.textContent = "🛵";
+        if (im.parentNode) im.parentNode.replaceChild(s, im);
+      });
+    });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

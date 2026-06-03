@@ -16,8 +16,7 @@
       "cta.signin": "Giriş Yap", "cta.panel": "Panelim", "cta.signout": "Çıkış",
       "wa.tooltip": "WhatsApp'tan yaz",
       "lang.aria": "Dili değiştir",
-      "theme.label": "Tema:", "theme.turuncu": "Turuncu", "theme.mavi": "Mavi",
-      "theme.mor": "Mor", "theme.yesil": "Yeşil", "theme.pembe": "Pembe",
+      "theme.label": "Tema:", "theme.toggle": "Açık / koyu tema",
       "title.index": "Kuryemi Bul · Kurye Ekosisteminin Buluşma Noktası",
       "title.kuryeler": "Kurye Havuzu · Kuryemi Bul", "title.isletmeler": "İşletme Havuzu · Kuryemi Bul",
       "title.firmalar": "Kurye Firması Havuzu · Kuryemi Bul", "title.harita": "Harita · Kuryemi Bul",
@@ -204,8 +203,7 @@
       "cta.signin": "Sign In", "cta.panel": "My Panel", "cta.signout": "Sign out",
       "wa.tooltip": "Chat on WhatsApp",
       "lang.aria": "Change language",
-      "theme.label": "Theme:", "theme.turuncu": "Orange", "theme.mavi": "Blue",
-      "theme.mor": "Purple", "theme.yesil": "Green", "theme.pembe": "Pink",
+      "theme.label": "Theme:", "theme.toggle": "Light / dark theme",
       "title.index": "Kuryemi Bul · The Meeting Point of the Courier Ecosystem",
       "title.kuryeler": "Courier Pool · Kuryemi Bul", "title.isletmeler": "Business Pool · Kuryemi Bul",
       "title.firmalar": "Courier Firm Pool · Kuryemi Bul", "title.harita": "Map · Kuryemi Bul",
@@ -388,7 +386,7 @@
   if (!DICT[lang]) lang = "tr";
 
   // Arka plan renk temasını olabildiğince erken uygula (parlama olmasın)
-  document.documentElement.setAttribute("data-theme", localStorage.getItem("kb_theme") || "turuncu");
+  document.documentElement.setAttribute("data-theme", localStorage.getItem("kb_theme") === "light" ? "light" : "dark");
 
   function t(key, vars) {
     var s = (DICT[lang] && DICT[lang][key]);
