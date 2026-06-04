@@ -50,6 +50,10 @@
       "acc.danger": "Tehlikeli alan", "acc.deleteData": "Profil verilerimi sil",
       "acc.deleteDesc": "Profilin, iletişim bilgilerin, tekliflerin ve havuzun kalıcı olarak silinir.",
       "acc.deleteConfirm": "Profil verilerin kalıcı olarak silinecek. Emin misin?", "acc.deleted": "Verilerin silindi.",
+      "rev.title": "Değerlendirmeler", "rev.yourRating": "Bu profili değerlendir",
+      "rev.commentPh": "Deneyimini birkaç kelimeyle yaz (isteğe bağlı)",
+      "rev.submit": "Değerlendir", "rev.update": "Güncelle", "rev.saved": "✓ Değerlendirmen kaydedildi.",
+      "rev.none": "Henüz değerlendirme yok.", "rev.pickStar": "Lütfen yıldız seç.",
 
       "hero.badge": "🛵 Kurye Ekosisteminin Buluşma Noktası",
       "hero.title": "Kuryemi <span class=\"accent\">Bul</span>",
@@ -248,6 +252,10 @@
       "acc.danger": "Danger zone", "acc.deleteData": "Delete my profile data",
       "acc.deleteDesc": "Your profile, contact info, offers and pool will be permanently deleted.",
       "acc.deleteConfirm": "Your profile data will be permanently deleted. Are you sure?", "acc.deleted": "Your data has been deleted.",
+      "rev.title": "Reviews", "rev.yourRating": "Rate this profile",
+      "rev.commentPh": "Describe your experience in a few words (optional)",
+      "rev.submit": "Submit Review", "rev.update": "Update", "rev.saved": "✓ Your review has been saved.",
+      "rev.none": "No reviews yet.", "rev.pickStar": "Please pick a star rating.",
 
       "hero.badge": "🛵 The Meeting Point of the Courier Ecosystem",
       "hero.title": "Kuryemi <span class=\"accent\">Bul</span>",

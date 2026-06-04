@@ -28,7 +28,7 @@
       ad: p.ad, sehir: p.sehir, telefon: p.telefon || "", email: p.email || "", aciklama: p.aciklama,
       lat: p.lat, lng: p.lng,
       arac: p.arac, bolgeler: p.bolgeler || [], deneyim: p.deneyim || 0,
-      seviye: p.seviye || "standart", puan: Number(p.puan) || 0, tamamlanan: p.tamamlanan || 0,
+      seviye: p.seviye || "standart", puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0, tamamlanan: p.tamamlanan || 0,
       sertifikalar: p.sertifikalar || [], calistigi: p.calistigi || [], referanslar: [],
       bolge: (p.bolgeler && p.bolgeler[0]) || "", tur: p.tur, acikIlan: p.acik_ilan || 0, ihtiyac: p.ihtiyac,
       kapasite: p.kapasite || 0, hizmetler: p.hizmetler || []
@@ -212,6 +212,43 @@
     return true;
   }
 
+  /* ---------- DEĞERLENDİRME ---------- */
+  // Bu hedefi değerlendirebilir miyim? (kabul edilmiş ortak teklif var mı, ben değilim)
+  async function canReview(targetId) {
+    var me = await myProfile();
+    if (!me || !me.id || me.id === targetId) return false;
+    var r = await client.from("offers").select("id").eq("durum", "accepted")
+      .or("from_user.eq." + targetId + ",to_user.eq." + targetId).limit(1);
+    return !!(r.data && r.data.length);
+  }
+  async function myReviewFor(targetId) {
+    var u = await getUser();
+    if (!u) return null;
+    var r = await client.from("reviews").select("puan,yorum").eq("reviewer_user", u.id).eq("target_id", targetId).maybeSingle();
+    return r.data || null;
+  }
+  async function addReview(targetId, puan, yorum) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var me = await myProfile();
+    if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var r = await client.from("reviews").upsert(
+      { reviewer_user: u.id, reviewer_profile: me.id, target_id: targetId, puan: puan, yorum: yorum || "" },
+      { onConflict: "reviewer_user,target_id" }
+    ).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  async function reviewsFor(targetId) {
+    var r = await client.from("reviews")
+      .select("puan,yorum,created_at, reviewer:reviewer_profile(ad,role)")
+      .eq("target_id", targetId).order("created_at", { ascending: false });
+    if (r.error) { console.warn("reviewsFor:", r.error); return []; }
+    return (r.data || []).map(function (x) {
+      return { puan: x.puan, yorum: x.yorum, tarih: (x.created_at || "").slice(0, 10), ad: (x.reviewer && x.reviewer.ad) || "Kullanıcı", rol: x.reviewer && x.reviewer.role };
+    });
+  }
+
   window.SB = {
     isOn: isOn,
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
@@ -220,6 +257,7 @@
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
-    changePassword: changePassword, deleteMyData: deleteMyData
+    changePassword: changePassword, deleteMyData: deleteMyData,
+    canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor
   };
 })();

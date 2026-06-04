@@ -240,6 +240,57 @@
   function box(title, inner) { return '<div class="panel-box"><h3>' + title + '</h3>' + inner + '</div>'; }
   function chips(arr) { return '<div class="taglist">' + arr.map(function (s) { return '<span class="chip">' + KB.esc(s) + '</span>'; }).join("") + '</div>'; }
 
+  /* ---------- DEĞERLENDİRME (profil) ---------- */
+  function starPicker(val) {
+    var s = "";
+    for (var i = 1; i <= 5; i++) s += '<button type="button" class="rev-star' + (i <= val ? " on" : "") + '" data-star="' + i + '" aria-label="' + i + '">★</button>';
+    return '<div class="rev-picker" data-val="' + (val || 0) + '">' + s + '</div>';
+  }
+  function reviewsBox(targetId, reviews, canRev, myRev) {
+    var inner = "";
+    if (canRev) {
+      inner += '<div class="rev-form" data-target="' + targetId + '">' +
+        '<p class="pcard__sub">' + T("rev.yourRating") + '</p>' +
+        starPicker(myRev ? myRev.puan : 0) +
+        '<textarea class="rev-text" rows="2" placeholder="' + T("rev.commentPh") + '">' + (myRev ? KB.esc(myRev.yorum) : "") + '</textarea>' +
+        '<button type="button" class="btn btn--primary btn--sm rev-submit">' + T(myRev ? "rev.update" : "rev.submit") + '</button>' +
+        '<p class="form-success rev-msg" hidden></p>' +
+        '</div>';
+    }
+    if (reviews.length) {
+      inner += '<ul class="rev-list">' + reviews.map(function (r) {
+        return '<li><div class="rev-head"><b>' + KB.esc(r.ad) + '</b>' + KB.stars(r.puan) + '<span class="rev-date">' + KB.esc(r.tarih) + '</span></div>' +
+          (r.yorum ? '<p>' + KB.esc(r.yorum) + '</p>' : '') + '</li>';
+      }).join("") + '</ul>';
+    } else if (!canRev) {
+      inner += '<p class="pcard__sub">' + T("rev.none") + '</p>';
+    }
+    return box(T("rev.title") + ' (' + reviews.length + ')', inner);
+  }
+  document.addEventListener("click", function (e) {
+    var st = e.target.closest(".rev-star");
+    if (st) {
+      var picker = st.closest(".rev-picker");
+      var v = parseInt(st.getAttribute("data-star"), 10);
+      picker.setAttribute("data-val", v);
+      [].forEach.call(picker.querySelectorAll(".rev-star"), function (b, i) { b.classList.toggle("on", (i + 1) <= v); });
+      return;
+    }
+    var sub = e.target.closest(".rev-submit");
+    if (!sub) return;
+    var form = sub.closest(".rev-form");
+    var targetId = form.getAttribute("data-target");
+    var val = parseInt(form.querySelector(".rev-picker").getAttribute("data-val"), 10) || 0;
+    var yorum = form.querySelector(".rev-text").value.trim();
+    var msg = form.querySelector(".rev-msg");
+    if (val < 1) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = T("rev.pickStar"); return; }
+    sub.disabled = true;
+    SB.addReview(targetId, val, yorum).then(function () {
+      msg.hidden = false; msg.style.color = ""; msg.textContent = T("rev.saved");
+      setTimeout(function () { location.reload(); }, 900);
+    }).catch(function (err) { sub.disabled = false; msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = (err && err.message) || "Hata"; });
+  });
+
   async function renderProfile(type) {
     var host = document.getElementById("profileRoot");
     if (!host) return;
@@ -283,6 +334,19 @@
           '<dt>' + T("kv.capacity") + '</dt><dd>' + x.kapasite + ' ' + T("unit.couriers") + '</dd></dl>') +
         box(T("prof.about"), '<p>' + KB.esc(x.aciklama) + '</p>') +
         box(T("prof.services"), chips(x.hizmetler));
+    }
+
+    // Değerlendirmeler
+    if (online()) {
+      var reviews = [], canRev = false, myRev = null;
+      try {
+        reviews = await SB.reviewsFor(x.id);
+        if (KB.isAuthed && KB.isAuthed()) {
+          var meP = KB.session() && KB.session().profile;
+          if (!meP || meP.id !== x.id) { canRev = await SB.canReview(x.id); if (canRev) myRev = await SB.myReviewFor(x.id); }
+        }
+      } catch (e) {}
+      body += reviewsBox(x.id, reviews, canRev, myRev);
     }
 
     host.innerHTML =

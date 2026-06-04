@@ -25,6 +25,7 @@ create table if not exists public.profiles (
   deneyim     int default 0,
   seviye      text default 'standart' check (seviye in ('standart','profesyonel','premium')),
   puan        numeric(3,2) default 0,
+  degerlendirme int not null default 0,  -- değerlendirme sayısı (reviews trigger ile güncellenir)
   tamamlanan  int default 0,
   sertifikalar text[] default '{}',
   calistigi   text[] default '{}',
@@ -231,4 +232,58 @@ create policy pool_insert_own on public.pool_members for insert with check (owne
 drop policy if exists pool_delete_own on public.pool_members;
 create policy pool_delete_own on public.pool_members for delete using (owner_user = auth.uid());
 
--- Bitti. Tablolar: public.profiles, public.offers, public.profile_contacts, public.pool_members
+-- ---------- 7) REVIEWS (değerlendirme / puan) ----------
+create table if not exists public.reviews (
+  id               uuid primary key default gen_random_uuid(),
+  reviewer_user    uuid not null references auth.users(id) on delete cascade,
+  reviewer_profile uuid references public.profiles(id) on delete set null,
+  target_id        uuid not null references public.profiles(id) on delete cascade,
+  offer_id         uuid references public.offers(id) on delete set null,
+  puan             int not null check (puan between 1 and 5),
+  yorum            text default '',
+  created_at       timestamptz default now(),
+  unique (reviewer_user, target_id)
+);
+create index if not exists reviews_target_idx on public.reviews(target_id);
+alter table public.reviews enable row level security;
+
+drop policy if exists reviews_select_all on public.reviews;
+create policy reviews_select_all on public.reviews for select using (true);
+
+drop policy if exists reviews_insert_party on public.reviews;
+create policy reviews_insert_party on public.reviews for insert with check (
+  reviewer_user = auth.uid()
+  and reviewer_profile = (select id from public.profiles where user_id = auth.uid())
+  and target_id <> reviewer_profile
+  and exists (
+    select 1 from public.offers o
+    join public.profiles me on me.user_id = auth.uid()
+    where o.durum = 'accepted'
+      and ((o.from_user = me.id and o.to_user = target_id)
+        or (o.to_user = me.id and o.from_user = target_id))
+  )
+);
+
+drop policy if exists reviews_update_own on public.reviews;
+create policy reviews_update_own on public.reviews for update using (reviewer_user = auth.uid());
+drop policy if exists reviews_delete_own on public.reviews;
+create policy reviews_delete_own on public.reviews for delete using (reviewer_user = auth.uid());
+
+create or replace function public.recompute_profile_rating()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare tgt uuid;
+begin
+  tgt := coalesce(new.target_id, old.target_id);
+  update public.profiles set
+    puan = coalesce((select round(avg(puan)::numeric, 2) from public.reviews where target_id = tgt), 0),
+    degerlendirme = (select count(*) from public.reviews where target_id = tgt)
+  where id = tgt;
+  return coalesce(new, old);
+end $$;
+
+drop trigger if exists on_review_change on public.reviews;
+create trigger on_review_change
+  after insert or update or delete on public.reviews
+  for each row execute function public.recompute_profile_rating();
+
+-- Bitti. Tablolar: public.profiles, public.offers, public.profile_contacts, public.pool_members, public.reviews
