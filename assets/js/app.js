@@ -291,6 +291,153 @@
     }
   });
 
+  /* ============ İHALE & TEKLİF ============ */
+  function tenderCard(t, bidSet, myPid, myRole) {
+    var owner = t.owner_id === myPid;
+    var bidded = bidSet[t.id];
+    var meta = [t.sehir, t.bolge].filter(Boolean).join(" · ");
+    var details = [];
+    if (t.adet) details.push(T("ihale.adet", { n: t.adet }));
+    if (t.sure) details.push("⏱ " + t.sure);
+    if (t.butce) details.push("💰 " + t.butce);
+    var action;
+    if (!canPool()) action = '<a class="btn btn--light btn--sm" href="giris.html">' + T("cta.signin") + '</a>';
+    else if (owner) action = '<span class="chip">' + T("ihale.own") + '</span>';
+    else if (bidded) action = '<span class="chip">' + T("ihale.bidded") + '</span>';
+    else if (myRole === "firma") action = '<button class="btn btn--primary btn--sm" data-bid="' + t.id + '" data-baslik="' + KB.esc(t.baslik) + '">' + T("ihale.bid") + '</button>';
+    else action = '<span class="chip">' + T("ihale.firmOnly") + '</span>';
+    return '<article class="pcard">' +
+      '<div class="pcard__name">' + KB.esc(t.baslik) + '</div>' +
+      '<div class="pcard__sub">' + KB.esc(t.sahip) + (meta ? " · " + KB.esc(meta) : "") + '</div>' +
+      (details.length ? '<div class="pcard__meta">' + details.map(function (d) { return '<span class="chip">' + KB.esc(d) + '</span>'; }).join("") + '</div>' : "") +
+      (t.aciklama ? '<p class="pcard__sub">' + KB.esc(t.aciklama) + '</p>' : "") +
+      '<div class="pcard__foot">' + action + '<span class="rev-date">' + KB.esc(t.tarih) + '</span></div>' +
+    '</article>';
+  }
+  function bidRow(b) {
+    var action = b.durum === "pending"
+      ? '<span class="offer-act" data-bid-id="' + b.id + '"><button class="btn btn--primary btn--sm" data-bid-act="accepted">' + T("offer.accept") + '</button><button class="btn btn--light btn--sm" data-bid-act="rejected">' + T("offer.reject") + '</button></span>'
+      : '<span class="offer-act"><span class="chip">' + (b.durum === "accepted" ? T("state.accepted") : T("state.rejected")) + '</span></span>';
+    return listRow('<a href="profil-firma.html?id=' + b.bidderId + '">' + KB.esc(b.ad) + '</a> ' + KB.stars(b.puan), (b.tutar ? "💰 " + KB.esc(b.tutar) + " · " : "") + KB.esc(b.mesaj || "") + " · " + KB.esc(b.tarih), action);
+  }
+  function myTenderRow(t) {
+    var st = t.durum === "acik" ? T("ilan.open") : T("ilan.closed");
+    return '<div style="border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px">' +
+      '<div class="list-row" style="border:none;background:none;padding:0;margin:0">' +
+        '<div class="list-row__main"><div class="list-row__title">' + KB.esc(t.baslik) + '</div>' +
+        '<div class="list-row__sub">' + KB.esc([t.sehir, t.bolge].filter(Boolean).join(" · ")) + ' · ' + st + '</div></div>' +
+        '<span class="offer-act">' +
+          '<button class="btn btn--light btn--sm" data-tender-toggle="' + t.id + '" data-durum="' + t.durum + '">' + (t.durum === "acik" ? T("ilan.close") : T("ilan.reopen")) + '</button>' +
+          '<button class="btn btn--ghost btn--sm" data-tender-del="' + t.id + '">' + T("ilan.delete") + '</button>' +
+        '</span></div>' +
+      '<div data-bids="' + t.id + '" style="margin-top:12px"></div></div>';
+  }
+  async function renderOwnerTenders() {
+    var host = document.getElementById("tenderOwnerArea");
+    if (!host) return;
+    var mp = canPool() && KB.session() && KB.session().profile;
+    if (!mp || mp.role !== "isletme") { host.innerHTML = ""; return; }
+    host.innerHTML =
+      '<div class="panel-box" style="margin-bottom:24px"><h3>' + T("ihale.newTitle") + '</h3>' +
+      '<div class="form-grid">' +
+      '<div class="field"><label>' + T("ilan.baslik") + '</label><input id="teBaslik" placeholder="' + T("ihale.baslikPh") + '"></div>' +
+      '<div class="field"><label>' + T("ilan.sehir") + '</label><input id="teSehir"></div>' +
+      '<div class="field"><label>' + T("ilan.bolge") + '</label><input id="teBolge"></div>' +
+      '<div class="field"><label>' + T("ihale.adetLabel") + '</label><input id="teAdet" type="number"></div>' +
+      '<div class="field"><label>' + T("ihale.sure") + '</label><input id="teSure" placeholder="3 ay"></div>' +
+      '<div class="field"><label>' + T("ihale.butce") + '</label><input id="teButce"></div>' +
+      '<div class="field field--full"><label>' + T("ilan.aciklama") + '</label><textarea id="teAciklama" rows="2"></textarea></div>' +
+      '</div><button type="button" class="btn btn--primary btn--sm" id="teSubmit">' + T("ihale.create") + '</button>' +
+      '<p class="form-success" id="teMsg" hidden></p></div>' +
+      '<div id="myTendersList"></div>';
+    var mine = await SB.myTenders();
+    document.getElementById("myTendersList").innerHTML = mine.length
+      ? '<div class="panel-box"><h3>' + T("ihale.mine") + '</h3>' + mine.map(myTenderRow).join("") + '</div>' : "";
+    mine.forEach(async function (t) {
+      var box = host.querySelector('[data-bids="' + t.id + '"]'); if (!box) return;
+      var bids = await SB.tenderBids(t.id);
+      box.innerHTML = bids.length ? '<p class="pcard__sub" style="margin-bottom:8px">' + T("ihale.bids") + ' (' + bids.length + ')</p>' + bids.map(bidRow).join("") : '<p class="pcard__sub">' + T("ihale.noBids") + '</p>';
+    });
+  }
+  async function renderTenders() {
+    var grid = document.getElementById("tendersGrid");
+    if (!grid) return;
+    if (window.KB && KB.ready) await KB.ready();
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.loading") + '</div>';
+    if (!online()) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Supabase gerekli.</div>'; return; }
+    await renderOwnerTenders();
+    var list = await SB.openTenders();
+    var bidSet = {}, myPid = null, myRole = null;
+    if (canPool()) { try { (await SB.bidTenderIds()).forEach(function (id) { bidSet[id] = 1; }); } catch (e) {} var mp = KB.session() && KB.session().profile; myPid = mp && mp.id; myRole = mp && mp.role; }
+    var countEl = document.getElementById("tendersCount");
+    if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
+    grid.innerHTML = list.length ? list.map(function (t) { return tenderCard(t, bidSet, myPid, myRole); }).join("") : '<div class="empty" style="grid-column:1/-1">' + T("ihale.none") + '</div>';
+  }
+  async function renderMyBids() {
+    var host = document.getElementById("firmaBids");
+    if (!host) return;
+    var bids = await SB.myBids();
+    if (!bids.length) { host.innerHTML = '<div class="empty">' + T("ihale.noMyBids") + '</div>'; return; }
+    host.innerHTML = bids.map(function (b) {
+      var st = b.durum === "accepted" ? T("state.accepted") : b.durum === "rejected" ? T("state.rejected") : T("state.pending");
+      return listRow(KB.esc(b.baslik || T("ihale.removed")), (b.tutar ? "💰 " + KB.esc(b.tutar) + " · " : "") + KB.esc(b.ihaleSehir || "") + " · " + KB.esc(b.tarih), '<span class="chip">' + st + '</span>');
+    }).join("");
+  }
+  /* teklif modalı */
+  function ensureBidModal() {
+    if (document.getElementById("bidModal")) return;
+    var div = document.createElement("div"); div.className = "modal-overlay"; div.id = "bidModal";
+    div.innerHTML = '<div class="modal"><div class="modal__head"><h3>' + T("ihale.bidTitle") + '</h3><button class="modal__close" aria-label="' + T("modal.close") + '">&times;</button></div>' +
+      '<p class="modal__sub" id="bidSub"></p>' +
+      '<form id="bidForm"><div class="field"><label>' + T("ihale.tutar") + '</label><input id="bidTutar" placeholder="' + T("ihale.tutarPh") + '"></div>' +
+      '<div class="field"><label>' + T("modal.msgLabel") + '</label><textarea id="bidMsg" rows="2"></textarea></div>' +
+      '<button type="submit" class="btn btn--primary btn--block">' + T("ihale.bid") + '</button>' +
+      '<p class="form-success" id="bidOk" hidden>' + T("ihale.bidded") + '</p></form></div>';
+    document.body.appendChild(div);
+    div.querySelector(".modal__close").addEventListener("click", function () { div.classList.remove("is-open"); });
+    div.addEventListener("click", function (e) { if (e.target === div) div.classList.remove("is-open"); });
+  }
+  function openBidModal(tenderId, baslik) {
+    if (!canPool()) { location.href = "giris.html"; return; }
+    ensureBidModal();
+    var m = document.getElementById("bidModal");
+    document.getElementById("bidSub").textContent = baslik;
+    var form = document.getElementById("bidForm"); var ok = document.getElementById("bidOk"); ok.hidden = true; form.reset();
+    form.onsubmit = async function (e) {
+      e.preventDefault();
+      try { await SB.submitBid(tenderId, document.getElementById("bidTutar").value.trim(), document.getElementById("bidMsg").value.trim()); }
+      catch (err) { alert((err && err.message) || "Hata"); return; }
+      ok.hidden = false;
+      document.querySelectorAll('[data-bid="' + tenderId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip">' + T("ihale.bidded") + '</span>'; });
+      setTimeout(function () { m.classList.remove("is-open"); }, 1200);
+    };
+    m.classList.add("is-open");
+  }
+  document.addEventListener("click", function (e) {
+    var bd = e.target.closest("[data-bid]");
+    if (bd) { e.preventDefault(); openBidModal(bd.getAttribute("data-bid"), bd.getAttribute("data-baslik")); }
+  });
+  document.addEventListener("click", async function (e) {
+    if (e.target.closest("#teSubmit")) {
+      var baslik = val2("teBaslik"); var msg = document.getElementById("teMsg");
+      if (!baslik) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = T("ilan.baslikReq"); return; }
+      try { await SB.createTender({ baslik: baslik, sehir: val2("teSehir"), bolge: val2("teBolge"), adet: val2("teAdet"), sure: val2("teSure"), butce: val2("teButce"), aciklama: val2("teAciklama") }); await renderOwnerTenders(); await renderTenders(); }
+      catch (err) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = (err && err.message) || "Hata"; }
+      return;
+    }
+    var tog = e.target.closest("[data-tender-toggle]");
+    if (tog) { try { await SB.updateTenderStatus(tog.getAttribute("data-tender-toggle"), tog.getAttribute("data-durum") === "acik" ? "kapali" : "acik"); await renderOwnerTenders(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    var del = e.target.closest("[data-tender-del]");
+    if (del) { if (!confirm(T("ilan.delConfirm"))) return; try { await SB.deleteTender(del.getAttribute("data-tender-del")); await renderOwnerTenders(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    var ba = e.target.closest("[data-bid-act]");
+    if (ba) {
+      var wrap = ba.closest(".offer-act"); var bid = wrap.getAttribute("data-bid-id"); var act = ba.getAttribute("data-bid-act");
+      [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = true; });
+      try { var r = await SB.updateBid(bid, act); if (r && r.error) throw r.error; wrap.innerHTML = '<span class="chip">' + (act === "accepted" ? T("state.accepted") : T("state.rejected")) + '</span>'; }
+      catch (err) { alert((err && err.message) || "Hata"); [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; }); }
+    }
+  });
+
   /* ============ HAVUZ LİSTELEME ============ */
   function teklifBtn(type, id) {
     return '<button class="btn btn--light btn--sm" data-teklif="' + type + '" data-id="' + id + '">✉️ ' + T("btn.offer") + '</button>';
@@ -754,6 +901,7 @@
         return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), KB.levelBadge(k.seviye));
       }).join(""));
       setHTML("firmaTeklif", listFor("firma"));
+      if (online()) renderMyBids();
     }
   }
   function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="empty">' + T("empty.generic") + '</div>'; }
@@ -762,6 +910,6 @@
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
     initMap: initMap, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
-    renderMyPool: renderMyPool, renderListings: renderListings
+    renderMyPool: renderMyPool, renderListings: renderListings, renderTenders: renderTenders
   };
 })();

@@ -34,6 +34,7 @@
     { href: "isletmeler.html", key: "nav.businesses" },
     { href: "firmalar.html", key: "nav.firms" },
     { href: "ilanlar.html", key: "nav.ilanlar" },
+    { href: "ihaleler.html", key: "nav.ihaleler" },
     { href: "harita.html", key: "nav.map" },
     { href: "iletisim.html", key: "nav.contact" }
   ];

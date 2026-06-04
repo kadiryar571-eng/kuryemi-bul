@@ -334,6 +334,71 @@
     return client.from("applications").update({ durum: durum }).eq("id", id);
   }
 
+  /* ---------- İHALE & TEKLİF ---------- */
+  function tenderFromDb(t) {
+    return {
+      id: t.id, owner_id: t.owner_id, role: t.role, baslik: t.baslik, aciklama: t.aciklama,
+      sehir: t.sehir, bolge: t.bolge, adet: t.adet || 0, sure: t.sure, butce: t.butce, durum: t.durum,
+      tarih: (t.created_at || "").slice(0, 10), sahip: (t.owner && t.owner.ad) || ""
+    };
+  }
+  async function createTender(fields) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var me = await myProfile(); if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var r = await client.from("tenders").insert({
+      owner_id: me.id, owner_user: u.id, role: me.role,
+      baslik: fields.baslik, aciklama: fields.aciklama || "", sehir: fields.sehir || "", bolge: fields.bolge || "",
+      adet: parseInt(fields.adet, 10) || 0, sure: fields.sure || "", butce: fields.butce || ""
+    }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return tenderFromDb(r.data);
+  }
+  async function myTenders() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("tenders").select("*").eq("owner_user", u.id).order("created_at", { ascending: false });
+    if (r.error) { console.warn("myTenders:", r.error); return []; }
+    return (r.data || []).map(tenderFromDb);
+  }
+  async function openTenders() {
+    var r = await client.from("tenders").select("*, owner:owner_id(ad)").eq("durum", "acik").order("created_at", { ascending: false });
+    if (r.error) { console.warn("openTenders:", r.error); return []; }
+    return (r.data || []).map(tenderFromDb);
+  }
+  async function updateTenderStatus(id, durum) { return client.from("tenders").update({ durum: durum }).eq("id", id); }
+  async function deleteTender(id) { return client.from("tenders").delete().eq("id", id); }
+  async function submitBid(tenderId, tutar, mesaj) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var me = await myProfile(); if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var r = await client.from("bids").insert({
+      tender_id: tenderId, bidder_id: me.id, bidder_user: u.id, tutar: tutar || "", mesaj: mesaj || ""
+    }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  async function myBids() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("bids").select("*, tender:tender_id(baslik,sehir,durum)").eq("bidder_user", u.id).order("created_at", { ascending: false });
+    if (r.error) { console.warn("myBids:", r.error); return []; }
+    return (r.data || []).map(function (b) {
+      return { id: b.id, durum: b.durum, tutar: b.tutar, mesaj: b.mesaj, tarih: (b.created_at || "").slice(0, 10),
+        baslik: (b.tender && b.tender.baslik) || "", ihaleSehir: (b.tender && b.tender.sehir) || "" };
+    });
+  }
+  async function bidTenderIds() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("bids").select("tender_id").eq("bidder_user", u.id);
+    return (r.data || []).map(function (x) { return x.tender_id; });
+  }
+  async function tenderBids(tenderId) {
+    var r = await client.from("bids").select("*, bidder:bidder_id(id,ad,puan,sehir)").eq("tender_id", tenderId).order("created_at", { ascending: false });
+    if (r.error) { console.warn("tenderBids:", r.error); return []; }
+    return (r.data || []).map(function (b) {
+      return { id: b.id, durum: b.durum, tutar: b.tutar, mesaj: b.mesaj, tarih: (b.created_at || "").slice(0, 10),
+        bidderId: b.bidder && b.bidder.id, ad: (b.bidder && b.bidder.ad) || "Firma", puan: (b.bidder && Number(b.bidder.puan)) || 0, sehir: b.bidder && b.bidder.sehir };
+    });
+  }
+  async function updateBid(id, durum) { return client.from("bids").update({ durum: durum }).eq("id", id); }
+
   window.SB = {
     isOn: isOn,
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
@@ -347,6 +412,10 @@
     createListing: createListing, myListings: myListings, openListings: openListings,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
-    listingApplications: listingApplications, updateApplication: updateApplication
+    listingApplications: listingApplications, updateApplication: updateApplication,
+    createTender: createTender, myTenders: myTenders, openTenders: openTenders,
+    updateTenderStatus: updateTenderStatus, deleteTender: deleteTender,
+    submitBid: submitBid, myBids: myBids, bidTenderIds: bidTenderIds,
+    tenderBids: tenderBids, updateBid: updateBid
   };
 })();
