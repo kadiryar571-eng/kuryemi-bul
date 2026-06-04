@@ -65,7 +65,7 @@
       });
       // Havuzum sayfasındaysak ve çıkardıysak kartı kaldır
       if (!nowOn && document.getElementById("myPoolGrid")) {
-        var card = b.closest(".pcard"); if (card) card.remove();
+        var card = b.closest(".talent-card") || b.closest(".pcard"); if (card) card.remove();
         var grid = document.getElementById("myPoolGrid");
         if (grid && !grid.querySelector(".pcard")) grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pool.empty") + '</div>';
       }
@@ -144,17 +144,24 @@
     var owner = l.owner_id === myPid;
     var applied = appliedSet[l.id];
     var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
+    var score = talentScore(l.id);
     var action;
     if (!canPool()) action = '<a class="btn btn--light btn--sm" href="giris.html">' + T("cta.signin") + '</a>';
     else if (owner) action = '<span class="chip">' + T("ilan.own") + '</span>';
-    else if (applied) action = '<span class="chip">' + T("ilan.applied") + '</span>';
+    else if (applied) action = '<span class="chip chip--ok">' + T("ilan.applied") + '</span>';
     else action = '<button class="btn btn--primary btn--sm" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '">' + T("ilan.apply") + '</button>';
-    return '<article class="pcard">' +
-      '<div class="pcard__name">' + KB.esc(l.baslik) + '</div>' +
-      '<div class="pcard__sub">' + KB.esc(l.sahip) + (loc ? ' · ' + KB.esc(loc) : '') + '</div>' +
-      (l.arac ? '<div class="pcard__meta"><span class="chip">🛵 ' + KB.esc(l.arac) + '</span></div>' : '') +
+    return '<article class="job-card">' +
+      '<div class="employer-badge">' +
+        '<div class="employer-badge__av">' + KB.initials(l.sahip || "?") + '</div>' +
+        '<span class="employer-badge__name">' + KB.esc(l.sahip || T("ilan.unknown")) + '</span>' +
+      '</div>' +
+      '<div class="job-card__title">' + KB.esc(l.baslik) + '</div>' +
+      (loc || l.arac ? '<div class="job-card__meta">' + (loc ? '📍 ' + KB.esc(loc) : '') + (l.arac ? (loc ? ' · ' : '') + '🛵 ' + KB.esc(l.arac) : '') + '</div>' : '') +
       (l.aciklama ? '<p class="pcard__sub">' + KB.esc(l.aciklama) + '</p>' : '') +
-      '<div class="pcard__foot">' + action + '<span class="rev-date">' + KB.esc(l.tarih) + '</span></div>' +
+      '<div class="job-card__foot">' +
+        action +
+        '<div style="display:flex;align-items:center;gap:7px"><span class="match-score">%' + score + ' Uyum</span><span class="rev-date">' + KB.esc(l.tarih) + '</span></div>' +
+      '</div>' +
     '</article>';
   }
   async function renderListings() {
@@ -446,13 +453,44 @@
     return '<a class="btn btn--primary btn--sm" href="' + page + '?id=' + id + '">' + T("btn.viewProfile") + '</a>';
   }
 
+  /* deterministik seed-based match score (veri değişmez, sadece görsel) */
+  function talentScore(id) {
+    var h = 0, s = String(id || "");
+    for (var i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+    return (Math.abs(h) % 28) + 72;
+  }
+  function xpFill(puan) { return Math.round((Number(puan) || 0) / 5 * 100); }
+  function careerTrackHtml(seviye) {
+    var levels = ["standart", "profesyonel", "premium"];
+    var cur = levels.indexOf(seviye || "standart");
+    var labels = [T("level.standart"), T("level.profesyonel"), T("level.premium")];
+    var icons = ["🥉", "🥈", "🥇"];
+    var html = '<div class="career-track">';
+    for (var i = 0; i < 3; i++) {
+      var cls = i < cur ? "done" : i === cur ? "current" : "";
+      html += '<div class="career-track__node ' + cls + '">' + icons[i] + '</div>';
+      if (i < 2) html += '<div class="career-track__seg' + (i < cur ? " done" : "") + '"></div>';
+    }
+    html += '</div><div class="career-track__labels">';
+    for (var j = 0; j < 3; j++) html += '<span' + (j === cur ? ' class="cur"' : '') + '>' + labels[j] + '</span>';
+    html += '</div>';
+    return html;
+  }
+
   function kuryeCard(k) {
     var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
-    return '<article class="pcard">' + poolStar(k.id) +
+    var score = talentScore(k.id);
+    var fill = xpFill(k.puan);
+    return '<article class="talent-card">' + poolStar(k.id) +
+      '<span class="match-score">%' + score + ' Uyum</span>' +
       '<div class="pcard__top"><div class="avatar">' + KB.initials(k.ad) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(k.ad) + ' ' + verBadge(k.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
       '<div>' + KB.levelBadge(k.seviye) + ' ' + KB.stars(k.puan) + '</div>' +
+      '<div class="career-score-mini">' +
+        '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (k.puan ? Number(k.puan).toFixed(1) : "—") + '</b></div>' +
+        '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + fill + '%"></div></div>' +
+      '</div>' +
       '<div class="pcard__meta"><span class="chip">🛵 ' + KB.esc(k.arac) + '</span>' +
         '<span class="chip">' + T("pcard.exp", { n: k.deneyim }) + '</span>' +
         '<span class="chip">' + T("pcard.deliveries", { n: k.tamamlanan }) + '</span></div>' +
@@ -460,7 +498,9 @@
     '</article>';
   }
   function isletmeCard(i) {
-    return '<article class="pcard">' + poolStar(i.id) +
+    var score = talentScore(i.id);
+    return '<article class="talent-card">' + poolStar(i.id) +
+      '<span class="match-score">%' + score + ' Uyum</span>' +
       '<div class="pcard__top"><div class="avatar avatar--blue">' + KB.initials(i.ad) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(i.ad) + ' ' + verBadge(i.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
@@ -471,7 +511,9 @@
     '</article>';
   }
   function firmaCard(f) {
-    return '<article class="pcard">' + poolStar(f.id) +
+    var score = talentScore(f.id);
+    return '<article class="talent-card">' + poolStar(f.id) +
+      '<span class="match-score">%' + score + ' Uyum</span>' +
       '<div class="pcard__top"><div class="avatar avatar--navy">' + KB.initials(f.ad) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(f.ad) + ' ' + verBadge(f.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
@@ -604,7 +646,18 @@
     var sideExtra = "", body = "";
 
     if (type === "kurye") {
-      sideExtra = '<div class="profile__badges">' + KB.levelBadge(x.seviye) + KB.stars(x.puan) + '</div>';
+      var fill = xpFill(x.puan);
+      sideExtra =
+        careerTrackHtml(x.seviye) +
+        '<div class="xp-bar" style="margin:10px 0 14px">' +
+          '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (x.puan ? Number(x.puan).toFixed(1) : "—") + ' / 5</b></div>' +
+          '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + fill + '%"></div></div>' +
+        '</div>';
+      var certHtml = x.sertifikalar.length
+        ? '<div class="achv-grid">' + x.sertifikalar.map(function (c) {
+            return '<div class="achv-badge"><div class="achv-badge__ic">🏅</div><div class="achv-badge__t">' + KB.esc(c) + '</div></div>';
+          }).join("") + '</div>'
+        : '<p class="pcard__sub">' + T("prof.noCert") + '</p>';
       body =
         box(T("prof.general"), '<dl class="kv">' +
           '<dt>' + T("kv.city") + '</dt><dd>' + KB.esc(x.sehir) + '</dd>' +
@@ -612,11 +665,11 @@
           '<dt>' + T("kv.exp") + '</dt><dd>' + x.deneyim + ' ' + T("unit.years") + '</dd>' +
           '<dt>' + T("kv.completed") + '</dt><dd>' + x.tamamlanan + ' ' + T("unit.deliveries") + '</dd>' +
           '<dt>' + T("kv.regions") + '</dt><dd>' + KB.esc(x.bolgeler.join(", ")) + '</dd></dl>') +
-        box(T("prof.certs"), x.sertifikalar.length ? chips(x.sertifikalar) : '<p class="pcard__sub">' + T("prof.noCert") + '</p>') +
+        box(T("prof.certs"), certHtml) +
         box(T("prof.worked"), x.calistigi.length ? chips(x.calistigi) : '<p class="pcard__sub">' + T("prof.noHistory") + '</p>') +
         box(T("prof.refs"), x.referanslar.length ?
           '<ul class="reflist">' + x.referanslar.map(function (r) {
-            return '<li><span class="ref__name">' + KB.esc(r.ad) + '</span> <span class="ref__role">· ' + KB.esc(r.rol) + '</span><br>“' + KB.esc(r.not) + '”</li>';
+            return '<li><span class="ref__name">' + KB.esc(r.ad) + '</span> <span class="ref__role">· ' + KB.esc(r.rol) + '</span><br>"' + KB.esc(r.not) + '"</li>';
           }).join("") + '</ul>' : '<p class="pcard__sub">' + T("prof.noRef") + '</p>');
     } else if (type === "isletme") {
       sideExtra = '<div class="profile__badges"><span class="chip">' + KB.esc(x.tur) + '</span><span class="chip">' + T("pcard.openListings", { n: x.acikIlan }) + '</span></div>';
@@ -650,16 +703,29 @@
       body += reviewsBox(x.id, reviews, canRev, myRev);
     }
 
-    host.innerHTML =
-      '<div class="profile">' +
-        '<aside class="profile__card">' +
+    var sideWrapper = type === "kurye"
+      ? '<aside class="profile-identity">' +
+          '<div class="profile-identity__cover"></div>' +
+          '<div class="profile-identity__body">' +
+            '<div class="avatar' + avatarCls + '">' + KB.initials(x.ad) + '</div>' +
+            '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
+            '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
+            sideExtra +
+            '<button class="btn btn--primary btn--block" style="margin-top:16px" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+            poolBtnFull(x.id) +
+          '</div>' +
+        '</aside>'
+      : '<aside class="profile__card">' +
           '<div class="avatar' + avatarCls + '">' + KB.initials(x.ad) + '</div>' +
           '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
           '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
           sideExtra +
           '<button class="btn btn--primary btn--block" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
           poolBtnFull(x.id) +
-        '</aside>' +
+        '</aside>';
+    host.innerHTML =
+      '<div class="profile">' +
+        sideWrapper +
         '<div class="profile__body">' + body + '</div>' +
       '</div>';
   }
@@ -927,9 +993,33 @@
 
     if (role === "kurye") {
       var pu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.9";
-      var sv = prof ? T("level." + (prof.seviye || "standart")) : T("level.premium");
+      var sv = prof ? (prof.seviye || "standart") : "premium";
+      var svLabel = T("level." + sv);
       var tm = prof ? (prof.tamamlanan || 0) : "1.240";
-      setHTML("kuryeMetrics", metric(pu, T("m.score")) + metric(sv, T("m.level")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")));
+      var fill = xpFill(prof ? prof.puan : 4.9);
+      /* kariyer seviye progress + metrikler + profil gücü + insight */
+      var levels2 = ["standart", "profesyonel", "premium"];
+      var curIdx = levels2.indexOf(sv);
+      var clpHtml = '<div class="career-level-progress">';
+      var clpIcons = ["🥉","🥈","🥇"], clpLabels = [T("level.standart"), T("level.profesyonel"), T("level.premium")];
+      for (var ci = 0; ci < 3; ci++) {
+        var cls2 = ci < curIdx ? "done" : ci === curIdx ? "active" : "";
+        clpHtml += '<div class="clp__node"><div class="clp__ic ' + cls2 + '">' + clpIcons[ci] + '</div><div class="clp__label' + (ci === curIdx ? " active" : "") + '">' + clpLabels[ci] + '</div></div>';
+        if (ci < 2) clpHtml += '<div class="clp__seg' + (ci < curIdx ? " done" : "") + '"></div>';
+      }
+      clpHtml += '</div>';
+      var tips = [];
+      if (prof && !prof.arac) tips.push("🛵 " + T("career.tipVehicle"));
+      if (prof && !(prof.bolgeler && prof.bolgeler.length)) tips.push("📍 " + T("career.tipRegion"));
+      if (prof && !prof.aciklama) tips.push("📝 " + T("career.tipBio"));
+      var strength = prof ? Math.min(100, 40 + (prof.arac ? 20 : 0) + (prof.bolgeler && prof.bolgeler.length ? 20 : 0) + (prof.aciklama ? 20 : 0)) : 60;
+      var strengthHtml = '<div class="profile-strength">' +
+        '<div class="profile-strength__h"><span>' + T("career.strength") + '</span><b>%' + strength + '</b></div>' +
+        '<div class="profile-strength__track"><div class="profile-strength__fill" style="width:' + strength + '%"></div></div>' +
+        (tips.length ? '<div class="profile-strength__tips">' + tips.map(function (t) { return '<div class="profile-strength__tip"><span class="ic">→</span>' + t + '</div>'; }).join("") + '</div>' : '') +
+      '</div>';
+      var insightHtml = '<div class="insight-card"><div class="insight-card__h">💡 ' + T("career.insight") + '</div><p>' + T("career.insightMsg") + '</p></div>';
+      setHTML("kuryeMetrics", clpHtml + metric(pu, T("m.score")) + metric(svLabel, T("m.level")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")) + strengthHtml + insightHtml);
       if (online()) renderMyApplications();
       else setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');

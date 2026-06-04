@@ -1,0 +1,597 @@
+/* ============================================================
+   Kuryemi Bul — talent.css
+   Talent marketplace katmanı. styles.css'ten SONRA yüklenir.
+   Landing.css + styles.css token köprüsü + 20 bileşen.
+   İşlevselliğe DOKUNMAZ — sadece görsel katman.
+   ============================================================ */
+
+/* === TOKEN KÖPRÜSÜ ===
+   landing.css yüklü değilse styles.css değerleriyle fallback yap. */
+:root {
+  /* landing token'ları → styles token'larına karşılık */
+  --t-grad:        var(--grad,       var(--accent-grad));
+  --t-glow:        var(--glow-cyan,  0 0 40px -10px rgba(34,211,238,0.45));
+  --t-stroke:      var(--stroke,     var(--line));
+  --t-stroke2:     var(--stroke-2,   rgba(255,255,255,0.16));
+  --t-panel:       var(--panel,      var(--white));
+  --t-panel2:      var(--panel-2,    var(--surface-2));
+  --t-grad-soft:   var(--grad-soft,  linear-gradient(135deg,rgba(34,211,238,0.10),rgba(79,139,255,0.07) 50%,rgba(168,85,247,0.09)));
+  --t-ease:        var(--ease,       cubic-bezier(.22,.61,.36,1));
+  --t-muted:       var(--muted,      #74819a);
+  --t-faint:       rgba(233,238,250,0.40);
+  --t-cyan:        #22D3EE;
+  --t-blue:        #4f8bff;
+  --t-violet:      #a855f7;
+}
+
+/* ===================== 1. TALENT CARD ===================== */
+/* .pcard'ı replace eden premium discovery kartı */
+.talent-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0)),
+    var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  border-radius: var(--radius);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform .4s var(--t-ease), box-shadow .4s var(--t-ease), border-color .3s;
+  overflow: hidden;
+}
+.talent-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 15%; bottom: 15%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--t-grad);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.talent-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg, 0 24px 60px rgba(34,211,238,0.14));
+  border-color: rgba(34,211,238,0.30);
+}
+.talent-card:hover::before { opacity: 1; }
+
+/* ===================== 2. MATCH SCORE ===================== */
+.match-score {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: var(--t-grad);
+  color: var(--on-accent, #04060e);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* ===================== 3. CAREER SCORE (sidebar) ===================== */
+.career-score {
+  text-align: center;
+  padding: 18px 0 12px;
+}
+.career-score__ring {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  background: conic-gradient(var(--t-cyan) calc(var(--p, 80) * 1%), rgba(255,255,255,0.08) 0);
+  display: grid; place-items: center;
+}
+.career-score__inner {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--bg, #050505);
+  display: grid; place-items: center;
+  flex-direction: column;
+}
+.career-score__v {
+  font-family: var(--display, 'Space Grotesk', sans-serif);
+  font-size: 1.4rem; font-weight: 700;
+  line-height: 1;
+}
+.career-score__l {
+  font-size: 0.7rem;
+  color: var(--t-muted);
+  margin-top: 4px;
+}
+
+/* ===================== 4. XP BAR ===================== */
+.xp-bar { width: 100%; }
+.xp-bar__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: var(--t-muted);
+  margin-bottom: 6px;
+}
+.xp-bar__labels b { color: var(--navy, #f4f6fb); }
+.xp-bar__track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+.xp-bar__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--t-grad);
+  transition: width 1.2s var(--t-ease);
+  width: 0;
+}
+
+/* mini variant inside talent-card */
+.career-score-mini { margin-top: 4px; }
+.career-score-mini .xp-bar__track { height: 5px; }
+.career-score-mini .xp-bar__labels { font-size: 0.68rem; }
+
+/* ===================== 5. LEVEL BADGE (premium) ===================== */
+/* Mevcut KB.levelBadge() çıktısındaki .level--* sınıfları için zenginleştirilmiş stil */
+.level--premium, .level--profesyonel, .level--standart {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px;
+  vertical-align: middle; white-space: nowrap;
+  transition: box-shadow .3s;
+}
+.level--premium {
+  background: linear-gradient(135deg, rgba(168,85,247,0.22), rgba(34,211,238,0.16));
+  color: #d8b4fe;
+  border: 1px solid rgba(168,85,247,0.45);
+  box-shadow: 0 0 16px -6px rgba(168,85,247,0.5);
+}
+.level--profesyonel {
+  background: rgba(79,139,255,0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(79,139,255,0.45);
+}
+.level--standart {
+  background: rgba(255,255,255,0.07);
+  color: var(--navy-soft, #aebbd0);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* ===================== 6. PROFILE IDENTITY (sidebar) ===================== */
+.profile-identity {
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0)),
+    var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: sticky;
+  top: 90px;
+  box-shadow: var(--shadow, 0 24px 60px -24px rgba(0,0,0,0.82));
+}
+.profile-identity__cover {
+  height: 72px;
+  background: var(--t-grad);
+  opacity: .9;
+  position: relative;
+}
+.profile-identity__cover::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 200% at 80% 0%, rgba(168,85,247,0.4), transparent 60%);
+}
+.profile-identity__body { padding: 0 22px 22px; }
+.profile-identity .avatar {
+  margin-top: -32px;
+  margin-bottom: 14px;
+  border: 2px solid var(--t-stroke2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* ===================== 7. JOB CARD ===================== */
+.job-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0)),
+    var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform .4s var(--t-ease), box-shadow .4s var(--t-ease), border-color .3s;
+}
+.job-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg, 0 24px 60px rgba(34,211,238,0.14));
+  border-color: rgba(79,139,255,0.30);
+}
+.job-card__title {
+  font-family: var(--display, 'Space Grotesk', sans-serif);
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--navy, #f4f6fb);
+}
+.job-card__meta {
+  font-size: 0.85rem;
+  color: var(--t-muted);
+}
+.job-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* match-score inside footer (smaller) */
+.job-card__foot .match-score {
+  position: static;
+  font-size: 0.68rem;
+}
+
+/* ===================== 8. EMPLOYER BADGE ===================== */
+.employer-badge {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 4px;
+}
+.employer-badge__av {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: grid; place-items: center;
+  background: var(--t-grad-soft);
+  border: 1px solid var(--t-stroke);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--navy, #f4f6fb);
+  flex: none;
+}
+.employer-badge__name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--navy-soft, #aebbd0);
+}
+
+/* ===================== 9. SALARY RANGE ===================== */
+.salary-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--t-cyan);
+}
+.salary-range::before { content: "₺"; opacity: 0.7; }
+
+/* ===================== 10. PIPELINE STAGE ===================== */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 16px 0 4px;
+  overflow-x: auto;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.pipeline::-webkit-scrollbar { display: none; }
+.pipeline__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 72px;
+  text-align: center;
+}
+.pipeline__dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.12);
+  background: var(--t-panel2, var(--surface-2));
+  display: grid; place-items: center;
+  font-size: 0.75rem;
+  position: relative;
+  z-index: 1;
+  transition: border-color .3s, box-shadow .3s;
+}
+.pipeline__dot.done {
+  background: var(--t-grad);
+  border-color: transparent;
+}
+.pipeline__dot.current {
+  border-color: var(--t-cyan);
+  box-shadow: var(--t-glow);
+  animation: t-pulse 2s infinite;
+}
+.pipeline__label { font-size: 0.68rem; color: var(--t-muted); }
+.pipeline__label.current { color: var(--t-cyan); font-weight: 600; }
+.pipeline__seg {
+  flex: 1;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  min-width: 20px;
+  position: relative;
+  top: -14px;
+}
+.pipeline__seg.done { background: var(--t-grad); }
+
+/* ===================== 11. ACHIEVEMENT BADGE ===================== */
+.achv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+}
+.achv-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  text-align: center;
+  transition: border-color .3s, transform .3s var(--t-ease);
+  cursor: default;
+}
+.achv-badge:hover { transform: translateY(-3px); border-color: var(--t-stroke2); }
+.achv-badge__ic { font-size: 1.4rem; line-height: 1; }
+.achv-badge__t { font-size: 0.66rem; color: var(--t-muted); line-height: 1.3; }
+
+/* ===================== 12. CAREER TRACK ===================== */
+.career-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 14px 0;
+}
+.career-track__node {
+  flex: none;
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 1.1rem;
+  border: 1px solid var(--t-stroke);
+  background: var(--t-panel);
+  position: relative;
+  z-index: 1;
+}
+.career-track__node.done { background: var(--t-grad-soft); border-color: var(--t-stroke2); }
+.career-track__node.current { border-color: var(--t-cyan); box-shadow: var(--t-glow); }
+.career-track__node.current::after {
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 15px;
+  border: 1px solid rgba(34,211,238,0.3);
+}
+.career-track__seg {
+  flex: 1;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  min-width: 10px;
+}
+.career-track__seg.done { background: var(--t-grad); }
+.career-track__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--t-muted);
+  margin-top: 4px;
+}
+.career-track__labels .cur { color: var(--t-cyan); font-weight: 600; }
+
+/* ===================== 13. TALENT GRID ===================== */
+.talent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 22px;
+}
+
+/* ===================== 14. TALENT FILTERS ===================== */
+.talent-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.filter-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--t-stroke);
+  background: var(--t-panel);
+  color: var(--navy-soft, #aebbd0);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .25s, color .25s, background .25s;
+  user-select: none;
+}
+.filter-chip:hover { border-color: var(--t-stroke2); color: var(--navy, #f4f6fb); }
+.filter-chip.is-on {
+  background: var(--t-grad-soft);
+  border-color: rgba(34,211,238,0.4);
+  color: var(--t-cyan);
+}
+
+/* ===================== 15. CANDIDATE ROW ===================== */
+.candidate-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line, var(--t-stroke));
+}
+.candidate-row:last-child { border-bottom: 0; }
+.candidate-row__av {
+  width: 36px; height: 36px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  background: var(--t-grad-soft);
+  border: 1px solid var(--t-stroke);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex: none;
+}
+.candidate-row__name { font-weight: 600; font-size: 0.9rem; }
+.candidate-row__sub { font-size: 0.76rem; color: var(--t-muted); }
+.candidate-row__right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* ===================== 16. INSIGHT CARD ===================== */
+.insight-card {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(168,85,247,0.3);
+  background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(34,211,238,0.05));
+  margin-top: 14px;
+}
+.insight-card__h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #d8b4fe;
+  margin-bottom: 7px;
+}
+.insight-card p { font-size: 0.88rem; color: var(--navy, #f4f6fb); }
+.insight-card .sub { margin-top: 8px; font-size: 0.76rem; color: var(--t-muted); }
+
+/* ===================== 17. PROFILE STRENGTH ===================== */
+.profile-strength {
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  margin-top: 14px;
+}
+.profile-strength__h {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.profile-strength__h b { color: var(--t-cyan); }
+.profile-strength__track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.profile-strength__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--t-grad);
+  transition: width 1.2s var(--t-ease);
+  width: 0;
+}
+.profile-strength__tips {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.profile-strength__tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--t-muted);
+}
+.profile-strength__tip .ic { font-size: 0.72rem; }
+
+/* ===================== 18. OPPORTUNITY MAP LEGEND ===================== */
+.opportunity-layer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color .25s;
+}
+.opportunity-layer:has(input:checked) { border-color: var(--t-stroke2); }
+.opportunity-layer input { accent-color: var(--t-cyan); }
+.opportunity-layer__dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+.opportunity-layer__t { font-size: 0.88rem; font-weight: 600; }
+.opportunity-layer__d { font-size: 0.74rem; color: var(--t-muted); }
+
+/* ===================== 19. SAVED CARD ===================== */
+.saved-card { }
+.saved-card .saved-stamp {
+  position: absolute;
+  bottom: 14px; right: 14px;
+  font-size: 0.68rem;
+  color: var(--gold, #fbbf24);
+  font-weight: 700;
+}
+
+/* ===================== 20. CAREER LEVEL PROGRESS ===================== */
+.career-level-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.clp__node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 60px;
+}
+.clp__ic {
+  width: 36px; height: 36px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  background: var(--t-panel);
+  border: 1px solid var(--t-stroke);
+  font-size: 1.1rem;
+  transition: box-shadow .3s, border-color .3s;
+}
+.clp__ic.active { border-color: var(--t-cyan); box-shadow: var(--t-glow); }
+.clp__ic.done { background: var(--t-grad-soft); border-color: var(--t-stroke2); }
+.clp__label { font-size: 0.66rem; color: var(--t-muted); text-align: center; }
+.clp__label.active { color: var(--t-cyan); font-weight: 700; }
+.clp__seg { flex: 1; height: 2px; background: rgba(255,255,255,0.08); min-width: 16px; }
+.clp__seg.done { background: var(--t-grad); }
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes t-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,211,238,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(34,211,238,0); }
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 700px) {
+  .talent-grid { grid-template-columns: 1fr; }
+  .achv-grid { grid-template-columns: repeat(3, 1fr); }
+  .career-level-progress { gap: 6px; }
+  .clp__node { min-width: 48px; }
+}
+
+/* ===================== LIGHT THEME OVERRIDES ===================== */
+[data-theme="light"] {
+  --t-panel: rgba(255,255,255,0.9);
+  --t-stroke: rgba(0,0,0,0.09);
+  --t-stroke2: rgba(0,0,0,0.18);
+  --t-muted: #6b7890;
+  --t-faint: rgba(0,0,0,0.35);
+}
+[data-theme="light"] .talent-card { background: #fff; }
+[data-theme="light"] .job-card { background: #fff; }
+[data-theme="light"] .profile-identity { background: #fff; }
+[data-theme="light"] .career-score__inner { background: #f4f7fb; }

@@ -16,23 +16,24 @@
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/talent.css">
 </head>
 <body>
     <div id="app-header"></div>
 
     <section class="page-head">
-        <div class="container"><h1 data-i18n="pool.isletme.title">📦 İşletme Havuzu</h1><p data-i18n="pool.isletme.lead">Kurye ihtiyacı olan işletmeleri keşfet; türüne göre filtrele ve teklif gönder.</p></div>
+        <div class="container"><h1>🏪 İşverenler</h1><p>Kurye arayan işletmeler — iş fırsatı oluştur, başvuruları yönet.</p></div>
     </section>
 
     <main class="section--sm">
         <div class="container">
             <div class="toolbar">
-                <div class="search"><input type="search" id="fSearch" data-i18n-ph="pool.isletme.search" placeholder="İşletme, şehir veya tür ara…" aria-label="Ara"></div>
+                <div class="search"><input type="search" id="fSearch" placeholder="İşletme, şehir veya tür ara…" aria-label="Ara"></div>
                 <select id="fSelect1" aria-label="Şehir"></select>
                 <select id="fSelect2" aria-label="Tür"></select>
             </div>
             <p class="result-count" id="resultCount"></p>
-            <div class="pool-grid" id="poolGrid"></div>
+            <div class="talent-grid" id="poolGrid"></div>
         </div>
     </main>
 

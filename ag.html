@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Canlı Kurye Ağı · Kuryemi Bul</title>
+  <title>Canlı Yetenek Ağı · Kuryemi Bul</title>
   <link rel="icon" href="assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,14 +17,14 @@
 
   <template id="page">
     <div class="grid grid--4 reveal">
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🛵</span><span class="stat__l">Ağdaki Kurye</span></div><div class="stat__v" data-count="128">0</div><div class="stat__d up">▲ canlı</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🟢</span><span class="stat__l">Müsait</span></div><div class="stat__v" data-count="86">0</div><div class="stat__d up">▲ teslimat alabilir</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🔥</span><span class="stat__l">Yoğun Bölge</span></div><div class="stat__v" data-count="4">0</div><div class="stat__d down">▲ talep yüksek</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">📡</span><span class="stat__l">Kapsama</span></div><div class="stat__v"><span data-count="88">0</span>%</div><div class="stat__d up">▲ şehir geneli</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🛵</span><span class="stat__l">Ağdaki Yetenek</span></div><div class="stat__v" data-count="128">0</div><div class="stat__d up">▲ canlı</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🟢</span><span class="stat__l">Başvuruya Açık</span></div><div class="stat__v" data-count="86">0</div><div class="stat__d up">▲ pozisyon bekliyor</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🔥</span><span class="stat__l">Fırsat Bölgesi</span></div><div class="stat__v" data-count="4">0</div><div class="stat__d down">▲ fırsat yoğun</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📡</span><span class="stat__l">Eşleşme Oranı</span></div><div class="stat__v"><span data-count="88">0</span>%</div><div class="stat__d up">▲ şehir geneli</div></div>
     </div>
 
     <div class="panel reveal" style="margin-top:18px">
-      <div class="panel__h"><h3><span class="ic">🌐</span> Gerçek Zamanlı Kurye Ağı</h3><span class="right"><span class="chip chip--cy">İstanbul</span><span class="chip chip--ok">● hareket izleri</span><span class="chip chip--warn">● talep ısısı</span></span></div>
+      <div class="panel__h"><h3><span class="ic">🌐</span> Canlı Yetenek Ağı</h3><span class="right"><span class="chip chip--cy">İstanbul</span><span class="chip chip--ok">● hareket izleri</span><span class="chip chip--warn">● talep ısısı</span></span></div>
       <div style="padding:18px">
         <div class="bigmap" style="height:520px">
           <div class="minimap__grid"></div>
@@ -34,8 +34,8 @@
           <span class="heat" style="width:160px;height:160px;left:74%;top:68%;background:radial-gradient(circle,rgba(251,191,36,0.35),transparent 70%)"></span>
           <svg id="netmap" viewBox="0 0 600 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
           <div class="bigmap__legend">
-            <span class="chip chip--cy">● Müsait kurye</span><span class="chip">● İşletme</span>
-            <span class="chip chip--warn">● Yüksek talep</span><span class="chip" style="color:#f87171;border-color:rgba(239,68,68,.4)">● Kapsama boşluğu</span>
+            <span class="chip chip--cy">● Başvuruya Açık kurye</span><span class="chip">● İşletme</span>
+            <span class="chip chip--warn">● Yüksek fırsat</span><span class="chip" style="color:#f87171;border-color:rgba(239,68,68,.4)">● Eşleşme Oranı boşluğu</span>
           </div>
         </div>
       </div>
@@ -43,24 +43,24 @@
 
     <div class="grid grid--3 reveal" style="margin-top:18px">
       <div class="panel col-2">
-        <div class="panel__h"><h3><span class="ic">🛵</span> Kurye Durumu</h3><span class="right"><span class="chip chip--ok">86 müsait</span></span></div>
+        <div class="panel__h"><h3><span class="ic">🛵</span> Yetenek Durumu</h3><span class="right"><span class="chip chip--ok">86 müsait</span></span></div>
         <div class="panel__b" style="padding:6px 8px">
           <table class="tbl">
-            <thead><tr><th>Kurye</th><th>Bölge</th><th>Durum</th><th>Rota Verimi</th><th>Seviye</th></tr></thead>
+            <thead><tr><th>Kurye</th><th>Bölge</th><th>Durum</th><th>Eşleşme Skoru</th><th>Seviye</th></tr></thead>
             <tbody>
-              <tr><td><span class="u"><span class="av">🛵</span> Yusuf K.</span></td><td>Kadıköy</td><td><span class="chip chip--ok">● Müsait</span></td><td><b>%94</b></td><td><span class="vbadge vbadge--pro">Profesyonel</span></td></tr>
-              <tr><td><span class="u"><span class="av">🛵</span> Elif D.</span></td><td>Beşiktaş</td><td><span class="chip chip--cy">● Teslimatta</span></td><td><b>%97</b></td><td><span class="vbadge vbadge--prem">Premium</span></td></tr>
-              <tr><td><span class="u"><span class="av">🛵</span> Murat A.</span></td><td>Üsküdar</td><td><span class="chip chip--ok">● Müsait</span></td><td><b>%88</b></td><td><span class="vbadge vbadge--ok">Doğrulanmış</span></td></tr>
-              <tr><td><span class="u"><span class="av">🛵</span> Selin B.</span></td><td>Şişli</td><td><span class="chip chip--ok">● Müsait</span></td><td><b>%91</b></td><td><span class="vbadge vbadge--pro">Profesyonel</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Yusuf K.</span></td><td>Kadıköy</td><td><span class="chip chip--ok">● Başvuruya Açık</span></td><td><b>%94</b></td><td><span class="vbadge vbadge--pro">Profesyonel</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Elif D.</span></td><td>Beşiktaş</td><td><span class="chip chip--cy">● Müzakerede</span></td><td><b>%97</b></td><td><span class="vbadge vbadge--prem">Premium</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Murat A.</span></td><td>Üsküdar</td><td><span class="chip chip--ok">● Başvuruya Açık</span></td><td><b>%88</b></td><td><span class="vbadge vbadge--ok">Doğrulanmış</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Selin B.</span></td><td>Şişli</td><td><span class="chip chip--ok">● Başvuruya Açık</span></td><td><b>%91</b></td><td><span class="vbadge vbadge--pro">Profesyonel</span></td></tr>
               <tr><td><span class="u"><span class="av">🛵</span> Can T.</span></td><td>Maltepe</td><td><span class="chip chip--warn">● Mola</span></td><td><b>%82</b></td><td><span class="vbadge vbadge--ok">Doğrulanmış</span></td></tr>
             </tbody>
           </table>
         </div>
       </div>
       <div class="grid" style="gap:18px">
-        <div class="alert alert--red" style="margin:0"><span class="ai">⚠️</span><span><b>Kapsama boşluğu: Pendik</b><span> Bölgede aktif kurye yok.</span></span></div>
+        <div class="alert alert--red" style="margin:0"><span class="ai">⚠️</span><span><b>Eşleşme Oranı boşluğu: Pendik</b><span> Bu bölgede kayıtlı yetenek yetersiz.</span></span></div>
         <div class="panel">
-          <div class="panel__h"><h3><span class="ic">🔥</span> Yüksek Talep Bölgeleri</h3></div>
+          <div class="panel__h"><h3><span class="ic">🔥</span> Yüksek Fırsat Bölgeleri</h3></div>
           <div class="panel__b">
             <div class="metricrow">
               <div class="metric"><div class="metric__t"><span>Kadıköy</span><b>%92</b></div><div class="metric__track"><i data-fill="92" style="background:linear-gradient(90deg,#f87171,#fbbf24)"></i></div></div>
@@ -79,7 +79,7 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/platform.js"></script>
   <script>
-    var wrap = Platform.init({ active: 'net', title: 'Canlı Kurye Ağı', subtitle: 'Ekosistemi görselleştir · konum, hareket ve yoğunluk' });
+    var wrap = Platform.init({ active: 'net', title: 'Canlı Yetenek Ağı', subtitle: 'Ekosistemi görselleştir · yetenek, uygunluk ve fırsat yoğunluğu' });
     wrap.innerHTML = document.getElementById('page').innerHTML;
     Platform.buildMap(document.getElementById('netmap'),
       [[60,70],[180,40],[320,70],[450,50],[540,120],[120,170],[260,150],[400,180],[510,230],[90,280],[230,300],[380,320],[490,360],[160,400],[320,430],[450,460]],

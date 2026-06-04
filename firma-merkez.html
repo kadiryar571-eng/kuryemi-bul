@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Firma Operasyon Merkezi · Kuryemi Bul</title>
+  <title>Firma Kariyer Merkezi · Kuryemi Bul</title>
   <link rel="icon" href="assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -15,15 +15,15 @@
   <div id="app"></div>
   <template id="page">
     <div class="grid grid--4 reveal">
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🚚</span><span class="stat__l">Filo Büyüklüğü</span></div><div class="stat__v" data-count="46">0</div><div class="stat__d up">▲ 6 yeni</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🟢</span><span class="stat__l">Aktif Kurye</span></div><div class="stat__v" data-count="38">0</div><div class="stat__d up">▲ sahada</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">📊</span><span class="stat__l">Filo Kullanımı</span></div><div class="stat__v"><span data-count="83">0</span>%</div><div class="stat__d up">▲ verimli</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">💰</span><span class="stat__l">Aylık Gelir</span></div><div class="stat__v" data-prefix="₺" data-count="184" data-suffix="K">0</div><div class="stat__d up">▲ %19</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🚚</span><span class="stat__l">Ekip Büyüklüğü</span></div><div class="stat__v" data-count="46">0</div><div class="stat__d up">▲ büyüyor</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🟢</span><span class="stat__l">Pozisyon Başvurusu</span></div><div class="stat__v" data-count="38">0</div><div class="stat__d up">▲ bu hafta</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📊</span><span class="stat__l">Doluluk Oranı</span></div><div class="stat__v"><span data-count="83">0</span>%</div><div class="stat__d up">▲ ort.</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">💰</span><span class="stat__l">Aktif Pozisyon</span></div><div class="stat__v" data-prefix="₺" data-count="184" data-suffix="K">0</div><div class="stat__d up">▲ %19</div></div>
     </div>
 
     <div class="ops reveal" style="margin-top:18px">
       <div class="panel">
-        <div class="panel__h"><h3><span class="ic">🗺️</span> Kapsama Haritası</h3><span class="right"><span class="chip chip--cy">5 bölge</span><span class="chip chip--ok">● 38 aktif</span></span></div>
+        <div class="panel__h"><h3><span class="ic">🗺️</span> Yetenek Keşif Haritası</h3><span class="right"><span class="chip chip--cy">5 bölge</span><span class="chip chip--ok">● 38 aktif</span></span></div>
         <div style="padding:18px">
           <div class="bigmap" style="height:380px">
             <div class="minimap__grid"></div>
@@ -36,13 +36,13 @@
       </div>
       <div class="grid" style="gap:18px">
         <div class="panel">
-          <div class="panel__h"><h3><span class="ic">💚</span> Filo Sağlık Skoru</h3></div>
+          <div class="panel__h"><h3><span class="ic">💚</span> Eşleşme Kalitesi</h3></div>
           <div class="panel__b" style="display:flex;flex-direction:column;align-items:center;gap:14px">
             <div class="donut" style="--p:70;--p2:91"><i><b data-count="91" data-suffix="%">0</b><span>sağlıklı</span></i></div>
           </div>
         </div>
         <div class="panel">
-          <div class="panel__h"><h3><span class="ic">📍</span> Bölgesel Performans</h3></div>
+          <div class="panel__h"><h3><span class="ic">📍</span> Bölgesel Yetenek</h3></div>
           <div class="panel__b"><div class="metricrow">
             <div class="metric"><div class="metric__t"><span>Kadıköy</span><b>%94</b></div><div class="metric__track"><i data-fill="94"></i></div></div>
             <div class="metric"><div class="metric__t"><span>Beşiktaş</span><b>%88</b></div><div class="metric__track"><i data-fill="88"></i></div></div>
@@ -55,16 +55,16 @@
 
     <div class="grid grid--3 reveal" style="margin-top:18px">
       <div class="panel col-2">
-        <div class="panel__h"><h3><span class="ic">📈</span> Gelir & Büyüme</h3><span class="right chip chip--ok">▲ %19</span></div>
+        <div class="panel__h"><h3><span class="ic">📈</span> Pozisyon & Büyüme</h3><span class="right chip chip--ok">▲ %19</span></div>
         <div class="panel__b"><svg class="linechart" id="fleetChart" aria-hidden="true"></svg></div>
       </div>
       <div class="panel">
-        <div class="panel__h"><h3><span class="ic">⚡</span> Dağıtım Performansı</h3></div>
+        <div class="panel__h"><h3><span class="ic">⚡</span> İşe Alım Performansı</h3></div>
         <div class="panel__b"><div class="metricrow">
-          <div class="metric"><div class="metric__t"><span>Zamanında teslim</span><b>%95</b></div><div class="metric__track"><i data-fill="95"></i></div></div>
-          <div class="metric"><div class="metric__t"><span>Kabul oranı</span><b>%89</b></div><div class="metric__track"><i data-fill="89"></i></div></div>
-          <div class="metric"><div class="metric__t"><span>Kurye memnuniyeti</span><b>%92</b></div><div class="metric__track"><i data-fill="92"></i></div></div>
-          <div class="metric"><div class="metric__t"><span>Müşteri tutma</span><b>%87</b></div><div class="metric__track"><i data-fill="87"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>Başvuru kabul oranı</span><b>%95</b></div><div class="metric__track"><i data-fill="95"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>Mülakat tamamlama</span><b>%89</b></div><div class="metric__track"><i data-fill="89"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>Aday memnuniyeti</span><b>%92</b></div><div class="metric__track"><i data-fill="92"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>Ekip tutma oranı</span><b>%87</b></div><div class="metric__track"><i data-fill="87"></i></div></div>
         </div></div>
       </div>
     </div>
@@ -72,7 +72,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
   <script>
-    var wrap = Platform.init({ active: 'fleet', title: 'Firma Operasyon Merkezi', subtitle: 'Kurumsal filo yönetimi · performans ve büyüme' });
+    var wrap = Platform.init({ active: 'fleet', title: 'Firma Kariyer Merkezi', subtitle: 'Ekip oluştur · açık pozisyonlar ve yetenek havuzu' });
     wrap.innerHTML = document.getElementById('page').innerHTML;
     Platform.buildMap(document.getElementById('fleetmap'),
       [[80,80],[220,60],[360,90],[480,70],[150,180],[300,160],[440,200],[230,280],[400,300],[110,300]],
