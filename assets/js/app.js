@@ -137,6 +137,160 @@
     if (btn) { e.preventDefault(); openOfferModal(btn.getAttribute("data-teklif"), btn.getAttribute("data-id")); }
   });
 
+  /* ============ İLAN & BAŞVURU ============ */
+  function val2(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+  function listingCard(l, appliedSet, myPid) {
+    var owner = l.owner_id === myPid;
+    var applied = appliedSet[l.id];
+    var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
+    var action;
+    if (!canPool()) action = '<a class="btn btn--light btn--sm" href="giris.html">' + T("cta.signin") + '</a>';
+    else if (owner) action = '<span class="chip">' + T("ilan.own") + '</span>';
+    else if (applied) action = '<span class="chip">' + T("ilan.applied") + '</span>';
+    else action = '<button class="btn btn--primary btn--sm" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '">' + T("ilan.apply") + '</button>';
+    return '<article class="pcard">' +
+      '<div class="pcard__name">' + KB.esc(l.baslik) + '</div>' +
+      '<div class="pcard__sub">' + KB.esc(l.sahip) + (loc ? ' · ' + KB.esc(loc) : '') + '</div>' +
+      (l.arac ? '<div class="pcard__meta"><span class="chip">🛵 ' + KB.esc(l.arac) + '</span></div>' : '') +
+      (l.aciklama ? '<p class="pcard__sub">' + KB.esc(l.aciklama) + '</p>' : '') +
+      '<div class="pcard__foot">' + action + '<span class="rev-date">' + KB.esc(l.tarih) + '</span></div>' +
+    '</article>';
+  }
+  async function renderListings() {
+    var grid = document.getElementById("listingsGrid");
+    if (!grid) return;
+    var countEl = document.getElementById("listingsCount");
+    if (window.KB && KB.ready) await KB.ready();
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.loading") + '</div>';
+    if (!online()) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Supabase gerekli.</div>'; return; }
+    var list = await SB.openListings();
+    var appliedSet = {}, myPid = null;
+    if (canPool()) {
+      try { (await SB.appliedListingIds()).forEach(function (id) { appliedSet[id] = 1; }); } catch (e) {}
+      var mp = KB.session() && KB.session().profile; myPid = mp && mp.id;
+    }
+    if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
+    grid.innerHTML = list.length ? list.map(function (l) { return listingCard(l, appliedSet, myPid); }).join("")
+      : '<div class="empty" style="grid-column:1/-1">' + T("ilan.none") + '</div>';
+  }
+
+  /* başvuru modalı */
+  function ensureApplyModal() {
+    if (document.getElementById("applyModal")) return;
+    var div = document.createElement("div");
+    div.className = "modal-overlay"; div.id = "applyModal";
+    div.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' +
+      '<div class="modal__head"><h3>' + T("ilan.applyTitle") + '</h3><button class="modal__close" aria-label="' + T("modal.close") + '">&times;</button></div>' +
+      '<p class="modal__sub" id="applySub"></p>' +
+      '<form id="applyForm"><div class="field"><label>' + T("modal.msgLabel") + '</label>' +
+      '<textarea id="applyMsg" rows="3" placeholder="' + T("ilan.applyPh") + '"></textarea></div>' +
+      '<button type="submit" class="btn btn--primary btn--block">' + T("ilan.apply") + '</button>' +
+      '<p class="form-success" id="applyOk" hidden>' + T("ilan.applied") + '</p></form></div>';
+    document.body.appendChild(div);
+    div.querySelector(".modal__close").addEventListener("click", function () { div.classList.remove("is-open"); });
+    div.addEventListener("click", function (e) { if (e.target === div) div.classList.remove("is-open"); });
+  }
+  function openApplyModal(listingId, baslik) {
+    if (!canPool()) { location.href = "giris.html"; return; }
+    ensureApplyModal();
+    var m = document.getElementById("applyModal");
+    document.getElementById("applySub").textContent = baslik;
+    var form = document.getElementById("applyForm");
+    var ok = document.getElementById("applyOk"); ok.hidden = true; form.reset();
+    form.onsubmit = async function (e) {
+      e.preventDefault();
+      try { await SB.applyToListing(listingId, document.getElementById("applyMsg").value.trim()); }
+      catch (err) { alert((err && err.message) || "Hata"); return; }
+      ok.hidden = false;
+      document.querySelectorAll('[data-apply="' + listingId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip">' + T("ilan.applied") + '</span>'; });
+      setTimeout(function () { m.classList.remove("is-open"); }, 1200);
+    };
+    m.classList.add("is-open");
+  }
+
+  /* Başvurularım (kurye paneli) */
+  async function renderMyApplications() {
+    var host = document.getElementById("kuryeBasvuru");
+    if (!host) return;
+    var apps = await SB.myApplications();
+    if (!apps.length) { host.innerHTML = '<div class="empty">' + T("basvuru.none") + '</div>'; return; }
+    host.innerHTML = apps.map(function (a) {
+      var st = a.durum === "accepted" ? T("state.accepted") : a.durum === "rejected" ? T("state.rejected") : T("state.pending");
+      return listRow(KB.esc(a.baslik || T("ilan.removed")), KB.esc(a.ilanSehir || "") + " · " + KB.esc(a.tarih), '<span class="chip">' + st + '</span>');
+    }).join("");
+  }
+
+  /* İlanlarım (işletme paneli) */
+  function applicationRow(a) {
+    var page = a.rol === "kurye" ? "profil-kurye.html" : a.rol === "isletme" ? "profil-isletme.html" : "profil-firma.html";
+    var action = a.durum === "pending"
+      ? '<span class="offer-act" data-app="' + a.id + '"><button class="btn btn--primary btn--sm" data-app-act="accepted">' + T("offer.accept") + '</button><button class="btn btn--light btn--sm" data-app-act="rejected">' + T("offer.reject") + '</button></span>'
+      : '<span class="offer-act"><span class="chip">' + (a.durum === "accepted" ? T("state.accepted") : T("state.rejected")) + '</span></span>';
+    return listRow('<a href="' + page + '?id=' + a.applicantId + '">' + KB.esc(a.ad) + '</a> ' + KB.stars(a.puan), KB.esc(a.mesaj || "") + " · " + KB.esc(a.tarih), action);
+  }
+  function myListingRow(l) {
+    var st = l.durum === "acik" ? T("ilan.open") : T("ilan.closed");
+    return '<div class="panel-box" style="margin-bottom:14px">' +
+      '<div class="list-row" style="border:none;background:none;padding:0;margin:0">' +
+        '<div class="list-row__main"><div class="list-row__title">' + KB.esc(l.baslik) + '</div>' +
+        '<div class="list-row__sub">' + KB.esc([l.sehir, l.bolge].filter(Boolean).join(" · ")) + ' · ' + st + '</div></div>' +
+        '<span class="offer-act">' +
+          '<button class="btn btn--light btn--sm" data-listing-toggle="' + l.id + '" data-durum="' + l.durum + '">' + (l.durum === "acik" ? T("ilan.close") : T("ilan.reopen")) + '</button>' +
+          '<button class="btn btn--ghost btn--sm" data-listing-del="' + l.id + '">' + T("ilan.delete") + '</button>' +
+        '</span></div>' +
+      '<div class="li-apps" data-apps="' + l.id + '" style="margin-top:12px"></div></div>';
+  }
+  async function renderMyListings() {
+    var host = document.getElementById("isletmeIlan");
+    if (!host) return;
+    var formHtml = '<div class="rev-form" style="margin-bottom:20px">' +
+      '<div class="form-grid">' +
+      '<div class="field"><label>' + T("ilan.baslik") + '</label><input id="liBaslik" placeholder="' + T("ilan.baslikPh") + '"></div>' +
+      '<div class="field"><label>' + T("ilan.sehir") + '</label><input id="liSehir"></div>' +
+      '<div class="field"><label>' + T("ilan.bolge") + '</label><input id="liBolge"></div>' +
+      '<div class="field"><label>' + T("ilan.arac") + '</label><input id="liArac"></div>' +
+      '<div class="field field--full"><label>' + T("ilan.aciklama") + '</label><textarea id="liAciklama" rows="2"></textarea></div>' +
+      '</div><button type="button" class="btn btn--primary btn--sm" id="liSubmit">' + T("ilan.create") + '</button>' +
+      '<p class="form-success" id="liMsg" hidden></p></div>';
+    var mine = await SB.myListings();
+    var listHtml = mine.length ? mine.map(myListingRow).join("") : '<div class="empty">' + T("ilan.noneOwn") + '</div>';
+    host.innerHTML = formHtml + listHtml;
+    mine.forEach(async function (l) {
+      var box = host.querySelector('[data-apps="' + l.id + '"]');
+      if (!box) return;
+      var apps = await SB.listingApplications(l.id);
+      box.innerHTML = apps.length
+        ? '<p class="pcard__sub" style="margin-bottom:8px">' + T("ilan.apps") + ' (' + apps.length + ')</p>' + apps.map(applicationRow).join("")
+        : '<p class="pcard__sub">' + T("ilan.noApps") + '</p>';
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    var ap = e.target.closest("[data-apply]");
+    if (ap) { e.preventDefault(); openApplyModal(ap.getAttribute("data-apply"), ap.getAttribute("data-baslik")); }
+  });
+  document.addEventListener("click", async function (e) {
+    if (e.target.closest("#liSubmit")) {
+      var baslik = val2("liBaslik"); var msg = document.getElementById("liMsg");
+      if (!baslik) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = T("ilan.baslikReq"); return; }
+      try { await SB.createListing({ baslik: baslik, sehir: val2("liSehir"), bolge: val2("liBolge"), arac: val2("liArac"), aciklama: val2("liAciklama") }); await renderMyListings(); }
+      catch (err) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = (err && err.message) || "Hata"; }
+      return;
+    }
+    var tog = e.target.closest("[data-listing-toggle]");
+    if (tog) { try { await SB.updateListingStatus(tog.getAttribute("data-listing-toggle"), tog.getAttribute("data-durum") === "acik" ? "kapali" : "acik"); await renderMyListings(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    var del = e.target.closest("[data-listing-del]");
+    if (del) { if (!confirm(T("ilan.delConfirm"))) return; try { await SB.deleteListing(del.getAttribute("data-listing-del")); await renderMyListings(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    var aa = e.target.closest("[data-app-act]");
+    if (aa) {
+      var wrap = aa.closest(".offer-act"); var aid = wrap.getAttribute("data-app"); var act = aa.getAttribute("data-app-act");
+      [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = true; });
+      try { var r = await SB.updateApplication(aid, act); if (r && r.error) throw r.error; wrap.innerHTML = '<span class="chip">' + (act === "accepted" ? T("state.accepted") : T("state.rejected")) + '</span>'; }
+      catch (err) { alert((err && err.message) || "Hata"); [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; }); }
+    }
+  });
+
   /* ============ HAVUZ LİSTELEME ============ */
   function teklifBtn(type, id) {
     return '<button class="btn btn--light btn--sm" data-teklif="' + type + '" data-id="' + id + '">✉️ ' + T("btn.offer") + '</button>';
@@ -576,8 +730,8 @@
       var sv = prof ? T("level." + (prof.seviye || "standart")) : T("level.premium");
       var tm = prof ? (prof.tamamlanan || 0) : "1.240";
       setHTML("kuryeMetrics", metric(pu, T("m.score")) + metric(sv, T("m.level")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")));
-      // İlan/başvuru sistemi henüz yok → online'da dürüstçe "yakında", offline demoda örnek
-      setHTML("kuryeBasvuru", online() ? soonInline() : D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
+      if (online()) renderMyApplications();
+      else setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');
       }).join(""));
       setHTML("kuryeTeklif", listFor("kurye"));
@@ -585,7 +739,8 @@
       var ai = prof ? (prof.acikIlan || 0) : "3";
       // Görüşme/memnuniyet için gerçek veri yok → online'da "—"
       setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric(online() ? "—" : "12", T("m.meetings")) + metric(online() ? "—" : "4.7", T("m.satisfaction")));
-      setHTML("isletmeIlan", online() ? soonInline() : D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
+      if (online()) renderMyListings();
+      else setHTML("isletmeIlan", D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), T("soon.published") + " · " + KB.esc(i.tarih), '<span class="chip">' + T("state.active") + '</span>');
       }).join(""));
       setHTML("isletmeBasvuru", listFor("isletme"));
@@ -607,6 +762,6 @@
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
     initMap: initMap, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
-    renderMyPool: renderMyPool
+    renderMyPool: renderMyPool, renderListings: renderListings
   };
 })();

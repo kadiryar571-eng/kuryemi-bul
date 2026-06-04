@@ -249,6 +249,91 @@
     });
   }
 
+  /* ---------- İLAN & BAŞVURU ---------- */
+  function listingFromDb(l) {
+    return {
+      id: l.id, owner_id: l.owner_id, role: l.role, baslik: l.baslik, aciklama: l.aciklama,
+      sehir: l.sehir, bolge: l.bolge, arac: l.arac, durum: l.durum,
+      tarih: (l.created_at || "").slice(0, 10),
+      sahip: (l.owner && l.owner.ad) || ""
+    };
+  }
+  async function createListing(fields) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var me = await myProfile();
+    if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var row = {
+      owner_id: me.id, owner_user: u.id, role: me.role,
+      baslik: fields.baslik, aciklama: fields.aciklama || "", sehir: fields.sehir || "",
+      bolge: fields.bolge || "", arac: fields.arac || ""
+    };
+    var r = await client.from("listings").insert(row).select().maybeSingle();
+    if (r.error) throw r.error;
+    return listingFromDb(r.data);
+  }
+  async function myListings() {
+    var u = await getUser();
+    if (!u) return [];
+    var r = await client.from("listings").select("*").eq("owner_user", u.id).order("created_at", { ascending: false });
+    if (r.error) { console.warn("myListings:", r.error); return []; }
+    return (r.data || []).map(listingFromDb);
+  }
+  async function openListings() {
+    var r = await client.from("listings").select("*, owner:owner_id(ad)").eq("durum", "acik").order("created_at", { ascending: false });
+    if (r.error) { console.warn("openListings:", r.error); return []; }
+    return (r.data || []).map(listingFromDb);
+  }
+  async function updateListingStatus(id, durum) {
+    return client.from("listings").update({ durum: durum }).eq("id", id);
+  }
+  async function deleteListing(id) {
+    return client.from("listings").delete().eq("id", id);
+  }
+  async function applyToListing(listingId, mesaj) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var me = await myProfile();
+    if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var r = await client.from("applications").insert({
+      listing_id: listingId, applicant_id: me.id, applicant_user: u.id, applicant_role: me.role, mesaj: mesaj || ""
+    }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  async function myApplications() {
+    var u = await getUser();
+    if (!u) return [];
+    var r = await client.from("applications")
+      .select("*, listing:listing_id(baslik,sehir,bolge,durum)")
+      .eq("applicant_user", u.id).order("created_at", { ascending: false });
+    if (r.error) { console.warn("myApplications:", r.error); return []; }
+    return (r.data || []).map(function (a) {
+      return { id: a.id, durum: a.durum, mesaj: a.mesaj, tarih: (a.created_at || "").slice(0, 10),
+        baslik: (a.listing && a.listing.baslik) || "", ilanSehir: (a.listing && a.listing.sehir) || "", ilanDurum: a.listing && a.listing.durum };
+    });
+  }
+  async function appliedListingIds() {
+    var u = await getUser();
+    if (!u) return [];
+    var r = await client.from("applications").select("listing_id").eq("applicant_user", u.id);
+    return (r.data || []).map(function (x) { return x.listing_id; });
+  }
+  async function listingApplications(listingId) {
+    var r = await client.from("applications")
+      .select("*, applicant:applicant_id(id,ad,role,puan,sehir)")
+      .eq("listing_id", listingId).order("created_at", { ascending: false });
+    if (r.error) { console.warn("listingApplications:", r.error); return []; }
+    return (r.data || []).map(function (a) {
+      return { id: a.id, durum: a.durum, mesaj: a.mesaj, tarih: (a.created_at || "").slice(0, 10),
+        applicantId: a.applicant && a.applicant.id, ad: (a.applicant && a.applicant.ad) || "Kullanıcı",
+        rol: a.applicant && a.applicant.role, puan: (a.applicant && Number(a.applicant.puan)) || 0, sehir: a.applicant && a.applicant.sehir };
+    });
+  }
+  async function updateApplication(id, durum) {
+    return client.from("applications").update({ durum: durum }).eq("id", id);
+  }
+
   window.SB = {
     isOn: isOn,
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
@@ -258,6 +343,10 @@
     pool: pool, profileById: profileById,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
     changePassword: changePassword, deleteMyData: deleteMyData,
-    canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor
+    canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
+    createListing: createListing, myListings: myListings, openListings: openListings,
+    updateListingStatus: updateListingStatus, deleteListing: deleteListing,
+    applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
+    listingApplications: listingApplications, updateApplication: updateApplication
   };
 })();
