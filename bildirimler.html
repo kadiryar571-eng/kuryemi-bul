@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Bildirim Merkezi · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css"><link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+  <div id="app"></div>
+  <template id="page">
+    <div class="grid grid--4 reveal">
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🚨</span><span class="stat__l">Acil Uyarı</span></div><div class="stat__v" data-count="2">0</div><div class="stat__d down">▲ ilgi bekliyor</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📦</span><span class="stat__l">Teslimat Güncellemesi</span></div><div class="stat__v" data-count="14">0</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🏪</span><span class="stat__l">İşletme Talebi</span></div><div class="stat__v" data-count="7">0</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">💬</span><span class="stat__l">Kurye Mesajı</span></div><div class="stat__v" data-count="5">0</div></div>
+    </div>
+
+    <div class="ops reveal" style="margin-top:18px">
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🌊</span> Aktivite Akışı</h3><span class="right"><span class="chip chip--cy">Tümü</span><a class="act-link" style="color:var(--cyan);font-weight:600" href="#">Tümünü okundu işaretle</a></span></div>
+        <div class="panel__b">
+          <div class="alert alert--red"><span class="ai">🚨</span><span><b>Kadıköy’de kurye açığı</b><span> Talep arzı %38 aşıyor.</span></span><a href="ops-merkez.html" class="act-link">Dağıt →</a></div>
+          <div class="alert alert--red"><span class="ai">⚠️</span><span><b>Pendik kapsama boşluğu</b><span> Bölgede aktif kurye yok.</span></span><a href="ag.html" class="act-link">Haritada gör →</a></div>
+          <div class="alert alert--cy"><span class="ai">📦</span><span><b>Teslimat #1042 yolda</b><span> Yusuf K. · tahmini 6 dk.</span></span><a href="teslimat.html" class="act-link">Takip et →</a></div>
+          <div class="alert alert--cy"><span class="ai">🏪</span><span><b>Moda Çiçek kurye talep etti</b><span> 2 paket · Acil.</span></span><a href="eslesme.html" class="act-link">Eşleştir →</a></div>
+          <div class="alert alert--vi"><span class="ai">💬</span><span><b>Elif D.: “Teslim ettim 👍”</b><span> Teslimat #1039 tamamlandı.</span></span><a href="#" class="act-link">Yanıtla →</a></div>
+          <div class="alert alert--vi"><span class="ai">🏆</span><span><b>Yusuf K. Profesyonel oldu</b><span> Seviye yükseltme onaylandı.</span></span><a href="kurye-kimlik.html" class="act-link">Profili gör →</a></div>
+        </div>
+      </div>
+      <div class="grid" style="gap:18px">
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">🗂️</span> Kategoriler</h3></div>
+          <div class="panel__b act">
+            <div class="act__row"><span class="act__ic">🚨</span><span class="act__t"><b>Acil Uyarılar</b></span><span class="act__time"><span class="chip" style="color:#f87171;border-color:rgba(239,68,68,.4)">2</span></span></div>
+            <div class="act__row"><span class="act__ic">📦</span><span class="act__t"><b>Teslimat Güncellemeleri</b></span><span class="act__time"><span class="chip chip--cy">14</span></span></div>
+            <div class="act__row"><span class="act__ic">🏪</span><span class="act__t"><b>İşletme Talepleri</b></span><span class="act__time"><span class="chip chip--cy">7</span></span></div>
+            <div class="act__row"><span class="act__ic">💬</span><span class="act__t"><b>Kurye Mesajları</b></span><span class="act__time"><span class="chip">5</span></span></div>
+            <div class="act__row"><span class="act__ic">⚙️</span><span class="act__t"><b>Sistem Olayları</b></span><span class="act__time"><span class="chip">9</span></span></div>
+          </div>
+        </div>
+        <div class="ai-card"><div class="ai-card__h">🧠 Özet</div><p>Bugün <b>2 kritik uyarı</b> var. En öncelikli: Kadıköy kurye açığı. Akıllı dağıtım ile çözülebilir.</p></div>
+      </div>
+    </div>
+  </template>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'notif', title: 'Bildirim Merkezi', subtitle: 'Modern aktivite akışı · her şey tek yerde' });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.animate();
+  </script>
+</body>
+</html>

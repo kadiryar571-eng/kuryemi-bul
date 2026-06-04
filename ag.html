@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Canlı Kurye Ağı · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+  <div id="app"></div>
+
+  <template id="page">
+    <div class="grid grid--4 reveal">
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🛵</span><span class="stat__l">Ağdaki Kurye</span></div><div class="stat__v" data-count="128">0</div><div class="stat__d up">▲ canlı</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🟢</span><span class="stat__l">Müsait</span></div><div class="stat__v" data-count="86">0</div><div class="stat__d up">▲ teslimat alabilir</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🔥</span><span class="stat__l">Yoğun Bölge</span></div><div class="stat__v" data-count="4">0</div><div class="stat__d down">▲ talep yüksek</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📡</span><span class="stat__l">Kapsama</span></div><div class="stat__v"><span data-count="88">0</span>%</div><div class="stat__d up">▲ şehir geneli</div></div>
+    </div>
+
+    <div class="panel reveal" style="margin-top:18px">
+      <div class="panel__h"><h3><span class="ic">🌐</span> Gerçek Zamanlı Kurye Ağı</h3><span class="right"><span class="chip chip--cy">İstanbul</span><span class="chip chip--ok">● hareket izleri</span><span class="chip chip--warn">● talep ısısı</span></span></div>
+      <div style="padding:18px">
+        <div class="bigmap" style="height:520px">
+          <div class="minimap__grid"></div>
+          <span class="heat" style="width:240px;height:240px;left:10%;top:14%;background:radial-gradient(circle,rgba(239,68,68,0.45),transparent 70%)"></span>
+          <span class="heat" style="width:200px;height:200px;left:58%;top:30%;background:radial-gradient(circle,rgba(34,211,238,0.42),transparent 70%)"></span>
+          <span class="heat" style="width:180px;height:180px;left:34%;top:60%;background:radial-gradient(circle,rgba(168,85,247,0.4),transparent 70%)"></span>
+          <span class="heat" style="width:160px;height:160px;left:74%;top:68%;background:radial-gradient(circle,rgba(251,191,36,0.35),transparent 70%)"></span>
+          <svg id="netmap" viewBox="0 0 600 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+          <div class="bigmap__legend">
+            <span class="chip chip--cy">● Müsait kurye</span><span class="chip">● İşletme</span>
+            <span class="chip chip--warn">● Yüksek talep</span><span class="chip" style="color:#f87171;border-color:rgba(239,68,68,.4)">● Kapsama boşluğu</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid--3 reveal" style="margin-top:18px">
+      <div class="panel col-2">
+        <div class="panel__h"><h3><span class="ic">🛵</span> Kurye Durumu</h3><span class="right"><span class="chip chip--ok">86 müsait</span></span></div>
+        <div class="panel__b" style="padding:6px 8px">
+          <table class="tbl">
+            <thead><tr><th>Kurye</th><th>Bölge</th><th>Durum</th><th>Rota Verimi</th><th>Seviye</th></tr></thead>
+            <tbody>
+              <tr><td><span class="u"><span class="av">🛵</span> Yusuf K.</span></td><td>Kadıköy</td><td><span class="chip chip--ok">● Müsait</span></td><td><b>%94</b></td><td><span class="vbadge vbadge--pro">Profesyonel</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Elif D.</span></td><td>Beşiktaş</td><td><span class="chip chip--cy">● Teslimatta</span></td><td><b>%97</b></td><td><span class="vbadge vbadge--prem">Premium</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Murat A.</span></td><td>Üsküdar</td><td><span class="chip chip--ok">● Müsait</span></td><td><b>%88</b></td><td><span class="vbadge vbadge--ok">Doğrulanmış</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Selin B.</span></td><td>Şişli</td><td><span class="chip chip--ok">● Müsait</span></td><td><b>%91</b></td><td><span class="vbadge vbadge--pro">Profesyonel</span></td></tr>
+              <tr><td><span class="u"><span class="av">🛵</span> Can T.</span></td><td>Maltepe</td><td><span class="chip chip--warn">● Mola</span></td><td><b>%82</b></td><td><span class="vbadge vbadge--ok">Doğrulanmış</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="grid" style="gap:18px">
+        <div class="alert alert--red" style="margin:0"><span class="ai">⚠️</span><span><b>Kapsama boşluğu: Pendik</b><span> Bölgede aktif kurye yok.</span></span></div>
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">🔥</span> Yüksek Talep Bölgeleri</h3></div>
+          <div class="panel__b">
+            <div class="metricrow">
+              <div class="metric"><div class="metric__t"><span>Kadıköy</span><b>%92</b></div><div class="metric__track"><i data-fill="92" style="background:linear-gradient(90deg,#f87171,#fbbf24)"></i></div></div>
+              <div class="metric"><div class="metric__t"><span>Beşiktaş</span><b>%76</b></div><div class="metric__track"><i data-fill="76"></i></div></div>
+              <div class="metric"><div class="metric__t"><span>Şişli</span><b>%61</b></div><div class="metric__track"><i data-fill="61"></i></div></div>
+              <div class="metric"><div class="metric__t"><span>Üsküdar</span><b>%44</b></div><div class="metric__track"><i data-fill="44"></i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'net', title: 'Canlı Kurye Ağı', subtitle: 'Ekosistemi görselleştir · konum, hareket ve yoğunluk' });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.buildMap(document.getElementById('netmap'),
+      [[60,70],[180,40],[320,70],[450,50],[540,120],[120,170],[260,150],[400,180],[510,230],[90,280],[230,300],[380,320],[490,360],[160,400],[320,430],[450,460]],
+      [[0,5],[5,6],[6,2],[2,7],[7,3],[3,4],[4,8],[6,10],[5,9],[10,11],[11,7],[8,12],[9,13],[13,14],[14,11],[11,12],[1,6],[10,14],[7,8]]);
+    Platform.animate();
+  </script>
+</body>
+</html>

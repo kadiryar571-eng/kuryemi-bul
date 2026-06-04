@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Operasyon Komuta Merkezi · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+
+  <div id="app"></div>
+
+  <template id="page">
+    <!-- emergency / smart alerts -->
+    <div class="reveal">
+      <div class="alert alert--red">
+        <span class="ai">🚨</span>
+        <span><b>Kadıköy bölgesinde kurye açığı</b><span> Talep arzı %38 aşıyor — yakın bölgelerden yönlendirme öneriliyor.</span></span>
+        <a href="#" class="act-link">Dağıt →</a>
+      </div>
+      <div class="alert alert--cy">
+        <span class="ai">🧠</span>
+        <span><b>Akıllı dağıtım hazır</b><span> 7 bekleyen talep için optimum kurye eşleşmeleri hesaplandı.</span></span>
+        <a href="eslesme.html" class="act-link">İncele →</a>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="grid grid--4 reveal" style="margin-top:18px">
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🛵</span><span class="stat__l">Aktif Kurye</span></div><div class="stat__v" data-count="128">0</div><div class="stat__d up">▲ 12 son saatte</div><div class="stat__spark"><i style="height:40%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:80%"></i><i style="height:70%"></i><i style="height:100%"></i></div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📦</span><span class="stat__l">Aktif Teslimat</span></div><div class="stat__v" data-count="64">0</div><div class="stat__d up">▲ gerçek zamanlı</div><div class="stat__spark"><i style="height:50%"></i><i style="height:40%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:90%"></i><i style="height:75%"></i></div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🏪</span><span class="stat__l">Bekleyen Talep</span></div><div class="stat__v" data-count="37">0</div><div class="stat__d up">▲ 7 eşleşme bekliyor</div><div class="stat__spark"><i style="height:30%"></i><i style="height:55%"></i><i style="height:45%"></i><i style="height:65%"></i><i style="height:50%"></i><i style="height:70%"></i></div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">💚</span><span class="stat__l">Ağ Sağlığı</span></div><div class="stat__v"><span data-count="98">0</span>%</div><div class="stat__d up">▲ stabil</div><div class="stat__spark"><i style="height:80%"></i><i style="height:85%"></i><i style="height:78%"></i><i style="height:92%"></i><i style="height:88%"></i><i style="height:96%"></i></div></div>
+    </div>
+
+    <!-- main ops: map + side -->
+    <div class="ops reveal" style="margin-top:18px">
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🗺️</span> Canlı Lojistik Haritası</h3><span class="right"><span class="chip chip--cy">İstanbul</span><span class="chip chip--ok">● 128 kurye</span></span></div>
+        <div style="padding:18px">
+          <div class="bigmap">
+            <div class="minimap__grid"></div>
+            <span class="heat" style="width:180px;height:180px;left:8%;top:18%;background:radial-gradient(circle,rgba(239,68,68,0.5),transparent 70%)"></span>
+            <span class="heat" style="width:220px;height:220px;left:55%;top:40%;background:radial-gradient(circle,rgba(34,211,238,0.45),transparent 70%)"></span>
+            <span class="heat" style="width:160px;height:160px;left:30%;top:62%;background:radial-gradient(circle,rgba(168,85,247,0.42),transparent 70%)"></span>
+            <svg id="opsmap" viewBox="0 0 600 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+            <div class="bigmap__zones">
+              <div class="zonebar"><div class="zonebar__t"><span>Kadıköy</span><b style="color:#f87171">Yoğun</b></div><div class="zonebar__track"><i data-fill="92" style="background:linear-gradient(90deg,#f87171,#fbbf24)"></i></div></div>
+              <div class="zonebar"><div class="zonebar__t"><span>Beşiktaş</span><b style="color:#22d3ee">Dengeli</b></div><div class="zonebar__track"><i data-fill="64"></i></div></div>
+              <div class="zonebar"><div class="zonebar__t"><span>Üsküdar</span><b style="color:#34d399">Rahat</b></div><div class="zonebar__track"><i data-fill="38"></i></div></div>
+            </div>
+            <div class="bigmap__legend">
+              <span class="chip chip--cy">● Kurye</span>
+              <span class="chip">● İşletme</span>
+              <span class="chip chip--warn">● Yoğunluk</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:18px">
+        <div class="ai-card">
+          <div class="ai-card__h">🧠 AI Lojistik Önerisi</div>
+          <p>3 kuryeyi <b>Kadıköy → Beşiktaş</b> koridoruna kaydır; tahmini ortalama teslimat süresi <b>%14 düşer</b>.</p>
+          <div class="mini">Güven: yüksek · 12 sinyale dayalı</div>
+        </div>
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">📡</span> Şehir Aktivite Akışı</h3><span class="right"><span class="dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399"></span> canlı</span></div>
+          <div class="panel__b act">
+            <div class="act__row"><span class="act__ic">🛵</span><span><span class="act__t"><b>Yusuf K.</b> teslimatı aldı</span><br><span class="act__s">Lezzet Burger · Kadıköy</span></span><span class="act__time">şimdi</span></div>
+            <div class="act__row"><span class="act__ic">🏪</span><span><span class="act__t"><b>Moda Çiçek</b> kurye talep etti</span><br><span class="act__s">2 paket · Acil</span></span><span class="act__time">1 dk</span></div>
+            <div class="act__row"><span class="act__ic">✅</span><span><span class="act__t"><b>Elif D.</b> teslim etti</span><br><span class="act__s">4.9★ değerlendirme aldı</span></span><span class="act__time">3 dk</span></div>
+            <div class="act__row"><span class="act__ic">🧠</span><span><span class="act__t">Akıllı eşleşme tamamlandı</span><br><span class="act__s">%98 uyum · Beşiktaş</span></span><span class="act__time">4 dk</span></div>
+            <div class="act__row"><span class="act__ic">🏢</span><span><span class="act__t"><b>HızlıKurye</b> filoya 6 kurye ekledi</span><br><span class="act__s">Kapsama genişledi</span></span><span class="act__time">7 dk</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom: dispatch + health -->
+    <div class="grid grid--3 reveal" style="margin-top:18px">
+      <div class="panel col-2">
+        <div class="panel__h"><h3><span class="ic">⚡</span> Akıllı Dağıtım Önerileri</h3><span class="right"><a href="eslesme.html" class="act-link" style="color:var(--cyan);font-weight:600">Tümünü gör →</a></span></div>
+        <div class="panel__b" style="padding:14px 18px">
+          <div class="match is-top"><span class="match__av">🛵</span><div class="match__main"><div class="match__name">Yusuf K. <span class="vbadge vbadge--pro">✓ Profesyonel</span></div><div class="match__sub">Moda Çiçek talebi · 320m uzakta</div></div><div class="match__pct"><b>%98</b><span>uyum</span></div></div>
+          <div class="match"><span class="match__av">🛵</span><div class="match__main"><div class="match__name">Elif D. <span class="vbadge vbadge--prem">★ Premium</span></div><div class="match__sub">Lezzet Burger talebi · 540m uzakta</div></div><div class="match__pct"><b>%91</b><span>uyum</span></div></div>
+          <div class="match"><span class="match__av">🛵</span><div class="match__main"><div class="match__name">Murat A. <span class="vbadge vbadge--ok">✓ Doğrulanmış</span></div><div class="match__sub">Kahve Durağı talebi · 760m uzakta</div></div><div class="match__pct"><b>%85</b><span>uyum</span></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">💚</span> Ağ Sağlığı</h3></div>
+        <div class="panel__b" style="display:flex;flex-direction:column;align-items:center;gap:18px">
+          <div class="donut" style="--p:72;--p2:92"><i><b data-count="98" data-suffix="%">0</b><span>operasyonel</span></i></div>
+          <div class="metricrow" style="width:100%">
+            <div class="metric"><div class="metric__t"><span>Kurye uygunluğu</span><b>%82</b></div><div class="metric__track"><i data-fill="82"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Eşleşme başarısı</span><b>%96</b></div><div class="metric__track"><i data-fill="96"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Şehir kapsaması</span><b>%88</b></div><div class="metric__track"><i data-fill="88"></i></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'ops', title: 'Operasyon Komuta Merkezi', subtitle: 'Ekosistemin kalbi · gerçek zamanlı lojistik kontrolü' });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.buildMap(document.getElementById('opsmap'),
+      [[70,80],[210,50],[360,90],[500,60],[150,200],[330,180],[470,230],[260,320],[420,360],[110,360]],
+      [[0,4],[4,5],[5,2],[2,3],[3,6],[5,8],[4,9],[7,8],[1,5],[5,6],[9,7],[0,1]]);
+    Platform.animate();
+  </script>
+</body>
+</html>

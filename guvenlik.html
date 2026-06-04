@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Güven & Güvenlik Merkezi · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css"><link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+  <div id="app"></div>
+  <template id="page">
+    <div class="grid grid--4 reveal">
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🛡️</span><span class="stat__l">Güven Skoru</span></div><div class="stat__v"><span data-count="97">0</span>%</div><div class="stat__d up">▲ banka düzeyi</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">✅</span><span class="stat__l">Doğrulanmış</span></div><div class="stat__v"><span data-count="92">0</span>%</div><div class="stat__d up">▲ kullanıcı</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🔒</span><span class="stat__l">Güvenli Oturum</span></div><div class="stat__v"><span data-count="100">0</span>%</div><div class="stat__d up">▲ şifreli</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🚫</span><span class="stat__l">Engellenen Tehdit</span></div><div class="stat__v" data-count="14">0</div><div class="stat__d up">▲ bu hafta</div></div>
+    </div>
+
+    <div class="ops reveal" style="margin-top:18px">
+      <div class="grid" style="gap:18px">
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">🪪</span> Kimlik Doğrulama (KYC)</h3></div>
+          <div class="panel__b"><div class="metricrow">
+            <div class="metric"><div class="metric__t"><span>Kimlik doğrulanmış</span><b>%92</b></div><div class="metric__track"><i data-fill="92"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Belge geçerliliği</span><b>%96</b></div><div class="metric__track"><i data-fill="96"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Telefon doğrulama</span><b>%99</b></div><div class="metric__track"><i data-fill="99"></i></div></div>
+          </div></div>
+        </div>
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">🔍</span> Dolandırıcılık İzleme</h3></div>
+          <div class="panel__b act">
+            <div class="act__row"><span class="act__ic">🚫</span><span><span class="act__t">Şüpheli giriş engellendi</span><br><span class="act__s">IP doğrulaması · 11:42</span></span><span class="act__time"><span class="chip chip--ok">Çözüldü</span></span></div>
+            <div class="act__row"><span class="act__ic">⚠️</span><span><span class="act__t">Sahte profil reddedildi</span><br><span class="act__s">KYC başarısız · 09:18</span></span><span class="act__time"><span class="chip chip--ok">Çözüldü</span></span></div>
+            <div class="act__row"><span class="act__ic">🛡️</span><span><span class="act__t">Anormal aktivite taraması</span><br><span class="act__s">temiz · sürekli</span></span><span class="act__time"><span class="chip chip--cy">İzleniyor</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid" style="gap:18px">
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">💚</span> Platform Sağlığı</h3></div>
+          <div class="panel__b" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <div class="donut" style="--p:74;--p2:97"><i><b data-count="97" data-suffix="%">0</b><span>güvenli</span></i></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">🔐</span> Güvenlik Katmanları</h3></div>
+          <div class="panel__b act">
+            <div class="act__row"><span class="act__ic">🔒</span><span class="act__t"><b>Uçtan uca şifreli oturum</b></span><span class="act__time"><span class="chip chip--ok">● Aktif</span></span></div>
+            <div class="act__row"><span class="act__ic">👁️</span><span class="act__t"><b>Gerçek zamanlı izleme</b></span><span class="act__time"><span class="chip chip--ok">● Aktif</span></span></div>
+            <div class="act__row"><span class="act__ic">🪪</span><span class="act__t"><b>KYC kimlik doğrulama</b></span><span class="act__time"><span class="chip chip--ok">● Aktif</span></span></div>
+            <div class="act__row"><span class="act__ic">🛡️</span><span class="act__t"><b>İşletme koruma sistemi</b></span><span class="act__time"><span class="chip chip--ok">● Aktif</span></span></div>
+            <div class="act__row"><span class="act__ic">🔏</span><span class="act__t"><b>İletişim gizliliği (KVKK)</b></span><span class="act__time"><span class="chip chip--ok">● Aktif</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-card reveal" style="margin-top:18px"><div class="ai-card__h">🛡️ Güvenlik Durumu</div><p>Tüm güvenlik katmanları aktif. Bu hafta <b>14 tehdit</b> otomatik engellendi, <b>0 veri ihlali</b>. Platform banka düzeyi güven standardında çalışıyor.</p></div>
+  </template>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'trust', title: 'Güven & Güvenlik Merkezi', subtitle: 'Banka düzeyi güvenlik · ekosistem güveni' });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.animate();
+  </script>
+</body>
+</html>

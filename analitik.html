@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Analitik & İçgörü Merkezi · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css"><link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+  <div id="app"></div>
+  <template id="page">
+    <div class="grid grid--4 reveal">
+      <div class="stat"><div class="stat__top"><span class="stat__ic">💰</span><span class="stat__l">Aylık Hacim</span></div><div class="stat__v" data-prefix="₺" data-count="1.2" data-dec="1" data-suffix="M">0</div><div class="stat__d up">▲ %23</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📦</span><span class="stat__l">Teslimat</span></div><div class="stat__v" data-count="18420">0</div><div class="stat__d up">▲ %17</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🏪</span><span class="stat__l">İşletme Büyümesi</span></div><div class="stat__v"><span data-count="31">0</span>%</div><div class="stat__d up">▲ çeyreklik</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🛵</span><span class="stat__l">Kurye Büyümesi</span></div><div class="stat__v"><span data-count="28">0</span>%</div><div class="stat__d up">▲ çeyreklik</div></div>
+    </div>
+
+    <div class="grid grid--3 reveal" style="margin-top:18px">
+      <div class="panel col-2">
+        <div class="panel__h"><h3><span class="ic">📈</span> Gelir & Teslimat Trendi</h3><span class="right"><span class="chip chip--cy">12 ay</span><span class="chip chip--ok">▲ %23</span></span></div>
+        <div class="panel__b"><svg class="linechart" id="revChart" style="height:240px" aria-hidden="true"></svg></div>
+      </div>
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🥧</span> Rol Dağılımı</h3></div>
+        <div class="panel__b" style="display:flex;flex-direction:column;align-items:center;gap:18px">
+          <div class="donut" style="--p:55;--p2:82"><i><b>3</b><span>rol</span></i></div>
+          <div class="legend" style="width:100%">
+            <div class="li"><span class="sw" style="background:#22d3ee"></span> Kuryeler <span class="v">%55</span></div>
+            <div class="li"><span class="sw" style="background:#4f8bff"></span> İşletmeler <span class="v">%27</span></div>
+            <div class="li"><span class="sw" style="background:#a855f7"></span> Firmalar <span class="v">%18</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid--3 reveal" style="margin-top:18px">
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🌍</span> Şehir Performansı</h3></div>
+        <div class="panel__b"><div class="metricrow">
+          <div class="metric"><div class="metric__t"><span>İstanbul</span><b>%100</b></div><div class="metric__track"><i data-fill="100"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>Ankara</span><b>%72</b></div><div class="metric__track"><i data-fill="72"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>İzmir</span><b>%64</b></div><div class="metric__track"><i data-fill="64"></i></div></div>
+          <div class="metric"><div class="metric__t"><span>Bursa</span><b>%41</b></div><div class="metric__track"><i data-fill="41"></i></div></div>
+        </div></div>
+      </div>
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">📊</span> Haftalık Hacim</h3></div>
+        <div class="panel__b"><div class="bars">
+          <div class="b"><i data-h="50"></i><span>1</span></div><div class="b"><i data-h="62"></i><span>2</span></div>
+          <div class="b"><i data-h="58"></i><span>3</span></div><div class="b is-hi"><i data-h="84"></i><span>4</span></div>
+          <div class="b"><i data-h="72"></i><span>5</span></div><div class="b is-hi"><i data-h="100"></i><span>6</span></div>
+          <div class="b"><i data-h="78"></i><span>7</span></div>
+        </div></div>
+      </div>
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🔮</span> AI Tahmini</h3></div>
+        <div class="panel__b">
+          <div class="ai-card"><div class="ai-card__h">🔮 Gelecek Çeyrek</div><p>Mevcut büyüme hızıyla teslimat hacminin <b>%24 artması</b> ve İstanbul kapsamasının <b>%96’ya</b> ulaşması bekleniyor.</p><div class="mini">Model güveni: %88</div></div>
+          <div class="metric" style="margin-top:14px"><div class="metric__t"><span>Hedefe ilerleme</span><b>%78</b></div><div class="metric__track"><i data-fill="78"></i></div></div>
+        </div>
+      </div>
+    </div>
+  </template>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'analytics', title: 'Analitik & İçgörü Merkezi', subtitle: 'Yatırımcı düzeyinde raporlama · ekosistem metrikleri', wide: true });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.lineChart(document.getElementById('revChart'), [42,48,55,60,72,80,95,110,130,150,168,190], { h: 240 });
+    Platform.animate();
+  </script>
+</body>
+</html>

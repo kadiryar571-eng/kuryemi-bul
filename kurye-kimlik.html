@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Kurye Kimliği · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+  <div id="app"></div>
+
+  <template id="page">
+    <div class="ops reveal">
+      <!-- identity card -->
+      <div class="idcard">
+        <div class="idcard__cover"></div>
+        <div class="idcard__b">
+          <div class="idcard__av">🛵</div>
+          <div class="idcard__name">Yusuf Kaya <span class="vbadge vbadge--pro">✓ Profesyonel</span></div>
+          <div class="idcard__meta">İstanbul · Kadıköy · Ekosistemde 2 yıl</div>
+          <div class="grid grid--3" style="margin-top:20px;gap:12px">
+            <div class="stat" style="padding:14px"><div class="stat__l">Başarı Oranı</div><div class="stat__v" style="font-size:1.5rem"><span data-count="98">0</span>%</div></div>
+            <div class="stat" style="padding:14px"><div class="stat__l">Teslimat</div><div class="stat__v" style="font-size:1.5rem" data-count="1240">0</div></div>
+            <div class="stat" style="padding:14px"><div class="stat__l">Puan</div><div class="stat__v" style="font-size:1.5rem" data-count="4.9" data-dec="1">0</div></div>
+          </div>
+
+          <h3 style="margin:24px 0 14px;font-size:1.05rem">Performans Profili</h3>
+          <div class="metricrow">
+            <div class="metric"><div class="metric__t"><span>Deneyim skoru</span><b>%92</b></div><div class="metric__track"><i data-fill="92"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Rota verimliliği</span><b>%94</b></div><div class="metric__track"><i data-fill="94"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Zamanında teslim</span><b>%97</b></div><div class="metric__track"><i data-fill="97"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>Müşteri memnuniyeti</span><b>%96</b></div><div class="metric__track"><i data-fill="96"></i></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- side: career + earnings -->
+      <div class="grid" style="gap:18px">
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">🚀</span> Kariyer Yolculuğu</h3></div>
+          <div class="panel__b">
+            <div class="track">
+              <span class="node is-done">🥉</span><span class="seg is-done"></span>
+              <span class="node is-done is-cur">🥈</span><span class="seg"></span>
+              <span class="node">🥇</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--faint);margin-top:8px"><span>Standart</span><span style="color:var(--cyan)">Profesyonel</span><span>Premium</span></div>
+            <div class="ai-card" style="margin-top:18px">
+              <div class="ai-card__h">🎯 Sıradaki Seviye: Premium</div>
+              <p>Premium’a yükselmek için <b>260 teslimat</b> ve <b>4.95★</b> ortalama kaldı.</p>
+              <div class="metric" style="margin-top:12px"><div class="metric__t"><span>İlerleme</span><b>%74</b></div><div class="metric__track"><i data-fill="74"></i></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__h"><h3><span class="ic">💰</span> Kazanç Trendi</h3><span class="right chip chip--ok">▲ %18</span></div>
+          <div class="panel__b">
+            <div class="bars">
+              <div class="b"><i data-h="45"></i><span>Pzt</span></div>
+              <div class="b"><i data-h="60"></i><span>Sal</span></div>
+              <div class="b"><i data-h="52"></i><span>Çar</span></div>
+              <div class="b is-hi"><i data-h="88"></i><span>Per</span></div>
+              <div class="b"><i data-h="70"></i><span>Cum</span></div>
+              <div class="b is-hi"><i data-h="100"></i><span>Cmt</span></div>
+              <div class="b"><i data-h="64"></i><span>Paz</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- achievements -->
+    <div class="panel reveal" style="margin-top:18px">
+      <div class="panel__h"><h3><span class="ic">🏅</span> Başarımlar</h3><span class="right">9 / 12 açıldı</span></div>
+      <div class="panel__b">
+        <div class="achv">
+          <div class="a"><div class="em">⚡</div><small>Hız Ustası</small></div>
+          <div class="a"><div class="em">🎯</div><small>1000 Teslimat</small></div>
+          <div class="a"><div class="em">⭐</div><small>5★ Serisi</small></div>
+          <div class="a"><div class="em">🛡️</div><small>Doğrulanmış</small></div>
+          <div class="a"><div class="em">🌙</div><small>Gece Kuryesi</small></div>
+          <div class="a"><div class="em">🔥</div><small>Yoğun Bölge</small></div>
+          <div class="a"><div class="em">🤝</div><small>Sadık Ortak</small></div>
+          <div class="a"><div class="em">📈</div><small>Yükseliş</small></div>
+          <div class="a"><div class="em">🏆</div><small>Bölge Lideri</small></div>
+          <div class="a is-locked"><div class="em">👑</div><small>Premium</small></div>
+          <div class="a is-locked"><div class="em">💎</div><small>Elit Ağ</small></div>
+          <div class="a is-locked"><div class="em">🚀</div><small>10K Kulübü</small></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'courier', title: 'Kurye Kimliği', subtitle: 'Premium kurye profili · oyunlaştırılmış kariyer sistemi' });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.animate();
+  </script>
+</body>
+</html>

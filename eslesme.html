@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Akıllı Eşleşme Motoru · Kuryemi Bul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <link rel="stylesheet" href="assets/css/platform.css">
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
+  <div id="app"></div>
+
+  <template id="page">
+    <div class="ai-card reveal" style="border-color:rgba(168,85,247,0.35)">
+      <div class="ai-card__h">🧠 Eşleşme Motoru Aktif</div>
+      <p><b>Moda Çiçek</b> talebi için 86 müsait kurye tarandı, konum · uygunluk · güven · performans skoru birleştirildi. En uygun 3 aday aşağıda.</p>
+      <div class="mini">Hesaplama süresi: 0.8 sn · 12 sinyal değerlendirildi</div>
+    </div>
+
+    <div class="grid grid--3 reveal" style="margin-top:18px">
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🎯</span><span class="stat__l">Eşleşme Başarısı</span></div><div class="stat__v"><span data-count="96">0</span>%</div><div class="stat__d up">▲ son 24 saat</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">⚡</span><span class="stat__l">Ort. Eşleşme Süresi</span></div><div class="stat__v"><span data-count="8">0</span> sn</div><div class="stat__d up">▲ %14 hızlandı</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">🤝</span><span class="stat__l">Bugünkü Eşleşme</span></div><div class="stat__v" data-count="214">0</div><div class="stat__d up">▲ akıllı motor</div></div>
+    </div>
+
+    <div class="ops reveal" style="margin-top:18px">
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🛵</span> Önerilen Kuryeler</h3><span class="right"><span class="chip chip--cy">Moda Çiçek · 2 paket · Kadıköy</span></span></div>
+        <div class="panel__b" style="padding:16px 18px">
+          <div class="match is-top">
+            <span class="match__av">🛵</span>
+            <div class="match__main"><div class="match__name">Yusuf K. <span class="vbadge vbadge--pro">✓ Profesyonel</span></div><div class="match__sub">320m uzakta · 1.240 teslimat · 4.9★</div></div>
+            <div class="match__scores">
+              <div class="scorepill"><b>%96</b><span>uygunluk</span></div>
+              <div class="scorepill"><b>%98</b><span>mesafe</span></div>
+              <div class="scorepill"><b>%95</b><span>güven</span></div>
+              <div class="scorepill"><b>%94</b><span>performans</span></div>
+            </div>
+            <div class="match__pct"><b>%98</b><span>genel uyum</span></div>
+          </div>
+          <div class="match">
+            <span class="match__av">🛵</span>
+            <div class="match__main"><div class="match__name">Elif D. <span class="vbadge vbadge--prem">★ Premium</span></div><div class="match__sub">540m uzakta · 2.110 teslimat · 5.0★</div></div>
+            <div class="match__scores">
+              <div class="scorepill"><b>%88</b><span>uygunluk</span></div>
+              <div class="scorepill"><b>%90</b><span>mesafe</span></div>
+              <div class="scorepill"><b>%99</b><span>güven</span></div>
+              <div class="scorepill"><b>%97</b><span>performans</span></div>
+            </div>
+            <div class="match__pct"><b>%91</b><span>genel uyum</span></div>
+          </div>
+          <div class="match">
+            <span class="match__av">🛵</span>
+            <div class="match__main"><div class="match__name">Murat A. <span class="vbadge vbadge--ok">✓ Doğrulanmış</span></div><div class="match__sub">760m uzakta · 540 teslimat · 4.7★</div></div>
+            <div class="match__scores">
+              <div class="scorepill"><b>%80</b><span>uygunluk</span></div>
+              <div class="scorepill"><b>%82</b><span>mesafe</span></div>
+              <div class="scorepill"><b>%88</b><span>güven</span></div>
+              <div class="scorepill"><b>%85</b><span>performans</span></div>
+            </div>
+            <div class="match__pct"><b>%85</b><span>genel uyum</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__h"><h3><span class="ic">🔍</span> AI Gerekçesi</h3></div>
+        <div class="panel__b">
+          <p style="color:var(--muted);font-size:0.92rem;margin-bottom:16px">Yusuf K. neden ilk sırada?</p>
+          <div class="metricrow">
+            <div class="metric"><div class="metric__t"><span>📍 Mesafe yakınlığı</span><b>%98</b></div><div class="metric__track"><i data-fill="98"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>🟢 Anlık uygunluk</span><b>%96</b></div><div class="metric__track"><i data-fill="96"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>🛡️ Güven skoru</span><b>%95</b></div><div class="metric__track"><i data-fill="95"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>📈 Performans geçmişi</span><b>%94</b></div><div class="metric__track"><i data-fill="94"></i></div></div>
+            <div class="metric"><div class="metric__t"><span>🏪 Bu işletmeyle uyum</span><b>%90</b></div><div class="metric__track"><i data-fill="90"></i></div></div>
+          </div>
+          <a href="#" class="btn btn--primary btn--sm" style="margin-top:20px;width:100%">Yusuf K.'yı Ata →</a>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/platform.js"></script>
+  <script>
+    var wrap = Platform.init({ active: 'match', title: 'Akıllı Eşleşme Motoru', subtitle: 'Platform zekâsı · neden bu kurye seçildi?' });
+    wrap.innerHTML = document.getElementById('page').innerHTML;
+    Platform.animate();
+  </script>
+</body>
+</html>
