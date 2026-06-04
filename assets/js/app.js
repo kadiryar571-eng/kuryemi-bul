@@ -450,7 +450,7 @@
     var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
     return '<article class="pcard">' + poolStar(k.id) +
       '<div class="pcard__top"><div class="avatar">' + KB.initials(k.ad) + '</div>' +
-        '<div><div class="pcard__name">' + KB.esc(k.ad) + '</div>' +
+        '<div><div class="pcard__name">' + KB.esc(k.ad) + ' ' + verBadge(k.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
       '<div>' + KB.levelBadge(k.seviye) + ' ' + KB.stars(k.puan) + '</div>' +
       '<div class="pcard__meta"><span class="chip">🛵 ' + KB.esc(k.arac) + '</span>' +
@@ -462,7 +462,7 @@
   function isletmeCard(i) {
     return '<article class="pcard">' + poolStar(i.id) +
       '<div class="pcard__top"><div class="avatar avatar--blue">' + KB.initials(i.ad) + '</div>' +
-        '<div><div class="pcard__name">' + KB.esc(i.ad) + '</div>' +
+        '<div><div class="pcard__name">' + KB.esc(i.ad) + ' ' + verBadge(i.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
       '<p class="pcard__sub">' + KB.esc(i.aciklama) + '</p>' +
       '<div class="pcard__meta"><span class="chip">📍 ' + KB.esc(i.bolge) + '</span>' +
@@ -473,7 +473,7 @@
   function firmaCard(f) {
     return '<article class="pcard">' + poolStar(f.id) +
       '<div class="pcard__top"><div class="avatar avatar--navy">' + KB.initials(f.ad) + '</div>' +
-        '<div><div class="pcard__name">' + KB.esc(f.ad) + '</div>' +
+        '<div><div class="pcard__name">' + KB.esc(f.ad) + ' ' + verBadge(f.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
       '<p class="pcard__sub">' + KB.esc(f.aciklama) + '</p>' +
       '<div>' + KB.stars(f.puan) + '</div>' +
@@ -654,7 +654,7 @@
       '<div class="profile">' +
         '<aside class="profile__card">' +
           '<div class="avatar' + avatarCls + '">' + KB.initials(x.ad) + '</div>' +
-          '<div class="profile__name">' + KB.esc(x.ad) + '</div>' +
+          '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
           '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
           sideExtra +
           '<button class="btn btn--primary btn--block" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
@@ -796,6 +796,7 @@
     return ' · 📞 ' + KB.esc(c.telefon || c.email);
   }
   function soonInline() { return '<div class="empty">' + T("soon.feature") + '</div>'; }
+  function verBadge(d) { return d === "verified" ? '<span class="ver-badge" title="' + T("kyc.verified") + '">✓ ' + T("kyc.verifiedShort") + '</span>' : ""; }
   function renderOfferRows(rows) {
     if (!rows.length) return '<div class="empty">' + T("empty.offers") + '</div>';
     return rows.map(function (t) {

@@ -23,6 +23,12 @@
                 <p class="mt-24" id="peView" hidden><a class="btn btn--light btn--sm" id="peViewLink" href="#" data-i18n="pe.viewPublic">Herkese açık profilimi gör →</a></p>
             </div>
 
+            <div class="form-card mt-24" id="kycCard" hidden>
+                <h3 style="margin-bottom:6px" data-i18n="kyc.title">🪪 Kimlik Doğrulama</h3>
+                <p class="pcard__sub" data-i18n="kyc.lead">Profilini doğrulat, havuzda "✓ Doğrulanmış" rozetiyle öne çık.</p>
+                <div id="kycBody" class="mt-24"></div>
+            </div>
+
             <div class="form-card mt-24" id="accCard" hidden>
                 <h3 style="margin-bottom:16px" data-i18n="acc.title">Hesap</h3>
                 <div class="field"><label for="accPass" data-i18n="acc.changePass">Şifre Değiştir</label>
@@ -109,6 +115,39 @@
 
             var p = (KB.session() && KB.session().profile) || await SB.myProfile();
             var role = p.role;
+
+            // KYC kartı
+            var kycCard = document.getElementById("kycCard");
+            if (kycCard) {
+                kycCard.hidden = false;
+                var kycBody = document.getElementById("kycBody");
+                var d = p.dogrulama || "none";
+                if (d === "verified") {
+                    kycBody.innerHTML = '<p class="form-success">✓ ' + t("kyc.verified") + '</p>';
+                } else if (d === "pending") {
+                    kycBody.innerHTML = '<p class="pcard__sub">⏳ ' + t("kyc.pending") + '</p>';
+                } else {
+                    kycBody.innerHTML =
+                        (d === "rejected" ? '<p class="pcard__sub" style="color:#c0392b">' + t("kyc.rejected") + '</p>' : '') +
+                        '<div class="form-grid">' +
+                        '<div class="field"><label>' + t("kyc.adsoyad") + '</label><input id="kycAd"></div>' +
+                        '<div class="field"><label>' + t("kyc.tc") + '</label><input id="kycTc" maxlength="11" inputmode="numeric"></div>' +
+                        '<div class="field"><label>' + t("kyc.belge") + '</label><select id="kycBelge"><option value="kimlik">' + t("kyc.belgeKimlik") + '</option><option value="ehliyet">' + t("kyc.belgeEhliyet") + '</option></select></div>' +
+                        '</div>' +
+                        '<button type="button" class="btn btn--primary btn--sm" id="kycSubmit">' + t("kyc.submit") + '</button>' +
+                        '<p class="form-success" id="kycMsg" hidden></p>';
+                    document.getElementById("kycSubmit").addEventListener("click", async function () {
+                        var ad = val("kycAd"), tc = val("kycTc"), belge = val("kycBelge"), msg = document.getElementById("kycMsg");
+                        if (ad.length < 3) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("kyc.adReq"); return; }
+                        if (!/^[0-9]{11}$/.test(tc)) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("kyc.tcReq"); return; }
+                        try {
+                            await SB.submitKyc({ ad_soyad: ad, tc_no: tc, belge_turu: belge });
+                            msg.hidden = false; msg.style.color = ""; msg.textContent = t("kyc.submitted");
+                            setTimeout(function () { location.reload(); }, 1300);
+                        } catch (e) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = e.message || t("auth.errGeneric"); }
+                    });
+                }
+            }
             var html = '<div class="form-grid">';
             html += field("pAd", t("pe.name"), p.ad);
             html += field("pSehir", t("pe.city"), p.sehir);

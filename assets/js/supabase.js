@@ -28,7 +28,7 @@
       ad: p.ad, sehir: p.sehir, telefon: p.telefon || "", email: p.email || "", aciklama: p.aciklama,
       lat: p.lat, lng: p.lng,
       arac: p.arac, bolgeler: p.bolgeler || [], deneyim: p.deneyim || 0,
-      seviye: p.seviye || "standart", puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0, tamamlanan: p.tamamlanan || 0,
+      seviye: p.seviye || "standart", puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0, dogrulama: p.dogrulama || "none", tamamlanan: p.tamamlanan || 0,
       sertifikalar: p.sertifikalar || [], calistigi: p.calistigi || [], referanslar: [],
       bolge: (p.bolgeler && p.bolgeler[0]) || "", tur: p.tur, acikIlan: p.acik_ilan || 0, ihtiyac: p.ihtiyac,
       kapasite: p.kapasite || 0, hizmetler: p.hizmetler || []
@@ -399,6 +399,23 @@
   }
   async function updateBid(id, durum) { return client.from("bids").update({ durum: durum }).eq("id", id); }
 
+  /* ---------- KYC / KİMLİK DOĞRULAMA ---------- */
+  async function submitKyc(fields) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var me = await myProfile(); if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var r = await client.from("kyc_submissions").upsert({
+      profile_id: me.id, user_id: u.id, ad_soyad: fields.ad_soyad, tc_no: fields.tc_no,
+      belge_turu: fields.belge_turu || "", not_text: fields.not_text || "", durum: "pending"
+    }, { onConflict: "user_id" }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  async function myKycSubmission() {
+    var u = await getUser(); if (!u) return null;
+    var r = await client.from("kyc_submissions").select("ad_soyad,belge_turu,durum").eq("user_id", u.id).maybeSingle();
+    return r.data || null;
+  }
+
   window.SB = {
     isOn: isOn,
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
@@ -416,6 +433,7 @@
     createTender: createTender, myTenders: myTenders, openTenders: openTenders,
     updateTenderStatus: updateTenderStatus, deleteTender: deleteTender,
     submitBid: submitBid, myBids: myBids, bidTenderIds: bidTenderIds,
-    tenderBids: tenderBids, updateBid: updateBid
+    tenderBids: tenderBids, updateBid: updateBid,
+    submitKyc: submitKyc, myKycSubmission: myKycSubmission
   };
 })();

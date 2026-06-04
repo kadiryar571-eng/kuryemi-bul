@@ -305,6 +305,9 @@ a { color: inherit; text-decoration: none; }
 .rev-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .rev-date { color: var(--muted); font-size: 0.82rem; margin-left: auto; }
 .rev-list p { color: var(--navy-soft); font-size: 0.92rem; }
+
+/* Doğrulanmış rozeti */
+.ver-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: rgba(52,211,153,0.16); color: #34D399; border: 1px solid rgba(52,211,153,0.35); vertical-align: middle; white-space: nowrap; }
 .pcard__top { display: flex; align-items: center; gap: 14px; }
 .avatar { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; color: var(--on-accent); background: var(--accent-grad); flex-shrink: 0; }
 .avatar--blue { background: linear-gradient(135deg, #3B82F6, #6366F1); color: #fff; }
