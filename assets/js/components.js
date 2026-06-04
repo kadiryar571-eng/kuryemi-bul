@@ -349,6 +349,24 @@
         if (im.parentNode) im.parentNode.replaceChild(s, im);
       });
     });
+    // Scroll listener: header şeffaf başlar, scroll'da cam olur (landing nav gibi)
+    // demo-banner varsa header onun altına yerleşir
+    var hdr = document.querySelector(".header");
+    var banner = document.querySelector(".demo-banner");
+    if (hdr) {
+      function posHeader() {
+        var bh = banner ? banner.getBoundingClientRect().height : 0;
+        hdr.style.top = bh + "px";
+      }
+      function onScroll() {
+        hdr.classList.toggle("is-stuck", window.scrollY > 8);
+        posHeader();
+      }
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", posHeader);
+      posHeader(); // başlangıç konumu
+      onScroll();
+    }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
