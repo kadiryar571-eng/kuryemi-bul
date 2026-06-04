@@ -1,241 +1,435 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kuryemi Bul — işletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı. Kendi sürdürülebilir kurye havuzunu kur.">
-    <title data-i18n="title.index">Kuryemi Bul · Kurye Ekosisteminin Buluşma Noktası</title>
-    <link rel="icon" href="assets/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Kuryemi Bul">
-    <meta property="og:title" content="Kuryemi Bul · Kurye Ekosisteminin Buluşma Noktası">
-    <meta property="og:description" content="İşletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı.">
-    <meta property="og:url" content="https://kadiryar571-eng.github.io/kuryemi-bul/">
-    <meta property="og:image" content="https://kadiryar571-eng.github.io/kuryemi-bul/assets/og-cover.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="tr_TR">
-    <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="assets/css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Kuryemi Bul — kuryeleri, işletmeleri ve kurye firmalarını gerçek zamanlı buluşturan dijital lojistik ekosistemi. Akıllı eşleşme, canlı takip ve doğrulanmış kurye ağı tek platformda.">
+  <title>Kuryemi Bul · Kurye Ekosisteminin İşletim Sistemi</title>
+  <link rel="icon" href="assets/logo.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Kuryemi Bul">
+  <meta property="og:title" content="Kuryemi Bul · Kurye Ekosisteminin İşletim Sistemi">
+  <meta property="og:description" content="Kuryeleri, işletmeleri ve kurye firmalarını gerçek zamanlı buluşturan dijital lojistik ekosistemi.">
+  <meta property="og:url" content="https://kadiryar571-eng.github.io/kuryemi-bul/">
+  <meta property="og:locale" content="tr_TR">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
 </head>
 <body>
-    <div id="app-header"></div>
 
-    <main>
-        <!-- HERO -->
-        <section class="hero">
-            <div class="hero__deco" aria-hidden="true"><span>🛵</span><span>📦</span><span>📍</span><span>⚡</span><span>🏍️</span><span>📦</span></div>
-            <div class="container hero__inner">
-                <span class="badge" data-i18n="hero.badge">🛵 Kurye Ekosisteminin Buluşma Noktası</span>
-                <h1 class="hero__title" data-i18n-html="hero.title">Kuryemi <span class="accent">Bul</span></h1>
-                <p class="hero__subtitle" data-i18n="hero.subtitle">İşletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı. Anlık çözüm değil — kendi güvenilir ve sürdürülebilir kurye havuzunu kur.</p>
-                <div class="hero__actions">
-                    <a href="giris.html" class="btn btn--primary btn--lg" data-i18n="hero.cta1">🚀 Hemen Başla</a>
-                    <a href="#harita" class="btn btn--ghost btn--lg" data-i18n="hero.cta2">📍 Haritada Keşfet</a>
-                </div>
-                <div class="trust-row">
-                    <div class="trust"><span class="trust__ic">♻️</span><span><span class="trust__t" data-i18n="trust.t1">Sürdürülebilir Havuz</span><br><span class="trust__d" data-i18n="trust.d1">Tek seferlik değil, kalıcı kurye ağı</span></span></div>
-                    <div class="trust"><span class="trust__ic">📍</span><span><span class="trust__t" data-i18n="trust.t2">Konum Bazlı Eşleşme</span><br><span class="trust__d" data-i18n="trust.d2">Bölge ve yakınlık odaklı</span></span></div>
-                    <div class="trust"><span class="trust__ic">✅</span><span><span class="trust__t" data-i18n="trust.t3">Doğrulanmış Profiller</span><br><span class="trust__d" data-i18n="trust.d3">Seviye ve referans sistemi</span></span></div>
-                </div>
+  <!-- ambient background -->
+  <div class="bg-fx" aria-hidden="true">
+    <span class="orb orb--1"></span>
+    <span class="orb orb--2"></span>
+    <span class="orb orb--3"></span>
+  </div>
+  <canvas id="net-canvas" aria-hidden="true"></canvas>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="nav">
+    <div class="container nav__in">
+      <a href="index.html" class="brand">
+        <span class="brand__mark"><img src="assets/logo.png" alt="" onerror="this.parentNode.textContent='🛵'"></span>
+        Kuryemi&nbsp;Bul
+      </a>
+      <nav class="nav__links" aria-label="Ana menü">
+        <a href="#ekosistem">Ekosistem</a>
+        <a href="#ozellikler">Özellikler</a>
+        <a href="#seviye">Seviye Sistemi</a>
+        <a href="kuryeler.html">Havuzlar</a>
+        <a href="harita.html">Harita</a>
+      </nav>
+      <div class="nav__cta">
+        <a href="giris.html" class="nav__signin" id="navSignin">Giriş Yap</a>
+        <a href="giris.html" class="btn btn--primary btn--sm" id="navCta">Ücretsiz Başla</a>
+        <button class="nav__burger" id="burger" aria-label="Menü">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="container">
+        <span class="hero__badge reveal in">
+          <span class="dot"></span>
+          <span class="hero__pill">YENİ</span>
+          <b>Akıllı eşleşme motoru</b> artık canlı
+        </span>
+        <h1 class="hero__title reveal in" data-d="1">
+          Şehrin teslimat <span class="grad-text">altyapısı</span> tek platformda
+        </h1>
+        <p class="hero__sub reveal in" data-d="2">
+          Kuryemi Bul; kuryeleri, işletmeleri ve kurye firmalarını gerçek zamanlı bağlayan
+          dijital lojistik ekosistemidir. Akıllı eşleşme, canlı takip ve doğrulanmış ağ —
+          bir kurye şirketi değil, kurye ekosisteminin işletim sistemi.
+        </p>
+        <div class="hero__actions reveal in" data-d="3">
+          <a href="giris.html" class="btn btn--primary btn--lg">Ekosisteme Katıl →</a>
+          <a href="#kontrol" class="btn btn--ghost btn--lg">▶ Canlı Paneli Gör</a>
+        </div>
+        <div class="hero__meta reveal in" data-d="4">
+          <span><i>●</i> Konum bazlı eşleşme</span>
+          <span><i>●</i> Doğrulanmış kurye ağı</span>
+          <span><i>●</i> Gerçek zamanlı izleme</span>
+        </div>
+      </div>
+
+      <!-- dashboard mockup -->
+      <div class="container" id="kontrol">
+        <div class="hero__stage reveal" data-d="1">
+          <div class="floaty floaty--a">
+            <span class="floaty__ic">⚡</span>
+            <span><span class="floaty__l">Ort. eşleşme</span><span class="floaty__v">8 sn</span></span>
+          </div>
+          <div class="floaty floaty--b">
+            <span class="floaty__ic">📍</span>
+            <span><span class="floaty__l">Aktif rota</span><span class="floaty__v" data-count="42" data-suffix="">0</span></span>
+          </div>
+          <div class="floaty floaty--c">
+            <span class="floaty__ic">⭐</span>
+            <span><span class="floaty__l">Memnuniyet</span><span class="floaty__v">4.9/5</span></span>
+          </div>
+
+          <div class="dash">
+            <div class="dash__bar">
+              <span class="tl"><i></i><i></i><i></i></span>
+              <span class="dash__title">Kuryemi Bul · Lojistik Kontrol Merkezi</span>
+              <span class="dash__live"><span class="dot"></span> CANLI</span>
             </div>
-        </section>
-
-        <!-- CANLI İSTATİSTİK BANDI -->
-        <section class="section--sm">
-            <div class="container">
-                <div class="stat-band" id="homeStats"></div>
+            <div class="dash__grid">
+              <div class="dash__main">
+                <div class="kpis">
+                  <div class="kpi">
+                    <div class="kpi__l"><span class="kpi__ic">🛵</span> Aktif kurye</div>
+                    <div class="kpi__v" data-count="128">0</div>
+                    <div class="kpi__d">▲ canlı ağ</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="kpi__l"><span class="kpi__ic">📦</span> Aktif teslimat</div>
+                    <div class="kpi__v" data-count="64">0</div>
+                    <div class="kpi__d">▲ gerçek zamanlı</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="kpi__l"><span class="kpi__ic">🏪</span> İşletme talebi</div>
+                    <div class="kpi__v" data-count="37">0</div>
+                    <div class="kpi__d">▲ eşleşme bekliyor</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="kpi__l"><span class="kpi__ic">🧠</span> Eşleşme/dk</div>
+                    <div class="kpi__v" data-count="19">0</div>
+                    <div class="kpi__d">▲ akıllı motor</div>
+                  </div>
+                </div>
+                <div class="minimap" id="minimap">
+                  <div class="minimap__grid"></div>
+                  <svg id="mapsvg" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="routeg" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a855f7"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div class="dash__side">
+                <div class="gauge">
+                  <div class="gauge__ring" style="--p:96"><i>96%</i></div>
+                  <div class="gauge__t"><b>Şehir kapsama</b><span>Akıllı dağıtım ağı</span></div>
+                </div>
+                <div class="glass" style="padding:16px">
+                  <div class="dash__title" style="margin:0 0 6px">Canlı akış</div>
+                  <div class="feed">
+                    <div class="feed__row"><span class="feed__av">🛵</span><span class="feed__t">Yusuf K. <span class="feed__s">teslimatı aldı</span></span><span class="feed__tag">Kadıköy</span></div>
+                    <div class="feed__row"><span class="feed__av">🏪</span><span class="feed__t">Lezzet Burger <span class="feed__s">kurye istedi</span></span><span class="feed__tag">eşleşti</span></div>
+                    <div class="feed__row"><span class="feed__av">✅</span><span class="feed__t">Elif D. <span class="feed__s">teslim etti</span></span><span class="feed__tag">4.9★</span></div>
+                    <div class="feed__row"><span class="feed__av">🏢</span><span class="feed__t">HızlıKurye <span class="feed__s">filo ekledi</span></span><span class="feed__tag">+6</span></div>
+                  </div>
+                </div>
+              </div>
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <!-- 3 KATEGORİ -->
-        <section class="section">
-            <div class="container">
-                <div class="section__head">
-                    <span class="eyebrow" data-i18n="cats.eyebrow">Üç Kategori, Tek Platform</span>
-                    <h2 class="section__title" data-i18n="cats.title">Nereden Başlamak İstersin?</h2>
-                    <p class="section__lead" data-i18n="cats.lead">Rolüne uygun havuza gir; ister keşfet ister doğrudan teklif gönder.</p>
-                </div>
-                <div class="cat-grid">
-                    <a class="cat-card" href="kuryeler.html"><div class="cat-card__ic">🛵</div><h3 data-i18n="cat.kurye.t">Kurye Havuzu</h3><p data-i18n="cat.kurye.d">Aktif kuryeleri keşfet, profil ve seviyelerini incele, havuzuna ekle.</p><span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span></a>
-                    <a class="cat-card" href="isletmeler.html"><div class="cat-card__ic">📦</div><h3 data-i18n="cat.isletme.t">İşletme Havuzu</h3><p data-i18n="cat.isletme.d">Kuryeye ihtiyaç duyan işletmeleri gör, ihtiyaca göre teklif gönder.</p><span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span></a>
-                    <a class="cat-card" href="firmalar.html"><div class="cat-card__ic">🏢</div><h3 data-i18n="cat.firma.t">Kurye Firmaları</h3><p data-i18n="cat.firma.d">Filo yöneten kurye firmalarıyla kurumsal ve toplu çözümler kur.</p><span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span></a>
-                </div>
+    <!-- ============ LOGO STRIP ============ -->
+    <section class="section--tight">
+      <div class="container strip">
+        <p class="strip__lead">Tek ekosistem · üç rol · sınırsız bağlantı</p>
+        <div class="strip__row">
+          <span>🛵 Kuryeler</span>
+          <span>🏪 İşletmeler</span>
+          <span>🏢 Kurye Firmaları</span>
+          <span>🧠 Akıllı Eşleşme</span>
+          <span>📍 Canlı Takip</span>
+          <span>✅ Doğrulama</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAT BAND ============ -->
+    <section class="section--tight">
+      <div class="container">
+        <div class="statband reveal" id="statband">
+          <div class="statband__c"><div class="statband__v" data-count="0" id="st-kurye">—</div><div class="statband__l">Aktif Kurye</div></div>
+          <div class="statband__c"><div class="statband__v" data-count="0" id="st-isletme">—</div><div class="statband__l">Kayıtlı İşletme</div></div>
+          <div class="statband__c"><div class="statband__v" data-count="0" id="st-firma">—</div><div class="statband__l">Kurye Firması</div></div>
+          <div class="statband__c"><div class="statband__v" data-count="8" data-suffix=" sn">0</div><div class="statband__l">Ort. Eşleşme</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ECOSYSTEM ============ -->
+    <section class="section" id="ekosistem">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Çekirdek Ekosistem</span>
+          <h2 class="sec-title">Herkes için <span class="grad-text">tek ağ</span></h2>
+          <p class="sec-lead">İşletme, kurye veya kurye firması — rolün ne olursa olsun, aynı akıllı altyapıda buluşursun.</p>
+        </div>
+        <div class="eco-grid">
+          <article class="eco reveal" data-d="1" style="--c:rgba(79,139,255,0.18)">
+            <div class="eco__ic">🏪</div>
+            <h3 class="eco__t">İşletmeler</h3>
+            <p class="eco__d">Teslimatı saniyeler içinde organize et.</p>
+            <ul class="eco__list">
+              <li><span class="ck">✓</span> Anında kurye bul</li>
+              <li><span class="ck">✓</span> Teslimat maliyetini düşür</li>
+              <li><span class="ck">✓</span> Gerçek zamanlı takip et</li>
+              <li><span class="ck">✓</span> Güvenilir kurye ağına eriş</li>
+            </ul>
+            <a href="isletmeler.html" class="eco__link">İşletme havuzunu keşfet →</a>
+          </article>
+          <article class="eco reveal" data-d="2" style="--c:rgba(34,211,238,0.20)">
+            <div class="eco__ic">🛵</div>
+            <h3 class="eco__t">Kuryeler</h3>
+            <p class="eco__d">Daha çok iş, daha güçlü itibar.</p>
+            <ul class="eco__list">
+              <li><span class="ck">✓</span> Daha fazla teslimat fırsatı</li>
+              <li><span class="ck">✓</span> Gelirini artır</li>
+              <li><span class="ck">✓</span> Profesyonel itibar oluştur</li>
+              <li><span class="ck">✓</span> İşini tek panelden yönet</li>
+            </ul>
+            <a href="kuryeler.html" class="eco__link">Kurye havuzunu keşfet →</a>
+          </article>
+          <article class="eco reveal" data-d="3" style="--c:rgba(168,85,247,0.18)">
+            <div class="eco__ic">🏢</div>
+            <h3 class="eco__t">Kurye Firmaları</h3>
+            <p class="eco__d">Filonu büyüt, operasyonu optimize et.</p>
+            <ul class="eco__list">
+              <li><span class="ck">✓</span> Müşteri ağını genişlet</li>
+              <li><span class="ck">✓</span> Filonu verimli yönet</li>
+              <li><span class="ck">✓</span> Performans analizini izle</li>
+              <li><span class="ck">✓</span> Operasyonu optimize et</li>
+            </ul>
+            <a href="firmalar.html" class="eco__link">Firma havuzunu keşfet →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FEATURE: matching ============ -->
+    <section class="section" id="ozellikler">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Akıllı Altyapı</span>
+          <h2 class="sec-title">Eşleşmeden teslimata, <span class="grad-text">tek akış</span></h2>
+        </div>
+
+        <div class="feat reveal">
+          <div class="feat__body">
+            <span class="feat__tag">🧠 Akıllı Eşleşme</span>
+            <h3 class="feat__t">Doğru kuryeyi saniyeler içinde bulan motor</h3>
+            <p class="feat__d">Konum, yoğunluk, geçmiş performans ve uygunluk verisini birleştiren akıllı dağıtım algoritması; her teslimat için en uygun kuryeyi otomatik eşleştirir.</p>
+            <ul class="feat__list">
+              <li><span class="ck">✓</span> Konum ve yakınlık bazlı sıralama</li>
+              <li><span class="ck">✓</span> Performans skoruna göre öncelik</li>
+              <li><span class="ck">✓</span> Otomatik dağıtım ve manuel onay seçeneği</li>
+            </ul>
+          </div>
+          <div class="feat__media">
+            <div class="matchrow glass"><span class="matchrow__av">🏪</span><span class="matchrow__t"><b>Lezzet Burger</b><span>2 paket · Kadıköy</span></span><span class="matchrow__score">talep</span></div>
+            <div class="matchrow glass matchrow--match"><span class="matchrow__av">🛵</span><span class="matchrow__t"><b>Yusuf K.</b><span>320m uzakta · Profesyonel</span></span><span class="matchrow__score">%98</span></div>
+            <div class="matchrow glass"><span class="matchrow__av">🛵</span><span class="matchrow__t"><b>Elif D.</b><span>540m uzakta · Premium</span></span><span class="matchrow__score">%91</span></div>
+          </div>
+        </div>
+
+        <div class="feat feat--rev reveal">
+          <div class="feat__body">
+            <span class="feat__tag">📍 Canlı Takip</span>
+            <h3 class="feat__t">Her teslimat haritada, gerçek zamanlı</h3>
+            <p class="feat__d">İşletmeler ve firmalar; kuryelerin konumunu, rota ilerlemesini ve teslimat durumunu canlı izler. Şeffaflık güveni, güven sadakati getirir.</p>
+            <ul class="feat__list">
+              <li><span class="ck">✓</span> Canlı konum ve rota görünümü</li>
+              <li><span class="ck">✓</span> Teslimat durumu bildirimleri</li>
+              <li><span class="ck">✓</span> Şehir geneli ısı haritası</li>
+            </ul>
+          </div>
+          <div class="feat__media">
+            <div class="minimap" style="height:100%;min-height:280px" id="minimap2">
+              <div class="minimap__grid"></div>
+              <svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice" id="mapsvg2" aria-hidden="true"></svg>
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <!-- KONSEPT -->
-        <section class="section section--alt">
-            <div class="container">
-                <div class="concept">
-                    <div class="concept__text">
-                        <span class="eyebrow" data-i18n="concept.eyebrow">Platform Hakkında</span>
-                        <h2 class="concept__title" data-i18n-html="concept.title">Kurye ekosistemini <span class="accent">tek platformda</span> birleştiriyoruz.</h2>
-                        <p data-i18n="concept.p1">Kuryemi Bul; kuryeleri, kuryeye ihtiyaç duyan işletmeleri ve kurye firmalarını aynı sistemde buluşturan dijital bir kurye ağıdır.</p>
-                        <p data-i18n="concept.p2">İşletmeler havuzdan kurye bulur ve teklif gönderir; kuryeler profilini oluşturup kalıcı iş ilişkileri kurar; firmalar kurumsal çözümler sunar. Teklif, iletişim ve yönetim tek panelde toplanır.</p>
-                        <ul class="concept__list">
-                            <li data-i18n="concept.li1">Konum ve bölge bazlı akıllı eşleşme</li>
-                            <li data-i18n="concept.li2">Profil, seviye ve referansla güçlendirilmiş güven</li>
-                            <li data-i18n="concept.li3">Teklif, iletişim ve yönetim tek panelde</li>
-                        </ul>
-                    </div>
-                    <div class="concept__visual">
-                        <h3 class="concept__card-title" data-i18n="concept.card.t">Kimler için ne sağlar?</h3>
-                        <ul class="concept__roles">
-                            <li><span class="concept__role-ic">🛵</span><span class="concept__role-tx"><b data-i18n="concept.role.kurye.t">Kuryeler</b><span class="concept__role-d" data-i18n="concept.role.kurye.d">Kalıcı iş ilişkileri, düzenli gelir ve görünürlük.</span></span></li>
-                            <li><span class="concept__role-ic">📦</span><span class="concept__role-tx"><b data-i18n="concept.role.isletme.t">İşletmeler</b><span class="concept__role-d" data-i18n="concept.role.isletme.d">Güvenilir, sürekli ve kendine ait bir kurye havuzu.</span></span></li>
-                            <li><span class="concept__role-ic">🏢</span><span class="concept__role-tx"><b data-i18n="concept.role.firma.t">Kurye Firmaları</b><span class="concept__role-d" data-i18n="concept.role.firma.d">Kurumsal hacim, yeni müşteriler ve filo yönetimi.</span></span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <!-- ============ BENTO ============ -->
+    <section class="section">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Platform Yetenekleri</span>
+          <h2 class="sec-title">Tek ekosistemde <span class="grad-text">her şey</span></h2>
+          <p class="sec-lead">Operasyonun her katmanı için kurumsal düzeyde araçlar.</p>
+        </div>
+        <div class="bento">
+          <article class="bcard bcard--w2 bcard--h2 reveal">
+            <span class="bcard__spot"></span>
+            <div class="bcard__ic">🌐</div>
+            <div class="bcard__t">Kurye Ağı</div>
+            <p class="bcard__d">Doğrulanmış, konum bazlı ve sürdürülebilir bir kurye ekosistemi.</p>
+            <svg class="bcard__viz" viewBox="0 0 400 360" id="bento-net" aria-hidden="true"></svg>
+          </article>
+          <article class="bcard reveal" data-d="1"><span class="bcard__spot"></span><div class="bcard__ic">🧠</div><div class="bcard__t">Akıllı Eşleşme</div><p class="bcard__d">En uygun kurye otomatik.</p></article>
+          <article class="bcard reveal" data-d="2"><span class="bcard__spot"></span><div class="bcard__ic">📍</div><div class="bcard__t">Canlı Takip</div><p class="bcard__d">Gerçek zamanlı konum.</p></article>
+          <article class="bcard reveal" data-d="1">
+            <span class="bcard__spot"></span><div class="bcard__ic">📊</div><div class="bcard__t">Teslimat Analizi</div>
+            <div class="spark"><i style="animation-delay:0s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.4s"></i><i style="animation-delay:.6s"></i><i style="animation-delay:.8s"></i><i style="animation-delay:1s"></i><i style="animation-delay:1.2s"></i></div>
+          </article>
+          <article class="bcard reveal" data-d="2"><span class="bcard__spot"></span><div class="bcard__ic">🚚</div><div class="bcard__t">Filo Yönetimi</div><p class="bcard__d">Firmalar için kontrol.</p></article>
+          <article class="bcard bcard--w2 reveal"><span class="bcard__spot"></span><div class="bcard__ic">🛣️</div><div class="bcard__t">Rota Optimizasyonu</div><p class="bcard__d">AI destekli en kısa ve en verimli teslimat rotaları.</p></article>
+          <article class="bcard reveal" data-d="1"><span class="bcard__spot"></span><div class="bcard__ic">🏆</div><div class="bcard__t">Performans Skoru</div><p class="bcard__d">Başarıya dayalı seviye.</p></article>
+        </div>
+      </div>
+    </section>
 
-        <!-- NUMARALI SÜREÇ TIMELINE -->
-        <section class="section">
-            <div class="container">
-                <div class="section__head">
-                    <span class="eyebrow" data-i18n="flow.eyebrow">Nasıl Çalışır</span>
-                    <h2 class="section__title" data-i18n="flow.title">5 adımda kurye ağın</h2>
-                    <p class="section__lead" data-i18n="flow.lead">Kayıttan değerlendirmeye, tüm süreç tek platformda.</p>
-                </div>
-                <div class="timeline">
-                    <div class="tl-step"><div class="tl-num">1</div><div class="tl-body"><h3 data-i18n="flow.s1t">Kaydol</h3><p data-i18n="flow.s1d">Kurye, işletme ya da firma olarak ücretsiz hesabını oluştur.</p></div></div>
-                    <div class="tl-step"><div class="tl-num">2</div><div class="tl-body"><h3 data-i18n="flow.s2t">Profilini Doğrula</h3><p data-i18n="flow.s2d">Kimlik doğrulamasıyla "✓ Doğrulanmış" rozetini kazan, güven ver.</p></div></div>
-                    <div class="tl-step"><div class="tl-num">3</div><div class="tl-body"><h3 data-i18n="flow.s3t">Havuzunu Kur</h3><p data-i18n="flow.s3d">Güvendiğin kurye, işletme ve firmaları havuzuna ekle; kalıcı ağını oluştur.</p></div></div>
-                    <div class="tl-step"><div class="tl-num">4</div><div class="tl-body"><h3 data-i18n="flow.s4t">Eşleş & Teklif</h3><p data-i18n="flow.s4d">Havuz, harita, ilan, teklif ve ihalelerle en uygun tarafla anlaş.</p></div></div>
-                    <div class="tl-step"><div class="tl-num">5</div><div class="tl-body"><h3 data-i18n="flow.s5t">Değerlendir</h3><p data-i18n="flow.s5d">İş sonrası puan ve yorumla itibarı büyüt, ağı sağlamlaştır.</p></div></div>
-                </div>
-            </div>
-        </section>
+    <!-- ============ RATING TIERS ============ -->
+    <section class="section" id="seviye">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Kurye Seviye Sistemi</span>
+          <h2 class="sec-title">Başarıyla <span class="grad-text">yüksel</span></h2>
+          <p class="sec-lead">Tamamlanan teslimatlar, puanlar ve doğrulamalarla ilerleyen ödül odaklı seviye sistemi.</p>
+        </div>
+        <div class="tiers">
+          <article class="tier reveal" data-d="1">
+            <div class="tier__badge">🥉</div>
+            <h3 class="tier__name">Standart</h3>
+            <p class="tier__d">Ekosisteme ilk adım</p>
+            <div class="tier__bar"><i data-fill="42"></i></div>
+            <ul class="tier__feats">
+              <li><span class="ck">✓</span> Profil ve havuza erişim</li>
+              <li><span class="ck">✓</span> Teklif al ve gönder</li>
+              <li><span class="ck">✓</span> Temel performans takibi</li>
+            </ul>
+          </article>
+          <article class="tier tier--feat reveal" data-d="2">
+            <span class="tier__crown">EN POPÜLER</span>
+            <div class="tier__badge is-pro">🥈</div>
+            <h3 class="tier__name">Profesyonel</h3>
+            <p class="tier__d">Kanıtlanmış güven</p>
+            <div class="tier__bar"><i data-fill="74"></i></div>
+            <ul class="tier__feats">
+              <li><span class="ck">✓</span> Doğrulanmış rozet</li>
+              <li><span class="ck">✓</span> Eşleşmede öncelik</li>
+              <li><span class="ck">✓</span> Gelişmiş itibar profili</li>
+              <li><span class="ck">✓</span> Daha fazla teslimat fırsatı</li>
+            </ul>
+          </article>
+          <article class="tier reveal" data-d="3">
+            <div class="tier__badge is-prem">🥇</div>
+            <h3 class="tier__name">Premium</h3>
+            <p class="tier__d">Ağın en üst seviyesi</p>
+            <div class="tier__bar"><i data-fill="100"></i></div>
+            <ul class="tier__feats">
+              <li><span class="ck">✓</span> En yüksek eşleşme önceliği</li>
+              <li><span class="ck">✓</span> Premium itibar vitrini</li>
+              <li><span class="ck">✓</span> Öne çıkan profil yerleşimi</li>
+              <li><span class="ck">✓</span> Kurumsal iş bağlantıları</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
 
-        <!-- DÖNÜŞÜMLÜ DEĞER BÖLÜMLERİ -->
-        <section class="section section--alt">
-            <div class="container">
-                <div class="alt-row">
-                    <div class="alt-row__text">
-                        <span class="alt-row__eyebrow" data-i18n="alt.isletme.eyebrow">İşletmeler için</span>
-                        <h2 class="alt-row__title" data-i18n="alt.isletme.title">Kendi sürdürülebilir kurye havuzun</h2>
-                        <p data-i18n="alt.isletme.p">Her seferinde sıfırdan kurye aramak yerine güvendiğin kuryelerden oluşan kalıcı bir ağ kur.</p>
-                        <ul class="alt-row__list"><li data-i18n="alt.isletme.l1">Havuzda ara, filtrele, doğrudan teklif gönder</li><li data-i18n="alt.isletme.l2">İlan aç, başvuruları yönet</li><li data-i18n="alt.isletme.l3">Çok şubeliysen ihaleyle toplu tedarik</li></ul>
-                        <a class="btn btn--primary mt-24" href="kuryeler.html" data-i18n="who.k.btn">Kurye Havuzu</a>
-                    </div>
-                    <div class="alt-row__visual"><span class="alt-row__ic">📦</span></div>
-                </div>
-                <div class="alt-row alt-row--rev">
-                    <div class="alt-row__text">
-                        <span class="alt-row__eyebrow" data-i18n="alt.kurye.eyebrow">Kuryeler için</span>
-                        <h2 class="alt-row__title" data-i18n="alt.kurye.title">Kalıcı iş ve görünürlük</h2>
-                        <p data-i18n="alt.kurye.p">Profilini oluştur, bölgeni ve deneyimini sergile; tek seferlik değil sürekli iş ilişkileri kur.</p>
-                        <ul class="alt-row__list"><li data-i18n="alt.kurye.l1">Seviye, puan ve referansla öne çık</li><li data-i18n="alt.kurye.l2">Yakınındaki ilanlara başvur</li><li data-i18n="alt.kurye.l3">İşletme ve firmalardan teklif al</li></ul>
-                        <a class="btn btn--primary mt-24" href="ilanlar.html" data-i18n="nav.ilanlar">İlanlar</a>
-                    </div>
-                    <div class="alt-row__visual"><span class="alt-row__ic">🛵</span></div>
-                </div>
-                <div class="alt-row">
-                    <div class="alt-row__text">
-                        <span class="alt-row__eyebrow" data-i18n="alt.firma.eyebrow">Kurye firmaları için</span>
-                        <h2 class="alt-row__title" data-i18n="alt.firma.title">Kurumsal hacim ve ihaleler</h2>
-                        <p data-i18n="alt.firma.p">Filonu yönet, işletmelere teklif gönder, kurumsal ihalelerde toplu işler kazan.</p>
-                        <ul class="alt-row__list"><li data-i18n="alt.firma.l1">Personel havuzunu güçlendir</li><li data-i18n="alt.firma.l2">İşletmelere teklif ver</li><li data-i18n="alt.firma.l3">İhalelerde rekabetçi teklif sun</li></ul>
-                        <a class="btn btn--primary mt-24" href="ihaleler.html" data-i18n="nav.ihaleler">İhaleler</a>
-                    </div>
-                    <div class="alt-row__visual"><span class="alt-row__ic">🏢</span></div>
-                </div>
-            </div>
-        </section>
+    <!-- ============ TRUST ============ -->
+    <section class="section">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="eyebrow">Güven & Güvenlik</span>
+          <h2 class="sec-title">Güven üzerine <span class="grad-text">kurulu</span> bir ağ</h2>
+        </div>
+        <div class="trust-grid">
+          <article class="trustc reveal" data-d="1"><div class="trustc__ic">✅</div><h3 class="trustc__t">Doğrulanmış Kurye Sistemi</h3><p class="trustc__d">Kimlik ve belge doğrulamasından geçmiş güvenilir kuryeler.</p></article>
+          <article class="trustc reveal" data-d="2"><div class="trustc__ic">🔒</div><h3 class="trustc__t">Güvenli Altyapı</h3><p class="trustc__d">İletişim gizliliği ve veri koruması temel tasarım ilkesi.</p></article>
+          <article class="trustc reveal" data-d="3"><div class="trustc__ic">📡</div><h3 class="trustc__t">Gerçek Zamanlı İzleme</h3><p class="trustc__d">Her teslimat baştan sona şeffaf şekilde takip edilir.</p></article>
+          <article class="trustc reveal" data-d="1"><div class="trustc__ic">🏅</div><h3 class="trustc__t">Performans Takibi</h3><p class="trustc__d">Puan ve değerlendirmeyle kalite sürekli ölçülür.</p></article>
+          <article class="trustc reveal" data-d="2"><div class="trustc__ic">🪪</div><h3 class="trustc__t">Kimlik Doğrulama</h3><p class="trustc__d">KYC tabanlı doğrulama ile sahte hesaplara karşı koruma.</p></article>
+          <article class="trustc reveal" data-d="3"><div class="trustc__ic">🛡️</div><h3 class="trustc__t">İşletme Koruması</h3><p class="trustc__d">İşletmeler yalnızca doğrulanmış ağ ile çalışır.</p></article>
+        </div>
+      </div>
+    </section>
 
-        <!-- NEDEN -->
-        <section class="section">
-            <div class="container">
-                <div class="section__head"><span class="eyebrow" data-i18n="why.eyebrow">Avantajlar</span><h2 class="section__title" data-i18n="why.title">Neden KuryemiBul?</h2></div>
-                <div class="features">
-                    <div class="feature"><div class="feature__icon">⚡</div><h3 data-i18n="why.f1t">Hızlı Eşleşme</h3><p data-i18n="why.f1d">Havuz + harita ile en uygun tarafı saniyeler içinde bul.</p></div>
-                    <div class="feature"><div class="feature__icon">📍</div><h3 data-i18n="why.f2t">Konum Bazlı</h3><p data-i18n="why.f2d">Bölgesel yoğunluk ve yakınlık mantığıyla değerlendir.</p></div>
-                    <div class="feature"><div class="feature__icon">⭐</div><h3 data-i18n="why.f3t">İtibar & Seviye</h3><p data-i18n="why.f3d">Objektif metriklerle kurye kariyer ve puan sistemi.</p></div>
-                    <div class="feature"><div class="feature__icon">🤝</div><h3 data-i18n="why.f4t">Çok Yönlü Teklif</h3><p data-i18n="why.f4d">Kurye, işletme ve firma arasında dört yönlü teklif akışı.</p></div>
-                    <div class="feature"><div class="feature__icon">🏛️</div><h3 data-i18n="why.f5t">Kurumsal İhale</h3><p data-i18n="why.f5d">Çok şubeli işletmeler için toplu kurye tedarik süreçleri.</p></div>
-                    <div class="feature"><div class="feature__icon">🚀</div><h3 data-i18n="why.f6t">Tek Çatı</h3><p data-i18n="why.f6d">Dağınık sektörü tek dijital buluşma noktasında topla.</p></div>
-                </div>
-            </div>
-        </section>
+    <!-- ============ CTA ============ -->
+    <section class="section">
+      <div class="container">
+        <div class="cta reveal">
+          <h2 class="cta__t">Şehrin teslimat altyapısını<br>bugün kurmaya başla</h2>
+          <p class="cta__d">İster işletme, ister kurye, ister kurye firması ol — kendi sürdürülebilir ağını dakikalar içinde kur.</p>
+          <div class="cta__actions">
+            <a href="giris.html" class="btn btn--primary btn--lg" id="ctaPrimary">Ücretsiz Hesap Oluştur →</a>
+            <a href="iletisim.html" class="btn btn--ghost btn--lg">Bizimle İletişime Geç</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-        <!-- BÖLGE GRID -->
-        <section class="section section--alt">
-            <div class="container">
-                <div class="section__head"><span class="eyebrow" data-i18n="region.eyebrow">Yaygın Ağ</span><h2 class="section__title" data-i18n="region.title">Türkiye genelinde</h2><p class="section__lead" data-i18n="region.lead">Büyük şehirlerden başlayarak tüm Türkiye'ye yayılan kurye ağı.</p></div>
-                <div class="region-grid">
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">İstanbul</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Ankara</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">İzmir</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Bursa</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Antalya</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Adana</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Konya</span></a>
-                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Gaziantep</span></a>
-                </div>
-            </div>
-        </section>
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="container">
+      <div class="foot__grid">
+        <div class="foot__brand">
+          <a href="index.html" class="brand">
+            <span class="brand__mark"><img src="assets/logo.png" alt="" onerror="this.parentNode.textContent='🛵'"></span>
+            Kuryemi&nbsp;Bul
+          </a>
+          <p>Kurye ekosisteminin işletim sistemi. Kuryeleri, işletmeleri ve firmaları tek dijital lojistik ağında birleştiriyoruz.</p>
+        </div>
+        <div class="foot__col">
+          <h4>Ekosistem</h4>
+          <a href="kuryeler.html">Kurye Havuzu</a>
+          <a href="isletmeler.html">İşletme Havuzu</a>
+          <a href="firmalar.html">Firma Havuzu</a>
+          <a href="harita.html">Canlı Harita</a>
+        </div>
+        <div class="foot__col">
+          <h4>Platform</h4>
+          <a href="ilanlar.html">İlanlar</a>
+          <a href="ihaleler.html">İhaleler</a>
+          <a href="giris.html">Giriş / Katıl</a>
+          <a href="#seviye">Seviye Sistemi</a>
+        </div>
+        <div class="foot__col">
+          <h4>İletişim</h4>
+          <a href="iletisim.html">İletişim Formu</a>
+          <a href="mailto:kadiryar571@gmail.com">E-posta</a>
+        </div>
+      </div>
+      <div class="foot__bottom">
+        <span>© 2026 Kuryemi Bul. Tüm hakları saklıdır.</span>
+        <span>Türkiye'nin kurye ekosistemi platformu · Beta</span>
+      </div>
+    </div>
+  </footer>
 
-        <!-- HARİTA -->
-        <section class="section" id="harita">
-            <div class="container">
-                <div class="section__head"><span class="eyebrow" data-i18n="homemap.eyebrow">Canlı Ağ</span><h2 class="section__title" data-i18n="homemap.title">Haritada Keşfet</h2><p class="section__lead" data-i18n="homemap.lead">Bir kategori seç; ağdaki konumları harita üzerinde gör.</p></div>
-                <div class="text-center">
-                    <div class="mapseg" role="tablist" aria-label="Harita kategorisi">
-                        <button type="button" class="is-active" data-mapseg="kurye">🛵 <span data-i18n="who.k.btn">Kurye Havuzu</span></button>
-                        <button type="button" data-mapseg="isletme">📦 <span data-i18n="who.i.btn">İşletme Havuzu</span></button>
-                        <button type="button" data-mapseg="firma">🏢 <span data-i18n="who.f.btn">Firma Havuzu</span></button>
-                    </div>
-                </div>
-                <div class="home-map__wrap"><div id="map"></div></div>
-                <p class="home-map__hint" data-i18n="map.hint">İşaretçiye tıklayıp profile gidebilirsin.</p>
-            </div>
-        </section>
-
-        <!-- YORUM CAROUSEL -->
-        <section class="section section--alt" id="testimonials">
-            <div class="container">
-                <div class="section__head"><span class="eyebrow" data-i18n="tm.eyebrow">Değerlendirmeler</span><h2 class="section__title" data-i18n="tm.title">Kullanıcılar ne diyor?</h2><p class="section__lead" data-i18n="tm.lead">Platformdaki gerçek değerlendirmelerden.</p></div>
-                <div class="tcarousel"><div class="tcarousel__track"></div><div class="tcarousel__dots"></div></div>
-            </div>
-        </section>
-
-        <!-- SSS -->
-        <section class="section">
-            <div class="container container--narrow">
-                <div class="section__head"><span class="eyebrow" data-i18n="faq.eyebrow">Aklına takılanlar</span><h2 class="section__title" data-i18n="faq.title">Sık Sorulan Sorular</h2></div>
-                <div class="faq">
-                    <details class="faq__item"><summary data-i18n="faq.q1">KuryemiBul'a üyelik ücretli mi?</summary><p data-i18n="faq.a1">Kayıt ücretsizdir. Yalnızca tamamlanan işlerde şeffaf bir hizmet bedeli uygulanır.</p></details>
-                    <details class="faq__item"><summary data-i18n="faq.q2">Kurye seviyeleri nasıl belirlenir?</summary><p data-i18n="faq.a2">Deneyim, süreklilik, referanslar ve değerlendirmeler gibi objektif kriterlerle Standart, Profesyonel ve Premium seviyeleri oluşur.</p></details>
-                    <details class="faq__item"><summary data-i18n="faq.q3">Kurye firmaları nasıl katılır?</summary><p data-i18n="faq.a3">Firma profili oluşturup hizmet bölgelerini tanımlar, personel havuzunu yönetir ve işletmelere teklif gönderir.</p></details>
-                    <details class="faq__item"><summary data-i18n="faq.q4">Bu gerçek bir platform mu?</summary><p data-i18n="faq.a4">Evet. Beta aşamasındayız; kayıtlar ve profiller gerçektir. Yeni özellikler (bildirim, değerlendirme, ilan/ihale) eklenmeye devam ediyor.</p></details>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA BAND -->
-        <section class="section">
-            <div class="container">
-                <div class="concept__visual text-center" style="max-width:760px;margin:0 auto">
-                    <h2 class="section__title" data-i18n="ctaband.title">Kendi kurye ağını bugün kurmaya başla.</h2>
-                    <p class="section__lead" data-i18n="ctaband.lead">Kayıt ücretsiz. Rolünü seç, profilini oluştur, havuzunu büyüt.</p>
-                    <a class="btn btn--primary btn--lg mt-24" href="giris.html" data-i18n="ctaband.btn">🚀 Ücretsiz Katıl</a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <div id="app-footer"></div>
-
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>KBApp.initHomeMap(); KBApp.renderHomeStats(); KBApp.renderTestimonials();</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/landing.js"></script>
 </body>
 </html>
