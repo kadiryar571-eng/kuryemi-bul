@@ -25,16 +25,11 @@
     <main>
         <!-- HERO -->
         <section class="hero">
-            <div class="hero__deco" aria-hidden="true">
-                <span>🛵</span><span>📦</span><span>📍</span><span>⚡</span><span>🏍️</span><span>📦</span>
-            </div>
+            <div class="hero__deco" aria-hidden="true"><span>🛵</span><span>📦</span><span>📍</span><span>⚡</span><span>🏍️</span><span>📦</span></div>
             <div class="container hero__inner">
                 <span class="badge" data-i18n="hero.badge">🛵 Kurye Ekosisteminin Buluşma Noktası</span>
                 <h1 class="hero__title" data-i18n-html="hero.title">Kuryemi <span class="accent">Bul</span></h1>
-                <p class="hero__subtitle" data-i18n="hero.subtitle">
-                    İşletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı.
-                    Anlık çözüm değil — kendi güvenilir ve sürdürülebilir kurye havuzunu kur.
-                </p>
+                <p class="hero__subtitle" data-i18n="hero.subtitle">İşletmeleri, kuryeleri ve kurye firmalarını tek platformda buluşturan dijital kurye operasyon ağı. Anlık çözüm değil — kendi güvenilir ve sürdürülebilir kurye havuzunu kur.</p>
                 <div class="hero__actions">
                     <a href="giris.html" class="btn btn--primary btn--lg" data-i18n="hero.cta1">🚀 Hemen Başla</a>
                     <a href="#harita" class="btn btn--ghost btn--lg" data-i18n="hero.cta2">📍 Haritada Keşfet</a>
@@ -47,6 +42,13 @@
             </div>
         </section>
 
+        <!-- CANLI İSTATİSTİK BANDI -->
+        <section class="section--sm">
+            <div class="container">
+                <div class="stat-band" id="homeStats"></div>
+            </div>
+        </section>
+
         <!-- 3 KATEGORİ -->
         <section class="section">
             <div class="container">
@@ -56,29 +58,14 @@
                     <p class="section__lead" data-i18n="cats.lead">Rolüne uygun havuza gir; ister keşfet ister doğrudan teklif gönder.</p>
                 </div>
                 <div class="cat-grid">
-                    <a class="cat-card" href="kuryeler.html">
-                        <div class="cat-card__ic">🛵</div>
-                        <h3 data-i18n="cat.kurye.t">Kurye Havuzu</h3>
-                        <p data-i18n="cat.kurye.d">Aktif kuryeleri keşfet, profil ve seviyelerini incele, havuzuna ekle.</p>
-                        <span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span>
-                    </a>
-                    <a class="cat-card" href="isletmeler.html">
-                        <div class="cat-card__ic">📦</div>
-                        <h3 data-i18n="cat.isletme.t">İşletme Havuzu</h3>
-                        <p data-i18n="cat.isletme.d">Kuryeye ihtiyaç duyan işletmeleri gör, ihtiyaca göre teklif gönder.</p>
-                        <span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span>
-                    </a>
-                    <a class="cat-card" href="firmalar.html">
-                        <div class="cat-card__ic">🏢</div>
-                        <h3 data-i18n="cat.firma.t">Kurye Firmaları</h3>
-                        <p data-i18n="cat.firma.d">Filo yöneten kurye firmalarıyla kurumsal ve toplu çözümler kur.</p>
-                        <span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span>
-                    </a>
+                    <a class="cat-card" href="kuryeler.html"><div class="cat-card__ic">🛵</div><h3 data-i18n="cat.kurye.t">Kurye Havuzu</h3><p data-i18n="cat.kurye.d">Aktif kuryeleri keşfet, profil ve seviyelerini incele, havuzuna ekle.</p><span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span></a>
+                    <a class="cat-card" href="isletmeler.html"><div class="cat-card__ic">📦</div><h3 data-i18n="cat.isletme.t">İşletme Havuzu</h3><p data-i18n="cat.isletme.d">Kuryeye ihtiyaç duyan işletmeleri gör, ihtiyaca göre teklif gönder.</p><span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span></a>
+                    <a class="cat-card" href="firmalar.html"><div class="cat-card__ic">🏢</div><h3 data-i18n="cat.firma.t">Kurye Firmaları</h3><p data-i18n="cat.firma.d">Filo yöneten kurye firmalarıyla kurumsal ve toplu çözümler kur.</p><span class="cat-card__link"><span data-i18n="cat.link">Havuza Git</span> →</span></a>
                 </div>
             </div>
         </section>
 
-        <!-- FELSEFE / KONSEPT -->
+        <!-- KONSEPT -->
         <section class="section section--alt">
             <div class="container">
                 <div class="concept">
@@ -105,38 +92,56 @@
             </div>
         </section>
 
-        <!-- HARİTA (seçmeli tek harita) -->
-        <section class="section" id="harita">
+        <!-- NUMARALI SÜREÇ TIMELINE -->
+        <section class="section">
             <div class="container">
                 <div class="section__head">
-                    <span class="eyebrow" data-i18n="homemap.eyebrow">Canlı Ağ</span>
-                    <h2 class="section__title" data-i18n="homemap.title">Haritada Keşfet</h2>
-                    <p class="section__lead" data-i18n="homemap.lead">Bir kategori seç; ağdaki konumları harita üzerinde gör.</p>
+                    <span class="eyebrow" data-i18n="flow.eyebrow">Nasıl Çalışır</span>
+                    <h2 class="section__title" data-i18n="flow.title">5 adımda kurye ağın</h2>
+                    <p class="section__lead" data-i18n="flow.lead">Kayıttan değerlendirmeye, tüm süreç tek platformda.</p>
                 </div>
-                <div class="text-center">
-                    <div class="mapseg" role="tablist" aria-label="Harita kategorisi">
-                        <button type="button" class="is-active" data-mapseg="kurye">🛵 <span data-i18n="who.k.btn">Kurye Havuzu</span></button>
-                        <button type="button" data-mapseg="isletme">📦 <span data-i18n="who.i.btn">İşletme Havuzu</span></button>
-                        <button type="button" data-mapseg="firma">🏢 <span data-i18n="who.f.btn">Firma Havuzu</span></button>
-                    </div>
+                <div class="timeline">
+                    <div class="tl-step"><div class="tl-num">1</div><div class="tl-body"><h3 data-i18n="flow.s1t">Kaydol</h3><p data-i18n="flow.s1d">Kurye, işletme ya da firma olarak ücretsiz hesabını oluştur.</p></div></div>
+                    <div class="tl-step"><div class="tl-num">2</div><div class="tl-body"><h3 data-i18n="flow.s2t">Profilini Doğrula</h3><p data-i18n="flow.s2d">Kimlik doğrulamasıyla "✓ Doğrulanmış" rozetini kazan, güven ver.</p></div></div>
+                    <div class="tl-step"><div class="tl-num">3</div><div class="tl-body"><h3 data-i18n="flow.s3t">Havuzunu Kur</h3><p data-i18n="flow.s3d">Güvendiğin kurye, işletme ve firmaları havuzuna ekle; kalıcı ağını oluştur.</p></div></div>
+                    <div class="tl-step"><div class="tl-num">4</div><div class="tl-body"><h3 data-i18n="flow.s4t">Eşleş & Teklif</h3><p data-i18n="flow.s4d">Havuz, harita, ilan, teklif ve ihalelerle en uygun tarafla anlaş.</p></div></div>
+                    <div class="tl-step"><div class="tl-num">5</div><div class="tl-body"><h3 data-i18n="flow.s5t">Değerlendir</h3><p data-i18n="flow.s5d">İş sonrası puan ve yorumla itibarı büyüt, ağı sağlamlaştır.</p></div></div>
                 </div>
-                <div class="home-map__wrap"><div id="map"></div></div>
-                <p class="home-map__hint" data-i18n="map.hint">İşaretçiye tıklayıp profile gidebilirsin.</p>
             </div>
         </section>
 
-        <!-- NASIL ÇALIŞIR -->
+        <!-- DÖNÜŞÜMLÜ DEĞER BÖLÜMLERİ -->
         <section class="section section--alt">
             <div class="container">
-                <div class="section__head">
-                    <span class="eyebrow" data-i18n="how.eyebrow">Basit 3 adım</span>
-                    <h2 class="section__title" data-i18n="how.title">Nasıl Çalışır?</h2>
-                    <p class="section__lead" data-i18n="how.lead">Kayıttan teslimata kadar her şey tek platformda.</p>
+                <div class="alt-row">
+                    <div class="alt-row__text">
+                        <span class="alt-row__eyebrow" data-i18n="alt.isletme.eyebrow">İşletmeler için</span>
+                        <h2 class="alt-row__title" data-i18n="alt.isletme.title">Kendi sürdürülebilir kurye havuzun</h2>
+                        <p data-i18n="alt.isletme.p">Her seferinde sıfırdan kurye aramak yerine güvendiğin kuryelerden oluşan kalıcı bir ağ kur.</p>
+                        <ul class="alt-row__list"><li data-i18n="alt.isletme.l1">Havuzda ara, filtrele, doğrudan teklif gönder</li><li data-i18n="alt.isletme.l2">İlan aç, başvuruları yönet</li><li data-i18n="alt.isletme.l3">Çok şubeliysen ihaleyle toplu tedarik</li></ul>
+                        <a class="btn btn--primary mt-24" href="kuryeler.html" data-i18n="who.k.btn">Kurye Havuzu</a>
+                    </div>
+                    <div class="alt-row__visual"><span class="alt-row__ic">📦</span></div>
                 </div>
-                <div class="steps">
-                    <article class="step"><div class="step__num">1</div><div class="step__icon">📝</div><h3 data-i18n="how.s1t">Kaydol</h3><p data-i18n="how.s1d">Kurye, işletme ya da firma olarak profilini oluştur.</p></article>
-                    <article class="step"><div class="step__num">2</div><div class="step__icon">🤝</div><h3 data-i18n="how.s2t">Eşleş</h3><p data-i18n="how.s2d">Havuz ve harita üzerinden en uygun tarafla eşleş.</p></article>
-                    <article class="step"><div class="step__num">3</div><div class="step__icon">✅</div><h3 data-i18n="how.s3t">Teslim Et</h3><p data-i18n="how.s3d">Teklif, takip, değerlendirme ve performans tek ekranda.</p></article>
+                <div class="alt-row alt-row--rev">
+                    <div class="alt-row__text">
+                        <span class="alt-row__eyebrow" data-i18n="alt.kurye.eyebrow">Kuryeler için</span>
+                        <h2 class="alt-row__title" data-i18n="alt.kurye.title">Kalıcı iş ve görünürlük</h2>
+                        <p data-i18n="alt.kurye.p">Profilini oluştur, bölgeni ve deneyimini sergile; tek seferlik değil sürekli iş ilişkileri kur.</p>
+                        <ul class="alt-row__list"><li data-i18n="alt.kurye.l1">Seviye, puan ve referansla öne çık</li><li data-i18n="alt.kurye.l2">Yakınındaki ilanlara başvur</li><li data-i18n="alt.kurye.l3">İşletme ve firmalardan teklif al</li></ul>
+                        <a class="btn btn--primary mt-24" href="ilanlar.html" data-i18n="nav.ilanlar">İlanlar</a>
+                    </div>
+                    <div class="alt-row__visual"><span class="alt-row__ic">🛵</span></div>
+                </div>
+                <div class="alt-row">
+                    <div class="alt-row__text">
+                        <span class="alt-row__eyebrow" data-i18n="alt.firma.eyebrow">Kurye firmaları için</span>
+                        <h2 class="alt-row__title" data-i18n="alt.firma.title">Kurumsal hacim ve ihaleler</h2>
+                        <p data-i18n="alt.firma.p">Filonu yönet, işletmelere teklif gönder, kurumsal ihalelerde toplu işler kazan.</p>
+                        <ul class="alt-row__list"><li data-i18n="alt.firma.l1">Personel havuzunu güçlendir</li><li data-i18n="alt.firma.l2">İşletmelere teklif ver</li><li data-i18n="alt.firma.l3">İhalelerde rekabetçi teklif sun</li></ul>
+                        <a class="btn btn--primary mt-24" href="ihaleler.html" data-i18n="nav.ihaleler">İhaleler</a>
+                    </div>
+                    <div class="alt-row__visual"><span class="alt-row__ic">🏢</span></div>
                 </div>
             </div>
         </section>
@@ -152,6 +157,60 @@
                     <div class="feature"><div class="feature__icon">🤝</div><h3 data-i18n="why.f4t">Çok Yönlü Teklif</h3><p data-i18n="why.f4d">Kurye, işletme ve firma arasında dört yönlü teklif akışı.</p></div>
                     <div class="feature"><div class="feature__icon">🏛️</div><h3 data-i18n="why.f5t">Kurumsal İhale</h3><p data-i18n="why.f5d">Çok şubeli işletmeler için toplu kurye tedarik süreçleri.</p></div>
                     <div class="feature"><div class="feature__icon">🚀</div><h3 data-i18n="why.f6t">Tek Çatı</h3><p data-i18n="why.f6d">Dağınık sektörü tek dijital buluşma noktasında topla.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BÖLGE GRID -->
+        <section class="section section--alt">
+            <div class="container">
+                <div class="section__head"><span class="eyebrow" data-i18n="region.eyebrow">Yaygın Ağ</span><h2 class="section__title" data-i18n="region.title">Türkiye genelinde</h2><p class="section__lead" data-i18n="region.lead">Büyük şehirlerden başlayarak tüm Türkiye'ye yayılan kurye ağı.</p></div>
+                <div class="region-grid">
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">İstanbul</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Ankara</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">İzmir</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Bursa</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Antalya</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Adana</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Konya</span></a>
+                    <a class="region-card" href="kuryeler.html"><span class="region-card__pin">📍</span><span class="region-card__name">Gaziantep</span></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- HARİTA -->
+        <section class="section" id="harita">
+            <div class="container">
+                <div class="section__head"><span class="eyebrow" data-i18n="homemap.eyebrow">Canlı Ağ</span><h2 class="section__title" data-i18n="homemap.title">Haritada Keşfet</h2><p class="section__lead" data-i18n="homemap.lead">Bir kategori seç; ağdaki konumları harita üzerinde gör.</p></div>
+                <div class="text-center">
+                    <div class="mapseg" role="tablist" aria-label="Harita kategorisi">
+                        <button type="button" class="is-active" data-mapseg="kurye">🛵 <span data-i18n="who.k.btn">Kurye Havuzu</span></button>
+                        <button type="button" data-mapseg="isletme">📦 <span data-i18n="who.i.btn">İşletme Havuzu</span></button>
+                        <button type="button" data-mapseg="firma">🏢 <span data-i18n="who.f.btn">Firma Havuzu</span></button>
+                    </div>
+                </div>
+                <div class="home-map__wrap"><div id="map"></div></div>
+                <p class="home-map__hint" data-i18n="map.hint">İşaretçiye tıklayıp profile gidebilirsin.</p>
+            </div>
+        </section>
+
+        <!-- YORUM CAROUSEL -->
+        <section class="section section--alt" id="testimonials">
+            <div class="container">
+                <div class="section__head"><span class="eyebrow" data-i18n="tm.eyebrow">Değerlendirmeler</span><h2 class="section__title" data-i18n="tm.title">Kullanıcılar ne diyor?</h2><p class="section__lead" data-i18n="tm.lead">Platformdaki gerçek değerlendirmelerden.</p></div>
+                <div class="tcarousel"><div class="tcarousel__track"></div><div class="tcarousel__dots"></div></div>
+            </div>
+        </section>
+
+        <!-- SSS -->
+        <section class="section">
+            <div class="container container--narrow">
+                <div class="section__head"><span class="eyebrow" data-i18n="faq.eyebrow">Aklına takılanlar</span><h2 class="section__title" data-i18n="faq.title">Sık Sorulan Sorular</h2></div>
+                <div class="faq">
+                    <details class="faq__item"><summary data-i18n="faq.q1">KuryemiBul'a üyelik ücretli mi?</summary><p data-i18n="faq.a1">Kayıt ücretsizdir. Yalnızca tamamlanan işlerde şeffaf bir hizmet bedeli uygulanır.</p></details>
+                    <details class="faq__item"><summary data-i18n="faq.q2">Kurye seviyeleri nasıl belirlenir?</summary><p data-i18n="faq.a2">Deneyim, süreklilik, referanslar ve değerlendirmeler gibi objektif kriterlerle Standart, Profesyonel ve Premium seviyeleri oluşur.</p></details>
+                    <details class="faq__item"><summary data-i18n="faq.q3">Kurye firmaları nasıl katılır?</summary><p data-i18n="faq.a3">Firma profili oluşturup hizmet bölgelerini tanımlar, personel havuzunu yönetir ve işletmelere teklif gönderir.</p></details>
+                    <details class="faq__item"><summary data-i18n="faq.q4">Bu gerçek bir platform mu?</summary><p data-i18n="faq.a4">Evet. Beta aşamasındayız; kayıtlar ve profiller gerçektir. Yeni özellikler (bildirim, değerlendirme, ilan/ihale) eklenmeye devam ediyor.</p></details>
                 </div>
             </div>
         </section>
@@ -177,6 +236,6 @@
     <script src="assets/js/components.js"></script>
     <script src="assets/js/app.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>KBApp.initHomeMap();</script>
+    <script>KBApp.initHomeMap(); KBApp.renderHomeStats(); KBApp.renderTestimonials();</script>
 </body>
 </html>

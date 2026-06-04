@@ -238,6 +238,58 @@ a { color: inherit; text-decoration: none; }
 .concept__role-tx b { font-size: 1rem; }
 .concept__role-d { color: var(--navy-soft); font-size: 0.9rem; }
 
+/* ===================== CANLI İSTATİSTİK BANDI ===================== */
+.stat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.stat-card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 20px; text-align: center; position: relative; overflow: hidden; }
+.stat-card::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--accent-grad); }
+.stat-card__num { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+.stat-card__label { color: var(--navy-soft); font-size: 0.9rem; margin-top: 8px; font-weight: 600; }
+
+/* ===================== NUMARALI TIMELINE ===================== */
+.timeline { max-width: 760px; margin: 0 auto; display: grid; gap: 0; position: relative; }
+.tl-step { display: grid; grid-template-columns: 56px 1fr; gap: 20px; padding-bottom: 36px; position: relative; }
+.tl-step:not(:last-child)::before { content: ""; position: absolute; left: 27px; top: 52px; bottom: 0; width: 2px; background: linear-gradient(var(--accent), transparent); }
+.tl-num { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; font-size: 1.3rem; font-weight: 900; color: var(--on-accent); background: var(--accent-grad); box-shadow: 0 8px 20px rgba(34,211,238,0.25); }
+.tl-body { padding-top: 6px; }
+.tl-body h3 { font-size: 1.2rem; margin-bottom: 6px; }
+.tl-body p { color: var(--navy-soft); }
+
+/* ===================== DÖNÜŞÜMLÜ 2-SÜTUN ===================== */
+.alt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-bottom: 56px; }
+.alt-row:last-child { margin-bottom: 0; }
+.alt-row--rev .alt-row__text { order: 2; }
+.alt-row__eyebrow { color: var(--accent); font-weight: 700; font-size: 0.82rem; letter-spacing: 1.5px; text-transform: uppercase; }
+.alt-row__title { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 800; letter-spacing: -0.5px; margin: 10px 0 14px; }
+.alt-row__text p { color: var(--navy-soft); font-size: 1.05rem; margin-bottom: 18px; }
+.alt-row__list { list-style: none; display: grid; gap: 10px; }
+.alt-row__list li { position: relative; padding-left: 30px; color: var(--navy); font-weight: 600; }
+.alt-row__list li::before { content: "✓"; position: absolute; left: 0; top: -1px; width: 22px; height: 22px; background: rgba(34,211,238,0.14); color: var(--accent); border-radius: 50%; display: grid; place-items: center; font-size: 0.78rem; font-weight: 800; }
+.alt-row__visual { background: linear-gradient(150deg, var(--surface-2), var(--white)); border: 1px solid var(--line); border-radius: var(--radius); min-height: 260px; display: grid; place-items: center; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.alt-row__visual::before { content: ""; position: absolute; width: 260px; height: 260px; background: radial-gradient(circle, rgba(34,211,238,0.18), transparent 70%); top: -60px; right: -60px; }
+.alt-row__ic { font-size: 5rem; filter: drop-shadow(0 10px 24px rgba(0,0,0,.4)); position: relative; }
+
+/* ===================== BÖLGE GRID ===================== */
+.region-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.region-card { display: flex; align-items: center; gap: 10px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px 18px; transition: border-color var(--transition), transform var(--transition); }
+.region-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.region-card__pin { font-size: 1.2rem; }
+.region-card__name { font-weight: 700; }
+
+/* ===================== YORUM CAROUSEL ===================== */
+.tcarousel { position: relative; overflow: hidden; }
+.tcarousel__track { display: flex; transition: transform 0.5s ease; }
+.tcarousel__slide { min-width: 100%; padding: 4px; }
+.tquote { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; max-width: 760px; margin: 0 auto; box-shadow: var(--shadow); }
+.tquote__stars { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; margin-bottom: 14px; }
+.tquote__text { font-size: 1.15rem; line-height: 1.7; color: var(--navy); font-style: italic; }
+.tquote__by { margin-top: 18px; display: flex; align-items: center; gap: 10px; }
+.tquote__av { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; color: var(--on-accent); background: var(--accent-grad); }
+.tquote__name { font-weight: 800; }
+.tquote__role { color: var(--muted); font-size: 0.85rem; }
+.tcarousel__dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+.tcarousel__dots button { width: 9px; height: 9px; border-radius: 50%; border: none; background: var(--line); cursor: pointer; transition: var(--transition); padding: 0; }
+.tcarousel__dots button.is-active { background: var(--accent); width: 24px; border-radius: 999px; }
+
 /* ===================== STEPS ===================== */
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .step { position: relative; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 36px 28px 30px; text-align: center; transition: transform var(--transition), box-shadow var(--transition); }
@@ -489,6 +541,20 @@ a { color: inherit; text-decoration: none; }
     .kv dt { margin-top: 8px; }
     #map { height: 440px; }
     .trust { width: 100%; }
+}
+
+/* yeni ana sayfa bileşenleri responsive */
+@media (max-width: 980px) {
+    .stat-band { grid-template-columns: repeat(2, 1fr); }
+    .region-grid { grid-template-columns: repeat(3, 1fr); }
+    .alt-row { grid-template-columns: 1fr; gap: 28px; }
+    .alt-row--rev .alt-row__text { order: 0; }
+    .alt-row__visual { min-height: 200px; }
+}
+@media (max-width: 560px) {
+    .stat-band { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .region-grid { grid-template-columns: repeat(2, 1fr); }
+    .tquote { padding: 24px; }
 }
 
 /* ===================== DİL ANAHTARI ===================== */

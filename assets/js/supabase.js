@@ -114,6 +114,23 @@
     if (r.error) throw r.error;
     return (r.data || []).map(fromDb);
   }
+  async function poolCounts() {
+    async function cnt(role) {
+      var r = await client.from("profiles").select("id", { count: "exact", head: true }).eq("role", role).eq("yayinda", true);
+      return r.count || 0;
+    }
+    var rev = await client.from("reviews").select("id", { count: "exact", head: true });
+    return { kurye: await cnt("kurye"), isletme: await cnt("isletme"), firma: await cnt("firma"), degerlendirme: (rev && rev.count) || 0 };
+  }
+  async function recentReviews(limit) {
+    var r = await client.from("reviews")
+      .select("puan,yorum,created_at, reviewer:reviewer_profile(ad,role), target:target_id(ad,role)")
+      .neq("yorum", "").order("created_at", { ascending: false }).limit(limit || 12);
+    if (r.error) { console.warn("recentReviews:", r.error); return []; }
+    return (r.data || []).map(function (x) {
+      return { puan: x.puan, yorum: x.yorum, ad: (x.reviewer && x.reviewer.ad) || "Kullanıcı", rol: x.reviewer && x.reviewer.role, hedef: (x.target && x.target.ad) || "" };
+    });
+  }
   async function profileById(id) {
     var r = await client.from("profiles").select("*").eq("id", id).maybeSingle();
     if (r.error) throw r.error;
@@ -439,7 +456,7 @@
     resetPassword: resetPassword, updatePassword: updatePassword,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
-    pool: pool, profileById: profileById,
+    pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,

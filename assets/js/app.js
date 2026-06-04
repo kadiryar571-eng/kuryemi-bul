@@ -768,6 +768,58 @@
     setTimeout(function () { map.invalidateSize(); }, 200);
   }
 
+  /* ============ ANA SAYFA: CANLI İSTATİSTİK + YORUM CAROUSEL ============ */
+  async function renderHomeStats() {
+    var host = document.getElementById("homeStats");
+    if (!host) return;
+    if (window.KB && KB.ready) await KB.ready();
+    if (!online()) { host.closest(".section") && (host.closest(".section").style.display = "none"); return; }
+    try {
+      var c = await SB.poolCounts();
+      var items = [
+        { n: c.kurye, label: T("stats.couriers") },
+        { n: c.isletme, label: T("stats.businesses") },
+        { n: c.firma, label: T("stats.firms") },
+        { n: c.degerlendirme, label: T("stats.reviews") }
+      ];
+      host.innerHTML = items.map(function (it) {
+        return '<div class="stat-card"><div class="stat-card__num" data-to="' + it.n + '">0</div><div class="stat-card__label">' + it.label + '</div></div>';
+      }).join("");
+      host.querySelectorAll(".stat-card__num").forEach(function (el) {
+        var to = parseInt(el.getAttribute("data-to"), 10) || 0, start = null;
+        function step(ts) { if (!start) start = ts; var p = Math.min((ts - start) / 1100, 1); el.textContent = Math.floor(p * to).toLocaleString("tr-TR"); if (p < 1) requestAnimationFrame(step); }
+        requestAnimationFrame(step);
+      });
+    } catch (e) {}
+  }
+  async function renderTestimonials() {
+    var sec = document.getElementById("testimonials");
+    if (!sec) return;
+    if (window.KB && KB.ready) await KB.ready();
+    var list = [];
+    if (online()) { try { list = await SB.recentReviews(10); } catch (e) {} }
+    if (!list.length) { sec.style.display = "none"; return; }
+    var track = sec.querySelector(".tcarousel__track");
+    var dots = sec.querySelector(".tcarousel__dots");
+    track.innerHTML = list.map(function (r) {
+      var stars = ""; for (var i = 0; i < 5; i++) stars += i < Math.round(r.puan) ? "★" : "☆";
+      return '<div class="tcarousel__slide"><div class="tquote">' +
+        '<div class="tquote__stars">' + stars + '</div>' +
+        '<p class="tquote__text">"' + KB.esc(r.yorum) + '"</p>' +
+        '<div class="tquote__by"><span class="tquote__av">' + KB.initials(r.ad) + '</span>' +
+        '<span><span class="tquote__name">' + KB.esc(r.ad) + '</span><br><span class="tquote__role">' + (r.rol ? T("role." + r.rol) : "") + (r.hedef ? " → " + KB.esc(r.hedef) : "") + '</span></span></div>' +
+        '</div></div>';
+    }).join("");
+    dots.innerHTML = list.map(function (_, i) { return '<button data-i="' + i + '"' + (i === 0 ? ' class="is-active"' : '') + ' aria-label="' + (i + 1) + '"></button>'; }).join("");
+    var idx = 0, n = list.length, timer = null;
+    function go(i) { idx = (i + n) % n; track.style.transform = "translateX(-" + (idx * 100) + "%)"; dots.querySelectorAll("button").forEach(function (b, j) { b.classList.toggle("is-active", j === idx); }); }
+    dots.querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { go(parseInt(b.getAttribute("data-i"), 10)); }); });
+    function startTimer() { timer = setInterval(function () { go(idx + 1); }, 5000); }
+    sec.addEventListener("mouseenter", function () { clearInterval(timer); });
+    sec.addEventListener("mouseleave", startTimer);
+    if (n > 1) startTimer();
+  }
+
   /* ============ PANEL / DASHBOARD ============ */
   function metric(num, label) { return '<div class="metric"><div class="metric__num">' + num + '</div><div class="metric__label">' + label + '</div></div>'; }
   function listRow(title, sub, right) {
@@ -911,6 +963,7 @@
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
     initMap: initMap, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
-    renderMyPool: renderMyPool, renderListings: renderListings, renderTenders: renderTenders
+    renderMyPool: renderMyPool, renderListings: renderListings, renderTenders: renderTenders,
+    renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials
   };
 })();
