@@ -269,6 +269,7 @@
           '<button type="button" class="acct__btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" title="' + esc(SESSION.user.email || "") + '">' +
             '<span class="acct__ava">👤</span><span class="acct__name">' + esc(nm) + '</span><span class="acct__caret" aria-hidden="true">▾</span></button>' +
           '<div class="acct__menu" role="menu">' +
+            '<a href="ops-merkez.html" role="menuitem" class="acct__cmd">🛰️ ' + T("menu.command") + '</a>' +
             '<a href="' + profileLink + '" role="menuitem">' + T("menu.profile") + '</a>' +
             '<a href="profil-duzenle.html" role="menuitem">' + T("menu.editProfile") + '</a>' +
             '<a href="admin.html" role="menuitem" class="acct__admin" hidden>' + T("menu.admin") + '</a>' +
