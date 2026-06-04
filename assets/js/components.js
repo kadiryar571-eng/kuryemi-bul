@@ -223,6 +223,12 @@
     if (r === "firma") return "panel-firma.html";
     return "giris.html";
   }
+  function roleToProfile(r) {
+    if (r === "kurye") return "profil-kurye.html";
+    if (r === "isletme") return "profil-isletme.html";
+    if (r === "firma") return "profil-firma.html";
+    return "";
+  }
 
   async function loadSession() {
     if (!isOnline()) { SESSION.loaded = true; return SESSION; }
@@ -251,12 +257,24 @@
         '<a href="' + panelHref() + '" class="btn btn--primary btn--sm nav__cta">' + panelLabel + '</a>';
     }
     if (SESSION.user) {
-      var nm = (SESSION.profile && SESSION.profile.ad) || SESSION.user.email || "Hesabım";
-      var ph = roleToPanel(SESSION.profile && SESSION.profile.role);
+      var nm = (SESSION.profile && SESSION.profile.ad) || SESSION.user.email || T("cta.account");
+      var role = SESSION.profile && SESSION.profile.role;
+      var ph = roleToPanel(role);
+      var profPage = roleToProfile(role);
+      var pid = SESSION.profile && SESSION.profile.id;
+      var profileLink = (profPage && pid) ? (profPage + "?id=" + pid) : "profil-duzenle.html";
       return '<a href="havuzum.html" class="auth-link">★ ' + T("nav.pool") + '</a>' +
         '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
-        '<a href="profil-duzenle.html" class="user-chip" title="' + esc(SESSION.user.email || "") + '">👤 ' + esc(nm) + '</a>' +
-        '<button id="logoutBtn" type="button" class="lang-toggle">' + T("cta.signout") + '</button>';
+        '<div class="acct" id="acctMenu">' +
+          '<button type="button" class="acct__btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" title="' + esc(SESSION.user.email || "") + '">' +
+            '<span class="acct__ava">👤</span><span class="acct__name">' + esc(nm) + '</span><span class="acct__caret" aria-hidden="true">▾</span></button>' +
+          '<div class="acct__menu" role="menu">' +
+            '<a href="' + profileLink + '" role="menuitem">' + T("menu.profile") + '</a>' +
+            '<a href="profil-duzenle.html" role="menuitem">' + T("menu.editProfile") + '</a>' +
+            '<a href="admin.html" role="menuitem" class="acct__admin" hidden>' + T("menu.admin") + '</a>' +
+            '<button type="button" id="logoutBtn" role="menuitem" class="acct__signout">' + T("cta.signout") + '</button>' +
+          '</div>' +
+        '</div>';
     }
     return '<a href="giris.html" class="btn btn--primary btn--sm nav__cta">' + T("cta.signin") + '</a>';
   }
@@ -269,6 +287,27 @@
       try { await SB.signOut(); } catch (e) {}
       location.href = "index.html";
     });
+    var acctBtn = document.getElementById("acctBtn");
+    var acctMenu = document.getElementById("acctMenu");
+    if (acctBtn && acctMenu) {
+      acctBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var open = acctMenu.classList.toggle("acct--open");
+        acctBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      document.addEventListener("click", function (e) {
+        if (!acctMenu.contains(e.target)) {
+          acctMenu.classList.remove("acct--open");
+          acctBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          acctMenu.classList.remove("acct--open");
+          acctBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
   }
 
   async function updateAuthArea() {
@@ -284,6 +323,12 @@
           var cta = area.querySelector(".nav__cta");
           if (cta) cta.insertAdjacentHTML("beforeend", ' <span class="badge-count">' + n + '</span>');
         }
+      }).catch(function () {});
+    }
+    // Yönetim menü öğesi: yalnız adminlere göster
+    if (isOnline() && SESSION.user && window.SB && SB.amIAdmin) {
+      SB.amIAdmin().then(function (ok) {
+        if (ok) { var ai = area.querySelector(".acct__admin"); if (ai) ai.hidden = false; }
       }).catch(function () {});
     }
   }
