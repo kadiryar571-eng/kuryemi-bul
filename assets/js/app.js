@@ -309,16 +309,26 @@
     if (t.butce) details.push("💰 " + t.butce);
     var action;
     if (!canPool()) action = '<a class="btn btn--light btn--sm" href="giris.html">' + T("cta.signin") + '</a>';
-    else if (owner) action = '<span class="chip">' + T("ihale.own") + '</span>';
-    else if (bidded) action = '<span class="chip">' + T("ihale.bidded") + '</span>';
+    else if (owner) action = '<span class="kb-chip kb-chip--accent">' + T("ihale.own") + '</span>';
+    else if (bidded) action = '<span class="kb-chip kb-chip--accent">✓ ' + T("ihale.bidded") + '</span>';
     else if (myRole === "firma") action = '<button class="btn btn--primary btn--sm" data-bid="' + t.id + '" data-baslik="' + KB.esc(t.baslik) + '">' + T("ihale.bid") + '</button>';
-    else action = '<span class="chip">' + T("ihale.firmOnly") + '</span>';
-    return '<article class="pcard">' +
-      '<div class="pcard__name">' + KB.esc(t.baslik) + '</div>' +
-      '<div class="pcard__sub">' + KB.esc(t.sahip) + (meta ? " · " + KB.esc(meta) : "") + '</div>' +
-      (details.length ? '<div class="pcard__meta">' + details.map(function (d) { return '<span class="chip">' + KB.esc(d) + '</span>'; }).join("") + '</div>' : "") +
-      (t.aciklama ? '<p class="pcard__sub">' + KB.esc(t.aciklama) + '</p>' : "") +
-      '<div class="pcard__foot">' + action + '<span class="rev-date">' + KB.esc(t.tarih) + '</span></div>' +
+    else action = '<span class="kb-chip">' + T("ihale.firmOnly") + '</span>';
+    var score = talentScore(t.id);
+    return '<article class="kb-card kb-tender">' +
+      '<div class="kb-card__inner">' +
+        '<div class="kb-job__employer">' +
+          '<div class="kb-job__emp-av">🏛️</div>' +
+          '<span class="kb-job__emp-name">' + KB.esc(t.sahip) + (meta ? ' · ' + KB.esc(meta) : '') + '</span>' +
+        '</div>' +
+        '<span class="kb-tender__badge kb-tender__badge--active">● ' + T("ilan.open") + '</span>' +
+        '<div class="kb-tender__title">' + KB.esc(t.baslik) + '</div>' +
+        (t.aciklama ? '<p class="kb-card__sub" style="margin:4px 0 0">' + KB.esc(t.aciklama) + '</p>' : '') +
+        (details.length ? '<div class="kb-card__chips" style="margin-top:12px">' + details.map(function (d) { return '<span class="kb-chip">' + KB.esc(d) + '</span>'; }).join('') + '</div>' : '') +
+        '<div class="kb-tender__foot">' +
+          action +
+          '<span class="kb-chip kb-chip--violet">%' + score + ' Uyum</span>' +
+        '</div>' +
+      '</div>' +
     '</article>';
   }
   function bidRow(b) {
@@ -378,7 +388,7 @@
     if (canPool()) { try { (await SB.bidTenderIds()).forEach(function (id) { bidSet[id] = 1; }); } catch (e) {} var mp = KB.session() && KB.session().profile; myPid = mp && mp.id; myRole = mp && mp.role; }
     var countEl = document.getElementById("tendersCount");
     if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
-    grid.innerHTML = list.length ? list.map(function (t) { return tenderCard(t, bidSet, myPid, myRole); }).join("") : '<div class="empty" style="grid-column:1/-1">' + T("ihale.none") + '</div>';
+    grid.innerHTML = list.length ? list.map(function (t) { return tenderCard(t, bidSet, myPid, myRole); }).join("") : '<div class="kb-empty"><div class="kb-empty__ic">🏛️</div><div class="kb-empty__t">' + T("ihale.none") + '</div><div class="kb-empty__d">Yeni kurumsal işe alım fırsatları yakında. Aşağıdaki kategorileri keşfedebilirsin.</div></div>';
   }
   async function renderMyBids() {
     var host = document.getElementById("firmaBids");
