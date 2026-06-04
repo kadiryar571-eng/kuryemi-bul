@@ -6,5 +6,6 @@ Disallow: /panel-firma.html
 Disallow: /profil-duzenle.html
 Disallow: /havuzum.html
 Disallow: /sifre-sifirla.html
+Disallow: /admin.html
 
 Sitemap: https://kadiryar571-eng.github.io/kuryemi-bul/sitemap.xml

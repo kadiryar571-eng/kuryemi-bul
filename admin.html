@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim · KYC Onayları · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container">
+            <h1>🛡️ Yönetim — KYC Onayları</h1>
+            <p>Bekleyen kimlik doğrulama başvurularını incele ve onayla/reddet.</p>
+        </div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container container--narrow">
+            <p class="result-count" id="adminCount"></p>
+            <div id="adminBody"></div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var body = document.getElementById("adminBody");
+        var countEl = document.getElementById("adminCount");
+        function esc(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? "" : s); }
+
+        function rowHtml(k) {
+            var roller = { kurye: "Kurye", isletme: "İşletme", firma: "Kurye Firması" };
+            return '<div class="list-row" data-pid="' + k.profile_id + '">' +
+                '<div class="list-row__main">' +
+                    '<div class="list-row__title">' + esc(k.ad_soyad) + ' ' +
+                        '<span class="chip">' + esc(roller[k.role] || k.role) + '</span></div>' +
+                    '<div class="list-row__sub">Profil: ' + esc(k.ad || "—") +
+                        ' · TC: ' + esc(k.tc_no) + ' · Belge: ' + esc(k.belge_turu || "—") +
+                        ' · ' + esc((k.created_at || "").slice(0, 10)) + '</div>' +
+                '</div>' +
+                '<span class="offer-act">' +
+                    '<button class="btn btn--primary btn--sm" data-kyc="verified">Onayla</button>' +
+                    '<button class="btn btn--ghost btn--sm" data-kyc="rejected">Reddet</button>' +
+                '</span></div>';
+        }
+
+        async function start() {
+            if (window.KB && KB.ready) await KB.ready();
+            if (!(window.KB && KB.isOnline())) { body.innerHTML = '<div class="empty">Supabase gerekli.</div>'; return; }
+            if (!KB.isAuthed()) { body.innerHTML = '<div class="empty">Bu sayfa için giriş yapmalısın.<br><a class="btn btn--primary btn--sm mt-24" href="giris.html">Giriş Yap</a></div>'; return; }
+            var admin = false;
+            try { admin = await SB.amIAdmin(); } catch (e) {}
+            if (!admin) { // oturum tokeni geç oturmuş olabilir; bir kez daha dene
+                await new Promise(function (r) { setTimeout(r, 800); });
+                try { admin = await SB.amIAdmin(); } catch (e) {}
+            }
+            if (!admin) { body.innerHTML = '<div class="empty">⛔ Bu sayfa yalnız yöneticiler içindir.</div>'; return; }
+
+            var list = [];
+            try { list = await SB.listPendingKyc(); }
+            catch (e) { body.innerHTML = '<div class="empty">Liste alınamadı: ' + esc(e.message) + '</div>'; return; }
+            if (countEl) countEl.textContent = list.length + " bekleyen başvuru";
+            body.innerHTML = list.length ? list.map(rowHtml).join("") : '<div class="empty">🎉 Bekleyen KYC başvurusu yok.</div>';
+        }
+
+        body.addEventListener("click", async function (e) {
+            var btn = e.target.closest("[data-kyc]");
+            if (!btn) return;
+            var row = btn.closest(".list-row");
+            var pid = row.getAttribute("data-pid");
+            var decision = btn.getAttribute("data-kyc");
+            [].forEach.call(row.querySelectorAll("button"), function (b) { b.disabled = true; });
+            try {
+                await SB.reviewKyc(pid, decision);
+                row.outerHTML = '<div class="list-row"><div class="list-row__main"><div class="list-row__sub">' +
+                    (decision === "verified" ? "✓ Onaylandı" : "✗ Reddedildi") + '</div></div></div>';
+            } catch (err) {
+                alert(err.message || "Hata");
+                [].forEach.call(row.querySelectorAll("button"), function (b) { b.disabled = false; });
+            }
+        });
+
+        start();
+    })();
+    </script>
+</body>
+</html>

@@ -416,6 +416,23 @@
     return r.data || null;
   }
 
+  /* ---------- ADMIN ---------- */
+  async function amIAdmin() {
+    var u = await getUser(); if (!u) return false;
+    var r = await client.from("admins").select("user_id").eq("user_id", u.id).maybeSingle();
+    return !!(r && r.data);
+  }
+  async function listPendingKyc() {
+    var r = await client.rpc("list_pending_kyc");
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+  async function reviewKyc(profileId, decision) {
+    var r = await client.rpc("review_kyc", { p_profile_id: profileId, p_decision: decision });
+    if (r.error) throw r.error;
+    return true;
+  }
+
   window.SB = {
     isOn: isOn,
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
@@ -434,6 +451,7 @@
     updateTenderStatus: updateTenderStatus, deleteTender: deleteTender,
     submitBid: submitBid, myBids: myBids, bidTenderIds: bidTenderIds,
     tenderBids: tenderBids, updateBid: updateBid,
-    submitKyc: submitKyc, myKycSubmission: myKycSubmission
+    submitKyc: submitKyc, myKycSubmission: myKycSubmission,
+    amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc
   };
 })();
