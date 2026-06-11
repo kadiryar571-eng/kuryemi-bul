@@ -36,10 +36,19 @@
   }
 
   /* ---------- AUTH ---------- */
-  async function signUp(email, password, role, ad, telefon) {
+  // Rol artık kayıtta seçilmez; handle_new_user trigger'ı varsayılan 'kurye' atar,
+  // kullanıcı profil-duzenle.html'de rolünü seçer.
+  async function signUp(email, password, ad, telefon) {
     return client.auth.signUp({
       email: email, password: password,
-      options: { data: { role: role, ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
+      options: { data: { ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
+    });
+  }
+  // Google ile giriş/kayıt (OAuth). Dönüş giris.html'de oturum tespitiyle yönlendirilir.
+  async function signInWithGoogle() {
+    return client.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: location.origin + "/giris.html" }
     });
   }
   // E-posta doğrulama (verify-email.html'den çağrılır): token_hash'i doğrula, oturum aç
@@ -463,7 +472,7 @@
 
   window.SB = {
     isOn: isOn,
-    signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
+    signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
     resetPassword: resetPassword, updatePassword: updatePassword,
     verifyEmail: verifyEmail, resendVerification: resendVerification,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,

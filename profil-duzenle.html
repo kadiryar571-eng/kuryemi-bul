@@ -8,6 +8,17 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
+    <style>
+      /* Rol seçici (profil tamamlamada) */
+      .role-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+      .role-pick__btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:12px;
+        border:1px solid var(--line);background:var(--surface,#fff);color:var(--muted,#667);cursor:pointer;
+        font-family:inherit;font-weight:600;font-size:.85rem;transition:all .2s}
+      .role-pick__btn .em{font-size:1.5rem;line-height:1}
+      .role-pick__btn:hover{border-color:var(--primary,#4f8bff)}
+      .role-pick__btn.active{border-color:var(--primary,#4f8bff);color:var(--primary,#4f8bff);
+        background:rgba(79,139,255,.08);box-shadow:0 0 0 1px var(--primary,#4f8bff) inset}
+    </style>
 </head>
 <body>
     <div id="app-header"></div>
@@ -149,40 +160,73 @@
                     });
                 }
             }
-            var html = '<div class="form-grid">';
-            html += field("pAd", t("pe.name"), p.ad);
-            html += field("pSehir", t("pe.city"), p.sehir);
-            html += field("pTel", t("pe.phone"), p.telefon);
+            // Kullanıcı rolünü burada seçer (Google/e-posta tüm yeni kullanıcılar için onboarding).
+            var curRole = role || "kurye";
 
-            if (role === "kurye") {
-                html += field("pArac", t("pe.vehicle"), p.arac);
-                html += field("pDeneyim", t("pe.exp"), p.deneyim, "number");
-                html += levelSelect(p.seviye);
-                html += field("pTamam", t("pe.completed"), p.tamamlanan, "number");
-                html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
-                html += field("pCert", t("pe.certs"), (p.sertifikalar || []).join(", "));
-            } else if (role === "isletme") {
-                html += field("pTur", t("pe.type"), p.tur);
-                html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
-                html += field("pAcik", t("pe.openListing"), p.acikIlan, "number");
-                html += field("pIhtiyac", t("pe.need"), p.ihtiyac);
-            } else {
-                html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
-                html += field("pKapasite", t("pe.capacity"), p.kapasite, "number");
-                html += field("pHizmet", t("pe.services"), (p.hizmetler || []).join(", "));
+            function roleSegHtml() {
+                var roles = [["kurye", "🛵", t("role.kurye")], ["isletme", "🏪", t("role.isletme")], ["firma", "🏢", t("role.firma")]];
+                var btns = roles.map(function (r) {
+                    return '<button type="button" data-role="' + r[0] + '" class="role-pick__btn' + (r[0] === curRole ? " active" : "") + '">' +
+                        '<span class="em">' + r[1] + '</span>' + r[2] + '</button>';
+                }).join("");
+                return '<div class="field field--full"><label>' + t("auth.role") + '</label>' +
+                    '<div class="role-pick" id="rolePick">' + btns + '</div></div>';
             }
-            html += '</div>';
-            html += area("pAbout", t("pe.about"), p.aciklama);
-            html += '<button type="submit" class="btn btn--primary btn--lg btn--block">' + t("pe.save") + '</button>';
-            form.innerHTML = html;
+
+            function fieldsHtml() {
+                var html = '<div class="form-grid">';
+                html += roleSegHtml();
+                html += field("pAd", t("pe.name"), p.ad);
+                html += field("pSehir", t("pe.city"), p.sehir);
+                html += field("pTel", t("pe.phone"), p.telefon);
+
+                if (curRole === "kurye") {
+                    html += field("pArac", t("pe.vehicle"), p.arac);
+                    html += field("pDeneyim", t("pe.exp"), p.deneyim, "number");
+                    html += levelSelect(p.seviye);
+                    html += field("pTamam", t("pe.completed"), p.tamamlanan, "number");
+                    html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
+                    html += field("pCert", t("pe.certs"), (p.sertifikalar || []).join(", "));
+                } else if (curRole === "isletme") {
+                    html += field("pTur", t("pe.type"), p.tur);
+                    html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
+                    html += field("pAcik", t("pe.openListing"), p.acikIlan, "number");
+                    html += field("pIhtiyac", t("pe.need"), p.ihtiyac);
+                } else {
+                    html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
+                    html += field("pKapasite", t("pe.capacity"), p.kapasite, "number");
+                    html += field("pHizmet", t("pe.services"), (p.hizmetler || []).join(", "));
+                }
+                html += '</div>';
+                html += area("pAbout", t("pe.about"), p.aciklama);
+                html += '<button type="submit" class="btn btn--primary btn--lg btn--block">' + t("pe.save") + '</button>';
+                return html;
+            }
+
+            function renderForm() {
+                form.innerHTML = fieldsHtml();
+                var rp = document.getElementById("rolePick");
+                if (rp) rp.querySelectorAll("button").forEach(function (b) {
+                    b.addEventListener("click", function () {
+                        // Rol değişiminde ortak alanların girilmiş değerlerini koru
+                        p.ad = val("pAd") || p.ad;
+                        p.sehir = val("pSehir") || p.sehir;
+                        p.telefon = val("pTel") || p.telefon;
+                        p.aciklama = val("pAbout") || p.aciklama;
+                        curRole = b.getAttribute("data-role");
+                        renderForm();
+                    });
+                });
+            }
+            renderForm();
 
             form.addEventListener("submit", async function (e) {
                 e.preventDefault();
-                var f = { ad: val("pAd"), sehir: val("pSehir"), telefon: val("pTel"), aciklama: val("pAbout") };
-                if (role === "kurye") {
+                var f = { role: curRole, ad: val("pAd"), sehir: val("pSehir"), telefon: val("pTel"), aciklama: val("pAbout") };
+                if (curRole === "kurye") {
                     f.arac = val("pArac"); f.deneyim = intv("pDeneyim"); f.seviye = val("pSeviye");
                     f.tamamlanan = intv("pTamam"); f.bolgeler = csv("pBolge"); f.sertifikalar = csv("pCert");
-                } else if (role === "isletme") {
+                } else if (curRole === "isletme") {
                     f.tur = val("pTur"); f.bolgeler = csv("pBolge"); f.acik_ilan = intv("pAcik"); f.ihtiyac = val("pIhtiyac");
                 } else {
                     f.bolgeler = csv("pBolge"); f.kapasite = intv("pKapasite"); f.hizmetler = csv("pHizmet");
@@ -199,7 +243,7 @@
                     }
                     var saved = await SB.updateMyProfile(f);
                     msg.hidden = false; msg.textContent = t("pe.saved");
-                    var pg = KB.roleToPanel(role).replace("panel-", "profil-");
+                    var pg = KB.roleToPanel(curRole).replace("panel-", "profil-");
                     var link = document.getElementById("peViewLink");
                     link.href = pg + "?id=" + saved.id;
                     document.getElementById("peView").hidden = false;
