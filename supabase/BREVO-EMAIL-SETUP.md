@@ -17,7 +17,9 @@ Bu KuryemiBul Brevo hesabının SMTP relay'i **zaten aktif**. Kesin değerler:
    - **SMTP Server:** `smtp-relay.brevo.com`
    - **Port:** `587`
    - **Login (Username):** `ae662c001@smtp-brevo.com`
-   - **Password:** Brevo API/SMTP anahtarın (`xkeysib-…` ile başlar) — Brevo relay'de bu anahtar parola olarak çalışır.
+   - **Password:** Brevo **SMTP key** (Master Password) — ⚠️ Bu, `xkeysib-…` ile başlayan **API anahtarı DEĞİLDİR**.
+     API anahtarı SMTP'de çalışmaz (`535 Authentication failed`). SMTP key'i şuradan al:
+     **app.brevo.com → SMTP & API → "SMTP" sekmesi → "Your SMTP key" / "Generate a new SMTP key"**.
    - **Plan:** Free → günlük **300 e-posta** limiti (doğrulama için fazlasıyla yeterli).
 
 > Gönderen (sender) için Brevo'da **doğrulanmış** bir adres gerekir. Hesap e-postan
@@ -40,7 +42,7 @@ Supabase Dashboard → **Project Settings** → **Authentication** → **SMTP Se
 | Host | `smtp-relay.brevo.com` |
 | Port | `587` |
 | Username | `ae662c001@smtp-brevo.com` |
-| Password | `xkeysib-…` (Brevo API/SMTP anahtarın — buraya yapıştır) |
+| Password | Brevo **SMTP key** (SMTP sekmesinden — `xkeysib-…` API anahtarı DEĞİL) |
 | Minimum interval | varsayılan bırak |
 
 **Save** → "Send test email" ile doğrula.
