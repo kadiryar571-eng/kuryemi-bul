@@ -20,6 +20,16 @@
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/talent.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&libraries=marker"></script>
+    <style>
+      .map-side { position: absolute; top: 16px; left: 16px; z-index: 10; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.15); max-width: 220px; }
+      .map-side h3 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+      .layer-toggle { display: flex; align-items: center; gap: 8px; margin: 10px 0; cursor: pointer; font-size: 14px; }
+      .layer-toggle input { cursor: pointer; }
+      .layer-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .map-wrap { position: relative; height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+      #map { width: 100%; height: 100%; }
+    </style>
 </head>
 <body>
     <div id="app-header"></div>
@@ -48,14 +58,12 @@
 
     <div id="app-footer"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="assets/js/i18n.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase.js"></script>
     <script src="assets/js/data.js"></script>
     <script src="assets/js/components.js"></script>
     <script src="assets/js/app.js"></script>
-    <script>KBApp.initMap();</script>
+    <script>KBApp.initMapGoogle();</script>
 </body>
 </html>

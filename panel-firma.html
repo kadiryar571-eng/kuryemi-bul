@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/talent.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&libraries=marker"></script>
 </head>
 <body>
     <div id="app-header"></div>
@@ -30,8 +31,7 @@
         <div class="container">
             <div class="dash">
                 <nav class="dash__nav">
-                    <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>
-                    <button data-tab="personel">👥 Yetenek Havuzum</button>
+                    <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>                    <button data-tab="harita">🗺️ Bölge Haritası</button>                    <button data-tab="personel">👥 Yetenek Havuzum</button>
                     <button data-tab="teklif">💼 İş Teklifleri</button>
                     <button data-tab="ihale">🏛️ Toplu İhaleler</button>
                 </nav>
@@ -44,6 +44,9 @@
                                 <a class="btn btn--light btn--sm" href="kuryeler.html" data-i18n="btn.courierPool">Kurye Havuzu</a>
                             </div>
                         </div>
+                    </section>
+                    <section id="panel-harita" class="dash__panel">
+                        <div id="panelMapFirma" style="width:100%;height:600px;border-radius:12px"></div>
                     </section>
                     <section id="panel-personel" class="dash__panel">
                         <div class="panel-box"><h3 data-i18n="box.personnelPool">👥 Personel Havuzu</h3><div id="firmaPersonel"></div></div>

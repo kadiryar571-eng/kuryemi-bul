@@ -36,10 +36,10 @@
   }
 
   /* ---------- AUTH ---------- */
-  async function signUp(email, password, role, ad) {
+  async function signUp(email, password, role, ad, telefon) {
     return client.auth.signUp({
       email: email, password: password,
-      options: { data: { role: role, ad: ad }, emailRedirectTo: location.origin + "/verify-email.html" }
+      options: { data: { role: role, ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
     });
   }
   // E-posta doğrulama (verify-email.html'den çağrılır): token_hash'i doğrula, oturum aç

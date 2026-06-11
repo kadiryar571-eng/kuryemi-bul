@@ -800,6 +800,167 @@
     });
   }
 
+  /* ============ GOOGLE MAPS - HARITA SAYFASI ============ */
+  async function initMapGoogle() {
+    if (typeof google === "undefined" || !google.maps) return;
+    var el = document.getElementById("map");
+    if (!el) return;
+    
+    var turkeyCenter = { lat: 39.5, lng: 33.5 };
+    var map = new google.maps.Map(el, {
+      zoom: 6,
+      center: turkeyCenter,
+      mapTypeControl: true,
+      fullscreenControl: true,
+      styles: [
+        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] }
+      ]
+    });
+    
+    var markerConfig = {
+      kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
+      isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
+      firma: { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
+    };
+    
+    var layers = {
+      kurye: [],
+      isletme: [],
+      firma: []
+    };
+    
+    function createMarker(item, type) {
+      if (item.lat == null || item.lng == null) return;
+      var config = markerConfig[type];
+      var marker = new google.maps.Marker({
+        position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
+        map: map,
+        title: item.ad,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: config.color,
+          fillOpacity: 0.85,
+          strokeColor: "#fff",
+          strokeWeight: 2.5
+        }
+      });
+      
+      var contentString = '<div style="padding:10px;font-family:Arial,sans-serif;max-width:220px;">' +
+        '<div style="font-weight:bold;margin-bottom:6px;font-size:14px;">' + config.emoji + ' ' + KB.esc(item.ad) + '</div>' +
+        '<div style="font-size:12px;color:#666;margin-bottom:10px;">' + 
+        (item.sehir ? KB.esc(item.sehir) : KB.esc((item.bolgeler || []).join(", "))) + 
+        '</div>' +
+        '<a href="' + config.page + '?id=' + item.id + '" style="color:#4f8bff;text-decoration:none;font-size:12px;font-weight:bold;">Profili Gör →</a>' +
+        '</div>';
+      
+      var infoWindow = new google.maps.InfoWindow({ content: contentString });
+      marker.addListener("click", function () { infoWindow.open(map, marker); });
+      
+      return { marker: marker, infoWindow: infoWindow };
+    }
+    
+    try {
+      var kData = await loadPool("kurye");
+      var iData = await loadPool("isletme");
+      var fData = await loadPool("firma");
+      
+      kData.forEach(function(x) { layers.kurye.push(createMarker(x, "kurye")); });
+      iData.forEach(function(x) { layers.isletme.push(createMarker(x, "isletme")); });
+      fData.forEach(function(x) { layers.firma.push(createMarker(x, "firma")); });
+      
+      document.querySelectorAll("[data-layer]").forEach(function (cb) {
+        cb.addEventListener("change", function () {
+          var type = cb.getAttribute("data-layer");
+          layers[type].forEach(function(item) {
+            if (item && item.marker) {
+              item.marker.setMap(cb.checked ? map : null);
+            }
+          });
+        });
+      });
+    } catch (e) {
+      console.error("Map error:", e);
+    }
+  }
+
+  /* ============ GOOGLE MAPS - PANEL HARİTASI ============ */
+  async function initPanelMap(panelType) {
+    // panelType: "kurye", "isletme", "firma"
+    if (typeof google === "undefined" || !google.maps) return;
+    
+    var containerId = "panelMap" + (panelType.charAt(0).toUpperCase() + panelType.slice(1));
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    
+    var turkeyCenter = { lat: 39.5, lng: 33.5 };
+    var map = new google.maps.Map(el, {
+      zoom: 6,
+      center: turkeyCenter,
+      mapTypeControl: true,
+      fullscreenControl: true,
+      styles: [
+        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+        { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+        { featureType: "poi", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
+        { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+        { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#e5e5e5" }] },
+        { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+        { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] }
+      ]
+    });
+    
+    var markerConfig = {
+      kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
+      isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
+      firma: { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
+    };
+    
+    try {
+      var kData = await loadPool("kurye");
+      var iData = await loadPool("isletme");
+      var fData = await loadPool("firma");
+      
+      function createMarker(item, type) {
+        if (item.lat == null || item.lng == null) return;
+        var config = markerConfig[type];
+        var marker = new google.maps.Marker({
+          position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
+          map: map,
+          title: item.ad,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: config.color,
+            fillOpacity: 0.85,
+            strokeColor: "#fff",
+            strokeWeight: 2.5
+          }
+        });
+        
+        var contentString = '<div style="padding:10px;font-family:Arial,sans-serif;max-width:220px;">' +
+          '<div style="font-weight:bold;margin-bottom:6px;font-size:14px;">' + config.emoji + ' ' + KB.esc(item.ad) + '</div>' +
+          '<div style="font-size:12px;color:#666;margin-bottom:10px;">' + 
+          (item.sehir ? KB.esc(item.sehir) : KB.esc((item.bolgeler || []).join(", "))) + 
+          '</div>' +
+          '<a href="' + config.page + '?id=' + item.id + '" style="color:#4f8bff;text-decoration:none;font-size:12px;font-weight:bold;display:inline-block;">Profili Gör →</a>' +
+          '</div>';
+        
+        var infoWindow = new google.maps.InfoWindow({ content: contentString });
+        marker.addListener("click", function () { infoWindow.open(map, marker); });
+      }
+      
+      kData.forEach(function(x) { createMarker(x, "kurye"); });
+      iData.forEach(function(x) { createMarker(x, "isletme"); });
+      fData.forEach(function(x) { createMarker(x, "firma"); });
+      
+    } catch (e) {
+      console.error("Panel map error:", e);
+    }
+  }
+
   /* ============ ANA SAYFA HARİTASI (seçmeli tek harita) ============ */
   function homeMarker(map, group, x, type) {
     if (x.lat == null || x.lng == null) return;
@@ -981,7 +1142,13 @@
     if (!nav) return;
     nav.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-tab]");
-      if (b) showPanel(b.getAttribute("data-tab"));
+      if (b) {
+        var tab = b.getAttribute("data-tab");
+        showPanel(tab);
+        if (tab === "harita") {
+          setTimeout(function() { initPanelMap(role); }, 100);
+        }
+      }
     });
     showPanel(nav.querySelector("button[data-tab]").getAttribute("data-tab"));
 
@@ -1062,7 +1229,7 @@
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
-    initMap: initMap, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
+    initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings, renderTenders: renderTenders,
     renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials
   };
