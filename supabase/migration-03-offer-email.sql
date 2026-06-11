@@ -32,7 +32,7 @@ declare
   -- >>> DOLDUR <<<
   api_key    text := 'RESEND_API_KEY_BURAYA';
   from_addr  text := 'Kuryemi Bul <onboarding@resend.dev>';  -- domain doğrulayınca: bildirim@senin-domain.com
-  site_url   text := 'https://kadiryar571-eng.github.io/kuryemi-bul';
+  site_url   text := 'https://kuryemibul.com';
 begin
   -- Alıcının e-postası (korumalı tablodan) ve isimler
   select email into to_email from public.profile_contacts where profile_id = new.to_user;
