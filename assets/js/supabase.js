@@ -24,7 +24,7 @@
   /* ---------- Veri haritalama (DB satırı -> uygulama nesnesi) ---------- */
   function fromDb(p) {
     return {
-      id: p.id, user_id: p.user_id, role: p.role,
+      id: p.id, user_id: p.user_id, role: p.role, avatar_url: p.avatar_url || "",
       ad: p.ad, sehir: p.sehir, telefon: p.telefon || "", email: p.email || "", aciklama: p.aciklama,
       lat: p.lat, lng: p.lng,
       arac: p.arac, bolgeler: p.bolgeler || [], deneyim: p.deneyim || 0,
@@ -121,6 +121,30 @@
     out.email = u.email || "";
     return out;
   }
+  /* ---------- DOSYA YÜKLEME (Storage) ---------- */
+  // Avatar yükle → herkese açık URL döner (profiles.avatar_url'e yazılır)
+  async function uploadAvatar(file) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var ext = ((file.name || "img").split(".").pop() || "jpg").toLowerCase();
+    var path = u.id + "/avatar." + ext;
+    var up = await client.storage.from("avatars").upload(path, file, { upsert: true, cacheControl: "3600" });
+    if (up.error) throw up.error;
+    var pub = client.storage.from("avatars").getPublicUrl(path);
+    var url = (pub && pub.data && pub.data.publicUrl) || "";
+    return url ? url + "?v=" + Date.now() : ""; // önbellek kırıcı
+  }
+  // KYC belgesi yükle (özel bucket) → yalnız dosya yolu döner; admin imzalı URL ile açar
+  async function uploadKycDoc(file) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var ext = ((file.name || "belge").split(".").pop() || "jpg").toLowerCase();
+    var path = u.id + "/belge_" + Date.now() + "." + ext;
+    var up = await client.storage.from("kyc_documents").upload(path, file, { upsert: true });
+    if (up.error) throw up.error;
+    return path;
+  }
+
   // Bir profilin iletişim bilgisi (RLS: yalnız sahip veya KABUL edilmiş teklifin karşı tarafı görür)
   async function contactOf(profileId) {
     if (!profileId) return null;
@@ -442,7 +466,7 @@
     var me = await myProfile(); if (!me || !me.id) throw new Error("Önce profilini oluştur.");
     var r = await client.from("kyc_submissions").upsert({
       profile_id: me.id, user_id: u.id, ad_soyad: fields.ad_soyad, tc_no: fields.tc_no,
-      belge_turu: fields.belge_turu || "", not_text: fields.not_text || "", durum: "pending"
+      belge_turu: fields.belge_turu || "", belge_url: fields.belge_url || "", not_text: fields.not_text || "", durum: "pending"
     }, { onConflict: "user_id" }).select().maybeSingle();
     if (r.error) throw r.error;
     return r.data;
@@ -476,6 +500,7 @@
     resetPassword: resetPassword, updatePassword: updatePassword,
     verifyEmail: verifyEmail, resendVerification: resendVerification,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
+    uploadAvatar: uploadAvatar, uploadKycDoc: uploadKycDoc,
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,

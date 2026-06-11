@@ -18,6 +18,10 @@
       .role-pick__btn:hover{border-color:var(--primary,#4f8bff)}
       .role-pick__btn.active{border-color:var(--primary,#4f8bff);color:var(--primary,#4f8bff);
         background:rgba(79,139,255,.08);box-shadow:0 0 0 1px var(--primary,#4f8bff) inset}
+      /* Avatar yükleyici */
+      .avatar-edit{display:flex;flex-direction:column;align-items:center;gap:12px}
+      .avatar-preview{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--line);background:var(--surface,#f3f4f6)}
+      .avatar-hint{font-size:.8rem;color:var(--muted,#667)}
     </style>
 </head>
 <body>
@@ -145,6 +149,7 @@
                         '<div class="field"><label>' + t("kyc.adsoyad") + '</label><input id="kycAd"></div>' +
                         '<div class="field"><label>' + t("kyc.tc") + '</label><input id="kycTc" maxlength="11" inputmode="numeric"></div>' +
                         '<div class="field"><label>' + t("kyc.belge") + '</label><select id="kycBelge"><option value="kimlik">' + t("kyc.belgeKimlik") + '</option><option value="ehliyet">' + t("kyc.belgeEhliyet") + '</option></select></div>' +
+                        '<div class="field field--full"><label>' + t("kyc.belgeUpload") + '</label><input id="kycFile" type="file" accept="image/*,application/pdf"></div>' +
                         '</div>' +
                         '<button type="button" class="btn btn--primary btn--sm" id="kycSubmit">' + t("kyc.submit") + '</button>' +
                         '<p class="form-success" id="kycMsg" hidden></p>';
@@ -152,8 +157,13 @@
                         var ad = val("kycAd"), tc = val("kycTc"), belge = val("kycBelge"), msg = document.getElementById("kycMsg");
                         if (ad.length < 3) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("kyc.adReq"); return; }
                         if (!/^[0-9]{11}$/.test(tc)) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("kyc.tcReq"); return; }
+                        var fileEl = document.getElementById("kycFile");
+                        var file = fileEl && fileEl.files && fileEl.files[0];
+                        if (file && file.size > 10 * 1024 * 1024) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("pe.photoTooBig"); return; }
                         try {
-                            await SB.submitKyc({ ad_soyad: ad, tc_no: tc, belge_turu: belge });
+                            var belgeUrl = "";
+                            if (file) { msg.hidden = false; msg.style.color = ""; msg.textContent = t("pe.photoUploading"); belgeUrl = await SB.uploadKycDoc(file); }
+                            await SB.submitKyc({ ad_soyad: ad, tc_no: tc, belge_turu: belge, belge_url: belgeUrl });
                             msg.hidden = false; msg.style.color = ""; msg.textContent = t("kyc.submitted");
                             setTimeout(function () { location.reload(); }, 1300);
                         } catch (e) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = e.message || t("auth.errGeneric"); }
@@ -175,6 +185,13 @@
 
             function fieldsHtml() {
                 var html = '<div class="form-grid">';
+                var av = p.avatar_url ? String(p.avatar_url).replace(/"/g, "&quot;") : "";
+                html += '<div class="field field--full"><div class="avatar-edit">' +
+                    '<img id="pAvatarImg" class="avatar-preview" alt="" src="' + av + '" onerror="this.removeAttribute(\'src\')">' +
+                    '<label class="btn btn--light btn--sm">' + t("pe.uploadPhoto") +
+                    '<input type="file" id="pAvatarFile" accept="image/*" hidden></label>' +
+                    '<span class="avatar-hint" id="pAvatarHint"></span>' +
+                    '</div></div>';
                 html += roleSegHtml();
                 html += field("pAd", t("pe.name"), p.ad);
                 html += field("pSehir", t("pe.city"), p.sehir);
@@ -205,6 +222,22 @@
 
             function renderForm() {
                 form.innerHTML = fieldsHtml();
+                // Avatar yükleme
+                var avFile = document.getElementById("pAvatarFile");
+                if (avFile) avFile.addEventListener("change", async function () {
+                    var file = avFile.files && avFile.files[0];
+                    if (!file) return;
+                    var hint = document.getElementById("pAvatarHint");
+                    var img = document.getElementById("pAvatarImg");
+                    if (file.size > 5 * 1024 * 1024) { if (hint) hint.textContent = t("pe.photoTooBig"); return; }
+                    if (hint) hint.textContent = t("pe.photoUploading");
+                    try {
+                        var url = await SB.uploadAvatar(file);
+                        p.avatar_url = url;
+                        if (img) img.src = url;
+                        if (hint) hint.textContent = t("pe.photoUploaded");
+                    } catch (e) { if (hint) hint.textContent = e.message || t("auth.errGeneric"); }
+                });
                 var rp = document.getElementById("rolePick");
                 if (rp) rp.querySelectorAll("button").forEach(function (b) {
                     b.addEventListener("click", function () {
@@ -222,7 +255,7 @@
 
             form.addEventListener("submit", async function (e) {
                 e.preventDefault();
-                var f = { role: curRole, ad: val("pAd"), sehir: val("pSehir"), telefon: val("pTel"), aciklama: val("pAbout") };
+                var f = { role: curRole, ad: val("pAd"), sehir: val("pSehir"), telefon: val("pTel"), aciklama: val("pAbout"), avatar_url: p.avatar_url || "" };
                 if (curRole === "kurye") {
                     f.arac = val("pArac"); f.deneyim = intv("pDeneyim"); f.seviye = val("pSeviye");
                     f.tamamlanan = intv("pTamam"); f.bolgeler = csv("pBolge"); f.sertifikalar = csv("pCert");

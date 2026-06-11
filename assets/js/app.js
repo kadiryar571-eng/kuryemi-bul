@@ -8,6 +8,14 @@
   var D = window.KB_DATA;
   var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
 
+  // Avatar içeriği: fotoğraf varsa <img>, yoksa baş harfler. (.avatar div'inin içine konur)
+  function avInner(x) {
+    if (x && x.avatar_url) {
+      return '<img class="avatar__img" src="' + KB.esc(x.avatar_url) + '" alt="" onerror="this.remove()">';
+    }
+    return KB.initials((x && x.ad) || "?");
+  }
+
   /* ============ VERİ KATMANI (online=Supabase / offline=demo) ============ */
   function online() { return !!(window.KB && KB.isOnline && KB.isOnline()); }
   async function loadPool(type) {
@@ -493,7 +501,7 @@
     var fill = xpFill(k.puan);
     return '<article class="talent-card">' + poolStar(k.id) +
       '<span class="match-score">%' + score + ' Uyum</span>' +
-      '<div class="pcard__top"><div class="avatar">' + KB.initials(k.ad) + '</div>' +
+      '<div class="pcard__top"><div class="avatar">' + avInner(k) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(k.ad) + ' ' + verBadge(k.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
       '<div>' + KB.levelBadge(k.seviye) + ' ' + KB.stars(k.puan) + '</div>' +
@@ -511,7 +519,7 @@
     var score = talentScore(i.id);
     return '<article class="talent-card">' + poolStar(i.id) +
       '<span class="match-score">%' + score + ' Uyum</span>' +
-      '<div class="pcard__top"><div class="avatar avatar--blue">' + KB.initials(i.ad) + '</div>' +
+      '<div class="pcard__top"><div class="avatar avatar--blue">' + avInner(i) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(i.ad) + ' ' + verBadge(i.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
       '<p class="pcard__sub">' + KB.esc(i.aciklama) + '</p>' +
@@ -524,7 +532,7 @@
     var score = talentScore(f.id);
     return '<article class="talent-card">' + poolStar(f.id) +
       '<span class="match-score">%' + score + ' Uyum</span>' +
-      '<div class="pcard__top"><div class="avatar avatar--navy">' + KB.initials(f.ad) + '</div>' +
+      '<div class="pcard__top"><div class="avatar avatar--navy">' + avInner(f) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(f.ad) + ' ' + verBadge(f.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
       '<p class="pcard__sub">' + KB.esc(f.aciklama) + '</p>' +
@@ -717,7 +725,7 @@
       ? '<aside class="profile-identity">' +
           '<div class="profile-identity__cover"></div>' +
           '<div class="profile-identity__body">' +
-            '<div class="avatar' + avatarCls + '">' + KB.initials(x.ad) + '</div>' +
+            '<div class="avatar' + avatarCls + '">' + avInner(x) + '</div>' +
             '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
             '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
             sideExtra +
@@ -726,7 +734,7 @@
           '</div>' +
         '</aside>'
       : '<aside class="profile__card">' +
-          '<div class="avatar' + avatarCls + '">' + KB.initials(x.ad) + '</div>' +
+          '<div class="avatar' + avatarCls + '">' + avInner(x) + '</div>' +
           '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
           '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
           sideExtra +

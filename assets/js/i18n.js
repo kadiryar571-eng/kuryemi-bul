@@ -65,6 +65,7 @@
       "kyc.rejected": "Önceki başvurun reddedildi. Bilgilerini kontrol edip tekrar gönder.",
       "kyc.adsoyad": "Ad Soyad (kimlikteki gibi)", "kyc.tc": "T.C. Kimlik No", "kyc.belge": "Belge türü",
       "kyc.belgeKimlik": "Kimlik kartı", "kyc.belgeEhliyet": "Ehliyet",
+      "kyc.belgeUpload": "Belge fotoğrafı yükle (kimlik/ehliyet)",
       "kyc.submit": "Doğrulamaya Gönder", "kyc.submitted": "✓ Başvurun alındı, inceleniyor.",
       "kyc.adReq": "Ad soyad gerekli.", "kyc.tcReq": "Geçerli bir 11 haneli T.C. no gir.",
 
@@ -267,6 +268,7 @@
       "sr.invalid": "Bağlantı geçersiz veya süresi dolmuş. Sıfırlamayı tekrar başlat.",
       "pe.title": "Profilim", "pe.lead": "Bilgilerini doldur; havuzda böyle görüneceksin.",
       "pe.save": "Kaydet", "pe.saved": "✓ Profil kaydedildi.", "pe.viewPublic": "Herkese açık profilimi gör →",
+      "pe.uploadPhoto": "Fotoğraf yükle", "pe.photoUploading": "Yükleniyor…", "pe.photoUploaded": "✓ Fotoğraf yüklendi", "pe.photoTooBig": "Dosya çok büyük (avatar maks 5MB, belge 10MB).",
       "pe.name": "Ad / İşletme / Firma Adı", "pe.city": "Şehir", "pe.phone": "Telefon", "pe.about": "Hakkında / Açıklama",
       "pe.vehicle": "Araç", "pe.regions": "Bölgeler (virgülle ayır)", "pe.exp": "Deneyim (yıl)", "pe.level": "Seviye",
       "pe.certs": "Sertifikalar (virgülle ayır)", "pe.completed": "Tamamlanan teslimat",
@@ -329,6 +331,7 @@
       "kyc.rejected": "Your previous request was rejected. Check your details and resubmit.",
       "kyc.adsoyad": "Full Name (as on ID)", "kyc.tc": "National ID No", "kyc.belge": "Document type",
       "kyc.belgeKimlik": "ID card", "kyc.belgeEhliyet": "Driver's license",
+      "kyc.belgeUpload": "Upload document photo (ID/license)",
       "kyc.submit": "Submit for Verification", "kyc.submitted": "✓ Request received, under review.",
       "kyc.adReq": "Full name is required.", "kyc.tcReq": "Enter a valid 11-digit ID number.",
 
@@ -531,6 +534,7 @@
       "sr.invalid": "Link is invalid or expired. Please restart the reset.",
       "pe.title": "My Profile", "pe.lead": "Fill in your details; this is how you'll appear in the pool.",
       "pe.save": "Save", "pe.saved": "✓ Profile saved.", "pe.viewPublic": "View my public profile →",
+      "pe.uploadPhoto": "Upload photo", "pe.photoUploading": "Uploading…", "pe.photoUploaded": "✓ Photo uploaded", "pe.photoTooBig": "File too large (avatar max 5MB, document 10MB).",
       "pe.name": "Name / Business / Firm", "pe.city": "City", "pe.phone": "Phone", "pe.about": "About / Description",
       "pe.vehicle": "Vehicle", "pe.regions": "Regions (comma separated)", "pe.exp": "Experience (years)", "pe.level": "Level",
       "pe.certs": "Certificates (comma separated)", "pe.completed": "Completed deliveries",
