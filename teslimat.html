@@ -16,7 +16,7 @@
   <template id="page">
     <div class="panel reveal" style="background:linear-gradient(135deg,rgba(34,211,238,0.06),rgba(168,85,247,0.05))">
       <div class="panel__b" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-        <span class="match__av" style="width:56px;height:56px;font-size:1.5rem">📦</span>
+        <span class="match__av" style="width:56px;height:56px;font-size:1.5rem">📋</span>
         <div><div style="font-family:var(--display);font-size:1.3rem;font-weight:700">Başvuru #1042</div><div style="color:var(--muted);font-size:0.9rem">HızlıKurye A.Ş. → Yusuf K. · Motosiklet Kuryesi</div></div>
         <div style="margin-left:auto;text-align:right"><div style="font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--cyan)">6 dk</div><div style="font-size:0.76rem;color:var(--faint)">tahmini karar</div></div>
         <span class="chip chip--cy" style="font-size:0.85rem">● Değerlendirmede</span>
@@ -32,7 +32,7 @@
             <span class="heat" style="width:160px;height:160px;left:18%;top:28%;background:radial-gradient(circle,rgba(34,211,238,0.4),transparent 70%)"></span>
             <span class="heat" style="width:160px;height:160px;left:62%;top:55%;background:radial-gradient(circle,rgba(168,85,247,0.38),transparent 70%)"></span>
             <svg id="routemap" viewBox="0 0 600 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
-            <div class="bigmap__legend"><span class="chip chip--cy">● Kurye</span><span class="chip chip--ok">● Alış</span><span class="chip" style="color:#a855f7;border-color:rgba(168,85,247,.4)">● Teslim</span></div>
+            <div class="bigmap__legend"><span class="chip chip--cy">● Kurye</span><span class="chip chip--ok">● Başlangıç Noktası</span><span class="chip" style="color:#a855f7;border-color:rgba(168,85,247,.4)">● İş Konumu</span></div>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@
               <div class="tline__i is-done"><div class="tline__t">Başvuru gönderildi</div><div class="tline__s">14:02 · Yusuf K.</div></div>
               <div class="tline__i is-done"><div class="tline__t">Profil incelemeye alındı</div><div class="tline__s">14:03 · HızlıKurye İK</div></div>
               <div class="tline__i is-done"><div class="tline__t">Mülakat daveti</div><div class="tline__s">14:09 · video görüşme talebi</div></div>
-              <div class="tline__i is-cur"><div class="tline__t">Yolda</div><div class="tline__s">14:11 · Moda’ya doğru</div></div>
+              <div class="tline__i is-cur"><div class="tline__t">Değerlendirmede</div><div class="tline__s">14:11 · süreç devam ediyor</div></div>
               <div class="tline__i"><div class="tline__t">Teklif gönderildi</div><div class="tline__s">tahminen yakında</div></div>
             </div>
           </div>
@@ -61,7 +61,7 @@
 
     <div class="grid grid--4 reveal" style="margin-top:18px">
       <div class="stat"><div class="stat__top"><span class="stat__ic">⏱️</span><span class="stat__l">Süreç Günü</span></div><div class="stat__v"><span data-count="9">0</span> dk</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🛣️</span><span class="stat__l">Mesafe</span></div><div class="stat__v" data-count="4.1" data-dec="1" data-suffix=" km">0</div></div>
+      <div class="stat"><div class="stat__top"><span class="stat__ic">📅</span><span class="stat__l">Başvuru Süresi</span></div><div class="stat__v" data-count="9" data-suffix=" gün">0</div></div>
       <div class="stat"><div class="stat__top"><span class="stat__ic">⚡</span><span class="stat__l">Eşleşme Skoru</span></div><div class="stat__v"><span data-count="94">0</span>%</div></div>
       <div class="stat"><div class="stat__top"><span class="stat__ic">🎯</span><span class="stat__l">Olumlu Süreç</span></div><div class="stat__v">Evet</div><div class="stat__d up">▲ devam ediyor</div></div>
     </div>
@@ -69,7 +69,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
   <script>
-    var wrap = Platform.init({ active: 'delivery', title: 'Başvuru Takibi', subtitle: 'Her başvuru bir yolculuk · canlı süreç izleme' });
+    var wrap = Platform.init({ active: 'application', title: 'Başvuru Takibi', subtitle: 'Her başvuru bir yolculuk · canlı süreç izleme' });
     wrap.innerHTML = document.getElementById('page').innerHTML;
     Platform.buildMap(document.getElementById('routemap'),
       [[110,240],[210,180],[300,210],[390,140],[470,180]],
