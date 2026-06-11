@@ -39,7 +39,18 @@
   async function signUp(email, password, role, ad) {
     return client.auth.signUp({
       email: email, password: password,
-      options: { data: { role: role, ad: ad }, emailRedirectTo: location.origin + "/profil-duzenle.html" }
+      options: { data: { role: role, ad: ad }, emailRedirectTo: location.origin + "/verify-email.html" }
+    });
+  }
+  // E-posta doğrulama (verify-email.html'den çağrılır): token_hash'i doğrula, oturum aç
+  async function verifyEmail(tokenHash, type) {
+    return client.auth.verifyOtp({ token_hash: tokenHash, type: type || "signup" });
+  }
+  // Süresi dolmuş/kullanılmış doğrulama için yeni bağlantı gönder
+  async function resendVerification(email) {
+    return client.auth.resend({
+      type: "signup", email: email,
+      options: { emailRedirectTo: location.origin + "/verify-email.html" }
     });
   }
   async function signIn(email, password) {
@@ -454,6 +465,7 @@
     isOn: isOn,
     signUp: signUp, signIn: signIn, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
     resetPassword: resetPassword, updatePassword: updatePassword,
+    verifyEmail: verifyEmail, resendVerification: resendVerification,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,

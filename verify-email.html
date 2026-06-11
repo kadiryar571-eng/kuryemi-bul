@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="verify.title">E-posta Doğrulama · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/design-system.css">
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1 data-i18n="verify.title">E-posta Doğrulama</h1></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container container--narrow">
+            <div class="form-card">
+                <!-- Durum: yükleniyor -->
+                <div id="vState" style="text-align:center">
+                    <p class="pcard__sub" id="vText" data-i18n="verify.checking">E-postan doğrulanıyor…</p>
+                </div>
+
+                <!-- Durum: hata (gizli) -->
+                <form id="resendForm" hidden>
+                    <div class="field"><label for="vEmail" data-i18n="auth.email">E-posta</label>
+                        <input type="email" id="vEmail" data-i18n-ph="verify.emailPh" placeholder="ornek@eposta.com" required></div>
+                    <button type="submit" class="btn btn--primary btn--lg btn--block" data-i18n="verify.resendBtn">Yeni doğrulama linki gönder</button>
+                </form>
+
+                <p class="form-success" id="vMsg" hidden></p>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var stateBox = document.getElementById("vState");
+        var vText = document.getElementById("vText");
+        var resendForm = document.getElementById("resendForm");
+        var msg = document.getElementById("vMsg");
+
+        function showErr(text) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = text; }
+        function showOk(text) { msg.hidden = false; msg.style.color = ""; msg.textContent = text; }
+
+        function showError(reasonKey) {
+            vText.textContent = t("verify.errorTitle");
+            showErr(t(reasonKey));
+            resendForm.hidden = false;
+        }
+
+        function getParam(name) {
+            var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
+            return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
+        }
+
+        async function start() {
+            if (window.KB && KB.ready) await KB.ready();
+            if (!(window.KB && KB.isOnline())) { vText.textContent = "Supabase gerekli."; return; }
+
+            // E-postadaki bağlantı: ?token_hash=...&type=signup
+            var tokenHash = getParam("token_hash");
+            var type = getParam("type") || "signup";
+
+            if (!tokenHash) { showError("verify.invalid"); return; }
+
+            try {
+                var r = await SB.verifyEmail(tokenHash, type);
+                if (r && r.error) {
+                    var m = (r.error.message || "").toLowerCase();
+                    showError(/expire|invalid|otp/.test(m) ? "verify.expired" : "verify.invalid");
+                    return;
+                }
+                // Başarılı → oturum açıldı, profili tamamlamaya yönlendir
+                vText.textContent = t("verify.success");
+                showOk(t("verify.successSub"));
+                setTimeout(function () { location.href = "profil-duzenle.html"; }, 1500);
+            } catch (err) {
+                showError("verify.expired");
+            }
+        }
+
+        resendForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            var email = document.getElementById("vEmail").value.trim();
+            if (!email) { showErr(t("auth.resetEmailFirst")); return; }
+            var btn = resendForm.querySelector("button");
+            btn.disabled = true;
+            try {
+                var r = await SB.resendVerification(email);
+                if (r && r.error) { showErr(r.error.message || t("auth.errGeneric")); btn.disabled = false; return; }
+                showOk(t("verify.resent"));
+            } catch (err) { showErr(err.message || t("auth.errGeneric")); btn.disabled = false; }
+        });
+
+        start();
+    })();
+    </script>
+</body>
+</html>
