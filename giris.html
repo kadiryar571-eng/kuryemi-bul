@@ -262,9 +262,11 @@
       var msg = document.getElementById("authMsg");
       var mode = "login";
 
+      var slider = tabs.querySelector(".auth-slider");
       function setMode(m) {
         mode = m;
         tabs.setAttribute("data-mode", m);
+        if (slider) slider.style.transform = m === "register" ? "translateX(100%)" : "translateX(0)";
         tabs.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-mode") === m); });
         navBtns.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-go") === m); });
         loginForm.classList.toggle("active", m === "login");
