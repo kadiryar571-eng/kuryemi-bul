@@ -10,36 +10,42 @@ aşağıdaki **panel ayarları** yapıldığında sistem anında çalışır.
 
 ---
 
-## 1) Brevo SMTP bilgilerini al
+## 1) Brevo SMTP bilgileri (bu hesap için doğrulandı)
 
-1. https://app.brevo.com → hesap aç / giriş yap.
-2. Sol üst profil → **SMTP & API** → **SMTP** sekmesi.
-3. Şu bilgileri not al:
+Bu KuryemiBul Brevo hesabının SMTP relay'i **zaten aktif**. Kesin değerler:
+
    - **SMTP Server:** `smtp-relay.brevo.com`
    - **Port:** `587`
-   - **Login:** Brevo'nun verdiği SMTP login (genelde hesap e-postan veya `xxxx@smtp-brevo.com`)
-   - **SMTP Key (Password):** "Generate a new SMTP key" ile oluştur — **bu, parola olarak kullanılacak**.
-4. **Senders & IP** bölümünden bir **gönderen e-posta** doğrula (örn. `noreply@kuryemibul.com`).
-   Domain doğrulaması (SPF/DKIM) yapılması teslimat oranını ciddi artırır.
+   - **Login (Username):** `ae662c001@smtp-brevo.com`
+   - **Password:** Brevo API/SMTP anahtarın (`xkeysib-…` ile başlar) — Brevo relay'de bu anahtar parola olarak çalışır.
+   - **Plan:** Free → günlük **300 e-posta** limiti (doğrulama için fazlasıyla yeterli).
+
+> Gönderen (sender) için Brevo'da **doğrulanmış** bir adres gerekir. Hesap e-postan
+> `kadiryar571@gmail.com` zaten doğrulu; hemen çalışması için onu kullanabilirsin.
+> İleride **Senders & IP** → `noreply@kuryemibul.com` ekleyip domain (SPF/DKIM)
+> doğrulaması yapman teslimat/markalaşma için önerilir.
 
 ---
 
 ## 2) Supabase'de SMTP'yi Brevo'ya bağla
 
-Supabase Dashboard → **Project Settings** → **Authentication** → **SMTP Settings**:
+Supabase Dashboard → **Project Settings** → **Authentication** → **SMTP Settings**
+(veya Authentication → Emails → SMTP):
 
 | Alan | Değer |
 |------|-------|
 | Enable Custom SMTP | ✅ Açık |
-| Sender email | `noreply@kuryemibul.com` (Brevo'da doğruladığın gönderen) |
+| Sender email | `kadiryar571@gmail.com` (Brevo'da doğrulanmış) |
 | Sender name | `Kuryemi Bul` |
 | Host | `smtp-relay.brevo.com` |
 | Port | `587` |
-| Username | Brevo SMTP **Login** |
-| Password | Brevo **SMTP Key** |
+| Username | `ae662c001@smtp-brevo.com` |
+| Password | `xkeysib-…` (Brevo API/SMTP anahtarın — buraya yapıştır) |
 | Minimum interval | varsayılan bırak |
 
 **Save** → "Send test email" ile doğrula.
+
+> 🔐 Bu anahtar yalnızca Supabase panelinde durur; repoya/koda **yazılmaz**.
 
 ---
 
