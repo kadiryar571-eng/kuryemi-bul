@@ -95,6 +95,7 @@
         '<form id="offerForm">' +
           '<div class="field"><label for="offerMsg">' + T("modal.msgLabel") + '</label>' +
             '<textarea id="offerMsg" rows="3" placeholder="' + T("modal.msgPh") + '" required></textarea></div>' +
+          '<p class="modal__consent">🔒 ' + T("modal.consent") + ' <a href="kvkk.html" target="_blank" rel="noopener">' + T("modal.consentLink") + '</a></p>' +
           '<button type="submit" class="btn btn--primary btn--block">' + T("modal.send") + '</button>' +
           '<p class="form-success" id="offerSuccess" hidden>' + T("modal.success") + '</p>' +
         '</form>' +

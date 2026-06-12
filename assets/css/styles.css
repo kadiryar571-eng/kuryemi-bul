@@ -455,6 +455,10 @@ body > .demo-banner ~ * .header { top: 0; }
 .legal__note { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.32); border-radius: 12px; padding: 14px 16px; font-size: .88rem; line-height: 1.6; margin-bottom: 28px; }
 .legal__toc { background: var(--surface-2, rgba(127,127,127,.06)); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 28px; }
 .legal__toc a { display: inline-block; margin: 3px 14px 3px 0; font-size: .9rem; }
+
+/* Teklif modalı KVKK rıza notu */
+.modal__consent { font-size: .8rem; line-height: 1.5; color: var(--muted, #6b7689); background: var(--surface-2, rgba(127,127,127,.06)); border-radius: 10px; padding: 10px 12px; margin: 0 0 14px; }
+.modal__consent a { color: var(--primary, #4f8bff); }
 .avatar--blue { background: linear-gradient(135deg, #3B82F6, #6366F1); color: #fff; }
 .avatar--navy { background: linear-gradient(135deg, #1E3A5F, #0F2A4A); color: #fff; }
 .pcard__name { font-size: 1.1rem; font-weight: 800; }

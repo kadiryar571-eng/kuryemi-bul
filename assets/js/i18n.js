@@ -205,6 +205,10 @@
       "modal.send": "Teklifi Gönder", "modal.success": "🎉 Teklif gönderildi! Panelinden takip edebilirsin.",
       "modal.guest": "Teklif göndermek için önce sağ üstten bir rol seç (Kurye / İşletme / Kurye Firması).",
       "modal.close": "Kapat",
+      "modal.consent": "Teklifin kabul edilirse iletişim bilgilerin (telefon/e-posta) karşı tarafla paylaşılır.",
+      "modal.consentLink": "KVKK Aydınlatma Metni",
+      "auth.invalidEmail": "Geçerli bir e-posta adresi gir.",
+      "auth.invalidPhone": "Geçerli bir telefon numarası gir (örn. 05xx xxx xx xx).",
 
       "panel.kurye.title": "🛵 Kurye Paneli", "panel.kurye.lead": "Profilin, başvuruların ve gelen teklifler tek ekranda.",
       "panel.isletme.title": "📦 İşletme Paneli", "panel.isletme.lead": "İlanlarını yönet, havuzda kurye ara, başvuruları incele.",
@@ -479,6 +483,10 @@
       "modal.send": "Send Offer", "modal.success": "🎉 Offer sent! You can track it from your panel.",
       "modal.guest": "To send an offer, first pick a role from the top right (Courier / Business / Courier Firm).",
       "modal.close": "Close",
+      "modal.consent": "If your offer is accepted, your contact details (phone/email) are shared with the other party.",
+      "modal.consentLink": "Data Protection Notice",
+      "auth.invalidEmail": "Enter a valid e-mail address.",
+      "auth.invalidPhone": "Enter a valid phone number (e.g. 05xx xxx xx xx).",
 
       "panel.kurye.title": "🛵 Courier Panel", "panel.kurye.lead": "Your profile, applications and incoming offers in one screen.",
       "panel.isletme.title": "📦 Business Panel", "panel.isletme.lead": "Manage your listings, search the pool, review applications.",

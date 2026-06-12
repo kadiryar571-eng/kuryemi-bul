@@ -344,6 +344,8 @@
         var tel = document.getElementById("rPhone").value.trim();
         var pass = document.getElementById("rPass").value;
         if (!ad || !email || !tel || pass.length < 6) { showErr(t("auth.errGeneric")); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr(t("auth.invalidEmail")); return; }
+        if (!/^0?5\d{9}$/.test(tel.replace(/\D/g, ""))) { showErr(t("auth.invalidPhone")); return; }
         if (!(window.KB && KB.isOnline())) { KB.setRole("kurye"); location.href = KB.panelHref(); return; }
         var btn = registerForm.querySelector(".auth-submit"); btn.disabled = true;
         try {

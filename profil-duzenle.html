@@ -255,7 +255,11 @@
 
             form.addEventListener("submit", async function (e) {
                 e.preventDefault();
-                var f = { role: curRole, ad: val("pAd"), sehir: val("pSehir"), telefon: val("pTel"), aciklama: val("pAbout"), avatar_url: p.avatar_url || "" };
+                var telRaw = val("pTel");
+                if (telRaw && !/^0?5\d{9}$/.test(telRaw.replace(/\D/g, ""))) {
+                    msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("auth.invalidPhone"); return;
+                }
+                var f = { role: curRole, ad: val("pAd"), sehir: val("pSehir"), telefon: telRaw, aciklama: val("pAbout"), avatar_url: p.avatar_url || "" };
                 if (curRole === "kurye") {
                     f.arac = val("pArac"); f.deneyim = intv("pDeneyim"); f.seviye = val("pSeviye");
                     f.tamamlanan = intv("pTamam"); f.bolgeler = csv("pBolge"); f.sertifikalar = csv("pCert");
