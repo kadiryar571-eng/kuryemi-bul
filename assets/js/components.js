@@ -150,6 +150,13 @@
             '<a href="firmalar.html">' + T("footer.firmsPool") + '</a>' +
             '<a href="harita.html">' + T("footer.map") + '</a>' +
           '</nav>' +
+          '<nav class="footer__links" aria-label="Yasal">' +
+            '<h4>' + T("footer.legal") + '</h4>' +
+            '<a href="kvkk.html">' + T("footer.kvkk") + '</a>' +
+            '<a href="gizlilik.html">' + T("footer.privacy") + '</a>' +
+            '<a href="sartlar.html">' + T("footer.terms") + '</a>' +
+            '<a href="cerez.html">' + T("footer.cookies") + '</a>' +
+          '</nav>' +
           '<div class="footer__contact">' +
             '<h4>' + T("footer.contact") + '</h4>' +
             '<p><a href="mailto:' + EMAIL + '">' + EMAIL + '</a></p>' +
@@ -210,6 +217,27 @@
     function onScroll() { b.classList.toggle("is-visible", window.scrollY > 400); }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
+  }
+
+  /* ---------- Çerez onay banner'ı ---------- */
+  function renderCookieConsent() {
+    try { if (localStorage.getItem("kb_cookie_ok") === "1") return; } catch (e) {}
+    if (document.getElementById("cookieBar")) return;
+    var bar = document.createElement("div");
+    bar.id = "cookieBar";
+    bar.className = "cookie-bar";
+    bar.innerHTML =
+      '<p class="cookie-bar__txt">' + T("cookie.text") +
+        ' <a href="cerez.html">' + T("cookie.link") + '</a></p>' +
+      '<div class="cookie-bar__act">' +
+        '<button type="button" class="btn btn--light btn--sm" id="cookieReject">' + T("cookie.reject") + '</button>' +
+        '<button type="button" class="btn btn--primary btn--sm" id="cookieAccept">' + T("cookie.accept") + '</button>' +
+      '</div>';
+    document.body.appendChild(bar);
+    function close(val) { try { localStorage.setItem("kb_cookie_ok", val); } catch (e) {} bar.classList.add("is-hidden"); setTimeout(function () { if (bar.parentNode) bar.parentNode.removeChild(bar); }, 350); }
+    document.getElementById("cookieAccept").addEventListener("click", function () { close("1"); });
+    document.getElementById("cookieReject").addEventListener("click", function () { close("0"); });
+    requestAnimationFrame(function () { bar.classList.add("is-in"); });
   }
 
   /* ---------- Oturum (Supabase) ---------- */
@@ -406,6 +434,7 @@
     renderFooter();
     renderWhatsApp();
     renderToTop();
+    renderCookieConsent();
     updateAuthArea();
     // Logo görseli yoksa (assets/logo.png eklenmediyse) 🛵 emojiye düş
     document.querySelectorAll(".logo__img").forEach(function (im) {

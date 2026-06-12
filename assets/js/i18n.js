@@ -44,6 +44,10 @@
       "footer.businessesPool": "İşletme Havuzu", "footer.firmsPool": "Firma Havuzu",
       "footer.map": "Harita", "footer.contact": "İletişim",
       "footer.rights": "© Kuryemi Bul. Tüm hakları saklıdır.",
+      "footer.legal": "Yasal", "footer.kvkk": "KVKK Aydınlatma Metni", "footer.privacy": "Gizlilik Politikası",
+      "footer.terms": "Kullanım Şartları", "footer.cookies": "Çerez Politikası",
+      "cookie.text": "Deneyimini iyileştirmek ve hizmeti sunmak için zorunlu çerezler kullanıyoruz.",
+      "cookie.link": "Detaylı bilgi", "cookie.accept": "Kabul et", "cookie.reject": "Yalnızca zorunlu",
 
       "level.standart": "Standart", "level.profesyonel": "Profesyonel", "level.premium": "Premium",
 
@@ -314,6 +318,10 @@
       "footer.businessesPool": "Business Pool", "footer.firmsPool": "Firm Pool",
       "footer.map": "Map", "footer.contact": "Contact",
       "footer.rights": "© Kuryemi Bul. All rights reserved.",
+      "footer.legal": "Legal", "footer.kvkk": "KVKK (Data Protection) Notice", "footer.privacy": "Privacy Policy",
+      "footer.terms": "Terms of Use", "footer.cookies": "Cookie Policy",
+      "cookie.text": "We use essential cookies to provide and improve the service.",
+      "cookie.link": "Learn more", "cookie.accept": "Accept", "cookie.reject": "Essential only",
 
       "level.standart": "Standard", "level.profesyonel": "Professional", "level.premium": "Premium",
 
