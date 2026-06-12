@@ -77,7 +77,7 @@
         var grid = document.getElementById("myPoolGrid");
         if (grid && !grid.querySelector(".pcard")) grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pool.empty") + '</div>';
       }
-    } catch (err) { alert(err.message || "Hata"); }
+    } catch (err) { KB.toast(err.message || "Hata", "error"); }
     b.disabled = false;
   });
 
@@ -111,9 +111,9 @@
     if (window.KB && KB.ready) await KB.ready();
     var on = online();
     if (on) {
-      if (!KB.isAuthed()) { alert(T("modal.guest")); location.href = "giris.html"; return; }
+      if (!KB.isAuthed()) { KB.toast(T("modal.guest"), "error"); setTimeout(function () { location.href = "giris.html"; }, 1200); return; }
     } else {
-      if (KB.getRole() === "ziyaretci") { alert(T("modal.guest")); return; }
+      if (KB.getRole() === "ziyaretci") { KB.toast(T("modal.guest"), "error"); return; }
     }
     var fromRole = on ? KB.currentRole() : KB.getRole();
     var target = on ? await SB.profileById(targetId)
@@ -134,7 +134,7 @@
       try {
         if (on) { await SB.sendOffer(targetId, targetType, fromRole, msg); }
         else { KB.addTeklif({ yon: fromRole + "-" + targetType, kimdenRol: fromRole, kimeTip: targetType, kime: target.ad, mesaj: msg }); }
-      } catch (err) { alert(err.message || "Hata"); return; }
+      } catch (err) { KB.toast(err.message || "Hata", "error"); return; }
       success.hidden = false;
       setTimeout(closeModal, 1600);
     };
@@ -216,7 +216,7 @@
     form.onsubmit = async function (e) {
       e.preventDefault();
       try { await SB.applyToListing(listingId, document.getElementById("applyMsg").value.trim()); }
-      catch (err) { alert((err && err.message) || "Hata"); return; }
+      catch (err) { KB.toast((err && err.message) || "Hata", "error"); return; }
       ok.hidden = false;
       document.querySelectorAll('[data-apply="' + listingId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip">' + T("ilan.applied") + '</span>'; });
       setTimeout(function () { m.classList.remove("is-open"); }, 1200);
@@ -294,15 +294,15 @@
       return;
     }
     var tog = e.target.closest("[data-listing-toggle]");
-    if (tog) { try { await SB.updateListingStatus(tog.getAttribute("data-listing-toggle"), tog.getAttribute("data-durum") === "acik" ? "kapali" : "acik"); await renderMyListings(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    if (tog) { try { await SB.updateListingStatus(tog.getAttribute("data-listing-toggle"), tog.getAttribute("data-durum") === "acik" ? "kapali" : "acik"); await renderMyListings(); } catch (err) { KB.toast((err && err.message) || "Hata", "error"); } return; }
     var del = e.target.closest("[data-listing-del]");
-    if (del) { if (!confirm(T("ilan.delConfirm"))) return; try { await SB.deleteListing(del.getAttribute("data-listing-del")); await renderMyListings(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    if (del) { if (!confirm(T("ilan.delConfirm"))) return; try { await SB.deleteListing(del.getAttribute("data-listing-del")); await renderMyListings(); } catch (err) { KB.toast((err && err.message) || "Hata", "error"); } return; }
     var aa = e.target.closest("[data-app-act]");
     if (aa) {
       var wrap = aa.closest(".offer-act"); var aid = wrap.getAttribute("data-app"); var act = aa.getAttribute("data-app-act");
       [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = true; });
       try { var r = await SB.updateApplication(aid, act); if (r && r.error) throw r.error; wrap.innerHTML = '<span class="chip">' + (act === "accepted" ? T("state.accepted") : T("state.rejected")) + '</span>'; }
-      catch (err) { alert((err && err.message) || "Hata"); [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; }); }
+      catch (err) { KB.toast((err && err.message) || "Hata", "error"); [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; }); }
     }
   });
 
@@ -431,7 +431,7 @@
     form.onsubmit = async function (e) {
       e.preventDefault();
       try { await SB.submitBid(tenderId, document.getElementById("bidTutar").value.trim(), document.getElementById("bidMsg").value.trim()); }
-      catch (err) { alert((err && err.message) || "Hata"); return; }
+      catch (err) { KB.toast((err && err.message) || "Hata", "error"); return; }
       ok.hidden = false;
       document.querySelectorAll('[data-bid="' + tenderId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip">' + T("ihale.bidded") + '</span>'; });
       setTimeout(function () { m.classList.remove("is-open"); }, 1200);
@@ -451,15 +451,15 @@
       return;
     }
     var tog = e.target.closest("[data-tender-toggle]");
-    if (tog) { try { await SB.updateTenderStatus(tog.getAttribute("data-tender-toggle"), tog.getAttribute("data-durum") === "acik" ? "kapali" : "acik"); await renderOwnerTenders(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    if (tog) { try { await SB.updateTenderStatus(tog.getAttribute("data-tender-toggle"), tog.getAttribute("data-durum") === "acik" ? "kapali" : "acik"); await renderOwnerTenders(); } catch (err) { KB.toast((err && err.message) || "Hata", "error"); } return; }
     var del = e.target.closest("[data-tender-del]");
-    if (del) { if (!confirm(T("ilan.delConfirm"))) return; try { await SB.deleteTender(del.getAttribute("data-tender-del")); await renderOwnerTenders(); } catch (err) { alert((err && err.message) || "Hata"); } return; }
+    if (del) { if (!confirm(T("ilan.delConfirm"))) return; try { await SB.deleteTender(del.getAttribute("data-tender-del")); await renderOwnerTenders(); } catch (err) { KB.toast((err && err.message) || "Hata", "error"); } return; }
     var ba = e.target.closest("[data-bid-act]");
     if (ba) {
       var wrap = ba.closest(".offer-act"); var bid = wrap.getAttribute("data-bid-id"); var act = ba.getAttribute("data-bid-act");
       [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = true; });
       try { var r = await SB.updateBid(bid, act); if (r && r.error) throw r.error; wrap.innerHTML = '<span class="chip">' + (act === "accepted" ? T("state.accepted") : T("state.rejected")) + '</span>'; }
-      catch (err) { alert((err && err.message) || "Hata"); [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; }); }
+      catch (err) { KB.toast((err && err.message) || "Hata", "error"); [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; }); }
     }
   });
 
@@ -1129,7 +1129,7 @@
         } catch (e) { /* iletişim okunamadıysa sessiz geç */ }
       }
     } catch (err) {
-      alert(err.message || T("offer.actErr"));
+      KB.toast(err.message || T("offer.actErr"), "error");
       [].forEach.call(wrap.querySelectorAll("button"), function (x) { x.disabled = false; });
     }
   });

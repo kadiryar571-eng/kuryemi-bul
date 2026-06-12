@@ -437,6 +437,20 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 
+  /* ---------- Toast bildirimi (alert yerine) ---------- */
+  function toast(msg, type) {
+    if (!msg) return;
+    var host = document.getElementById("kb-toasts");
+    if (!host) { host = document.createElement("div"); host.id = "kb-toasts"; host.className = "kb-toasts"; document.body.appendChild(host); }
+    var el = document.createElement("div");
+    el.className = "kb-toast" + (type === "error" ? " kb-toast--err" : type === "success" ? " kb-toast--ok" : "");
+    el.setAttribute("role", "status");
+    el.textContent = msg;
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add("in"); });
+    setTimeout(function () { el.classList.remove("in"); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 320); }, 3800);
+  }
+
   window.KB = {
     ROLES: ROLES, t: T,
     getRole: getRole, setRole: setRole,
@@ -445,6 +459,7 @@
     waLink: waLink, waNumber: WA_NUMBER, email: EMAIL, telDisplay: TEL_DISPLAY,
     levelBadge: levelBadge, stars: stars,
     getParam: getParam, findById: findById, initials: initials, esc: esc,
+    toast: toast,
     // oturum
     isOnline: isOnline,
     ready: function () { return READY || Promise.resolve(); },
