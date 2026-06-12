@@ -258,6 +258,38 @@
     return r.count || 0;
   }
 
+  /* ---------- BİLDİRİMLER ---------- */
+  async function myNotifications(limit) {
+    var u = await getUser();
+    if (!u) return [];
+    var r = await client.from("notifications").select("*")
+      .order("created_at", { ascending: false }).limit(limit || 50);
+    if (r.error) { console.warn("myNotifications:", r.error); return []; }
+    return r.data || [];
+  }
+  async function unreadCount() {
+    var u = await getUser();
+    if (!u) return 0;
+    var r = await client.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null);
+    return r.count || 0;
+  }
+  async function markNotificationRead(id) {
+    return client.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", id);
+  }
+  async function markAllNotificationsRead() {
+    var u = await getUser();
+    if (!u) return;
+    return client.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null);
+  }
+  // Anlık bildirim: yeni satır eklenince cb(notification) çağrılır. (RLS yalnız kendi satırlarını verir.)
+  function subscribeNotifications(cb) {
+    var ch = client.channel("kb-notif-" + Date.now())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" },
+        function (payload) { try { cb(payload.new); } catch (e) {} })
+      .subscribe();
+    return ch;
+  }
+
   /* ---------- HESAP ---------- */
   async function changePassword(newPass) {
     return client.auth.updateUser({ password: newPass });
@@ -504,6 +536,8 @@
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
+    myNotifications: myNotifications, unreadCount: unreadCount, markNotificationRead: markNotificationRead,
+    markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
     createListing: createListing, myListings: myListings, openListings: openListings,

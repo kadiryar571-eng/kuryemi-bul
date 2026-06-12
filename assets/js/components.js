@@ -263,6 +263,7 @@
       var pid = SESSION.profile && SESSION.profile.id;
       var profileLink = (profPage && pid) ? (profPage + "?id=" + pid) : "profil-duzenle.html";
       return '<a href="havuzum.html" class="auth-link">★ ' + T("nav.pool") + '</a>' +
+        '<a href="bildirimler.html" class="auth-link notif-bell" aria-label="' + T("notif.title") + '" title="' + T("notif.title") + '">🔔<span class="badge-count" id="notifBadge" hidden>0</span></a>' +
         '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
         '<div class="acct" id="acctMenu">' +
           '<button type="button" class="acct__btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" title="' + esc(SESSION.user.email || "") + '">' +
@@ -316,14 +317,22 @@
     if (isOnline()) { area.innerHTML = '<span class="user-chip">…</span>'; await READY; }
     area.innerHTML = buildAuthArea();
     wireAuthArea();
-    // Bildirim rozeti: bekleyen gelen teklif sayısı
-    if (isOnline() && SESSION.user && window.SB && SB.pendingOffersCount) {
-      SB.pendingOffersCount().then(function (n) {
-        if (n > 0) {
-          var cta = area.querySelector(".nav__cta");
-          if (cta) cta.insertAdjacentHTML("beforeend", ' <span class="badge-count">' + n + '</span>');
-        }
-      }).catch(function () {});
+    // Bildirim rozeti: okunmamış bildirim sayısı (+ anlık güncelleme)
+    if (isOnline() && SESSION.user && window.SB && SB.unreadCount) {
+      var setBadge = function (n) {
+        var b = document.getElementById("notifBadge");
+        if (!b) return;
+        if (n > 0) { b.textContent = n > 99 ? "99+" : n; b.hidden = false; }
+        else { b.hidden = true; }
+      };
+      SB.unreadCount().then(setBadge).catch(function () {});
+      // Anlık: yeni bildirim gelince rozeti +1 yap (sayfada zaten abone varsa çift saymamak için global kilit)
+      if (!window.__kbNotifSub && SB.subscribeNotifications) {
+        window.__kbNotifSub = true;
+        SB.subscribeNotifications(function () {
+          SB.unreadCount().then(setBadge).catch(function () {});
+        });
+      }
     }
     // Yönetim menü öğesi: yalnız adminlere göster
     if (isOnline() && SESSION.user && window.SB && SB.amIAdmin) {

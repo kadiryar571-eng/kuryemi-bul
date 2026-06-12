@@ -1,59 +1,132 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex">
-  <title>Bildirim Merkezi · Kuryemi Bul</title>
-  <link rel="icon" href="assets/logo.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/landing.css"><link rel="stylesheet" href="assets/css/platform.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="notif.title">Bildirimler · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/design-system.css">
+    <style>
+      .nlist{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+      .nrow{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1px solid var(--line);border-radius:14px;
+        background:var(--surface,#fff);text-decoration:none;color:inherit;transition:border-color .2s,background .2s}
+      .nrow:hover{border-color:var(--primary,#4f8bff)}
+      .nrow--unread{background:rgba(79,139,255,.06);border-color:rgba(79,139,255,.3)}
+      .nrow__ic{width:40px;height:40px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:1.2rem;
+        background:var(--accent-grad,linear-gradient(135deg,#4f8bff,#a855f7));color:#fff}
+      .nrow__body{flex:1;min-width:0}
+      .nrow__title{font-weight:700;font-size:.96rem;margin-bottom:2px}
+      .nrow__text{color:var(--muted,#667);font-size:.88rem;line-height:1.4;word-break:break-word}
+      .nrow__time{color:var(--muted,#90a);font-size:.76rem;margin-top:4px;opacity:.8}
+      .nrow__dot{width:9px;height:9px;border-radius:50%;background:var(--primary,#4f8bff);flex:none;margin-top:6px}
+      .nbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+    </style>
 </head>
 <body>
-  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
-  <div id="app"></div>
-  <template id="page">
-    <div class="grid grid--4 reveal">
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🚨</span><span class="stat__l">Acil Uyarı</span></div><div class="stat__v" data-count="2">0</div><div class="stat__d down">▲ ilgi bekliyor</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🔔</span><span class="stat__l">Süreç Güncellemesi</span></div><div class="stat__v" data-count="14">0</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🏪</span><span class="stat__l">İşletme Talebi</span></div><div class="stat__v" data-count="7">0</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">💬</span><span class="stat__l">Kurye Mesajı</span></div><div class="stat__v" data-count="5">0</div></div>
-    </div>
+    <div id="app-header"></div>
 
-    <div class="ops reveal" style="margin-top:18px">
-      <div class="panel">
-        <div class="panel__h"><h3><span class="ic">🌊</span> Aktivite Akışı</h3><span class="right"><span class="chip chip--cy">Tümü</span><a class="act-link" style="color:var(--cyan);font-weight:600" href="#">Tümünü okundu işaretle</a></span></div>
-        <div class="panel__b">
-          <div class="alert alert--red"><span class="ai">🚨</span><span><b>Kadıköy’de yetenek açığı</b><span> Talep arzı %38 aşıyor.</span></span><a href="ops-merkez.html" class="act-link">İncele →</a></div>
-          <div class="alert alert--red"><span class="ai">⚠️</span><span><b>Pendik kapsama boşluğu</b><span> Bölgede aktif kurye yok.</span></span><a href="ag.html" class="act-link">Haritada gör →</a></div>
-          <div class=”alert alert--cy”><span class=”ai”>📋</span><span><b>Başvuru #1042 aktif</b><span> Yusuf K. · değerlendirmede.</span></span><a href=”teslimat.html” class=”act-link”>Detayları Gör →</a></div>
-          <div class=”alert alert--cy”><span class=”ai”>🏪</span><span><b>Moda Çiçek kurye talep etti</b><span> Motosiklet Kuryesi · Acil.</span></span><a href=”eslesme.html” class=”act-link”>Eşleştir →</a></div>
-          <div class=”alert alert--vi”><span class=”ai”>💬</span><span><b>Elif D.: “Göreve başladım 👍”</b><span> Görev #1039 tamamlandı.</span></span><a href=”#” class=”act-link”>Yanıtla →</a></div>
-          <div class="alert alert--vi"><span class="ai">🏆</span><span><b>Yusuf K. Profesyonel oldu</b><span> Seviye yükseltme onaylandı.</span></span><a href="kurye-kimlik.html" class="act-link">Profili gör →</a></div>
+    <section class="page-head">
+        <div class="container">
+            <div class="nbar">
+                <div><h1 data-i18n="notif.title">Bildirimler</h1><p data-i18n="notif.lead">Tekliflerin, başvuruların ve doğrulama sonuçların burada.</p></div>
+                <button type="button" id="markAllBtn" class="btn btn--light btn--sm" data-i18n="notif.markAll" hidden>Tümünü okundu yap</button>
+            </div>
         </div>
-      </div>
-      <div class="grid" style="gap:18px">
-        <div class="panel">
-          <div class="panel__h"><h3><span class="ic">🗂️</span> Kategoriler</h3></div>
-          <div class="panel__b act">
-            <div class="act__row"><span class="act__ic">🚨</span><span class="act__t"><b>Acil Uyarılar</b></span><span class="act__time"><span class="chip" style="color:#f87171;border-color:rgba(239,68,68,.4)">2</span></span></div>
-            <div class="act__row"><span class="act__ic">🔔</span><span class="act__t"><b>Süreç Güncellemeleri</b></span><span class="act__time"><span class="chip chip--cy">14</span></span></div>
-            <div class="act__row"><span class="act__ic">🏪</span><span class="act__t"><b>İşletme Talepleri</b></span><span class="act__time"><span class="chip chip--cy">7</span></span></div>
-            <div class="act__row"><span class="act__ic">💬</span><span class="act__t"><b>Kurye Mesajları</b></span><span class="act__time"><span class="chip">5</span></span></div>
-            <div class="act__row"><span class="act__ic">⚙️</span><span class="act__t"><b>Sistem Olayları</b></span><span class="act__time"><span class="chip">9</span></span></div>
-          </div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container container--narrow">
+            <div id="nWrap"><p class="empty" id="nLoading" data-i18n="common.loading">Yükleniyor…</p></div>
         </div>
-        <div class="ai-card"><div class="ai-card__h">🧠 Özet</div><p>Bugün <b>2 kritik uyarı</b> var. En öncelikli: Kadıköy yetenek açığı. Akıllı eşleşme ile çözülebilir.</p></div>
-      </div>
-    </div>
-  </template>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
-  <script>
-    var wrap = Platform.init({ active: 'notif', title: 'Bildirim Merkezi', subtitle: 'Modern aktivite akışı · her şey tek yerde' });
-    wrap.innerHTML = document.getElementById('page').innerHTML;
-    Platform.animate();
-  </script>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+    (function () {
+        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+        var wrap = document.getElementById("nWrap");
+        var markAllBtn = document.getElementById("markAllBtn");
+
+        var ICONS = {
+            offer_new: "✉️", offer_accepted: "✅", offer_rejected: "❌",
+            application_new: "📨", application_accepted: "✅", application_rejected: "❌",
+            bid_new: "📑", bid_accepted: "✅", bid_rejected: "❌",
+            review_new: "⭐", kyc_verified: "🛡️", kyc_rejected: "⚠️", info: "🔔"
+        };
+
+        function timeAgo(iso) {
+            if (!iso) return "";
+            var d = new Date(iso), now = new Date(), s = Math.floor((now - d) / 1000);
+            if (s < 60) return t("time.now");
+            var m = Math.floor(s / 60); if (m < 60) return m + " " + t("time.min");
+            var h = Math.floor(m / 60); if (h < 24) return h + " " + t("time.hour");
+            var gun = Math.floor(h / 24); if (gun < 7) return gun + " " + t("time.day");
+            return d.toLocaleDateString();
+        }
+        function esc(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? "" : s); }
+
+        function rowHtml(n) {
+            var unread = !n.read_at;
+            var ic = ICONS[n.type] || ICONS.info;
+            return '<a href="' + (n.link || "index.html") + '" class="nrow' + (unread ? " nrow--unread" : "") + '" data-id="' + n.id + '">' +
+                '<span class="nrow__ic">' + ic + '</span>' +
+                '<span class="nrow__body"><span class="nrow__title">' + esc(n.title) + '</span>' +
+                (n.body ? '<span class="nrow__text">' + esc(n.body) + '</span>' : '') +
+                '<span class="nrow__time">' + timeAgo(n.created_at) + '</span></span>' +
+                (unread ? '<span class="nrow__dot" aria-hidden="true"></span>' : '') +
+                '</a>';
+        }
+
+        function render(list) {
+            if (!list.length) {
+                wrap.innerHTML = '<div class="empty">🔔<br>' + t("notif.empty") + '</div>';
+                markAllBtn.hidden = true;
+                return;
+            }
+            wrap.innerHTML = '<div class="nlist">' + list.map(rowHtml).join("") + '</div>';
+            markAllBtn.hidden = !list.some(function (n) { return !n.read_at; });
+        }
+
+        async function start() {
+            if (window.KB && KB.ready) await KB.ready();
+            if (!(window.KB && KB.isOnline())) { wrap.innerHTML = '<p class="empty">' + t("notif.needLogin") + '</p>'; return; }
+            if (!KB.isAuthed()) {
+                wrap.innerHTML = '<p class="empty">' + t("pe.loginRequired") + '</p>' +
+                    '<a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>';
+                return;
+            }
+            var list = await SB.myNotifications(80);
+            render(list);
+
+            // Tıklanınca okundu işaretle (yönlendirme yine de gerçekleşir)
+            wrap.addEventListener("click", function (e) {
+                var a = e.target.closest(".nrow"); if (!a) return;
+                var id = a.getAttribute("data-id");
+                if (a.classList.contains("nrow--unread")) { try { SB.markNotificationRead(id); } catch (x) {} }
+            });
+
+            markAllBtn.addEventListener("click", async function () {
+                try { await SB.markAllNotificationsRead(); } catch (x) {}
+                list.forEach(function (n) { n.read_at = n.read_at || new Date().toISOString(); });
+                render(list);
+            });
+
+            // Anlık: yeni bildirim gelince listeye ekle
+            try {
+                SB.subscribeNotifications(function (n) { list.unshift(n); render(list); });
+            } catch (x) {}
+        }
+        start();
+    })();
+    </script>
 </body>
 </html>
