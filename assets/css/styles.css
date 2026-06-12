@@ -456,6 +456,16 @@ body > .demo-banner ~ * .header { top: 0; }
 .legal__toc { background: var(--surface-2, rgba(127,127,127,.06)); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 28px; }
 .legal__toc a { display: inline-block; margin: 3px 14px 3px 0; font-size: .9rem; }
 
+/* İskelet (skeleton) yükleme */
+.skel-card { border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; }
+.skel-card__top { display: flex; gap: 12px; align-items: flex-start; }
+.skel { display: block; background: linear-gradient(90deg, rgba(127,127,127,.10) 25%, rgba(127,127,127,.20) 37%, rgba(127,127,127,.10) 63%); background-size: 400% 100%; animation: skelShimmer 1.4s ease infinite; border-radius: 8px; }
+.skel--ava { width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0; }
+.skel--line { height: 13px; }
+.skel--chips { height: 26px; width: 70%; border-radius: 999px; }
+@keyframes skelShimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+
 /* Teklif modalı KVKK rıza notu */
 .modal__consent { font-size: .8rem; line-height: 1.5; color: var(--muted, #6b7689); background: var(--surface-2, rgba(127,127,127,.06)); border-radius: 10px; padding: 10px 12px; margin: 0 0 14px; }
 .modal__consent a { color: var(--primary, #4f8bff); }

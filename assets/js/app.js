@@ -8,6 +8,16 @@
   var D = window.KB_DATA;
   var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
 
+  // İskelet (skeleton) yükleme kartları — grid'e basılır, gerçek veri gelince değişir
+  function skeletonCards(n) {
+    var one = '<div class="skel-card">' +
+      '<div class="skel-card__top"><span class="skel skel--ava"></span>' +
+      '<span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div>' +
+      '<span class="skel skel--line" style="width:90%;margin-top:14px"></span>' +
+      '<span class="skel skel--chips" style="margin-top:14px"></span></div>';
+    var out = ""; for (var i = 0; i < (n || 6); i++) out += one; return out;
+  }
+
   // Avatar içeriği: fotoğraf varsa <img>, yoksa baş harfler. (.avatar div'inin içine konur)
   function avInner(x) {
     if (x && x.avatar_url) {
@@ -178,7 +188,7 @@
     if (!grid) return;
     var countEl = document.getElementById("listingsCount");
     if (window.KB && KB.ready) await KB.ready();
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.loading") + '</div>';
+    grid.innerHTML = skeletonCards(6);
     if (!online()) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Supabase gerekli.</div>'; return; }
     var list = await SB.openListings();
     var appliedSet = {}, myPid = null;
@@ -389,7 +399,7 @@
     var grid = document.getElementById("tendersGrid");
     if (!grid) return;
     if (window.KB && KB.ready) await KB.ready();
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.loading") + '</div>';
+    grid.innerHTML = skeletonCards(6);
     if (!online()) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Supabase gerekli.</div>'; return; }
     await renderOwnerTenders();
     var list = await SB.openTenders();
@@ -550,7 +560,7 @@
     var sel1 = document.getElementById("fSelect1");
     var sel2 = document.getElementById("fSelect2");
     if (!grid) return;
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.loading") + '</div>';
+    grid.innerHTML = skeletonCards(6);
 
     var src = await loadPool(type);
     await loadPoolSet();
@@ -764,7 +774,7 @@
     await loadPoolSet();
     var list = await SB.myPool();
     if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
-    if (!list.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pool.empty") + '</div>'; return; }
+    if (!list.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">⭐<br>' + T("pool.empty") + '<br><a class="btn btn--primary btn--sm mt-24" href="kuryeler.html">' + T("pool.emptyCta") + '</a></div>'; return; }
     grid.innerHTML = list.map(function (x) {
       return x.role === "kurye" ? kuryeCard(x) : x.role === "isletme" ? isletmeCard(x) : firmaCard(x);
     }).join("");
