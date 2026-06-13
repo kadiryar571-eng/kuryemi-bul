@@ -1530,14 +1530,12 @@
     } else if (role === "firma") {
       var kp = prof ? (prof.kapasite || 0) : "60";
       var fpu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.8";
-      // İhale modülü Faz 3 → online'da "—"
-      setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")) + metric(online() ? "—" : "2", T("m.tenders")));
+      setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")));
       var kuryeler = await loadPool("kurye");
       setHTML("firmaPersonel", kuryeler.slice(0, 5).map(function (k) {
         return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), KB.levelBadge(k.seviye));
       }).join(""));
       setHTML("firmaTeklif", listFor("firma"));
-      if (online()) renderMyBids();
     }
   }
   function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="empty">' + T("empty.generic") + '</div>'; }
