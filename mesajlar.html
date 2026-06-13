@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title.mesajlar">Mesajlar · Kuryemi Bul</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/talent.css">
+    <link rel="stylesheet" href="assets/css/design-system.css">
+    <style>
+      .msg { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 210px); min-height: 480px;
+        border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--bg, #070809); box-shadow: 0 24px 60px -28px rgba(0,0,0,.7); }
+      .msg__list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }
+      .msg__list-head { padding: 16px 18px; border-bottom: 1px solid var(--line); }
+      .msg__list-head h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+      .msg__list-head p { font-size: .8rem; color: var(--muted, #94a0b4); margin: 4px 0 0; }
+      .msg-conv-list { flex: 1; overflow-y: auto; scrollbar-width: thin; }
+      .msg-conv { width: 100%; display: flex; gap: 11px; align-items: center; padding: 13px 16px; border: none; background: none;
+        border-bottom: 1px solid var(--line); cursor: pointer; text-align: left; transition: background .18s; }
+      .msg-conv:hover { background: rgba(255,255,255,.04); }
+      .msg-conv.is-active { background: rgba(79,139,255,.1); }
+      .msg-conv__av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: none; }
+      .msg-conv__av--ph { display: grid; place-items: center; background: var(--accent-grad, linear-gradient(135deg,#4f8bff,#a855f7)); color: #fff; font-weight: 700; }
+      .msg-conv__body { min-width: 0; flex: 1; }
+      .msg-conv__top { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+      .msg-conv__name { font-weight: 700; font-size: .92rem; color: var(--navy, #f4f6fb); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .msg-conv__badge { flex: none; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: .68rem; font-weight: 700; display: grid; place-items: center; }
+      .msg-conv__last { font-size: .8rem; color: var(--muted, #94a0b4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+      .msg__main { min-height: 0; display: flex; flex-direction: column; }
+      .msg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+      .msg-empty .kb-empty__ic { font-size: 2.4rem; margin-bottom: 10px; }
+      .msg-empty .kb-empty__t { font-weight: 700; }
+      .msg-empty .kb-empty__d { color: var(--muted, #94a0b4); font-size: .88rem; margin-top: 6px; max-width: 34ch; }
+      .msg-thread { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+      .msg-thread__head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+      .msg-back { display: none; background: none; border: none; color: var(--navy, #f4f6fb); font-size: 1.3rem; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+      .msg-thread__who { display: flex; align-items: center; gap: 10px; }
+      .msg-thread__who .msg-conv__av--ph { width: 38px; height: 38px; }
+      .msg-thread__name { font-weight: 700; font-size: .95rem; }
+      .msg-thread__role { font-size: .76rem; color: var(--muted, #94a0b4); }
+      .msg-thread__scroll { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+      .msg-thread__empty { margin: auto; color: var(--muted, #94a0b4); font-size: .9rem; }
+      .msg-bubble { max-width: 72%; align-self: flex-start; padding: 10px 14px; border-radius: 16px 16px 16px 4px;
+        background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--navy, #f4f6fb); font-size: .92rem; line-height: 1.45; position: relative; word-wrap: break-word; }
+      .msg-bubble--mine { align-self: flex-end; background: linear-gradient(135deg,#4f8bff,#a855f7); border-color: transparent; color: #fff; border-radius: 16px 16px 4px 16px; }
+      .msg-bubble__t { display: block; font-size: .64rem; opacity: .6; margin-top: 4px; text-align: right; }
+      .msg-compose { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); }
+      .msg-compose input { flex: 1; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 999px; padding: 11px 16px; color: var(--navy, #f4f6fb); font-family: inherit; font-size: .92rem; }
+      .msg-compose input:focus { outline: none; border-color: #4f8bff; box-shadow: 0 0 0 3px rgba(79,139,255,.16); }
+      .msg-compose .btn { border-radius: 999px; }
+
+      @media (max-width: 860px) {
+        .msg { grid-template-columns: 1fr; height: calc(100vh - 170px); }
+        .msg__main { display: none; }
+        .msg--threadopen .msg__list { display: none; }
+        .msg--threadopen .msg__main { display: flex; }
+        .msg-back { display: inline-block; }
+      }
+    </style>
+</head>
+<body>
+    <div id="app-header"></div>
+
+    <section class="page-head">
+        <div class="container"><h1>💬 Mesajlar</h1><p data-i18n="msg.lead">Eşleştiğin kişilerle buradan yazış.</p></div>
+    </section>
+
+    <main class="section--sm">
+        <div class="container">
+            <div id="msgRoot">
+                <div class="msg">
+                    <aside class="msg__list">
+                        <div class="msg__list-head"><h2 data-i18n="msg.title">Mesajlar</h2></div>
+                        <div class="msg-conv-list" id="msgConvList"></div>
+                    </aside>
+                    <section class="msg__main" id="msgMain"></section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="app-footer"></div>
+
+    <script src="assets/js/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>KBApp.renderMessages();</script>
+</body>
+</html>

@@ -291,6 +291,7 @@
       var pid = SESSION.profile && SESSION.profile.id;
       var profileLink = (profPage && pid) ? (profPage + "?id=" + pid) : "profil-duzenle.html";
       return '<a href="havuzum.html" class="auth-link">★ ' + T("nav.pool") + '</a>' +
+        '<a href="mesajlar.html" class="auth-link notif-bell" aria-label="' + T("nav.messages") + '" title="' + T("nav.messages") + '">💬<span class="badge-count" id="msgBadge" style="display:none">0</span></a>' +
         '<a href="bildirimler.html" class="auth-link notif-bell" aria-label="' + T("notif.title") + '" title="' + T("notif.title") + '">🔔<span class="badge-count" id="notifBadge" style="display:none">0</span></a>' +
         '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
         '<div class="acct" id="acctMenu">' +
@@ -298,6 +299,7 @@
             '<span class="acct__ava">👤</span><span class="acct__name">' + esc(nm) + '</span><span class="acct__caret" aria-hidden="true">▾</span></button>' +
           '<div class="acct__menu" role="menu">' +
             '<a href="havuzum.html" role="menuitem" class="acct__cmd">★ ' + T("nav.pool") + '</a>' +
+            '<a href="mesajlar.html" role="menuitem">' + T("menu.messages") + '</a>' +
             '<a href="' + profileLink + '" role="menuitem">' + T("menu.profile") + '</a>' +
             '<a href="profil-duzenle.html" role="menuitem">' + T("menu.editProfile") + '</a>' +
             '<a href="admin.html" role="menuitem" class="acct__admin" hidden>' + T("menu.admin") + '</a>' +
@@ -360,6 +362,21 @@
         SB.subscribeNotifications(function () {
           SB.unreadCount().then(setBadge).catch(function () {});
         });
+      }
+    }
+    // Mesaj rozeti: okunmamış mesaj sayısı (+ anlık güncelleme)
+    if (isOnline() && SESSION.user && window.SB && SB.unreadMessageCount) {
+      var setMsgBadge = function (n) {
+        var b = document.getElementById("msgBadge");
+        if (!b) return;
+        if (n > 0) { b.textContent = n > 99 ? "99+" : n; b.style.display = ""; }
+        else { b.style.display = "none"; }
+      };
+      window.__kbUpdateMsgBadge = function () { SB.unreadMessageCount().then(setMsgBadge).catch(function () {}); };
+      window.__kbUpdateMsgBadge();
+      if (!window.__kbMsgSub && SB.subscribeMessages) {
+        window.__kbMsgSub = true;
+        SB.subscribeMessages(function () { window.__kbUpdateMsgBadge(); });
       }
     }
     // Yönetim menü öğesi: yalnız adminlere göster

@@ -544,8 +544,78 @@
     return true;
   }
 
+  /* ---------- MESAJLAŞMA (yalnız eşleşenler) ---------- */
+  async function myPid() {
+    var u = await getUser(); if (!u) return null;
+    var r = await client.from("profiles").select("id").eq("user_id", u.id).maybeSingle();
+    return (r.data && r.data.id) || null;
+  }
+  // İki profil yazışabilir mi (kabul edilmiş teklif/başvuru) — RLS'teki are_matched() RPC'si
+  async function canMessage(targetId) {
+    var me = await myPid();
+    if (!me || !targetId || me === targetId) return false;
+    var r = await client.rpc("are_matched", { a: me, b: targetId });
+    if (r.error) { console.warn("canMessage:", r.error); return false; }
+    return !!r.data;
+  }
+  async function sendMessage(toProfileId, body) {
+    var me = await myPid(); if (!me) throw new Error("oturum yok");
+    var r = await client.from("messages").insert({ from_user: me, to_user: toProfileId, body: body }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  // Konuşma listesi: karşı profile göre gruplanmış son mesaj + okunmamış sayısı
+  async function myConversations() {
+    var me = await myPid(); if (!me) return [];
+    var r = await client.from("messages").select("*").order("created_at", { ascending: false });
+    if (r.error) { console.warn("myConversations:", r.error); return []; }
+    var threads = {}, order = [];
+    (r.data || []).forEach(function (m) {
+      var other = m.from_user === me ? m.to_user : m.from_user;
+      if (!threads[other]) { threads[other] = { profileId: other, lastBody: m.body, lastAt: m.created_at, lastMine: m.from_user === me, unread: 0 }; order.push(other); }
+      if (m.to_user === me && !m.read_at) threads[other].unread++;
+    });
+    if (!order.length) return [];
+    var pr = await client.from("profiles").select("id,ad,role,avatar_url").in("id", order);
+    var pmap = {}; (pr.data || []).forEach(function (p) { pmap[p.id] = p; });
+    return order.map(function (id) {
+      var t = threads[id], p = pmap[id] || {};
+      t.ad = p.ad || "Kullanıcı"; t.role = p.role || ""; t.avatar = p.avatar_url || "";
+      return t;
+    });
+  }
+  // Bir kişiyle olan tüm mesajlar (artan sırada) + karşı profil
+  async function threadWith(profileId) {
+    var me = await myPid(); if (!me) return { me: null, messages: [], other: null };
+    var r = await client.from("messages").select("*")
+      .or("and(from_user.eq." + me + ",to_user.eq." + profileId + "),and(from_user.eq." + profileId + ",to_user.eq." + me + ")")
+      .order("created_at", { ascending: true });
+    if (r.error) { console.warn("threadWith:", r.error); return { me: me, messages: [], other: null }; }
+    var op = await client.from("profiles").select("id,ad,role,avatar_url").eq("id", profileId).maybeSingle();
+    return { me: me, messages: r.data || [], other: op.data || { id: profileId, ad: "Kullanıcı" } };
+  }
+  async function markThreadRead(fromProfileId) {
+    var me = await myPid(); if (!me) return;
+    return client.from("messages").update({ read_at: new Date().toISOString() })
+      .eq("to_user", me).eq("from_user", fromProfileId).is("read_at", null);
+  }
+  async function unreadMessageCount() {
+    var me = await myPid(); if (!me) return 0;
+    var r = await client.from("messages").select("id", { count: "exact", head: true }).eq("to_user", me).is("read_at", null);
+    return r.count || 0;
+  }
+  function subscribeMessages(cb) {
+    var ch = client.channel("kb-msg-" + Date.now())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" },
+        function (payload) { try { cb(payload.new); } catch (e) {} })
+      .subscribe();
+    return ch;
+  }
+
   window.SB = {
     isOn: isOn,
+    canMessage: canMessage, sendMessage: sendMessage, myConversations: myConversations,
+    threadWith: threadWith, markThreadRead: markThreadRead, unreadMessageCount: unreadMessageCount, subscribeMessages: subscribeMessages,
     signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
     resetPassword: resetPassword, updatePassword: updatePassword,
     verifyEmail: verifyEmail, resendVerification: resendVerification,

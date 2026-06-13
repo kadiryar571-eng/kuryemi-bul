@@ -990,6 +990,7 @@
       body += reviewsBox(x.id, reviews, canRev, myRev);
     }
 
+    var msgBtn = '<a class="btn btn--light btn--block mt-24" id="profMsgBtn" href="mesajlar.html?to=' + x.id + '" hidden>💬 ' + T("msg.btn") + '</a>';
     var sideWrapper = type === "kurye"
       ? '<aside class="profile-identity">' +
           '<div class="profile-identity__cover"></div>' +
@@ -999,6 +1000,7 @@
             '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
             sideExtra +
             '<button class="btn btn--primary btn--block" style="margin-top:16px" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+            msgBtn +
             poolBtnFull(x.id) +
           '</div>' +
         '</aside>'
@@ -1008,6 +1010,7 @@
           '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
           sideExtra +
           '<button class="btn btn--primary btn--block" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+          msgBtn +
           poolBtnFull(x.id) +
         '</aside>';
     host.innerHTML =
@@ -1015,6 +1018,10 @@
         sideWrapper +
         '<div class="profile__body">' + body + '</div>' +
       '</div>';
+    // Eşleşme (kabul edilmiş teklif/başvuru) varsa "Mesaj Gönder" butonunu göster
+    if (online() && KB.isAuthed && KB.isAuthed() && SB.canMessage) {
+      SB.canMessage(x.id).then(function (ok) { if (ok) { var mb = document.getElementById("profMsgBtn"); if (mb) mb.hidden = false; } }).catch(function () {});
+    }
   }
 
   /* ============ HAVUZUM SAYFASI ============ */
@@ -1355,7 +1362,8 @@
         '</span>';
     }
     var st = KNOWN_STATES.indexOf(durum) > -1 ? T("state." + durum) : T("state.pending");
-    return '<span class="offer-act"><span class="chip">' + st + '</span></span>';
+    var msgLink = (online() && durum === "accepted" && t.karsiId) ? ' <a class="btn btn--light btn--sm" href="mesajlar.html?to=' + t.karsiId + '">💬 ' + T("msg.btn") + '</a>' : '';
+    return '<span class="offer-act"><span class="chip">' + st + '</span>' + msgLink + '</span>';
   }
   function contactLine(c) {
     if (!c || (!c.telefon && !c.email)) return "";
@@ -1756,12 +1764,101 @@
     render();
   }
 
+  /* ============ MESAJLAŞMA ============ */
+  function msgTimeShort(iso) { try { return new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } }
+  function msgPickPlaceholder() { return '<div class="msg-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.pickConv") + '</div><div class="kb-empty__d">' + T("msg.pickConvSub") + '</div></div>'; }
+  async function renderMessages() {
+    var root = document.getElementById("msgRoot");
+    if (!root) return;
+    if (window.KB && KB.ready) await KB.ready();
+    if (!(online() && KB.isAuthed && KB.isAuthed())) {
+      root.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.loginRequired") + '</div>' +
+        '<a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
+      return;
+    }
+    var listEl = document.getElementById("msgConvList");
+    var mainEl = document.getElementById("msgMain");
+    var rootC = document.querySelector(".msg");
+    var current = null, convs = [];
+
+    function convItem(c) {
+      var av = c.avatar ? '<img class="msg-conv__av" src="' + KB.esc(c.avatar) + '" alt="" onerror="this.remove()">' : '<div class="msg-conv__av msg-conv__av--ph">' + KB.initials(c.ad) + '</div>';
+      return '<button type="button" class="msg-conv' + (c.profileId === current ? " is-active" : "") + '" data-conv="' + c.profileId + '">' +
+        av + '<div class="msg-conv__body"><div class="msg-conv__top"><span class="msg-conv__name">' + KB.esc(c.ad) + '</span>' +
+        (c.unread ? '<span class="msg-conv__badge">' + c.unread + '</span>' : '') + '</div>' +
+        '<div class="msg-conv__last">' + (c.lastMine ? T("msg.you") + ": " : "") + KB.esc(c.lastBody || "") + '</div></div></button>';
+    }
+    async function loadConvs() {
+      convs = await SB.myConversations();
+      listEl.innerHTML = convs.map(convItem).join("");
+      if (!convs.length && !current) {
+        mainEl.innerHTML = '<div class="msg-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.empty") + '</div><div class="kb-empty__d">' + T("msg.emptySub") + '</div></div>';
+      }
+    }
+    function bubble(m, meId) {
+      var mine = m.from_user === meId;
+      return '<div class="msg-bubble' + (mine ? " msg-bubble--mine" : "") + '">' + KB.esc(m.body) + '<span class="msg-bubble__t">' + msgTimeShort(m.created_at) + '</span></div>';
+    }
+    function scrollBottom() { var s = document.getElementById("msgScroll"); if (s) s.scrollTop = s.scrollHeight; }
+    async function openThread(profileId) {
+      current = profileId;
+      if (rootC) rootC.classList.add("msg--threadopen");
+      listEl.querySelectorAll(".msg-conv").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-conv") === profileId); });
+      mainEl.innerHTML = '<div class="msg-thread"><div class="msg-thread__scroll" id="msgScroll"><div class="skel skel--line" style="width:55%;margin:10px 0"></div><div class="skel skel--line" style="width:40%;margin:10px 0 10px auto"></div></div></div>';
+      var t = await SB.threadWith(profileId);
+      var other = t.other || {};
+      var head = '<div class="msg-thread__head"><button type="button" class="msg-back" id="msgBack" aria-label="' + T("msg.back") + '">←</button>' +
+        '<div class="msg-thread__who"><div class="msg-conv__av msg-conv__av--ph">' + KB.initials(other.ad || "?") + '</div>' +
+        '<div><div class="msg-thread__name">' + KB.esc(other.ad || "") + '</div><div class="msg-thread__role">' + (other.role ? T("role." + other.role) : "") + '</div></div></div></div>';
+      var body = t.messages.length ? t.messages.map(function (m) { return bubble(m, t.me); }).join("") : '<div class="msg-thread__empty">' + T("msg.threadEmpty") + '</div>';
+      mainEl.innerHTML = '<div class="msg-thread">' + head + '<div class="msg-thread__scroll" id="msgScroll">' + body + '</div>' +
+        '<form class="msg-compose" id="msgForm"><input id="msgInput" autocomplete="off" placeholder="' + T("msg.placeholder") + '"><button type="submit" class="btn btn--primary btn--sm">' + T("msg.send") + '</button></form></div>';
+      scrollBottom();
+      try { await SB.markThreadRead(profileId); } catch (e) {}
+      loadConvs();
+      if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge();
+      document.getElementById("msgBack").addEventListener("click", function () {
+        current = null; if (rootC) rootC.classList.remove("msg--threadopen");
+        listEl.querySelectorAll(".msg-conv").forEach(function (b) { b.classList.remove("is-active"); });
+      });
+      document.getElementById("msgForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var inp = document.getElementById("msgInput"); var bodyTxt = inp.value.trim(); if (!bodyTxt) return;
+        inp.value = "";
+        var scroll = document.getElementById("msgScroll");
+        var empt = scroll.querySelector(".msg-thread__empty"); if (empt) empt.remove();
+        scroll.insertAdjacentHTML("beforeend", bubble({ from_user: t.me, body: bodyTxt, created_at: new Date().toISOString() }, t.me));
+        scrollBottom();
+        try { await SB.sendMessage(profileId, bodyTxt); loadConvs(); }
+        catch (err) { KB.toast((err && err.message) || T("apl.error"), "error"); }
+      });
+    }
+    listEl.addEventListener("click", function (e) { var b = e.target.closest("[data-conv]"); if (b) openThread(b.getAttribute("data-conv")); });
+
+    await loadConvs();
+    var to = KB.getParam("to");
+    if (to) openThread(to);
+    else if (convs.length && window.matchMedia("(min-width:861px)").matches) openThread(convs[0].profileId);
+    else if (convs.length) mainEl.innerHTML = msgPickPlaceholder();
+
+    if (SB.subscribeMessages) {
+      SB.subscribeMessages(function (m) {
+        if (current && m.from_user === current) {
+          var scroll = document.getElementById("msgScroll");
+          if (scroll) { scroll.insertAdjacentHTML("beforeend", bubble(m, m.to_user)); scrollBottom(); SB.markThreadRead(current); }
+        }
+        loadConvs();
+        if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge();
+      });
+    }
+  }
+
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
     initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initMapExperience: initMapExperience, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings, renderTenders: renderTenders,
-    renderJobDetail: renderJobDetail, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications,
+    renderJobDetail: renderJobDetail, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages,
     renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials
   };
 })();
