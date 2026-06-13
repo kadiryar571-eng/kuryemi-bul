@@ -119,7 +119,35 @@
       .auth-google:disabled{opacity:.55;cursor:default;transform:none}
       .auth-google svg{width:20px;height:20px;flex:none}
 
+      /* alan-bazlı inline validasyon */
+      .field-err{display:none;margin-top:6px;font-size:.78rem;color:#fca5a5;line-height:1.35}
+      .auth-field.invalid .auth-inp input{border-color:rgba(239,68,68,.6);background:rgba(239,68,68,.06)}
+      .auth-field.invalid .auth-inp input:focus{box-shadow:0 0 0 4px rgba(239,68,68,.14)}
+      .auth-field.invalid .field-err{display:block}
+      .auth-field.valid .auth-inp input{border-color:rgba(52,211,153,.4)}
+
+      /* parola gücü göstergesi (yalnız kayıt) */
+      .pass-meter{display:none;margin:-6px 0 14px}
+      .pass-meter.show{display:block}
+      .pass-meter__bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+      .pass-meter__fill{height:100%;width:0;border-radius:999px;transition:width .3s ease,background .3s ease}
+      .pass-meter__txt{margin-top:5px;font-size:.74rem;color:#94a0b4}
+      .pass-meter[data-lvl="1"] .pass-meter__fill{width:34%;background:#ef4444}
+      .pass-meter[data-lvl="2"] .pass-meter__fill{width:67%;background:#f59e0b}
+      .pass-meter[data-lvl="3"] .pass-meter__fill{width:100%;background:#34d399}
+
+      /* loading spinner + başarı durumu */
+      .auth-submit.is-loading,.auth-google.is-loading{color:transparent !important;pointer-events:none}
+      .auth-submit.is-loading::after,.auth-google.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:authSpin .7s linear infinite}
+      .auth-google{position:relative}
+      @keyframes authSpin{to{transform:rotate(360deg)}}
+      .auth-submit.is-ok{background:linear-gradient(135deg,#10b981,#34d399);box-shadow:0 12px 32px -12px rgba(16,185,129,.7)}
+
+      /* klavye erişimi: görünür odak halkası */
+      .auth-tabs button:focus-visible,.auth-navbtns button:focus-visible,.auth-submit:focus-visible,.auth-google:focus-visible,.auth-inp .eye:focus-visible,.auth-forgot a:focus-visible{outline:2px solid #6ea0ff;outline-offset:2px;border-radius:10px}
+
       @media (max-width:480px){ .auth-navbtns button{padding:8px 13px;font-size:.82rem} }
+      @media (prefers-reduced-motion:reduce){ .auth-submit.is-loading::after,.auth-google.is-loading::after{animation-duration:1.4s} }
       @media (prefers-reduced-motion:reduce){ .auth-bg .orb{animation:none} #auth-net{display:none} }
     </style>
 </head>
@@ -147,10 +175,10 @@
         <p class="auth-sub" data-i18n="giris.lead">Hesabına giriş yap ya da yeni bir hesap oluştur.</p>
 
         <!-- sekmeler -->
-        <div class="auth-tabs" id="authTabs" data-mode="login">
+        <div class="auth-tabs" id="authTabs" data-mode="login" role="tablist" aria-label="Giriş / Kayıt">
           <span class="auth-slider" aria-hidden="true"></span>
-          <button type="button" class="active" data-mode="login">Giriş Yap</button>
-          <button type="button" data-mode="register">Kayıt Ol</button>
+          <button type="button" class="active" data-mode="login" role="tab" aria-selected="true" data-i18n="auth.login">Giriş Yap</button>
+          <button type="button" data-mode="register" role="tab" aria-selected="false" data-i18n="auth.register">Kayıt Ol</button>
         </div>
 
         <!-- GİRİŞ FORMU -->
@@ -161,8 +189,9 @@
               <span class="ic" aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
               </span>
-              <input type="email" id="lEmail" placeholder="ornek@eposta.com" autocomplete="email" required>
+              <input type="email" id="lEmail" placeholder="ornek@eposta.com" autocomplete="email" aria-describedby="lEmailErr" required>
             </div>
+            <span class="field-err" id="lEmailErr" role="alert"></span>
           </div>
           <div class="auth-field">
             <label for="lPass" data-i18n="auth.password">Şifre</label>
@@ -170,9 +199,10 @@
               <span class="ic" aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
               </span>
-              <input type="password" id="lPass" placeholder="••••••••" autocomplete="current-password" minlength="6" required>
-              <button type="button" class="eye" data-eye="lPass" aria-label="Şifreyi göster/gizle"></button>
+              <input type="password" id="lPass" placeholder="••••••••" autocomplete="current-password" minlength="6" aria-describedby="lPassErr" required>
+              <button type="button" class="eye" data-eye="lPass" aria-label="Şifreyi göster/gizle" aria-pressed="false"></button>
             </div>
+            <span class="field-err" id="lPassErr" role="alert"></span>
           </div>
           <div class="auth-forgot"><a href="#" id="forgotLink" data-i18n="auth.forgot">Şifremi unuttum?</a></div>
           <button type="submit" class="auth-submit">Giriş Yap</button>
@@ -188,8 +218,9 @@
               <span class="ic" aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
               </span>
-              <input type="text" id="rName" data-i18n-ph="auth.namePh" placeholder="Örn. Ahmet Yılmaz" autocomplete="name" required>
+              <input type="text" id="rName" data-i18n-ph="auth.namePh" placeholder="Örn. Ahmet Yılmaz" autocomplete="name" aria-describedby="rNameErr" required>
             </div>
+            <span class="field-err" id="rNameErr" role="alert"></span>
           </div>
           <div class="auth-field">
             <label for="rEmail" data-i18n="auth.email">E-posta</label>
@@ -197,17 +228,9 @@
               <span class="ic" aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
               </span>
-              <input type="email" id="rEmail" placeholder="ornek@eposta.com" autocomplete="email" required>
+              <input type="email" id="rEmail" placeholder="ornek@eposta.com" autocomplete="email" aria-describedby="rEmailErr" required>
             </div>
-          </div>
-          <div class="auth-field">
-            <label for="rPhone" data-i18n="auth.phone">Telefon</label>
-            <div class="auth-inp">
-              <span class="ic" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L20 13l-2-5h4"/><path d="M5 4a16 16 0 0 0 15 15"/></svg>
-              </span>
-              <input type="tel" id="rPhone" data-i18n-ph="auth.phonePh" placeholder="05xx xxx xx xx" autocomplete="tel" required>
-            </div>
+            <span class="field-err" id="rEmailErr" role="alert"></span>
           </div>
           <div class="auth-field">
             <label for="rPass" data-i18n="auth.password">Şifre</label>
@@ -215,11 +238,13 @@
               <span class="ic" aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
               </span>
-              <input type="password" id="rPass" placeholder="En az 6 karakter" autocomplete="new-password" minlength="6" required>
-              <button type="button" class="eye" data-eye="rPass" aria-label="Şifreyi göster/gizle"></button>
+              <input type="password" id="rPass" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" autocomplete="new-password" minlength="6" aria-describedby="rPassErr" required>
+              <button type="button" class="eye" data-eye="rPass" aria-label="Şifreyi göster/gizle" aria-pressed="false"></button>
             </div>
+            <div class="pass-meter" id="rPassMeter" aria-hidden="true"><div class="pass-meter__bar"><div class="pass-meter__fill"></div></div><div class="pass-meter__txt" id="rPassMeterTxt"></div></div>
+            <span class="field-err" id="rPassErr" role="alert"></span>
           </div>
-          <button type="submit" class="auth-submit">Kayıt Ol</button>
+          <button type="submit" class="auth-submit" data-i18n="auth.registerBtn">Hesap Oluştur</button>
           <div class="auth-divider" data-i18n="auth.or">veya</div>
           <button type="button" class="auth-google" data-google><span data-i18n="auth.googleBtn">Google ile devam et</span></button>
         </form>
@@ -280,11 +305,16 @@
         mode = m;
         tabs.setAttribute("data-mode", m);
         if (slider) slider.style.transform = m === "register" ? "translateX(100%)" : "translateX(0)";
-        tabs.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-mode") === m); });
+        tabs.querySelectorAll("button").forEach(function (b) {
+          var on = b.getAttribute("data-mode") === m;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
         navBtns.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-go") === m); });
         loginForm.classList.toggle("active", m === "login");
         registerForm.classList.toggle("active", m === "register");
         msg.hidden = true;
+        clearAllFieldErrors();
       }
       tabs.querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.getAttribute("data-mode")); }); });
       navBtns.forEach(function (b) { b.addEventListener("click", function () { setMode(b.getAttribute("data-go")); document.querySelector(".auth-card").scrollIntoView({ behavior: "smooth", block: "center" }); }); });
@@ -299,12 +329,96 @@
           var show = inp.type === "password";
           inp.type = show ? "text" : "password";
           btn.innerHTML = show ? eyeOff : eyeOpen;
+          btn.setAttribute("aria-pressed", show ? "true" : "false");
         });
       });
 
-      /* ---- mesaj ---- */
+      /* ---- mesaj (sunucu/oturum hataları) ---- */
       function showErr(text) { msg.hidden = false; msg.classList.add("err"); msg.textContent = text; }
       function showOk(text) { msg.hidden = false; msg.classList.remove("err"); msg.textContent = text; }
+
+      /* ---- alan-bazlı inline validasyon ---- */
+      function fieldOf(inputId) { var el = document.getElementById(inputId); return el ? el.closest(".auth-field") : null; }
+      function setFieldError(inputId, text) {
+        var f = fieldOf(inputId); if (!f) return;
+        f.classList.add("invalid"); f.classList.remove("valid");
+        var e = document.getElementById(inputId + "Err"); if (e) e.textContent = text || "";
+      }
+      function setFieldValid(inputId) {
+        var f = fieldOf(inputId); if (!f) return;
+        f.classList.remove("invalid"); f.classList.add("valid");
+        var e = document.getElementById(inputId + "Err"); if (e) e.textContent = "";
+      }
+      function clearFieldError(inputId) {
+        var f = fieldOf(inputId); if (!f) return;
+        f.classList.remove("invalid"); f.classList.remove("valid");
+        var e = document.getElementById(inputId + "Err"); if (e) e.textContent = "";
+      }
+      function clearAllFieldErrors() {
+        document.querySelectorAll(".auth-field.invalid,.auth-field.valid").forEach(function (f) { f.classList.remove("invalid", "valid"); });
+        document.querySelectorAll(".field-err").forEach(function (e) { e.textContent = ""; });
+      }
+      var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      function validateEmail(id) {
+        var v = (document.getElementById(id).value || "").trim();
+        if (!v) { setFieldError(id, t("auth.emailRequired")); return false; }
+        if (!EMAIL_RE.test(v)) { setFieldError(id, t("auth.invalidEmail")); return false; }
+        setFieldValid(id); return true;
+      }
+      function validatePass(id, isNew) {
+        var v = document.getElementById(id).value || "";
+        if (!v) { setFieldError(id, t("auth.passRequired")); return false; }
+        if (v.length < 6) { setFieldError(id, t("auth.shortPass")); return false; }
+        setFieldValid(id); return true;
+      }
+      function validateName(id) {
+        var v = (document.getElementById(id).value || "").trim();
+        if (!v) { setFieldError(id, t("auth.nameRequired")); return false; }
+        setFieldValid(id); return true;
+      }
+      // blur'da doğrula, yazmaya başlayınca hatayı temizle
+      function wireLiveValidation(id, fn) {
+        var el = document.getElementById(id); if (!el) return;
+        el.addEventListener("blur", function () { if (el.value.trim()) fn(); });
+        el.addEventListener("input", function () { clearFieldError(id); });
+      }
+      wireLiveValidation("lEmail", function () { validateEmail("lEmail"); });
+      wireLiveValidation("rName", function () { validateName("rName"); });
+      wireLiveValidation("rEmail", function () { validateEmail("rEmail"); });
+
+      /* ---- buton loading / başarı durumu ---- */
+      function setLoading(btn, on, label) {
+        if (!btn) return;
+        if (on) { btn.dataset.label = btn.textContent; btn.classList.add("is-loading"); btn.disabled = true; if (label) btn.setAttribute("aria-label", label); }
+        else { btn.classList.remove("is-loading"); btn.disabled = false; if (btn.dataset.label) { btn.textContent = btn.dataset.label; } btn.removeAttribute("aria-label"); }
+      }
+      function setSuccess(btn, label) {
+        if (!btn) return;
+        btn.classList.remove("is-loading"); btn.classList.add("is-ok");
+        btn.textContent = "✓ " + (label || t("auth.successShort"));
+      }
+
+      /* ---- parola gücü (kayıt) ---- */
+      (function passStrength() {
+        var inp = document.getElementById("rPass");
+        var meter = document.getElementById("rPassMeter");
+        var txt = document.getElementById("rPassMeterTxt");
+        if (!inp || !meter) return;
+        inp.addEventListener("input", function () {
+          var v = inp.value || "";
+          if (!v) { meter.classList.remove("show"); meter.removeAttribute("data-lvl"); return; }
+          meter.classList.add("show");
+          var score = 0;
+          if (v.length >= 6) score++;
+          if (v.length >= 10) score++;
+          if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+          if (/\d/.test(v)) score++;
+          if (/[^A-Za-z0-9]/.test(v)) score++;
+          var lvl = score <= 2 ? 1 : score === 3 ? 2 : 3;
+          meter.setAttribute("data-lvl", lvl);
+          txt.textContent = t(lvl === 1 ? "auth.strengthWeak" : lvl === 2 ? "auth.strengthMedium" : "auth.strengthStrong");
+        });
+      })();
 
       /* ---- şifremi unuttum ---- */
       document.getElementById("forgotLink").addEventListener("click", async function (e) {
@@ -322,43 +436,53 @@
       /* ---- giriş ---- */
       loginForm.addEventListener("submit", async function (e) {
         e.preventDefault();
+        msg.hidden = true;
+        var okEmail = validateEmail("lEmail");
+        var okPass = validatePass("lPass");
+        if (!okEmail || !okPass) { document.getElementById(okEmail ? "lPass" : "lEmail").focus(); return; }
         var email = document.getElementById("lEmail").value.trim();
         var pass = document.getElementById("lPass").value;
-        if (!email || pass.length < 6) { showErr(t("auth.errGeneric")); return; }
         if (!(window.KB && KB.isOnline())) { KB.setRole("kurye"); location.href = KB.panelHref(); return; }
-        var btn = loginForm.querySelector(".auth-submit"); btn.disabled = true;
+        var btn = loginForm.querySelector(".auth-submit");
+        setLoading(btn, true, t("auth.loadingLogin"));
         try {
           var r = await SB.signIn(email, pass);
-          if (r.error) { showErr(r.error.message || t("auth.errGeneric")); btn.disabled = false; return; }
+          if (r.error) { showErr(r.error.message || t("auth.errGeneric")); setLoading(btn, false); return; }
           var prof = await SB.myProfile();
-          showOk(t("auth.okLogin"));
-          setTimeout(function () { location.href = KB.roleToPanel(prof && prof.role); }, 1000);
-        } catch (err) { showErr(err.message || t("auth.errGeneric")); btn.disabled = false; }
+          setSuccess(btn, t("auth.successShort"));
+          setTimeout(function () { location.href = KB.roleToPanel(prof && prof.role); }, 900);
+        } catch (err) { showErr(err.message || t("auth.errGeneric")); setLoading(btn, false); }
       });
 
       /* ---- kayıt ---- */
       registerForm.addEventListener("submit", async function (e) {
         e.preventDefault();
+        msg.hidden = true;
+        var okName = validateName("rName");
+        var okEmail = validateEmail("rEmail");
+        var okPass = validatePass("rPass", true);
+        if (!okName || !okEmail || !okPass) {
+          document.getElementById(!okName ? "rName" : !okEmail ? "rEmail" : "rPass").focus();
+          return;
+        }
         var ad = document.getElementById("rName").value.trim();
         var email = document.getElementById("rEmail").value.trim();
-        var tel = document.getElementById("rPhone").value.trim();
         var pass = document.getElementById("rPass").value;
-        if (!ad || !email || !tel || pass.length < 6) { showErr(t("auth.errGeneric")); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr(t("auth.invalidEmail")); return; }
-        if (!/^0?5\d{9}$/.test(tel.replace(/\D/g, ""))) { showErr(t("auth.invalidPhone")); return; }
-        if (!(window.KB && KB.isOnline())) { KB.setRole("kurye"); location.href = KB.panelHref(); return; }
-        var btn = registerForm.querySelector(".auth-submit"); btn.disabled = true;
+        if (!(window.KB && KB.isOnline())) { KB.setRole("kurye"); location.href = "onboarding.html"; return; }
+        var btn = registerForm.querySelector(".auth-submit");
+        setLoading(btn, true, t("auth.loadingRegister"));
         try {
-          var r = await SB.signUp(email, pass, ad, tel);
-          if (r.error) { showErr(r.error.message || t("auth.errGeneric")); btn.disabled = false; return; }
+          // Telefon onboarding adımında toplanır; kayıt yalnız ad+e-posta+şifre.
+          var r = await SB.signUp(email, pass, ad);
+          if (r.error) { showErr(r.error.message || t("auth.errGeneric")); setLoading(btn, false); return; }
           if (r.data && r.data.session) {
-            showOk(t("auth.okRegister"));
-            setTimeout(function () { location.href = "profil-duzenle.html"; }, 1200);
+            setSuccess(btn, t("auth.successShort"));
+            setTimeout(function () { location.href = "onboarding.html"; }, 1000);
           } else {
+            setLoading(btn, false);
             showOk(t("auth.okRegisterConfirm"));
-            btn.disabled = false;
           }
-        } catch (err) { showErr(err.message || t("auth.errGeneric")); btn.disabled = false; }
+        } catch (err) { showErr(err.message || t("auth.errGeneric")); setLoading(btn, false); }
       });
 
       setMode("login");
@@ -376,16 +500,19 @@
         btn.addEventListener("click", async function () {
           if (!(window.KB && KB.isOnline())) { showErr(t("auth.errGeneric")); return; }
           document.querySelectorAll("[data-google]").forEach(function (b) { b.disabled = true; });
+          btn.classList.add("is-loading");
           showOk(t("auth.googleSigningIn"));
           try {
             var r = await SB.signInWithGoogle();
             if (r && r.error) {
               showErr(r.error.message || t("auth.errGeneric"));
+              btn.classList.remove("is-loading");
               document.querySelectorAll("[data-google]").forEach(function (b) { b.disabled = false; });
             }
             // başarılıysa tarayıcı Google'a yönlenir; dönüşte aşağıdaki blok çalışır
           } catch (err) {
             showErr(err.message || t("auth.errGeneric"));
+            btn.classList.remove("is-loading");
             document.querySelectorAll("[data-google]").forEach(function (b) { b.disabled = false; });
           }
         });
@@ -403,8 +530,8 @@
           routed = true;
           var prof = null;
           try { prof = await SB.myProfile(); } catch (e) {}
-          // Profil henüz tamamlanmamışsa (ad boş) -> rol seçimi + profil tamamlama
-          if (!prof || !prof.ad) { location.href = "profil-duzenle.html"; }
+          // Profil henüz tamamlanmamışsa (ad boş) -> onboarding (rol seçimi + temel bilgiler)
+          if (!prof || !prof.ad) { location.href = "onboarding.html"; }
           else { location.href = KB.roleToPanel(prof.role); }
         }
         // detectSessionInUrl, code'u oturuma çevirince SIGNED_IN tetiklenir

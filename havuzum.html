@@ -24,8 +24,27 @@
 
     <main class="section--sm">
         <div class="container">
-            <p class="result-count" id="myPoolCount"></p>
-            <div class="talent-grid" id="myPoolGrid"></div>
+            <div class="fav-tabs" role="tablist">
+                <button class="fav-tab is-active" role="tab" aria-selected="true" data-favtab="profiles" data-i18n="fav.tabProfiles">Kayıtlı Profiller</button>
+                <button class="fav-tab" role="tab" aria-selected="false" data-favtab="jobs" data-i18n="fav.tabJobs">Kayıtlı İlanlar</button>
+            </div>
+
+            <section class="fav-panel is-active" id="favPanel-profiles" role="tabpanel">
+                <p class="result-count" id="myPoolCount"></p>
+                <div class="talent-grid" id="myPoolGrid"></div>
+            </section>
+
+            <section class="fav-panel" id="favPanel-jobs" role="tabpanel" hidden>
+                <div class="toolbar">
+                    <p class="result-count" id="savedJobsCount" style="margin:0"></p>
+                    <select id="savedSort" class="toolbar__sort" aria-label="Sırala">
+                        <option value="new" data-i18n="fav.sortNew">En yeni</option>
+                        <option value="company" data-i18n="fav.sortCompany">İşverene göre</option>
+                        <option value="location" data-i18n="fav.sortLocation">Konuma göre</option>
+                    </select>
+                </div>
+                <div class="talent-grid" id="savedJobsGrid"></div>
+            </section>
         </div>
     </main>
 
@@ -37,6 +56,22 @@
     <script src="assets/js/data.js"></script>
     <script src="assets/js/components.js"></script>
     <script src="assets/js/app.js"></script>
-    <script>KBApp.renderMyPool();</script>
+    <script>
+      KBApp.renderMyPool();
+      var savedLoaded = false;
+      document.querySelectorAll("[data-favtab]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var tab = btn.getAttribute("data-favtab");
+          document.querySelectorAll("[data-favtab]").forEach(function (b) {
+            var on = b === btn; b.classList.toggle("is-active", on); b.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          document.getElementById("favPanel-profiles").hidden = tab !== "profiles";
+          document.getElementById("favPanel-profiles").classList.toggle("is-active", tab === "profiles");
+          document.getElementById("favPanel-jobs").hidden = tab !== "jobs";
+          document.getElementById("favPanel-jobs").classList.toggle("is-active", tab === "jobs");
+          if (tab === "jobs" && !savedLoaded) { savedLoaded = true; KBApp.renderSavedJobs(); }
+        });
+      });
+    </script>
 </body>
 </html>

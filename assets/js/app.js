@@ -7,6 +7,12 @@
   'use strict';
   var D = window.KB_DATA;
   var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+  // Aksan/Türkçe-İ bağımsız normalize (arama için): "İstanbul" ~ "istanbul", "Şişli" ~ "sisli"
+  function norm(s) {
+    s = String(s == null ? "" : s).normalize("NFD"); var o = "";
+    for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c >= 0x300 && c <= 0x36f) continue; o += s.charAt(i); }
+    return o.toLowerCase().trim();
+  }
 
   // İskelet (skeleton) yükleme kartları — grid'e basılır, gerçek veri gelince değişir
   function skeletonCards(n) {
@@ -159,29 +165,192 @@
   /* ============ İLAN & BAŞVURU ============ */
   function val2(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
 
+  /* kaydedilen ilanlar (localStorage — ilan favorisi için backend tablosu yok) */
+  function getSavedJobs() { try { return JSON.parse(localStorage.getItem("kb_saved_jobs")) || []; } catch (e) { return []; } }
+  function isSavedJob(id) { return getSavedJobs().indexOf(String(id)) > -1; }
+  function toggleSavedJob(id) {
+    id = String(id); var s = getSavedJobs(); var i = s.indexOf(id);
+    if (i > -1) s.splice(i, 1); else s.push(id);
+    localStorage.setItem("kb_saved_jobs", JSON.stringify(s)); return i === -1;
+  }
+  function daysSince(dateStr) { if (!dateStr) return 9999; var d = new Date(dateStr + "T00:00:00"); if (isNaN(d.getTime())) return 9999; return Math.floor((Date.now() - d.getTime()) / 86400000); }
+  function isFresh(dateStr) { var n = daysSince(dateStr); return n >= 0 && n <= 3; }
+  function timeAgo(dateStr) {
+    var n = daysSince(dateStr);
+    if (n >= 9999) return KB.esc(dateStr || "");
+    if (n <= 0) return T("ilan.today");
+    if (n === 1) return T("ilan.yesterday");
+    return T("ilan.daysAgo", { n: n });
+  }
+  // favori (kalp) tıklaması — tüm kopya butonları senkron güncelle
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-savejob]");
+    if (!b) return;
+    e.preventDefault();
+    var id = b.getAttribute("data-savejob");
+    var on = toggleSavedJob(id);
+    document.querySelectorAll('[data-savejob="' + id + '"]').forEach(function (x) {
+      x.classList.toggle("is-on", on);
+      x.textContent = on ? "♥" : "♡";
+      x.setAttribute("aria-pressed", on ? "true" : "false");
+      var lbl = T(on ? "ilan.saved" : "ilan.save"); x.setAttribute("aria-label", lbl); x.title = lbl;
+    });
+    // Kayıtlı İlanlar görünümünde çıkarılan ilanın kartını anında kaldır
+    if (!on) {
+      var sg = document.getElementById("savedJobsGrid");
+      if (sg && b.closest("#savedJobsGrid")) {
+        var card = b.closest(".job-card"); if (card) card.remove();
+        var left = sg.querySelectorAll(".job-card").length;
+        var cnt = document.getElementById("savedJobsCount"); if (cnt) cnt.textContent = left ? T("fav.count", { n: left }) : "";
+        if (!left) sg.innerHTML = savedEmpty();
+      }
+    }
+  });
+
   function listingCard(l, appliedSet, myPid) {
     var owner = l.owner_id === myPid;
     var applied = appliedSet[l.id];
     var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
     var score = talentScore(l.id);
+    var saved = isSavedJob(l.id);
     var action;
     if (!canPool()) action = '<a class="btn btn--light btn--sm" href="giris.html">' + T("cta.signin") + '</a>';
     else if (owner) action = '<span class="chip">' + T("ilan.own") + '</span>';
     else if (applied) action = '<span class="chip chip--ok">' + T("ilan.applied") + '</span>';
-    else action = '<button class="btn btn--primary btn--sm" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '">' + T("ilan.apply") + '</button>';
-    return '<article class="job-card">' +
+    else action = '<button class="btn btn--primary btn--sm" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '" data-company="' + KB.esc(l.sahip || "") + '" data-loc="' + KB.esc(loc) + '">' + T("ilan.apply") + '</button>';
+    var tags = '<span class="chip chip--open">● ' + T("ilan.statusOpen") + '</span>' +
+      (l.arac ? '<span class="chip">🛵 ' + KB.esc(l.arac) + '</span>' : '') +
+      (isFresh(l.tarih) ? '<span class="chip chip--new">' + T("ilan.new") + '</span>' : '');
+    return '<article class="job-card" data-job="' + l.id + '">' +
+      '<button type="button" class="job-fav' + (saved ? " is-on" : "") + '" data-savejob="' + l.id + '" aria-pressed="' + (saved ? "true" : "false") + '" aria-label="' + T(saved ? "ilan.saved" : "ilan.save") + '" title="' + T(saved ? "ilan.saved" : "ilan.save") + '">' + (saved ? "♥" : "♡") + '</button>' +
       '<div class="employer-badge">' +
         '<div class="employer-badge__av">' + KB.initials(l.sahip || "?") + '</div>' +
         '<span class="employer-badge__name">' + KB.esc(l.sahip || T("ilan.unknown")) + '</span>' +
       '</div>' +
-      '<div class="job-card__title">' + KB.esc(l.baslik) + '</div>' +
-      (loc || l.arac ? '<div class="job-card__meta">' + (loc ? '📍 ' + KB.esc(loc) : '') + (l.arac ? (loc ? ' · ' : '') + '🛵 ' + KB.esc(l.arac) : '') + '</div>' : '') +
+      '<a class="job-card__title" href="ilan.html?id=' + l.id + '">' + KB.esc(l.baslik) + '</a>' +
+      '<div class="job-card__tags">' + tags + '</div>' +
+      (loc ? '<div class="job-card__meta">📍 ' + KB.esc(loc) + '</div>' : '') +
       (l.aciklama ? '<p class="pcard__sub">' + KB.esc(l.aciklama) + '</p>' : '') +
       '<div class="job-card__foot">' +
         action +
-        '<div style="display:flex;align-items:center;gap:7px"><span class="match-score">%' + score + ' Uyum</span><span class="rev-date">' + KB.esc(l.tarih) + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:8px"><span class="match-score">%' + score + ' Uyum</span><span class="job-posted">' + timeAgo(l.tarih) + '</span></div>' +
       '</div>' +
     '</article>';
+  }
+  function uniqVals(list, getter) {
+    var s = {}; list.forEach(function (x) { var v = getter(x); if (v) s[v] = 1; }); return Object.keys(s).sort();
+  }
+  function fillFilterSelect(sel, values, allLabel) {
+    if (!sel) return;
+    sel.innerHTML = '<option value="">' + allLabel + '</option>' +
+      values.map(function (v) { return '<option value="' + KB.esc(v) + '">' + KB.esc(v) + '</option>'; }).join("");
+  }
+  function emptyState(icon, title, sub, withClear) {
+    return '<div class="kb-empty" style="grid-column:1/-1"><div class="kb-empty__ic">' + icon + '</div>' +
+      '<div class="kb-empty__t">' + title + '</div>' +
+      (sub ? '<div class="kb-empty__d">' + sub + '</div>' : '') +
+      (withClear ? '<button type="button" class="btn btn--primary btn--sm mt-24" id="jobClearFilters">' + T("ilan.clearFilters") + '</button>' : '') +
+      '</div>';
+  }
+  // İlan listesi modül durumu — handler hep güncel veriyi okur (re-render güvenli)
+  var JOBS = { list: [], appliedSet: {}, myPid: null };
+
+  /* ---- akıllı arama: son aramalar + öneriler ---- */
+  function getRecentSearches() { try { return JSON.parse(localStorage.getItem("kb_recent_searches")) || []; } catch (e) { return []; } }
+  function pushRecentSearch(q) {
+    q = (q || "").trim(); if (!q) return;
+    var s = getRecentSearches().filter(function (x) { return x.toLowerCase() !== q.toLowerCase(); });
+    s.unshift(q); localStorage.setItem("kb_recent_searches", JSON.stringify(s.slice(0, 6)));
+  }
+  function buildSuggestHtml(q) {
+    q = norm(q);
+    var groups = [];
+    function uniqMatch(getter, limit) {
+      var seen = {}, out = [];
+      JOBS.list.forEach(function (l) { var v = getter(l); if (!v) return; var k = norm(v); if (seen[k]) return; if (q && k.indexOf(q) === -1) return; seen[k] = 1; out.push(v); });
+      return out.slice(0, limit);
+    }
+    if (!q) {
+      var rec = getRecentSearches();
+      if (rec.length) groups.push({ label: T("search.recent"), icon: "🕘", clear: true, items: rec });
+    } else {
+      var add = function (label, icon, vals) { if (vals.length) groups.push({ label: label, icon: icon, items: vals }); };
+      add(T("search.positions"), "💼", uniqMatch(function (l) { return l.baslik; }, 4));
+      add(T("search.companies"), "🏢", uniqMatch(function (l) { return l.sahip; }, 3));
+      add(T("search.cities"), "📍", uniqMatch(function (l) { return l.sehir; }, 3));
+      add(T("search.districts"), "🗺️", uniqMatch(function (l) { return l.bolge; }, 3));
+    }
+    if (!groups.length) return "";
+    return groups.map(function (g) {
+      return '<div class="suggest__group"><div class="suggest__label">' + KB.esc(g.label) +
+        (g.clear ? '<button type="button" class="suggest__clear" data-suggclear>' + T("search.clearRecent") + '</button>' : "") + '</div>' +
+        g.items.map(function (v) { return '<button type="button" class="suggest__item" data-sugg="' + KB.esc(v) + '"><span class="suggest__ic">' + g.icon + '</span><span>' + KB.esc(v) + '</span></button>'; }).join("") +
+        '</div>';
+    }).join("");
+  }
+  function renderActiveChips() {
+    var host = document.getElementById("jobChips"); if (!host) return;
+    var search = document.getElementById("jobSearch"), citySel = document.getElementById("jobCity"), vehSel = document.getElementById("jobVehicle");
+    var chips = [];
+    if (search && search.value.trim()) chips.push({ k: "q", label: '"' + search.value.trim() + '"' });
+    if (citySel && citySel.value) chips.push({ k: "city", label: "📍 " + citySel.value });
+    if (vehSel && vehSel.value) chips.push({ k: "veh", label: "🛵 " + vehSel.value });
+    if (!chips.length) { host.innerHTML = ""; host.classList.remove("is-open"); return; }
+    host.classList.add("is-open");
+    host.innerHTML = '<span class="active-chips__label">' + T("filter.active") + ':</span>' +
+      chips.map(function (c) { return '<button type="button" class="active-chip" data-rmfilter="' + c.k + '">' + KB.esc(c.label) + ' <span aria-hidden="true">✕</span></button>'; }).join("") +
+      '<button type="button" class="active-chips__clear" data-rmfilter="all">' + T("filter.clearAll") + '</button>';
+  }
+  document.addEventListener("click", function (e) {
+    var rm = e.target.closest("[data-rmfilter]"); if (!rm) return;
+    var k = rm.getAttribute("data-rmfilter");
+    var search = document.getElementById("jobSearch"), citySel = document.getElementById("jobCity"), vehSel = document.getElementById("jobVehicle");
+    if (k === "q" && search) search.value = "";
+    else if (k === "city" && citySel) citySel.value = "";
+    else if (k === "veh" && vehSel) vehSel.value = "";
+    else if (k === "all") { if (search) search.value = ""; if (citySel) citySel.value = ""; if (vehSel) vehSel.value = ""; }
+    applyJobFilters();
+  });
+
+  function applyJobFilters() {
+    var grid = document.getElementById("listingsGrid");
+    if (!grid) return;
+    renderActiveChips();
+    var countEl = document.getElementById("listingsCount");
+    var search = document.getElementById("jobSearch");
+    var citySel = document.getElementById("jobCity");
+    var vehSel = document.getElementById("jobVehicle");
+    var sortSel = document.getElementById("jobSort");
+    var q = norm(search && search.value || "");
+    var city = citySel && citySel.value, veh = vehSel && vehSel.value, sort = (sortSel && sortSel.value) || "new";
+    var out = JOBS.list.filter(function (l) {
+      if (city && l.sehir !== city) return false;
+      if (veh && l.arac !== veh) return false;
+      if (q) {
+        var hay = norm(l.baslik + " " + (l.aciklama || "") + " " + (l.sahip || "") + " " + (l.sehir || "") + " " + (l.bolge || ""));
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    out.sort(function (a, b) {
+      if (sort === "match") return talentScore(b.id) - talentScore(a.id);
+      var da = a.tarih || "", db = b.tarih || "";
+      return sort === "old" ? (da < db ? -1 : da > db ? 1 : 0) : (da < db ? 1 : da > db ? -1 : 0);
+    });
+    var filtersActive = !!(q || city || veh);
+    if (countEl) countEl.textContent = out.length ? T("ilan.count", { n: out.length }) : "";
+    if (!out.length) {
+      grid.innerHTML = filtersActive
+        ? emptyState("🔍", T("ilan.noMatch"), T("ilan.noMatchSub"), true)
+        : emptyState("📭", T("ilan.none"), "", false);
+      var clr = document.getElementById("jobClearFilters");
+      if (clr) clr.addEventListener("click", function () {
+        if (search) search.value = ""; if (citySel) citySel.value = ""; if (vehSel) vehSel.value = ""; if (sortSel) sortSel.value = "new";
+        applyJobFilters();
+      });
+      return;
+    }
+    grid.innerHTML = out.map(function (l) { return listingCard(l, JOBS.appliedSet, JOBS.myPid); }).join("");
   }
   async function renderListings() {
     var grid = document.getElementById("listingsGrid");
@@ -189,62 +358,151 @@
     var countEl = document.getElementById("listingsCount");
     if (window.KB && KB.ready) await KB.ready();
     grid.innerHTML = skeletonCards(6);
-    if (!online()) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Supabase gerekli.</div>'; return; }
+    if (!online()) { grid.innerHTML = emptyState("📭", T("ilan.none"), "", false); if (countEl) countEl.textContent = ""; return; }
     var list = await SB.openListings();
     var appliedSet = {}, myPid = null;
     if (canPool()) {
       try { (await SB.appliedListingIds()).forEach(function (id) { appliedSet[id] = 1; }); } catch (e) {}
       var mp = KB.session() && KB.session().profile; myPid = mp && mp.id;
     }
-    if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
-    grid.innerHTML = list.length ? list.map(function (l) { return listingCard(l, appliedSet, myPid); }).join("")
-      : '<div class="empty" style="grid-column:1/-1">' + T("ilan.none") + '</div>';
+    JOBS.list = list; JOBS.appliedSet = appliedSet; JOBS.myPid = myPid;
+    var citySel = document.getElementById("jobCity");
+    var vehSel = document.getElementById("jobVehicle");
+    fillFilterSelect(citySel, uniqVals(list, function (x) { return x.sehir; }), T("ilan.allCities"));
+    fillFilterSelect(vehSel, uniqVals(list, function (x) { return x.arac; }), T("ilan.allVehicles"));
+    ["jobSearch", "jobCity", "jobVehicle", "jobSort"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && !el._wired) { el._wired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", applyJobFilters); }
+    });
+    // arama önerileri (autocomplete)
+    var searchEl = document.getElementById("jobSearch"), sugg = document.getElementById("jobSuggest");
+    if (searchEl && sugg && !searchEl._suggWired) {
+      searchEl._suggWired = 1;
+      function openSugg() { var h = buildSuggestHtml(searchEl.value); sugg.innerHTML = h; sugg.classList.toggle("is-open", !!h); }
+      searchEl.addEventListener("focus", openSugg);
+      searchEl.addEventListener("input", openSugg);
+      searchEl.addEventListener("keydown", function (e) { if (e.key === "Enter") { pushRecentSearch(searchEl.value); sugg.classList.remove("is-open"); } });
+      sugg.addEventListener("mousedown", function (e) {
+        var clr = e.target.closest("[data-suggclear]");
+        if (clr) { e.preventDefault(); localStorage.removeItem("kb_recent_searches"); openSugg(); return; }
+        var it = e.target.closest("[data-sugg]");
+        if (it) { e.preventDefault(); searchEl.value = it.getAttribute("data-sugg"); pushRecentSearch(searchEl.value); applyJobFilters(); sugg.classList.remove("is-open"); }
+      });
+      document.addEventListener("click", function (e) { if (!sugg.contains(e.target) && e.target !== searchEl) sugg.classList.remove("is-open"); });
+    }
+    applyJobFilters();
   }
 
   /* başvuru modalı */
+  function summaryRow(k, v) { return '<div class="apply-summary__row"><span class="apply-summary__k">' + KB.esc(k) + '</span><span class="apply-summary__v">' + KB.esc(v) + '</span></div>'; }
   function ensureApplyModal() {
     if (document.getElementById("applyModal")) return;
     var div = document.createElement("div");
     div.className = "modal-overlay"; div.id = "applyModal";
-    div.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' +
-      '<div class="modal__head"><h3>' + T("ilan.applyTitle") + '</h3><button class="modal__close" aria-label="' + T("modal.close") + '">&times;</button></div>' +
-      '<p class="modal__sub" id="applySub"></p>' +
-      '<form id="applyForm"><div class="field"><label>' + T("modal.msgLabel") + '</label>' +
-      '<textarea id="applyMsg" rows="3" placeholder="' + T("ilan.applyPh") + '"></textarea></div>' +
-      '<button type="submit" class="btn btn--primary btn--block">' + T("ilan.apply") + '</button>' +
-      '<p class="form-success" id="applyOk" hidden>' + T("ilan.applied") + '</p></form></div>';
+    div.innerHTML = '<div class="modal apply-modal" role="dialog" aria-modal="true" aria-labelledby="applyTitle">' +
+      '<div class="modal__head"><h3 id="applyTitle">' + T("apl.confirmTitle") + '</h3><button class="modal__close" aria-label="' + T("modal.close") + '">&times;</button></div>' +
+      '<div id="applyConfirm">' +
+        '<p class="modal__sub">' + T("apl.confirmSub") + '</p>' +
+        '<div class="apply-summary" id="applySummary"></div>' +
+        '<form id="applyForm"><div class="field"><label for="applyMsg">' + T("apl.msgLabel") + '</label>' +
+        '<textarea id="applyMsg" rows="3" placeholder="' + T("apl.msgPh") + '"></textarea></div>' +
+        '<p class="apply-err" id="applyErr" role="alert" hidden></p>' +
+        '<div class="apply-actions">' +
+          '<button type="button" class="btn btn--ghost" id="applyCancel">' + T("apl.cancel") + '</button>' +
+          '<button type="submit" class="btn btn--primary" id="applySend">' + T("apl.send") + '</button>' +
+        '</div></form>' +
+      '</div>' +
+      '<div id="applySuccess" hidden><div class="apply-success">' +
+        '<div class="apply-success__ic">✓</div>' +
+        '<h4 class="apply-success__t">' + T("apl.successTitle") + '</h4>' +
+        '<p class="apply-success__d">' + T("apl.successSub") + '</p>' +
+        '<div class="apply-next"><a class="btn btn--primary btn--block" id="applyViewApps" href="havuzum.html">' + T("apl.viewApps") + '</a>' +
+        '<a class="btn btn--ghost btn--block" href="ilanlar.html">' + T("apl.continue") + '</a></div>' +
+      '</div></div>' +
+    '</div>';
     document.body.appendChild(div);
     div.querySelector(".modal__close").addEventListener("click", function () { div.classList.remove("is-open"); });
     div.addEventListener("click", function (e) { if (e.target === div) div.classList.remove("is-open"); });
   }
-  function openApplyModal(listingId, baslik) {
+  function openApplyModal(listingId, baslik, meta) {
     if (!canPool()) { location.href = "giris.html"; return; }
     ensureApplyModal();
+    meta = meta || {};
     var m = document.getElementById("applyModal");
-    document.getElementById("applySub").textContent = baslik;
+    document.getElementById("applyConfirm").hidden = false;
+    document.getElementById("applySuccess").hidden = true;
+    document.getElementById("applyTitle").textContent = T("apl.confirmTitle");
+    document.getElementById("applySummary").innerHTML =
+      summaryRow(T("apl.position"), baslik || "") +
+      (meta.company ? summaryRow(T("apl.company"), meta.company) : "") +
+      (meta.location ? summaryRow(T("apl.location"), meta.location) : "");
+    var viewApps = document.getElementById("applyViewApps");
+    if (viewApps) viewApps.href = online() ? KB.roleToPanel(KB.currentRole()) : KB.panelHref();
     var form = document.getElementById("applyForm");
-    var ok = document.getElementById("applyOk"); ok.hidden = true; form.reset();
+    var err = document.getElementById("applyErr"); err.hidden = true;
+    var sendBtn = document.getElementById("applySend");
+    sendBtn.disabled = false; sendBtn.classList.remove("is-loading"); sendBtn.textContent = T("apl.send");
+    form.reset();
+    document.getElementById("applyCancel").onclick = function () { m.classList.remove("is-open"); };
     form.onsubmit = async function (e) {
       e.preventDefault();
-      try { await SB.applyToListing(listingId, document.getElementById("applyMsg").value.trim()); }
-      catch (err) { KB.toast((err && err.message) || "Hata", "error"); return; }
-      ok.hidden = false;
-      document.querySelectorAll('[data-apply="' + listingId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip">' + T("ilan.applied") + '</span>'; });
-      setTimeout(function () { m.classList.remove("is-open"); }, 1200);
+      err.hidden = true;
+      sendBtn.disabled = true; sendBtn.classList.add("is-loading"); sendBtn.textContent = T("apl.sending");
+      try {
+        await SB.applyToListing(listingId, document.getElementById("applyMsg").value.trim());
+        document.querySelectorAll('[data-apply="' + listingId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip chip--ok">' + T("ilan.applied") + '</span>'; });
+        document.getElementById("applyConfirm").hidden = true;
+        document.getElementById("applySuccess").hidden = false;
+        document.getElementById("applyTitle").textContent = T("apl.successTitle");
+      } catch (e2) {
+        err.hidden = false; err.textContent = ((e2 && e2.message) || T("apl.error")) + " — " + T("apl.retry");
+        sendBtn.disabled = false; sendBtn.classList.remove("is-loading"); sendBtn.textContent = T("apl.send");
+      }
     };
     m.classList.add("is-open");
   }
 
-  /* Başvurularım (kurye paneli) */
+  /* Başvurularım (kurye paneli) — zengin kart + durum timeline */
+  function applicationCard(a) {
+    var status = a.durum === "accepted" ? "accepted" : a.durum === "rejected" ? "rejected" : "review";
+    var label = status === "accepted" ? T("state.accepted") : status === "rejected" ? T("state.rejected") : T("mya.review");
+    var decided = status !== "review";
+    var steps = [
+      { l: T("mya.tlSent"), done: true, cur: false, dec: "" },
+      { l: T("mya.tlReviewed"), done: decided, cur: !decided, dec: "" },
+      { l: T("mya.tlDecision"), done: decided, cur: false, dec: decided ? status : "" }
+    ];
+    var tl = '<div class="app-timeline">' + steps.map(function (s, i) {
+      var cls = s.done ? "done" : s.cur ? "current" : "";
+      var dec = s.dec ? (" app-timeline__dot--" + s.dec) : "";
+      return (i ? '<div class="app-timeline__seg' + (s.done ? " done" : "") + '"></div>' : "") +
+        '<div class="app-timeline__step"><span class="app-timeline__dot ' + cls + dec + '"></span><span class="app-timeline__label">' + s.l + '</span></div>';
+    }).join("") + '</div>';
+    var titleHtml = a.listingId
+      ? '<a class="app-card__title" href="ilan.html?id=' + a.listingId + '">' + KB.esc(a.baslik || T("ilan.removed")) + '</a>'
+      : '<span class="app-card__title">' + KB.esc(a.baslik || T("ilan.removed")) + '</span>';
+    return '<article class="app-card">' +
+      '<div class="app-card__top">' +
+        '<div class="app-card__emp"><div class="app-card__av">' + KB.initials(a.firma || a.baslik || "?") + '</div>' +
+          '<div>' + titleHtml +
+          '<div class="app-card__sub">' + KB.esc(a.firma || "") + (a.ilanSehir ? ' · ' + KB.esc(a.ilanSehir) : "") + '</div></div></div>' +
+        '<span class="app-badge app-badge--' + status + '">' + label + '</span>' +
+      '</div>' + tl +
+      '<div class="app-card__foot"><span>' + T("mya.appliedOn") + ': ' + KB.esc(a.tarih) + '</span>' +
+        (a.guncelleme && a.guncelleme !== a.tarih ? '<span>' + T("mya.updatedOn") + ': ' + KB.esc(a.guncelleme) + '</span>' : "") + '</div>' +
+    '</article>';
+  }
   async function renderMyApplications() {
     var host = document.getElementById("kuryeBasvuru");
     if (!host) return;
+    host.innerHTML = skeletonCards(3);
     var apps = await SB.myApplications();
-    if (!apps.length) { host.innerHTML = '<div class="empty">' + T("basvuru.none") + '</div>'; return; }
-    host.innerHTML = apps.map(function (a) {
-      var st = a.durum === "accepted" ? T("state.accepted") : a.durum === "rejected" ? T("state.rejected") : T("state.pending");
-      return listRow(KB.esc(a.baslik || T("ilan.removed")), KB.esc(a.ilanSehir || "") + " · " + KB.esc(a.tarih), '<span class="chip">' + st + '</span>');
-    }).join("");
+    if (!apps.length) {
+      host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">📭</div><div class="kb-empty__t">' + T("basvuru.none") + '</div>' +
+        '<a class="btn btn--primary btn--sm mt-24" href="ilanlar.html">' + T("fav.browse") + '</a></div>';
+      return;
+    }
+    host.innerHTML = '<div class="app-list">' + apps.map(applicationCard).join("") + '</div>';
   }
 
   /* İlanlarım (işletme paneli) */
@@ -294,7 +552,7 @@
 
   document.addEventListener("click", function (e) {
     var ap = e.target.closest("[data-apply]");
-    if (ap) { e.preventDefault(); openApplyModal(ap.getAttribute("data-apply"), ap.getAttribute("data-baslik")); }
+    if (ap) { e.preventDefault(); openApplyModal(ap.getAttribute("data-apply"), ap.getAttribute("data-baslik"), { company: ap.getAttribute("data-company") || "", location: ap.getAttribute("data-loc") || "" }); }
   });
   document.addEventListener("click", async function (e) {
     if (e.target.closest("#liSubmit")) {
@@ -1245,11 +1503,265 @@
   }
   function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="empty">' + T("empty.generic") + '</div>'; }
 
+  /* ============ HARİTA DENEYİMİ (senkron liste + harita) ============ */
+  async function initMapExperience() {
+    var mapEl = document.getElementById("map");
+    if (!mapEl || typeof L === "undefined") return;
+    var listEl = document.getElementById("mxList");
+    var countEl = document.getElementById("mxCount");
+    var searchEl = document.getElementById("mxSearch");
+    var container = document.querySelector(".mx");
+
+    var PIN = { ilan: { c: "#f59e0b", e: "💼" }, kurye: { c: "#22d3ee", e: "🛵" }, isletme: { c: "#4f8bff", e: "🏪" }, firma: { c: "#a855f7", e: "🏢" } };
+
+    if (listEl) listEl.innerHTML = mxSkeleton();
+
+    var map = L.map(mapEl, { zoomControl: true, scrollWheelZoom: true }).setView([39.5, 33.5], 6);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      { maxZoom: 19, subdomains: "abcd", attribution: "© OpenStreetMap © CARTO" }).addTo(map);
+    var cluster = L.markerClusterGroup ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 }) : L.layerGroup();
+    map.addLayer(cluster);
+
+    if (window.KB && KB.ready) await KB.ready();
+    var listings = [];
+    try { if (online()) listings = await SB.openListings(); } catch (e) {}
+    var kur = await loadPool("kurye"), isl = await loadPool("isletme"), frm = await loadPool("firma");
+
+    var items = [];
+    function push(type, x, lat, lng, ad, sub, chips, action) {
+      if (lat == null || lng == null) return;
+      items.push({ key: type + "-" + x.id, type: type, id: x.id, lat: +lat, lng: +lng, ad: ad || "", sub: sub || "", chips: chips || [], action: action });
+    }
+    listings.forEach(function (l) { push("ilan", l, l.lat, l.lng, l.baslik, (l.sahip ? l.sahip + " · " : "") + [l.sehir, l.bolge].filter(Boolean).join(" · "), [l.arac].filter(Boolean), { apply: { id: l.id, baslik: l.baslik } }); });
+    kur.forEach(function (k) { push("kurye", k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler || [])[0]].filter(Boolean).join(" · "), [k.arac].filter(Boolean), { view: "profil-kurye.html", offer: "kurye" }); });
+    isl.forEach(function (i) { push("isletme", i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(" · "), [], { view: "profil-isletme.html", offer: "isletme" }); });
+    frm.forEach(function (f) { push("firma", f, f.lat, f.lng, f.ad, (f.bolgeler || []).slice(0, 2).join(", "), [], { view: "profil-firma.html", offer: "firma" }); });
+
+    var activeLayers = { ilan: true, kurye: true, isletme: true, firma: true };
+    var markers = {}, cardEls = {}, selectedKey = null;
+
+    function pinIcon(it, sel) {
+      var p = PIN[it.type];
+      return L.divIcon({ className: "", html: '<div class="mx-pin mx-pin--' + it.type + (sel ? " is-sel" : "") + '" style="--c:' + p.c + '"><span>' + p.e + '</span></div>', iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -32] });
+    }
+    function actionHtml(it) {
+      if (it.action.apply) return '<button class="btn btn--primary btn--sm" data-apply="' + it.id + '" data-baslik="' + KB.esc(it.action.apply.baslik) + '">' + T("mx.apply") + '</button>';
+      return '<a class="btn btn--light btn--sm" href="' + it.action.view + '?id=' + it.id + '">' + T("mx.view") + '</a>';
+    }
+    function chipsHtml(it) { return it.chips.length ? '<div class="mx-card__chips">' + it.chips.map(function (c) { return '<span class="chip">' + KB.esc(c) + '</span>'; }).join("") + '</div>' : ""; }
+    function mxCard(it) {
+      return '<article class="mx-card" data-mxkey="' + KB.esc(it.key) + '" tabindex="0">' +
+        '<div class="mx-card__ic mx-card__ic--' + it.type + '">' + PIN[it.type].e + '</div>' +
+        '<div class="mx-card__body"><div class="mx-card__head"><span class="mx-card__title">' + KB.esc(it.ad) + '</span>' +
+        '<span class="mx-tag mx-tag--' + it.type + '">' + T("mx.type." + it.type) + '</span></div>' +
+        '<div class="mx-card__sub">' + KB.esc(it.sub) + '</div>' + chipsHtml(it) +
+        '<div class="mx-card__act">' + actionHtml(it) + '</div></div></article>';
+    }
+    function mxPopup(it) {
+      return '<div class="mx-popup"><div class="mx-popup__head"><span class="mx-card__ic mx-card__ic--' + it.type + '">' + PIN[it.type].e + '</span>' +
+        '<div><div class="mx-popup__title">' + KB.esc(it.ad) + '</div><div class="mx-popup__sub">' + KB.esc(it.sub) + '</div></div></div>' +
+        chipsHtml(it).replace("mx-card__chips", "mx-popup__chips") +
+        '<div class="mx-popup__act">' + actionHtml(it) + '</div></div>';
+    }
+    function visible() {
+      var q = norm(searchEl && searchEl.value || "");
+      return items.filter(function (it) {
+        if (!activeLayers[it.type]) return false;
+        if (q && norm(it.ad + " " + it.sub).indexOf(q) === -1) return false;
+        return true;
+      });
+    }
+    function select(key, fromMap) {
+      selectedKey = key;
+      Object.keys(cardEls).forEach(function (k) { if (cardEls[k]) cardEls[k].classList.toggle("is-selected", k === key); });
+      if (key && cardEls[key] && fromMap) cardEls[key].scrollIntoView({ behavior: "smooth", block: "nearest" });
+      Object.keys(markers).forEach(function (k) {
+        var m = markers[k]; if (m._it) m.setIcon(pinIcon(m._it, k === key));
+      });
+      if (key && markers[key] && !fromMap) {
+        var m = markers[key];
+        if (cluster.zoomToShowLayer) cluster.zoomToShowLayer(m, function () { m.openPopup(); });
+        else { map.setView(m.getLatLng(), Math.max(map.getZoom(), 12)); m.openPopup(); }
+      }
+    }
+    function renderList(list) {
+      if (countEl) countEl.textContent = list.length ? T("mx.count", { n: list.length }) : "";
+      if (!list.length) { listEl.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🗺️</div><div class="kb-empty__t">' + T("mx.empty") + '</div><div class="kb-empty__d">' + T("mx.emptySub") + '</div></div>'; cardEls = {}; return; }
+      listEl.innerHTML = list.map(mxCard).join("");
+      cardEls = {};
+      list.forEach(function (it) { cardEls[it.key] = listEl.querySelector('[data-mxkey="' + it.key.replace(/"/g, '\\"') + '"]'); });
+    }
+    function renderMarkers(list) {
+      cluster.clearLayers(); markers = {};
+      list.forEach(function (it) {
+        var m = L.marker([it.lat, it.lng], { icon: pinIcon(it, it.key === selectedKey) });
+        m._it = it;
+        m.bindPopup(mxPopup(it), { className: "mx-popup-wrap", maxWidth: 270, minWidth: 220 });
+        m.on("click", function () { select(it.key, true); });
+        markers[it.key] = m; cluster.addLayer(m);
+      });
+    }
+    function refresh() {
+      var list = visible();
+      if (selectedKey && !list.some(function (i) { return i.key === selectedKey; })) selectedKey = null;
+      renderList(list); renderMarkers(list);
+    }
+
+    // liste kartı tıklama → seç (aksiyon butonu/linke dokunma)
+    if (listEl) listEl.addEventListener("click", function (e) {
+      if (e.target.closest("[data-apply],[data-teklif],a,button")) return;
+      var c = e.target.closest("[data-mxkey]");
+      if (c) select(c.getAttribute("data-mxkey"), false);
+    });
+    // katman chip'leri
+    document.querySelectorAll("[data-mxlayer]").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var t = chip.getAttribute("data-mxlayer");
+        activeLayers[t] = !activeLayers[t];
+        chip.classList.toggle("is-on", activeLayers[t]);
+        chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
+        refresh();
+      });
+    });
+    if (searchEl) searchEl.addEventListener("input", refresh);
+    // mobil liste/harita geçişi
+    var toggleBtn = document.getElementById("mxToggle");
+    if (toggleBtn && container) toggleBtn.addEventListener("click", function () {
+      var open = container.classList.toggle("mx--listopen");
+      toggleBtn.textContent = open ? T("mx.map") : T("mx.list");
+    });
+
+    refresh();
+    var pts = items.map(function (i) { return [i.lat, i.lng]; });
+    if (pts.length) map.fitBounds(pts, { padding: [50, 50], maxZoom: 11 });
+    setTimeout(function () { map.invalidateSize(); }, 200);
+  }
+  function mxSkeleton() {
+    var one = '<div class="mx-card mx-card--skel"><span class="skel skel--ava"></span><div style="flex:1"><span class="skel skel--line" style="width:60%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div></div>';
+    var out = ""; for (var i = 0; i < 6; i++) out += one; return out;
+  }
+
+  /* ============ İLAN DETAYI (Job Detail) ============ */
+  function jobDetailSkeleton() {
+    return '<div class="jd"><div class="jd-main">' +
+      '<span class="skel skel--line" style="width:38%"></span>' +
+      '<span class="skel skel--line" style="width:75%;height:30px;margin-top:16px"></span>' +
+      '<span class="skel skel--line" style="width:100%;margin-top:22px"></span>' +
+      '<span class="skel skel--line" style="width:92%;margin-top:10px"></span>' +
+      '<span class="skel skel--line" style="width:80%;margin-top:10px"></span>' +
+      '</div><aside class="jd-side"><div class="skel-card" style="height:120px"></div></aside></div>';
+  }
+  function jobNotFound() {
+    return '<div class="kb-empty"><div class="kb-empty__ic">🔍</div><div class="kb-empty__t">' + T("jd.notFound") + '</div>' +
+      '<div class="kb-empty__d">' + T("jd.notFoundSub") + '</div>' +
+      '<a class="btn btn--primary btn--sm mt-24" href="ilanlar.html">' + T("jd.back") + '</a></div>';
+  }
+  async function renderJobDetail() {
+    var host = document.getElementById("jobDetailRoot");
+    if (!host) return;
+    var id = KB.getParam("id");
+    if (window.KB && KB.ready) await KB.ready();
+    host.innerHTML = jobDetailSkeleton();
+    if (!online() || !id) { host.innerHTML = jobNotFound(); return; }
+    var l = null;
+    try { l = await SB.listingById(id); } catch (e) {}
+    if (!l) { host.innerHTML = jobNotFound(); return; }
+
+    var applied = false, owner = false;
+    if (canPool()) {
+      try { (await SB.appliedListingIds()).forEach(function (x) { if (String(x) === String(id)) applied = true; }); } catch (e) {}
+      var mp = KB.session() && KB.session().profile; owner = !!(mp && mp.id === l.owner_id);
+    }
+    var saved = isSavedJob(l.id);
+    var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
+    var profilePage = l.sahipRol === "firma" ? "profil-firma.html" : "profil-isletme.html";
+    var ver = l.sahipDogrulama === "verified" ? ' <span class="ver-badge" title="' + T("kyc.verified") + '">✓ ' + T("kyc.verifiedShort") + '</span>' : "";
+    var logo = l.sahipAvatar
+      ? '<img class="jd-company__logo" src="' + KB.esc(l.sahipAvatar) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'jd-company__logo jd-company__logo--ph\',textContent:\'' + KB.esc(KB.initials(l.sahip || "?")) + '\'}))">'
+      : '<div class="jd-company__logo jd-company__logo--ph">' + KB.initials(l.sahip || "?") + '</div>';
+    function applyBtn(block) {
+      var cls = "btn btn--primary " + (block ? "btn--lg btn--block" : "btn--sm");
+      if (!canPool()) return '<a class="' + cls + '" href="giris.html">' + T("cta.signin") + '</a>';
+      if (owner) return '<span class="chip">' + T("ilan.own") + '</span>';
+      if (applied) return '<span class="chip chip--ok">✓ ' + T("ilan.applied") + '</span>';
+      return '<button class="' + cls + '" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '" data-company="' + KB.esc(l.sahip || "") + '" data-loc="' + KB.esc(loc) + '">' + T("ilan.apply") + '</button>';
+    }
+    var favBtn = '<button type="button" class="job-fav' + (saved ? " is-on" : "") + '" data-savejob="' + l.id + '" aria-pressed="' + (saved ? "true" : "false") + '" aria-label="' + T(saved ? "ilan.saved" : "ilan.save") + '" title="' + T(saved ? "ilan.saved" : "ilan.save") + '">' + (saved ? "♥" : "♡") + '</button>';
+    var tags = '<span class="chip chip--open">● ' + T("ilan.statusOpen") + '</span>' +
+      (l.arac ? '<span class="chip">🛵 ' + KB.esc(l.arac) + '</span>' : '') +
+      (isFresh(l.tarih) ? '<span class="chip chip--new">' + T("ilan.new") + '</span>' : '');
+
+    host.innerHTML =
+      '<a class="jd-back" href="ilanlar.html">← ' + T("jd.back") + '</a>' +
+      '<div class="jd">' +
+        '<div class="jd-main">' +
+          '<div class="jd-head">' +
+            '<div class="employer-badge"><div class="employer-badge__av">' + KB.initials(l.sahip || "?") + '</div><span class="employer-badge__name">' + KB.esc(l.sahip || T("ilan.unknown")) + '</span></div>' +
+            '<h1 class="jd-title">' + KB.esc(l.baslik) + '</h1>' +
+            '<div class="jd-meta">' + (loc ? '<span>📍 ' + KB.esc(loc) + '</span>' : "") + '<span>🕐 ' + T("jd.postedOn") + ': ' + timeAgo(l.tarih) + '</span></div>' +
+            '<div class="job-card__tags" style="margin-top:14px">' + tags + '</div>' +
+          '</div>' +
+          '<div class="jd-section"><h2>' + T("jd.about") + '</h2><p class="jd-desc">' + (l.aciklama ? KB.esc(l.aciklama) : T("jd.noDesc")) + '</p></div>' +
+          '<div class="jd-section"><h2>' + T("jd.details") + '</h2><dl class="kv">' +
+            '<dt>' + T("apl.position") + '</dt><dd>' + KB.esc(l.baslik) + '</dd>' +
+            (loc ? '<dt>' + T("apl.location") + '</dt><dd>' + KB.esc(loc) + '</dd>' : "") +
+            (l.arac ? '<dt>' + T("kv.vehicle") + '</dt><dd>' + KB.esc(l.arac) + '</dd>' : "") +
+            '<dt>' + T("jd.postedOn") + '</dt><dd>' + KB.esc(l.tarih) + '</dd>' +
+          '</dl></div>' +
+        '</div>' +
+        '<aside class="jd-side">' +
+          '<div class="jd-apply-card"><div class="jd-apply-card__act">' + applyBtn(true) + favBtn + '</div></div>' +
+          '<div class="jd-company">' +
+            '<div class="jd-company__head">' + logo + '<div><div class="jd-company__name">' + KB.esc(l.sahip || T("ilan.unknown")) + ver + '</div><div class="jd-company__role">' + T("role." + (l.sahipRol || "isletme")) + '</div></div></div>' +
+            '<a class="jd-company__link" href="' + profilePage + '?id=' + l.owner_id + '">' + T("jd.viewCompany") + '</a>' +
+          '</div>' +
+        '</aside>' +
+      '</div>' +
+      '<div class="jd-mobilebar">' + applyBtn(true) + favBtn + '</div>';
+    document.title = (l.baslik || "İlan") + " · Kuryemi Bul";
+  }
+
+  /* ============ KAYITLI İLANLAR (favoriler) ============ */
+  function savedEmpty() {
+    return '<div class="kb-empty" style="grid-column:1/-1"><div class="kb-empty__ic">🔖</div><div class="kb-empty__t">' + T("fav.empty") + '</div>' +
+      '<div class="kb-empty__d">' + T("fav.emptySub") + '</div>' +
+      '<a class="btn btn--primary btn--sm mt-24" href="ilanlar.html">' + T("fav.browse") + '</a></div>';
+  }
+  async function renderSavedJobs() {
+    var grid = document.getElementById("savedJobsGrid");
+    if (!grid) return;
+    var countEl = document.getElementById("savedJobsCount");
+    var sortSel = document.getElementById("savedSort");
+    if (window.KB && KB.ready) await KB.ready();
+    var ids = getSavedJobs();
+    if (!ids.length) { grid.innerHTML = savedEmpty(); if (countEl) countEl.textContent = ""; return; }
+    grid.innerHTML = skeletonCards(Math.min(ids.length, 4));
+    var jobs = [];
+    if (online()) {
+      for (var i = 0; i < ids.length; i++) { try { var l = await SB.listingById(ids[i]); if (l && l.durum === "acik") jobs.push(l); } catch (e) {} }
+    }
+    function render() {
+      if (!jobs.length) { grid.innerHTML = savedEmpty(); if (countEl) countEl.textContent = ""; return; }
+      var sort = (sortSel && sortSel.value) || "new";
+      var arr = jobs.slice();
+      arr.sort(function (a, b) {
+        if (sort === "company") return (a.sahip || "").localeCompare(b.sahip || "", "tr");
+        if (sort === "location") return (a.sehir || "").localeCompare(b.sehir || "", "tr");
+        var da = a.tarih || "", db = b.tarih || ""; return da < db ? 1 : da > db ? -1 : 0;
+      });
+      if (countEl) countEl.textContent = T("fav.count", { n: arr.length });
+      grid.innerHTML = arr.map(function (l) { return listingCard(l, {}, null); }).join("");
+    }
+    if (sortSel && !sortSel._wired) { sortSel._wired = 1; sortSel.addEventListener("change", render); }
+    render();
+  }
+
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
-    initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initPanel: initPanel, openOfferModal: openOfferModal,
+    initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initMapExperience: initMapExperience, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings, renderTenders: renderTenders,
+    renderJobDetail: renderJobDetail, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications,
     renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials
   };
 })();

@@ -348,8 +348,23 @@
       id: l.id, owner_id: l.owner_id, role: l.role, baslik: l.baslik, aciklama: l.aciklama,
       sehir: l.sehir, bolge: l.bolge, arac: l.arac, durum: l.durum,
       tarih: (l.created_at || "").slice(0, 10),
-      sahip: (l.owner && l.owner.ad) || ""
+      sahip: (l.owner && l.owner.ad) || "",
+      // Harita için: ilanın konumu = sahibi olan işletmenin koordinatı
+      lat: (l.owner && l.owner.lat != null) ? l.owner.lat : null,
+      lng: (l.owner && l.owner.lng != null) ? l.owner.lng : null,
+      // İlan detayı / firma bölümü için (yalnız listingById join'inde dolu)
+      sahipAvatar: (l.owner && l.owner.avatar_url) || "",
+      sahipDogrulama: (l.owner && l.owner.dogrulama) || "none",
+      sahipRol: (l.owner && l.owner.role) || "isletme"
     };
+  }
+  async function listingById(id) {
+    if (!id) return null;
+    var r = await client.from("listings")
+      .select("*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng)")
+      .eq("id", id).maybeSingle();
+    if (r.error) { console.warn("listingById:", r.error); return null; }
+    return r.data ? listingFromDb(r.data) : null;
   }
   async function createListing(fields) {
     var u = await getUser();
@@ -373,7 +388,7 @@
     return (r.data || []).map(listingFromDb);
   }
   async function openListings() {
-    var r = await client.from("listings").select("*, owner:owner_id(ad)").eq("durum", "acik").order("created_at", { ascending: false });
+    var r = await client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik").order("created_at", { ascending: false });
     if (r.error) { console.warn("openListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
@@ -398,12 +413,15 @@
     var u = await getUser();
     if (!u) return [];
     var r = await client.from("applications")
-      .select("*, listing:listing_id(baslik,sehir,bolge,durum)")
+      .select("*, listing:listing_id(baslik,sehir,bolge,durum, owner:owner_id(ad))")
       .eq("applicant_user", u.id).order("created_at", { ascending: false });
     if (r.error) { console.warn("myApplications:", r.error); return []; }
     return (r.data || []).map(function (a) {
-      return { id: a.id, durum: a.durum, mesaj: a.mesaj, tarih: (a.created_at || "").slice(0, 10),
-        baslik: (a.listing && a.listing.baslik) || "", ilanSehir: (a.listing && a.listing.sehir) || "", ilanDurum: a.listing && a.listing.durum };
+      var L = a.listing;
+      return { id: a.id, listingId: a.listing_id, durum: a.durum, mesaj: a.mesaj, tarih: (a.created_at || "").slice(0, 10),
+        guncelleme: (a.updated_at || a.created_at || "").slice(0, 10),
+        baslik: (L && L.baslik) || "", ilanSehir: [(L && L.sehir), (L && L.bolge)].filter(Boolean).join(" · "), ilanDurum: L && L.durum,
+        firma: (L && L.owner && L.owner.ad) || "" };
     });
   }
   async function appliedListingIds() {
@@ -540,7 +558,7 @@
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
-    createListing: createListing, myListings: myListings, openListings: openListings,
+    createListing: createListing, myListings: myListings, openListings: openListings, listingById: listingById,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
     listingApplications: listingApplications, updateApplication: updateApplication,

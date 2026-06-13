@@ -322,7 +322,7 @@ button { font-family: inherit; cursor: pointer; }
 .matchrow--match { border-color: rgba(34,211,238,0.4); box-shadow: var(--glow-cyan); }
 
 /* ---------- Trust ---------- */
-.trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .trustc { padding: 26px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--stroke); transition: border-color .4s, transform .5s var(--ease); }
 .trustc:hover { transform: translateY(-4px); border-color: var(--stroke-2); }
 .trustc__ic { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-size: 1.2rem; background: var(--grad-soft); border: 1px solid var(--stroke); margin-bottom: 16px; }
@@ -376,7 +376,8 @@ button { font-family: inherit; cursor: pointer; }
   .nav__links.is-open a { padding: 12px 14px; font-size: 1rem; }
   .nav__burger { display: grid; place-items: center; }
   .dash__grid { grid-template-columns: 1fr; }
-  .eco-grid, .tiers, .trust-grid { grid-template-columns: 1fr; }
+  .eco-grid, .tiers { grid-template-columns: 1fr; }
+  .trust-grid { grid-template-columns: repeat(2, 1fr); }
   .tiers { gap: 18px; }
   .feat, .feat--rev .feat__media { grid-template-columns: 1fr; order: 0; }
   .feat__media { order: -1; }
@@ -390,6 +391,7 @@ button { font-family: inherit; cursor: pointer; }
   .nav__signin { display: none; }
   .nav__in { gap: 10px; }
   .statband { grid-template-columns: repeat(2, 1fr); }
+  .trust-grid { grid-template-columns: 1fr; }
   .bento { grid-template-columns: 1fr; }
   .bcard--w2 { grid-column: span 1; }
   .foot__grid { grid-template-columns: 1fr; }
