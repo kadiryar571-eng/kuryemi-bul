@@ -1,0 +1,13 @@
+{
+  "appId": "com.kuryemibul.app",
+  "appName": "Kuryemi Bul",
+  "webDir": "www",
+  "server": {
+    "url": "https://kuryemibul.com",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
