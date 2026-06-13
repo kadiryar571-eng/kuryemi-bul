@@ -29,10 +29,9 @@ jobs:
       - name: Bağımlılıkları yükle
         run: npm install
 
-      - name: Android platformunu ekle
-        run: npx cap add android
-
-      - name: Web varlıklarını senkronla
+      # android/ klasörü repoda (deep-link manifest özelleştirmesi için).
+      # cap sync: web varlıkları + plugin'leri günceller (cap add GEREKMEZ).
+      - name: Web varlıklarını + plugin'leri senkronla
         run: npx cap sync android
 
       - name: gradlew çalıştırılabilir yap

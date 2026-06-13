@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kuryemi Bul</string>
+    <string name="title_activity_main">Kuryemi Bul</string>
+    <string name="package_name">com.kuryemibul.app</string>
+    <string name="custom_url_scheme">com.kuryemibul.app</string>
+</resources>

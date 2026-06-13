@@ -5,8 +5,8 @@
 node_modules/
 dist/
 
-# Capacitor — native platform klasörleri CI'da üretilir (repoda tutulmaz)
-android/
+# Capacitor — android/ kaynağı repoda tutulur (deep-link manifest özelleştirmesi için);
+# build çıktıları android/.gitignore ile elenir. iOS henüz yok.
 ios/
 .gradle/
 

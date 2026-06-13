@@ -44,13 +44,51 @@
       options: { data: { ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
     });
   }
-  // Google ile giriş/kayıt (OAuth). Dönüş giris.html'de oturum tespitiyle yönlendirilir.
+  // Capacitor native ortam mı?
+  function isNative() { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+  var NATIVE_REDIRECT = "com.kuryemibul.app://callback";
+
+  // Google ile giriş/kayıt (OAuth).
+  // Web: aynı sekmede redirect → giris.html oturum tespiti.
+  // Native (Capacitor app): Google WebView'i engellediği için sistem tarayıcısında aç,
+  //   dönüşü deep-link (com.kuryemibul.app://callback) ile yakala (initNativeAuth).
   async function signInWithGoogle() {
+    if (isNative()) {
+      var r = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true }
+      });
+      if (r && r.error) return r;
+      try {
+        var B = window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+        if (r.data && r.data.url && B) await B.open({ url: r.data.url });
+      } catch (e) { return { error: e }; }
+      return r;
+    }
     return client.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: location.origin + "/giris.html" }
     });
   }
+  // Native deep-link dönüşü: Google'dan gelen code'u oturuma çevir + yönlendir
+  function initNativeAuth() {
+    if (!isNative()) return;
+    var App = window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    if (!App || !App.addListener) return;
+    App.addListener("appUrlOpen", async function (ev) {
+      var url = ev && ev.url;
+      if (!url || url.indexOf("com.kuryemibul.app://") !== 0) return;
+      try { var B = window.Capacitor.Plugins.Browser; if (B && B.close) await B.close(); } catch (e) {}
+      try {
+        var code = new URLSearchParams(url.split("?")[1] || "").get("code");
+        if (code) await client.auth.exchangeCodeForSession(code);
+        var prof = null; try { prof = await myProfile(); } catch (e) {}
+        location.href = (!prof || !prof.ad) ? "onboarding.html"
+          : (window.KB && KB.roleToPanel ? KB.roleToPanel(prof.role) : "index.html");
+      } catch (e) { console.warn("native oauth:", e); }
+    });
+  }
+  try { initNativeAuth(); } catch (e) {}
   // E-posta doğrulama (verify-email.html'den çağrılır): token_hash'i doğrula, oturum aç
   async function verifyEmail(tokenHash, type) {
     return client.auth.verifyOtp({ token_hash: tokenHash, type: type || "signup" });
