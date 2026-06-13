@@ -34,9 +34,13 @@
     <main class="section--sm">
         <div class="container">
             <div class="toolbar">
-                <div class="search"><input type="search" id="fSearch" placeholder="Firma veya bölge ara…" aria-label="Ara"></div>
+                <div class="search search--suggest">
+                    <input type="search" id="fSearch" autocomplete="off" placeholder="Firma veya bölge ara…" aria-label="Ara">
+                    <div class="suggest" id="poolSuggest" role="listbox"></div>
+                </div>
                 <select id="fSelect1" aria-label="Şehir"></select>
             </div>
+            <div class="active-chips" id="poolChips"></div>
             <p class="result-count" id="resultCount"></p>
             <div class="talent-grid" id="poolGrid"></div>
         </div>

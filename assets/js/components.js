@@ -27,6 +27,11 @@
 
   function getTheme() { return localStorage.getItem("kb_theme") === "light" ? "light" : "dark"; }
   function setTheme(tk) { tk = (tk === "light" ? "light" : "dark"); localStorage.setItem("kb_theme", tk); document.documentElement.setAttribute("data-theme", tk); }
+  // Erişilebilirlik: yazı boyutu + kontrast (localStorage; i18n.js'te erken uygulanır)
+  function getFontScale() { var v = localStorage.getItem("kb_fontscale"); return (v === "sm" || v === "lg") ? v : "md"; }
+  function setFontScale(v) { v = (v === "sm" || v === "lg") ? v : "md"; localStorage.setItem("kb_fontscale", v); document.documentElement.setAttribute("data-fontscale", v); }
+  function getContrast() { return localStorage.getItem("kb_contrast") === "1"; }
+  function setContrast(on) { localStorage.setItem("kb_contrast", on ? "1" : "0"); document.documentElement.classList.toggle("high-contrast", !!on); }
 
   var NAV = [
     { href: "index.html", key: "nav.home" },
@@ -367,10 +372,12 @@
     // Mesaj rozeti: okunmamış mesaj sayısı (+ anlık güncelleme)
     if (isOnline() && SESSION.user && window.SB && SB.unreadMessageCount) {
       var setMsgBadge = function (n) {
-        var b = document.getElementById("msgBadge");
-        if (!b) return;
-        if (n > 0) { b.textContent = n > 99 ? "99+" : n; b.style.display = ""; }
-        else { b.style.display = "none"; }
+        ["msgBadge", "bnavMsgBadge"].forEach(function (id) {
+          var b = document.getElementById(id);
+          if (!b) return;
+          if (n > 0) { b.textContent = n > 99 ? "99+" : n; b.style.display = ""; }
+          else { b.style.display = "none"; }
+        });
       };
       window.__kbUpdateMsgBadge = function () { SB.unreadMessageCount().then(setMsgBadge).catch(function () {}); };
       window.__kbUpdateMsgBadge();
@@ -385,6 +392,9 @@
         if (ok) { var ai = area.querySelector(".acct__admin"); if (ai) ai.hidden = false; }
       }).catch(function () {});
     }
+    // Alt navigasyonu oturum yüklendikten sonra tazele (Panelim hedefi rol'e göre) + rozet
+    var bn = document.getElementById("kb-bottomnav");
+    if (bn) { bn.remove(); renderBottomNav(); if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge(); }
   }
 
   /* ---------- Paylaşılan canvas ağ arka planı (landing DNA'sı) ---------- */
@@ -443,6 +453,58 @@
     document.body.classList.add("kb-page");
   }
 
+  /* ---------- Erişilebilirlik paneli (yüzen) ---------- */
+  function renderA11y() {
+    if (document.getElementById("a11yFab")) return;
+    var wrap = document.createElement("div");
+    wrap.className = "a11y";
+    wrap.innerHTML =
+      '<button id="a11yFab" class="a11y-fab" type="button" aria-haspopup="true" aria-expanded="false" aria-label="' + T("a11y.title") + '" title="' + T("a11y.title") + '">♿</button>' +
+      '<div class="a11y-panel" id="a11yPanel" role="dialog" aria-label="' + T("a11y.title") + '">' +
+        '<div class="a11y-panel__h">' + T("a11y.title") + '</div>' +
+        '<div class="a11y-row"><span>' + T("a11y.fontSize") + '</span><div class="a11y-seg" id="a11yFont">' +
+          '<button type="button" data-fs="sm" aria-label="A-">A−</button><button type="button" data-fs="md">A</button><button type="button" data-fs="lg" aria-label="A+">A+</button></div></div>' +
+        '<div class="a11y-row"><span>' + T("a11y.contrast") + '</span><div class="a11y-seg" id="a11yContrast">' +
+          '<button type="button" data-ct="0">' + T("a11y.normal") + '</button><button type="button" data-ct="1">' + T("a11y.high") + '</button></div></div>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    var fab = document.getElementById("a11yFab"), panel = document.getElementById("a11yPanel");
+    function sync() {
+      var fs = getFontScale(), ct = getContrast();
+      wrap.querySelectorAll("#a11yFont [data-fs]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-fs") === fs); });
+      wrap.querySelectorAll("#a11yContrast [data-ct]").forEach(function (b) { b.classList.toggle("is-on", (b.getAttribute("data-ct") === "1") === ct); });
+    }
+    fab.addEventListener("click", function (e) { e.stopPropagation(); var open = panel.classList.toggle("is-open"); fab.setAttribute("aria-expanded", open ? "true" : "false"); });
+    document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) { panel.classList.remove("is-open"); fab.setAttribute("aria-expanded", "false"); } });
+    document.getElementById("a11yFont").addEventListener("click", function (e) { var b = e.target.closest("[data-fs]"); if (b) { setFontScale(b.getAttribute("data-fs")); sync(); } });
+    document.getElementById("a11yContrast").addEventListener("click", function (e) { var b = e.target.closest("[data-ct]"); if (b) { setContrast(b.getAttribute("data-ct") === "1"); sync(); } });
+    sync();
+  }
+
+  /* ---------- Mobil alt navigasyon ---------- */
+  function renderBottomNav() {
+    if (document.getElementById("kb-bottomnav")) return;
+    var active = (location.pathname.split("/").pop() || "index.html");
+    var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
+    var lastHref = authed ? (isOnline() ? roleToPanel(SESSION.profile && SESSION.profile.role) : panelHref()) : "giris.html";
+    var items = [
+      { href: "index.html", ic: "🏠", key: "nav.home" },
+      { href: "ilanlar.html", ic: "💼", key: "nav.ilanlar" },
+      { href: "harita.html", ic: "🗺️", key: "nav.map" },
+      { href: "mesajlar.html", ic: "💬", key: "nav.messages", badge: "bnavMsgBadge" },
+      { href: lastHref, ic: "👤", key: authed ? "cta.panel" : "cta.signin" }
+    ];
+    var nav = document.createElement("nav");
+    nav.id = "kb-bottomnav"; nav.className = "bottom-nav"; nav.setAttribute("aria-label", "Alt menü");
+    nav.innerHTML = items.map(function (it) {
+      var on = it.href === active ? " is-active" : "";
+      var badge = it.badge ? '<span class="bottom-nav__badge" id="' + it.badge + '" style="display:none">0</span>' : "";
+      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '"><span class="bottom-nav__ic">' + it.ic + badge + '</span><span class="bottom-nav__l">' + T(it.key) + '</span></a>';
+    }).join("");
+    document.body.appendChild(nav);
+    document.body.classList.add("has-bottom-nav");
+  }
+
   function init() {
     var active = (location.pathname.split("/").pop() || "index.html");
     renderAmbient();
@@ -451,6 +513,8 @@
     renderFooter();
     renderWhatsApp();
     renderToTop();
+    renderA11y();
+    renderBottomNav();
     renderCookieConsent();
     updateAuthArea();
     // Logo görseli yoksa (assets/logo.png eklenmediyse) 🛵 emojiye düş

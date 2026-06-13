@@ -217,7 +217,7 @@
       "mx.type.ilan": "İlan", "mx.type.kurye": "Kurye", "mx.type.isletme": "İşletme", "mx.type.firma": "Firma",
       "mx.layer.ilan": "İlanlar", "mx.layer.kurye": "Kuryeler", "mx.layer.isletme": "İşletmeler", "mx.layer.firma": "Firmalar",
       "search.recent": "Son aramalar", "search.companies": "İşverenler", "search.positions": "Pozisyonlar",
-      "search.cities": "Şehirler", "search.districts": "Bölgeler", "search.clearRecent": "Temizle",
+      "search.cities": "Şehirler", "search.districts": "Bölgeler", "search.clearRecent": "Temizle", "search.names": "İsimler",
       "filter.active": "Aktif filtreler", "filter.clearAll": "Tümünü temizle",
       "jd.back": "İlanlara dön", "jd.notFound": "İlan bulunamadı", "jd.notFoundSub": "Bu ilan kaldırılmış ya da kapatılmış olabilir.",
       "jd.company": "İşveren", "jd.about": "İlan Açıklaması", "jd.details": "İlan Detayları", "jd.viewCompany": "İşveren profilini gör →",
@@ -244,6 +244,8 @@
       "msg.pickConv": "Bir konuşma seç", "msg.pickConvSub": "Soldan bir kişi seçerek yazışmaya başla.",
       "msg.btn": "Mesaj Gönder", "msg.notMatched": "Bu kişiyle henüz eşleşmediniz.",
       "msg.cantMessage": "Yalnız eşleştiğin (kabul edilmiş teklif/başvuru) kişilerle yazışabilirsin.",
+      "a11y.title": "Erişilebilirlik", "a11y.fontSize": "Yazı Boyutu", "a11y.contrast": "Kontrast",
+      "a11y.normal": "Normal", "a11y.high": "Yüksek",
 
       "modal.title": "Teklif Gönder", "modal.msgLabel": "Mesajın", "modal.msgPh": "Teklifini kısaca yaz...",
       "modal.send": "Teklifi Gönder", "modal.success": "🎉 Teklif gönderildi! Panelinden takip edebilirsin.",
@@ -577,7 +579,7 @@
       "mx.type.ilan": "Job", "mx.type.kurye": "Courier", "mx.type.isletme": "Business", "mx.type.firma": "Firm",
       "mx.layer.ilan": "Jobs", "mx.layer.kurye": "Couriers", "mx.layer.isletme": "Businesses", "mx.layer.firma": "Firms",
       "search.recent": "Recent searches", "search.companies": "Employers", "search.positions": "Positions",
-      "search.cities": "Cities", "search.districts": "Districts", "search.clearRecent": "Clear",
+      "search.cities": "Cities", "search.districts": "Districts", "search.clearRecent": "Clear", "search.names": "Names",
       "filter.active": "Active filters", "filter.clearAll": "Clear all",
       "jd.back": "Back to listings", "jd.notFound": "Listing not found", "jd.notFoundSub": "This listing may have been removed or closed.",
       "jd.company": "Employer", "jd.about": "Job Description", "jd.details": "Job Details", "jd.viewCompany": "View employer profile →",
@@ -604,6 +606,8 @@
       "msg.pickConv": "Pick a conversation", "msg.pickConvSub": "Select someone on the left to start chatting.",
       "msg.btn": "Send Message", "msg.notMatched": "You haven't matched with this person yet.",
       "msg.cantMessage": "You can only chat with people you've matched with (accepted offer/application).",
+      "a11y.title": "Accessibility", "a11y.fontSize": "Font Size", "a11y.contrast": "Contrast",
+      "a11y.normal": "Normal", "a11y.high": "High",
 
       "modal.title": "Send Offer", "modal.msgLabel": "Your message", "modal.msgPh": "Write your offer briefly...",
       "modal.send": "Send Offer", "modal.success": "🎉 Offer sent! You can track it from your panel.",
@@ -737,6 +741,12 @@
 
   // Arka plan renk temasını olabildiğince erken uygula (parlama olmasın)
   document.documentElement.setAttribute("data-theme", localStorage.getItem("kb_theme") === "light" ? "light" : "dark");
+  // Erişilebilirlik tercihleri (yazı boyutu + kontrast) — parlama olmasın diye erken uygula
+  (function () {
+    var fs = localStorage.getItem("kb_fontscale");
+    document.documentElement.setAttribute("data-fontscale", (fs === "sm" || fs === "lg") ? fs : "md");
+    if (localStorage.getItem("kb_contrast") === "1") document.documentElement.classList.add("high-contrast");
+  })();
 
   function t(key, vars) {
     var s = (DICT[lang] && DICT[lang][key]);

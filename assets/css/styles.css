@@ -773,7 +773,7 @@ body > .demo-banner ~ * .header { top: 0; }
 
 /* ===================== YUKARI ÇIK BUTONU ===================== */
 .to-top {
-    position: fixed; left: 22px; bottom: 22px; z-index: 89;
+    position: fixed; left: 22px; bottom: 80px; z-index: 89;
     width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer;
     background: var(--surface-2); color: var(--navy); font-size: 1.2rem; line-height: 1;
     box-shadow: var(--shadow); opacity: 0; transform: translateY(12px); pointer-events: none;
@@ -814,6 +814,59 @@ body > .demo-banner ~ * .header { top: 0; }
 @media (prefers-reduced-motion: reduce) {
     .hero::before, .hero::after, .hero__deco span, .wa-float::after { animation: none !important; }
     .hero__deco { display: none; }
+}
+
+/* ===================== ERİŞİLEBİLİRLİK PANELİ ===================== */
+.a11y { position: fixed; left: 22px; bottom: 22px; z-index: 91; }
+.a11y-fab { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer;
+    background: var(--surface-2); color: var(--navy); font-size: 1.25rem; line-height: 1; display: grid; place-items: center;
+    box-shadow: 0 8px 22px -8px rgba(0,0,0,.5); transition: transform .2s, background .2s, color .2s; }
+.a11y-fab:hover { transform: translateY(-2px); background: var(--accent); color: var(--on-accent); }
+.a11y-panel { position: absolute; left: 0; bottom: 58px; width: 250px; background: var(--white); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px; box-shadow: 0 22px 55px -18px rgba(0,0,0,.6); display: none; }
+.a11y-panel.is-open { display: block; }
+.a11y-panel__h { font-weight: 700; font-size: .95rem; margin-bottom: 12px; }
+.a11y-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.a11y-row:last-child { margin-bottom: 0; }
+.a11y-row > span { font-size: .85rem; color: var(--muted, #6b7689); }
+.a11y-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.a11y-seg button { border: none; background: none; font-family: inherit; font-weight: 700; font-size: .82rem; padding: 7px 13px; cursor: pointer; color: var(--navy-soft); transition: background .2s, color .2s; }
+.a11y-seg button + button { border-left: 1px solid var(--line); }
+.a11y-seg button.is-on { background: var(--accent-grad); color: var(--on-accent); }
+
+/* Yazı boyutu ölçeği (root font-size; rem/clamp tabanlı bileşenler ölçeklenir) */
+html[data-fontscale="sm"] { font-size: 14px; }
+html[data-fontscale="lg"] { font-size: 18px; }
+
+/* Yüksek kontrast */
+html.high-contrast { --muted: #c9d3e6; --navy-soft: #e9eefa; --line: rgba(255,255,255,.34); }
+html.high-contrast[data-theme="light"] { --muted: #1b2230; --navy-soft: #0d1320; --line: rgba(0,0,0,.44); }
+html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outline-offset: 2px; }
+
+/* ===================== MOBİL ALT NAVİGASYON ===================== */
+.bottom-nav { display: none; }
+@media (max-width: 680px) {
+    .bottom-nav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+        background: var(--white); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        box-shadow: 0 -10px 30px -16px rgba(0,0,0,.5); }
+    .bottom-nav__item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+        padding: 6px 0; min-height: 48px; color: var(--navy-soft); font-size: .64rem; font-weight: 600; text-decoration: none; }
+    .bottom-nav__item.is-active { color: var(--accent); }
+    .bottom-nav__ic { font-size: 1.2rem; line-height: 1; position: relative; }
+    .bottom-nav__badge { position: absolute; top: -5px; right: -9px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px;
+        background: #ef4444; color: #fff; font-size: .6rem; font-weight: 700; display: grid; place-items: center; }
+    body.has-bottom-nav { padding-bottom: 66px; }
+    body.has-bottom-nav .wa-float { bottom: 80px; }
+    body.has-bottom-nav .a11y { bottom: 80px; }
+    body.has-bottom-nav .to-top { bottom: 138px; }
+    body.has-bottom-nav .cookie-bar { bottom: 78px; }
+    body.has-bottom-nav .kb-toasts { bottom: 78px; }
+}
+/* Panel sekmeleri mobilde yatay kaydırma (taşma yerine) */
+@media (max-width: 560px) {
+    .dash__nav { flex-wrap: nowrap; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+    .dash__nav::-webkit-scrollbar { display: none; }
+    .dash__nav button { flex: 0 0 auto; min-width: auto; }
 }
 
 /* ===================== 404 ===================== */

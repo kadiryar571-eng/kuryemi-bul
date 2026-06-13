@@ -811,54 +811,94 @@
     '</article>';
   }
 
+  // Havuz modül durumu — handler güncel veriyi okur (GROUP 3 deseni)
+  var POOLV = { src: [], type: "kurye", cardFn: null };
+  function renderPoolChips() {
+    var host = document.getElementById("poolChips"); if (!host) return;
+    var search = document.getElementById("fSearch"), sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
+    var chips = [];
+    if (search && search.value.trim()) chips.push({ k: "q", label: '"' + search.value.trim() + '"' });
+    if (sel1 && sel1.value) chips.push({ k: "s1", label: "📍 " + sel1.value });
+    if (sel2 && sel2.value) { var txt = sel2.options[sel2.selectedIndex] ? sel2.options[sel2.selectedIndex].text : sel2.value; chips.push({ k: "s2", label: txt }); }
+    if (!chips.length) { host.innerHTML = ""; host.classList.remove("is-open"); return; }
+    host.classList.add("is-open");
+    host.innerHTML = '<span class="active-chips__label">' + T("filter.active") + ':</span>' +
+      chips.map(function (c) { return '<button type="button" class="active-chip" data-rmpool="' + c.k + '">' + KB.esc(c.label) + ' <span aria-hidden="true">✕</span></button>'; }).join("") +
+      '<button type="button" class="active-chips__clear" data-rmpool="all">' + T("filter.clearAll") + '</button>';
+  }
+  function poolApply() {
+    var grid = document.getElementById("poolGrid"); if (!grid) return;
+    renderPoolChips();
+    var countEl = document.getElementById("resultCount");
+    var search = document.getElementById("fSearch"), sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
+    var type = POOLV.type;
+    var q = norm(search && search.value || ""), v1 = sel1 && sel1.value, v2 = sel2 && sel2.value;
+    var out = POOLV.src.filter(function (x) {
+      if (q) {
+        var hay = norm(x.ad + " " + (x.sehir || "") + " " + (x.bolgeler ? x.bolgeler.join(" ") : "") + " " + (x.bolge || "") + " " + (x.tur || "") + " " + (x.aciklama || ""));
+        if (hay.indexOf(q) === -1) return false;
+      }
+      if (v1) { if (type === "firma") { if (x.bolgeler.indexOf(v1) === -1) return false; } else if (x.sehir !== v1) return false; }
+      if (v2) { if (type === "kurye" && x.seviye !== v2) return false; if (type === "isletme" && x.tur !== v2) return false; }
+      return true;
+    });
+    grid.innerHTML = out.length ? out.map(POOLV.cardFn).join("") :
+      '<div class="empty" style="grid-column:1/-1">' + T("common.noResult") + '</div>';
+    if (countEl) countEl.textContent = T("common.results", { n: out.length });
+  }
+  document.addEventListener("click", function (e) {
+    var rm = e.target.closest("[data-rmpool]"); if (!rm) return;
+    var k = rm.getAttribute("data-rmpool");
+    var search = document.getElementById("fSearch"), sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
+    if (k === "q" && search) search.value = ""; else if (k === "s1" && sel1) sel1.value = ""; else if (k === "s2" && sel2) sel2.value = "";
+    else if (k === "all") { if (search) search.value = ""; if (sel1) sel1.value = ""; if (sel2) sel2.value = ""; }
+    poolApply();
+  });
+  function poolSuggestHtml(q) {
+    q = norm(q); var src = POOLV.src, type = POOLV.type, groups = [];
+    function uniqMatch(getter, limit) {
+      var seen = {}, out = [];
+      src.forEach(function (x) { [].concat(getter(x) || []).forEach(function (v) { if (!v) return; var k = norm(v); if (seen[k] || (q && k.indexOf(q) === -1)) return; seen[k] = 1; out.push(v); }); });
+      return out.slice(0, limit);
+    }
+    var add = function (label, icon, vals) { if (vals.length) groups.push({ label: label, icon: icon, items: vals }); };
+    add(T("search.names"), "👤", uniqMatch(function (x) { return x.ad; }, 4));
+    add(T("search.cities"), "📍", uniqMatch(function (x) { return x.sehir; }, 3));
+    add(T("search.districts"), "🗺️", uniqMatch(function (x) { return x.bolgeler || x.bolge; }, 3));
+    if (type === "isletme") add(T("pe.type"), "🏷️", uniqMatch(function (x) { return x.tur; }, 3));
+    if (!groups.length) return "";
+    return groups.map(function (g) {
+      return '<div class="suggest__group"><div class="suggest__label">' + KB.esc(g.label) + '</div>' +
+        g.items.map(function (v) { return '<button type="button" class="suggest__item" data-poolsugg="' + KB.esc(v) + '"><span class="suggest__ic">' + g.icon + '</span><span>' + KB.esc(v) + '</span></button>'; }).join("") + '</div>';
+    }).join("");
+  }
   async function renderPool(type) {
     var grid = document.getElementById("poolGrid");
-    var countEl = document.getElementById("resultCount");
-    var search = document.getElementById("fSearch");
-    var sel1 = document.getElementById("fSelect1");
-    var sel2 = document.getElementById("fSelect2");
     if (!grid) return;
     grid.innerHTML = skeletonCards(6);
-
     var src = await loadPool(type);
     await loadPoolSet();
-    var cardFn = type === "kurye" ? kuryeCard : type === "isletme" ? isletmeCard : firmaCard;
-
-    function uniq(getter) {
-      var s = {}; src.forEach(function (x) { [].concat(getter(x)).forEach(function (v) { if (v) s[v] = 1; }); });
-      return Object.keys(s).sort();
-    }
-    if (sel1) {
-      if (type === "firma") fillSelect(sel1, uniq(function (x) { return x.bolgeler; }));
-      else fillSelect(sel1, uniq(function (x) { return x.sehir; }));
-    }
-    if (type === "kurye" && sel2) fillSelect(sel2, ["standart", "profesyonel", "premium"],
-      { standart: T("level.standart"), profesyonel: T("level.profesyonel"), premium: T("level.premium") });
+    POOLV.src = src; POOLV.type = type;
+    POOLV.cardFn = type === "kurye" ? kuryeCard : type === "isletme" ? isletmeCard : firmaCard;
+    var sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
+    function uniq(getter) { var s = {}; src.forEach(function (x) { [].concat(getter(x)).forEach(function (v) { if (v) s[v] = 1; }); }); return Object.keys(s).sort(); }
+    if (sel1) { if (type === "firma") fillSelect(sel1, uniq(function (x) { return x.bolgeler; })); else fillSelect(sel1, uniq(function (x) { return x.sehir; })); }
+    if (type === "kurye" && sel2) fillSelect(sel2, ["standart", "profesyonel", "premium"], { standart: T("level.standart"), profesyonel: T("level.profesyonel"), premium: T("level.premium") });
     if (type === "isletme" && sel2) fillSelect(sel2, uniq(function (x) { return x.tur; }));
-
-    function apply() {
-      var q = (search && search.value || "").toLowerCase().trim();
-      var v1 = sel1 && sel1.value;
-      var v2 = sel2 && sel2.value;
-      var out = src.filter(function (x) {
-        var hay = (x.ad + " " + (x.sehir || "") + " " + (x.bolgeler ? x.bolgeler.join(" ") : "") + " " + (x.bolge || "") + " " + (x.tur || "") + " " + (x.aciklama || "")).toLowerCase();
-        if (q && hay.indexOf(q) === -1) return false;
-        if (v1) {
-          if (type === "firma") { if (x.bolgeler.indexOf(v1) === -1) return false; }
-          else if (x.sehir !== v1) return false;
-        }
-        if (v2) {
-          if (type === "kurye" && x.seviye !== v2) return false;
-          if (type === "isletme" && x.tur !== v2) return false;
-        }
-        return true;
-      });
-      grid.innerHTML = out.length ? out.map(cardFn).join("") :
-        '<div class="empty" style="grid-column:1/-1">' + T("common.noResult") + '</div>';
-      if (countEl) countEl.textContent = T("common.results", { n: out.length });
+    ["fSearch", "fSelect1", "fSelect2"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && !el._poolWired) { el._poolWired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", poolApply); }
+    });
+    var search = document.getElementById("fSearch"), sugg = document.getElementById("poolSuggest");
+    if (search && sugg && !search._poolSugg) {
+      search._poolSugg = 1;
+      function openS() { var h = poolSuggestHtml(search.value); sugg.innerHTML = h; sugg.classList.toggle("is-open", !!h); }
+      search.addEventListener("focus", openS);
+      search.addEventListener("input", openS);
+      sugg.addEventListener("mousedown", function (e) { var it = e.target.closest("[data-poolsugg]"); if (it) { e.preventDefault(); search.value = it.getAttribute("data-poolsugg"); poolApply(); sugg.classList.remove("is-open"); } });
+      document.addEventListener("click", function (e) { if (!sugg.contains(e.target) && e.target !== search) sugg.classList.remove("is-open"); });
     }
-    [search, sel1, sel2].forEach(function (el) { if (el) el.addEventListener("input", apply); });
-    apply();
+    poolApply();
   }
   function fillSelect(sel, values, labels) {
     sel.innerHTML = '<option value="">' + T("common.all") + '</option>' + values.map(function (v) {
@@ -991,28 +1031,19 @@
     }
 
     var msgBtn = '<a class="btn btn--light btn--block mt-24" id="profMsgBtn" href="mesajlar.html?to=' + x.id + '" hidden>💬 ' + T("msg.btn") + '</a>';
-    var sideWrapper = type === "kurye"
-      ? '<aside class="profile-identity">' +
-          '<div class="profile-identity__cover"></div>' +
-          '<div class="profile-identity__body">' +
-            '<div class="avatar' + avatarCls + '">' + avInner(x) + '</div>' +
-            '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
-            '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
-            sideExtra +
-            '<button class="btn btn--primary btn--block" style="margin-top:16px" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
-            msgBtn +
-            poolBtnFull(x.id) +
-          '</div>' +
-        '</aside>'
-      : '<aside class="profile__card">' +
+    // Tüm roller için premium kimlik kartı (cover + avatar)
+    var sideWrapper = '<aside class="profile-identity">' +
+        '<div class="profile-identity__cover"></div>' +
+        '<div class="profile-identity__body">' +
           '<div class="avatar' + avatarCls + '">' + avInner(x) + '</div>' +
           '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
           '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
           sideExtra +
-          '<button class="btn btn--primary btn--block" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+          '<button class="btn btn--primary btn--block" style="margin-top:16px" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
           msgBtn +
           poolBtnFull(x.id) +
-        '</aside>';
+        '</div>' +
+      '</aside>';
     host.innerHTML =
       '<div class="profile">' +
         sideWrapper +
