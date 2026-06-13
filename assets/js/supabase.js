@@ -115,8 +115,16 @@
 
   async function getUser() {
     if (!client) return null;
-    var r = await client.auth.getUser();
-    return (r && r.data && r.data.user) || null;
+    // Oturumu LOCAL'den oku (ağ yok) — sayfa geçişlerinde hızlı + stabil.
+    // Token süresi dolduysa autoRefreshToken arka planda yeniler; refresh başarısızsa null.
+    try {
+      var s = await client.auth.getSession();
+      return (s && s.data && s.data.session && s.data.session.user) || null;
+    } catch (e) {
+      // Yalnız getSession beklenmedik hata verirse sunucuya sor
+      try { var r = await client.auth.getUser(); return (r && r.data && r.data.user) || null; }
+      catch (e2) { return null; }
+    }
   }
   function onAuthChange(cb) {
     if (client) client.auth.onAuthStateChange(function (_e, session) { cb(session && session.user); });
