@@ -84,6 +84,17 @@
       .mx-popup__chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 0; }
       .mx-popup__act { margin-top: 12px; }
 
+      /* Konumum butonu */
+      .mx-locate-btn { width: 36px; height: 36px; background: #11151f; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.4); padding: 0; }
+      .mx-locate-btn:hover { background: rgba(34,211,238,0.1); color: #22d3ee; border-color: rgba(34,211,238,0.3); }
+      .mx-locate-btn.is-active { color: #22d3ee; border-color: rgba(34,211,238,0.5); background: rgba(34,211,238,0.07); }
+      .mx-locate-btn.is-loading svg { animation: loc-spin 1s linear infinite; }
+      @keyframes loc-spin { to { transform: rotate(360deg); } }
+      /* Kullanıcı konumu mavi nokta */
+      .mx-user-dot { width: 16px; height: 16px; background: #3b82f6; border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 0 0 3px rgba(59,130,246,0.3); position: relative; }
+      .mx-user-pulse { position: absolute; inset: -8px; border-radius: 50%; background: rgba(59,130,246,0.18); animation: user-pulse 2s ease-out infinite; }
+      @keyframes user-pulse { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(2.2); opacity: 0; } }
+
       /* mobil liste/harita geçişi (bottom sheet) */
       .mx-toggle { display: none; }
       @media (max-width: 860px) {

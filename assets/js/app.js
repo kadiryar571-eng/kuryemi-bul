@@ -1425,6 +1425,46 @@
     var cluster = L.markerClusterGroup ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 }) : L.layerGroup();
     map.addLayer(cluster);
 
+    // Konumum butonu
+    var locMarker = null;
+    var LocateControl = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd: function () {
+        var btn = L.DomUtil.create('button', 'mx-locate-btn');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
+        btn.title = 'Konumumu göster';
+        btn.setAttribute('aria-label', 'Konumumu göster');
+        L.DomEvent.on(btn, 'click', function (e) { L.DomEvent.stopPropagation(e); locateUser(btn); });
+        return btn;
+      }
+    });
+    new LocateControl().addTo(map);
+
+    function locateUser(btn) {
+      if (!navigator.geolocation) { if (window.KB) KB.toast('Tarayıcınız konum özelliğini desteklemiyor.', 'error'); return; }
+      btn.classList.add('is-loading');
+      btn.classList.remove('is-active');
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          btn.classList.remove('is-loading');
+          btn.classList.add('is-active');
+          var lat = pos.coords.latitude, lng = pos.coords.longitude;
+          if (locMarker) map.removeLayer(locMarker);
+          locMarker = L.marker([lat, lng], {
+            icon: L.divIcon({ className: '', html: '<div class="mx-user-dot"><div class="mx-user-pulse"></div></div>', iconSize: [20, 20], iconAnchor: [10, 10] }),
+            zIndexOffset: 1000
+          }).addTo(map);
+          map.flyTo([lat, lng], 14, { animate: true, duration: 1.4 });
+        },
+        function (err) {
+          btn.classList.remove('is-loading');
+          var msg = err.code === 1 ? 'Konum izni reddedildi.' : 'Konum alınamadı, tekrar deneyin.';
+          if (window.KB) KB.toast(msg, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
+    }
+
     if (window.KB && KB.ready) await KB.ready();
     var listings = [];
     try { if (online()) listings = await SB.openListings(); } catch (e) {}
