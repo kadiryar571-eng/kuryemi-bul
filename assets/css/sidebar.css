@@ -87,7 +87,7 @@
 .sidebar.is-collapsed .sidebar__brand-name { opacity: 0; max-width: 0; }
 .sidebar.is-collapsed .sidebar__item { justify-content: center; padding: 9px; }
 .sidebar.is-collapsed .sidebar__item::before { display: none; }
-.sidebar.is-collapsed .sidebar__support { display: none; }
+
 .sidebar.is-collapsed .sidebar__collapse-label { opacity: 0; max-width: 0; overflow: hidden; }
 .sidebar.is-collapsed .sidebar__item.is-active { padding: 9px; }
 
@@ -97,29 +97,6 @@
   border-top: 1px solid rgba(255,255,255,0.055);
   flex-shrink: 0;
 }
-.sidebar__support {
-  background: linear-gradient(135deg, rgba(79,139,255,0.07), rgba(168,85,247,0.07));
-  border: 1px solid rgba(168,85,247,0.16);
-  border-radius: 14px; padding: 13px; margin-bottom: 8px;
-}
-.sidebar__support-hd { display: flex; gap: 10px; align-items: flex-start; }
-.sidebar__support-ic {
-  width: 34px; height: 34px; flex-shrink: 0;
-  background: linear-gradient(135deg, rgba(79,139,255,0.18), rgba(168,85,247,0.18));
-  border-radius: 9px; display: flex; align-items: center; justify-content: center;
-  font-size: 1.05rem;
-}
-.sidebar__support-title { font-weight: 700; font-size: 0.78rem; color: #e2e8f0; margin-bottom: 3px; }
-.sidebar__support-desc { font-size: 0.71rem; color: rgba(148,163,184,0.6); margin: 0 0 10px; line-height: 1.45; }
-.sidebar__support-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: linear-gradient(135deg, #4f8bff, #a855f7);
-  color: #fff; font-weight: 700; font-size: 0.74rem;
-  padding: 7px 13px; border-radius: 999px;
-  border: none; cursor: pointer; text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s; font-family: inherit;
-}
-.sidebar__support-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(168,85,247,0.36); }
 
 .sidebar__collapse-btn {
   display: flex; align-items: center; gap: 8px;
@@ -262,7 +239,7 @@ body.has-sidebar .header__util, body.has-sidebar .nav { display: none !important
   .sidebar.is-collapsed .sidebar__label { opacity: 1; max-width: 160px; }
   .sidebar.is-collapsed .sidebar__brand-name { opacity: 1; max-width: 160px; }
   .sidebar.is-collapsed .sidebar__item { justify-content: flex-start; padding: 9px 12px; }
-  .sidebar.is-collapsed .sidebar__support { display: block; }
+
   .sidebar.is-collapsed .sidebar__collapse-label { opacity: 1; max-width: 160px; }
 }
 @media (max-width: 640px) {

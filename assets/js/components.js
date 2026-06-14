@@ -231,14 +231,6 @@
           buildSidebarItems(activePage) +
         '</nav>' +
         '<div class="sidebar__footer">' +
-          '<div class="sidebar__support">' +
-            '<div class="sidebar__support-hd">' +
-              '<div class="sidebar__support-ic">🤝</div>' +
-              '<div><div class="sidebar__support-title">Yardım & Destek</div></div>' +
-            '</div>' +
-            '<p class="sidebar__support-desc">Sorularınız için 7/24 hizmetinizdeyiz</p>' +
-            '<a href="' + waLink() + '" target="_blank" rel="noopener" class="sidebar__support-btn">💬 WhatsApp</a>' +
-          '</div>' +
           '<button type="button" class="sidebar__collapse-btn" id="sidebarCollapseBtn" title="Daralt/Genişlet">' +
             '<span class="sidebar__collapse-ic">' + SIC.chevLeft + '</span>' +
             '<span class="sidebar__collapse-label">Küçült</span>' +
