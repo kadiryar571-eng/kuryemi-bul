@@ -760,6 +760,7 @@ body > .demo-banner ~ * .header { top: 0; }
 .acct__cmd:hover { border-color: rgba(34,211,238,0.4); color: var(--accent) !important; }
 .acct--open .acct__menu { display: flex; }
 .acct__menu a, .acct__menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; border: none; border-radius: 8px; background: transparent; color: var(--navy); font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: background var(--transition), color var(--transition); }
+.acct__menu a[hidden], .acct__menu button[hidden] { display: none; }
 .acct__menu a:hover, .acct__menu button:hover { background: var(--surface-2); color: var(--accent); }
 .acct__signout { margin-top: 4px; border-top: 1px solid var(--line) !important; border-radius: 0 0 8px 8px; color: var(--navy-soft); }
 
