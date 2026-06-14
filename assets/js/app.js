@@ -1092,7 +1092,35 @@
         { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] }
       ]
     });
-    
+
+    // Konumum butonu
+    var panelLocMarker = null;
+    var panelLocBtn = document.createElement('button');
+    panelLocBtn.className = 'gm-locate-btn';
+    panelLocBtn.title = 'Konumumu göster';
+    panelLocBtn.setAttribute('aria-label', 'Konumumu göster');
+    panelLocBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
+    panelLocBtn.style.margin = '0 10px 10px 0';
+    panelLocBtn.addEventListener('click', function () {
+      if (!navigator.geolocation) { if (window.KB) KB.toast('Konum desteklenmiyor.', 'error'); return; }
+      panelLocBtn.classList.add('is-loading'); panelLocBtn.classList.remove('is-active');
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        panelLocBtn.classList.remove('is-loading'); panelLocBtn.classList.add('is-active');
+        var ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (panelLocMarker) panelLocMarker.setMap(null);
+        panelLocMarker = new google.maps.Marker({
+          position: ll, map: map, title: 'Konumunuz',
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+          zIndex: 1000
+        });
+        map.panTo(ll); map.setZoom(13);
+      }, function (err) {
+        panelLocBtn.classList.remove('is-loading');
+        if (window.KB) KB.toast(err.code === 1 ? 'Konum izni reddedildi.' : 'Konum alınamadı.', 'error');
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+    });
+    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(panelLocBtn);
+
     var markerConfig = {
       kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
       isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
@@ -1409,7 +1437,7 @@
   /* ============ HARİTA DENEYİMİ (senkron liste + harita) ============ */
   async function initMapExperience() {
     var mapEl = document.getElementById("map");
-    if (!mapEl || typeof L === "undefined") return;
+    if (!mapEl || typeof google === "undefined" || !google.maps) return;
     var listEl = document.getElementById("mxList");
     var countEl = document.getElementById("mxCount");
     var searchEl = document.getElementById("mxSearch");
@@ -1419,47 +1447,41 @@
 
     if (listEl) listEl.innerHTML = mxSkeleton();
 
-    var map = L.map(mapEl, { zoomControl: true, scrollWheelZoom: true }).setView([39.5, 33.5], 6);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      { maxZoom: 19, subdomains: "abcd", attribution: "© OpenStreetMap © CARTO" }).addTo(map);
-    var cluster = L.markerClusterGroup ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 50 }) : L.layerGroup();
-    map.addLayer(cluster);
+    var map = new google.maps.Map(mapEl, {
+      zoom: 6, center: { lat: 39.5, lng: 33.5 },
+      mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
+      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER }
+    });
 
     // Konumum butonu
     var locMarker = null;
-    var LocateControl = L.Control.extend({
-      options: { position: 'bottomright' },
-      onAdd: function () {
-        var btn = L.DomUtil.create('button', 'mx-locate-btn');
-        btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
-        btn.title = 'Konumumu göster';
-        btn.setAttribute('aria-label', 'Konumumu göster');
-        L.DomEvent.on(btn, 'click', function (e) { L.DomEvent.stopPropagation(e); locateUser(btn); });
-        return btn;
-      }
-    });
-    new LocateControl().addTo(map);
+    var locBtn = document.createElement('button');
+    locBtn.className = 'mx-locate-btn';
+    locBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
+    locBtn.title = 'Konumumu göster';
+    locBtn.setAttribute('aria-label', 'Konumumu göster');
+    locBtn.style.margin = '0 10px 10px 0';
+    locBtn.addEventListener('click', function (e) { e.stopPropagation(); locateUser(locBtn); });
+    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locBtn);
 
     function locateUser(btn) {
       if (!navigator.geolocation) { if (window.KB) KB.toast('Tarayıcınız konum özelliğini desteklemiyor.', 'error'); return; }
-      btn.classList.add('is-loading');
-      btn.classList.remove('is-active');
+      btn.classList.add('is-loading'); btn.classList.remove('is-active');
       navigator.geolocation.getCurrentPosition(
         function (pos) {
-          btn.classList.remove('is-loading');
-          btn.classList.add('is-active');
+          btn.classList.remove('is-loading'); btn.classList.add('is-active');
           var lat = pos.coords.latitude, lng = pos.coords.longitude;
-          if (locMarker) map.removeLayer(locMarker);
-          locMarker = L.marker([lat, lng], {
-            icon: L.divIcon({ className: '', html: '<div class="mx-user-dot"><div class="mx-user-pulse"></div></div>', iconSize: [20, 20], iconAnchor: [10, 10] }),
-            zIndexOffset: 1000
-          }).addTo(map);
-          map.flyTo([lat, lng], 14, { animate: true, duration: 1.4 });
+          if (locMarker) locMarker.setMap(null);
+          locMarker = new google.maps.Marker({
+            position: { lat: lat, lng: lng }, map: map,
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+            zIndex: 1000, title: 'Konumunuz'
+          });
+          map.panTo({ lat: lat, lng: lng }); map.setZoom(14);
         },
         function (err) {
           btn.classList.remove('is-loading');
-          var msg = err.code === 1 ? 'Konum izni reddedildi.' : 'Konum alınamadı, tekrar deneyin.';
-          if (window.KB) KB.toast(msg, 'error');
+          if (window.KB) KB.toast(err.code === 1 ? 'Konum izni reddedildi.' : 'Konum alınamadı, tekrar deneyin.', 'error');
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
       );
@@ -1481,16 +1503,15 @@
     frm.forEach(function (f) { push("firma", f, f.lat, f.lng, f.ad, (f.bolgeler || []).slice(0, 2).join(", "), [], { view: "profil-firma.html", offer: "firma" }); });
 
     var activeLayers = { ilan: true, kurye: true, isletme: true, firma: true };
-    // Filtre hafızası: önceki katman + arama durumunu yükle (MP05 §4)
     var mxSaved = window.KB && KB.loadView && KB.loadView("flt_mx");
     if (mxSaved && mxSaved.layers) Object.keys(mxSaved.layers).forEach(function (k) { if (k in activeLayers) activeLayers[k] = !!mxSaved.layers[k]; });
     if (mxSaved && mxSaved.q && searchEl) searchEl.value = mxSaved.q;
     function saveMxState() { if (window.KB && KB.saveView) KB.saveView("flt_mx", { q: searchEl ? searchEl.value : "", layers: activeLayers }); }
-    var markers = {}, cardEls = {}, selectedKey = null;
+    var markers = {}, cardEls = {}, selectedKey = null, openIW = null;
 
     function pinIcon(it, sel) {
       var p = PIN[it.type];
-      return L.divIcon({ className: "", html: '<div class="mx-pin mx-pin--' + it.type + (sel ? " is-sel" : "") + '" style="--c:' + p.c + '"><span>' + p.e + '</span></div>', iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -32] });
+      return { path: google.maps.SymbolPath.CIRCLE, scale: sel ? 14 : 11, fillColor: p.c, fillOpacity: sel ? 1 : 0.88, strokeColor: '#fff', strokeWeight: sel ? 3 : 2 };
     }
     function actionHtml(it) {
       if (it.action.apply) return '<button class="btn btn--primary btn--sm" data-apply="' + it.id + '" data-baslik="' + KB.esc(it.action.apply.baslik) + '">' + T("mx.apply") + '</button>';
@@ -1506,10 +1527,13 @@
         '<div class="mx-card__act">' + actionHtml(it) + '</div></div></article>';
     }
     function mxPopup(it) {
-      return '<div class="mx-popup"><div class="mx-popup__head"><span class="mx-card__ic mx-card__ic--' + it.type + '">' + PIN[it.type].e + '</span>' +
-        '<div><div class="mx-popup__title">' + KB.esc(it.ad) + '</div><div class="mx-popup__sub">' + KB.esc(it.sub) + '</div></div></div>' +
-        chipsHtml(it).replace("mx-card__chips", "mx-popup__chips") +
-        '<div class="mx-popup__act">' + actionHtml(it) + '</div></div>';
+      return '<div style="padding:12px 4px 4px;max-width:230px;font-family:inherit">' +
+        '<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">' +
+        '<span style="font-size:1.3rem">' + PIN[it.type].e + '</span>' +
+        '<div><div style="font-weight:700;font-size:.9rem;color:#111">' + KB.esc(it.ad) + '</div>' +
+        '<div style="font-size:.76rem;color:#666;margin-top:2px">' + KB.esc(it.sub) + '</div></div></div>' +
+        (it.chips.length ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">' + it.chips.map(function(c){ return '<span style="background:#f0f0f0;border-radius:999px;padding:2px 8px;font-size:.7rem;font-weight:600;color:#444">' + KB.esc(c) + '</span>'; }).join('') + '</div>' : '') +
+        '<div style="margin-top:8px">' + actionHtml(it) + '</div></div>';
     }
     function visible() {
       var q = norm(searchEl && searchEl.value || "");
@@ -1523,13 +1547,12 @@
       selectedKey = key;
       Object.keys(cardEls).forEach(function (k) { if (cardEls[k]) cardEls[k].classList.toggle("is-selected", k === key); });
       if (key && cardEls[key] && fromMap) cardEls[key].scrollIntoView({ behavior: "smooth", block: "nearest" });
-      Object.keys(markers).forEach(function (k) {
-        var m = markers[k]; if (m._it) m.setIcon(pinIcon(m._it, k === key));
-      });
+      Object.keys(markers).forEach(function (k) { var m = markers[k]; if (m._it) m.setIcon(pinIcon(m._it, k === key)); });
       if (key && markers[key] && !fromMap) {
-        var m = markers[key];
-        if (cluster.zoomToShowLayer) cluster.zoomToShowLayer(m, function () { m.openPopup(); });
-        else { map.setView(m.getLatLng(), Math.max(map.getZoom(), 12)); m.openPopup(); }
+        if (openIW) openIW.close();
+        openIW = markers[key]._iw;
+        markers[key]._iw.open(map, markers[key]);
+        map.panTo(markers[key].getPosition());
       }
     }
     function renderList(list) {
@@ -1540,13 +1563,14 @@
       list.forEach(function (it) { cardEls[it.key] = listEl.querySelector('[data-mxkey="' + it.key.replace(/"/g, '\\"') + '"]'); });
     }
     function renderMarkers(list) {
-      cluster.clearLayers(); markers = {};
+      Object.keys(markers).forEach(function (k) { markers[k].setMap(null); }); markers = {};
       list.forEach(function (it) {
-        var m = L.marker([it.lat, it.lng], { icon: pinIcon(it, it.key === selectedKey) });
+        var m = new google.maps.Marker({ position: { lat: it.lat, lng: it.lng }, map: map, title: it.ad, icon: pinIcon(it, it.key === selectedKey) });
         m._it = it;
-        m.bindPopup(mxPopup(it), { className: "mx-popup-wrap", maxWidth: 270, minWidth: 220 });
-        m.on("click", function () { select(it.key, true); });
-        markers[it.key] = m; cluster.addLayer(m);
+        var iw = new google.maps.InfoWindow({ content: mxPopup(it), maxWidth: 260 });
+        m._iw = iw;
+        m.addListener('click', function () { if (openIW) openIW.close(); openIW = iw; iw.open(map, m); select(it.key, true); });
+        markers[it.key] = m;
       });
     }
     function refresh() {
@@ -1554,38 +1578,33 @@
       if (selectedKey && !list.some(function (i) { return i.key === selectedKey; })) selectedKey = null;
       renderList(list); renderMarkers(list);
     }
-
-    // liste kartı tıklama → seç (aksiyon butonu/linke dokunma)
     if (listEl) listEl.addEventListener("click", function (e) {
       if (e.target.closest("[data-apply],[data-teklif],a,button")) return;
       var c = e.target.closest("[data-mxkey]");
       if (c) select(c.getAttribute("data-mxkey"), false);
     });
-    // katman chip'leri — kayıtlı durumu yansıt + değişimde kaydet
     document.querySelectorAll("[data-mxlayer]").forEach(function (chip) {
       var t = chip.getAttribute("data-mxlayer");
       chip.classList.toggle("is-on", activeLayers[t]);
       chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
       chip.addEventListener("click", function () {
-        activeLayers[t] = !activeLayers[t];
-        chip.classList.toggle("is-on", activeLayers[t]);
+        activeLayers[t] = !activeLayers[t]; chip.classList.toggle("is-on", activeLayers[t]);
         chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
-        refresh();
-        saveMxState();
+        refresh(); saveMxState();
       });
     });
     if (searchEl) searchEl.addEventListener("input", function () { refresh(); saveMxState(); });
-    // mobil liste/harita geçişi
     var toggleBtn = document.getElementById("mxToggle");
     if (toggleBtn && container) toggleBtn.addEventListener("click", function () {
       var open = container.classList.toggle("mx--listopen");
       toggleBtn.textContent = open ? T("mx.map") : T("mx.list");
     });
-
     refresh();
-    var pts = items.map(function (i) { return [i.lat, i.lng]; });
-    if (pts.length) map.fitBounds(pts, { padding: [50, 50], maxZoom: 11 });
-    setTimeout(function () { map.invalidateSize(); }, 200);
+    if (items.length) {
+      var bounds = new google.maps.LatLngBounds();
+      items.forEach(function (i) { bounds.extend({ lat: i.lat, lng: i.lng }); });
+      map.fitBounds(bounds);
+    }
   }
   function mxSkeleton() {
     var one = '<div class="mx-card mx-card--skel"><span class="skel skel--ava"></span><div style="flex:1"><span class="skel skel--line" style="width:60%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div></div>';

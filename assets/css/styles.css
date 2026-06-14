@@ -822,6 +822,13 @@ body > .demo-banner ~ * .header { top: 0; }
     .hero__deco { display: none; }
 }
 
+/* ===================== PANEL HARİTA KONUMUM BUTONU ===================== */
+.gm-locate-btn { width: 36px; height: 36px; background: #fff; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #444; box-shadow: 0 2px 6px rgba(0,0,0,0.2); padding: 0; }
+.gm-locate-btn:hover { background: #f5f5f5; color: #3b82f6; }
+.gm-locate-btn.is-active { color: #3b82f6; border-color: rgba(59,130,246,0.4); }
+.gm-locate-btn.is-loading svg { animation: loc-spin 1s linear infinite; }
+@keyframes loc-spin { to { transform: rotate(360deg); } }
+
 /* ===================== ERİŞİLEBİLİRLİK PANELİ ===================== */
 .a11y { position: fixed; right: 22px; bottom: 90px; z-index: 91; }
 .a11y-fab { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer;
