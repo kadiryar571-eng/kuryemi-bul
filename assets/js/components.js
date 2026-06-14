@@ -246,6 +246,24 @@
   /* ---------- Oturum (Supabase) ---------- */
   var SESSION = { loaded: false, user: null, profile: null };
 
+  /* ---------- Merkezi uygulama state'i (MP05) ---------- */
+  // Tek kaynak: auth/user/role/context/prefs. Boot'ta doldurulur, abonelere bildirilir.
+  var STATE = { auth: { status: "guest" }, user: null, role: "guest", context: {}, prefs: {} };
+  var _stateSubs = [];
+  function notifyState() { _stateSubs.forEach(function (cb) { try { cb(STATE); } catch (e) {} }); }
+  function onState(cb) { if (typeof cb === "function") { _stateSubs.push(cb); try { cb(STATE); } catch (e) {} } }
+  function setState(patch) { if (patch) Object.keys(patch).forEach(function (k) { STATE[k] = patch[k]; }); notifyState(); }
+  function buildState() {
+    STATE.auth = { status: SESSION.user ? "authed" : "guest", userId: SESSION.user && SESSION.user.id, email: SESSION.user && SESSION.user.email };
+    STATE.user = SESSION.profile ? { name: SESSION.profile.ad, avatar: SESSION.profile.avatar_url, role: SESSION.profile.role, verification: SESSION.profile.dogrulama } : null;
+    STATE.role = (SESSION.profile && SESSION.profile.role) || (isOnline() ? "guest" : getRole());
+    var cur = (location.pathname.split("/").pop() || "index.html");
+    var prev = null; try { prev = sessionStorage.getItem("kb_route"); sessionStorage.setItem("kb_route", cur); } catch (e) {}
+    STATE.context = { route: cur, prevRoute: (prev && prev !== cur) ? prev : (STATE.context && STATE.context.prevRoute) || null };
+    STATE.prefs = { lang: (window.KBI18N ? KBI18N.lang : "tr"), theme: getTheme(), fontScale: getFontScale(), contrast: getContrast() };
+    notifyState();
+  }
+
   function isOnline() { return !!(window.SB && SB.isOn()); }
   function roleToPanel(r) {
     if (r === "kurye") return "panel-kurye.html";
@@ -301,6 +319,10 @@
           '<button type="button" class="acct__btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" title="' + esc(SESSION.user.email || "") + '">' +
             '<span class="acct__ava">👤</span><span class="acct__name">' + esc(nm) + '</span><span class="acct__caret" aria-hidden="true">▾</span></button>' +
           '<div class="acct__menu" role="menu">' +
+            '<div class="acct__head" style="padding:10px 13px;border-bottom:1px solid var(--line,rgba(255,255,255,.1));margin-bottom:4px">' +
+              '<div style="font-weight:700;font-size:.92rem">' + esc(nm) + '</div>' +
+              (role ? '<div style="font-size:.74rem;opacity:.65;margin-top:1px">' + esc(T("role." + role)) + '</div>' : '') +
+            '</div>' +
             '<a href="havuzum.html" role="menuitem" class="acct__cmd">★ ' + T("nav.pool") + '</a>' +
             '<a href="mesajlar.html" role="menuitem">' + T("menu.messages") + '</a>' +
             '<a href="' + profileLink + '" role="menuitem">' + T("menu.profile") + '</a>' +
@@ -350,6 +372,7 @@
     if (isOnline()) { area.innerHTML = '<span class="user-chip">…</span>'; await READY; }
     area.innerHTML = buildAuthArea();
     wireAuthArea();
+    buildState();
     // Bildirim rozeti: okunmamış bildirim sayısı (+ anlık güncelleme)
     if (isOnline() && SESSION.user && window.SB && SB.unreadCount) {
       var setBadge = function (n) {
@@ -578,6 +601,8 @@
     ready: function () { return READY || Promise.resolve(); },
     session: function () { return SESSION; },
     isAuthed: function () { return !!SESSION.user; },
-    currentRole: function () { return isOnline() ? (SESSION.profile && SESSION.profile.role) : getRole(); }
+    currentRole: function () { return isOnline() ? (SESSION.profile && SESSION.profile.role) : getRole(); },
+    // Merkezi state (MP05): KB.state oku, KB.onState(cb) abone ol, KB.setState(patch) güncelle
+    state: STATE, onState: onState, setState: setState, homeHref: homeHref
   };
 })();
