@@ -82,7 +82,7 @@ serve(async (req: Request) => {
     }));
 
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,7 +97,7 @@ serve(async (req: Request) => {
     if (!resp.ok) {
       const errText = await resp.text();
       console.error("Gemini API hatası:", resp.status, errText);
-      return new Response(JSON.stringify({ error: "AI yanıt veremedi, lütfen tekrar deneyin" }), {
+      return new Response(JSON.stringify({ error: "AI yanıt veremedi (" + resp.status + "). Gemini API key'inizin geçerli olduğunu kontrol edin." }), {
         status: 502,
         headers: { ...CORS, "Content-Type": "application/json" },
       });

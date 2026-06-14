@@ -966,7 +966,7 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
     max-width: 78%;
 }
 .ai-msg--ai .ai-bubble {
-    background: var(--surface, #f1f5f9);
+    background: var(--surface-2);
     color: var(--navy); border-radius: 18px 18px 18px 4px;
     max-width: 78%;
 }
@@ -1024,7 +1024,7 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
     flex: 1; resize: none; border: 1.5px solid var(--line);
     border-radius: 12px; padding: 9px 12px;
     font-size: .875rem; font-family: inherit; line-height: 1.4;
-    background: var(--surface, #f8fafc); color: var(--navy);
+    background: var(--surface-2); color: var(--navy);
     max-height: 120px; outline: none;
     transition: border-color 0.18s;
 }
