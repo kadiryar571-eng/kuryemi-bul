@@ -18,20 +18,15 @@
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
     <style>
-      /* ===== Auth sayfası — kendine yeten premium katman ===== */
-      .auth-bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 22% 12%,#0b1020,#050505 62%);overflow:hidden}
-      .auth-bg .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.45;animation:authFloat 20s ease-in-out infinite}
-      .auth-bg .orb--1{width:540px;height:540px;background:radial-gradient(circle,#4f8bff,transparent 70%);top:-140px;left:-90px}
-      .auth-bg .orb--2{width:480px;height:480px;background:radial-gradient(circle,#22d3ee,transparent 70%);bottom:-160px;right:-80px;animation-delay:-7s}
-      .auth-bg .orb--3{width:420px;height:420px;background:radial-gradient(circle,#a855f7,transparent 70%);top:40%;left:45%;animation-delay:-13s}
-      @keyframes authFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.08)}}
-      #auth-net{position:fixed;inset:0;z-index:-1;width:100%;height:100%}
+      /* ===== Auth sayfası — sade dark tema ===== */
+      body{background:#0d0d0d}
 
       /* minimal header (logo solda — konum korunur) */
       .auth-header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
         padding:18px clamp(18px,5vw,48px)}
       .auth-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.15rem;letter-spacing:-.02em}
-      .auth-brand img{width:34px;height:34px;border-radius:8px}
+      .auth-brand__mark{width:34px;height:34px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-none;font-size:1.3rem}
+      .auth-brand__mark img{width:100%;height:100%;object-fit:cover;border-radius:8px}
       .auth-navbtns{display:flex;gap:8px}
       .auth-navbtns button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#cdd5e3;
         font-family:inherit;font-weight:600;font-size:.88rem;padding:9px 18px;border-radius:999px;cursor:pointer;
@@ -43,14 +38,11 @@
       /* ortala */
       .auth-wrap{min-height:100vh;display:grid;place-items:center;padding:112px 18px 72px}
 
-      /* cam kart */
+      /* kart */
       .auth-card{width:100%;max-width:440px;position:relative;
-        background:rgba(14,17,27,.55);backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);
-        border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:clamp(26px,4vw,38px);
-        box-shadow:0 40px 90px -30px rgba(79,139,255,.45),0 0 0 1px rgba(255,255,255,.04) inset}
-      .auth-card::before{content:"";position:absolute;inset:-1px;border-radius:24px;padding:1px;pointer-events:none;
-        background:linear-gradient(135deg,rgba(79,139,255,.5),transparent 40%,transparent 60%,rgba(168,85,247,.5));
-        -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.6}
+        background:rgba(255,255,255,.05);
+        border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:clamp(26px,4vw,38px);
+        box-shadow:0 8px 24px -6px rgba(0,0,0,0.55)}
 
       .auth-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,4vw,2rem);font-weight:700;color:#fff;text-align:center;letter-spacing:-.03em;line-height:1.1;margin:0}
       .auth-sub{color:#94a0b4;text-align:center;margin:9px 0 24px;font-size:.94rem;line-height:1.5}
@@ -148,20 +140,13 @@
 
       @media (max-width:480px){ .auth-navbtns button{padding:8px 13px;font-size:.82rem} }
       @media (prefers-reduced-motion:reduce){ .auth-submit.is-loading::after,.auth-google.is-loading::after{animation-duration:1.4s} }
-      @media (prefers-reduced-motion:reduce){ .auth-bg .orb{animation:none} #auth-net{display:none} }
     </style>
 </head>
 <body>
-    <!-- uzay arka plan -->
-    <div class="auth-bg" aria-hidden="true">
-      <span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span>
-    </div>
-    <canvas id="auth-net" aria-hidden="true"></canvas>
-
     <!-- minimal header: logo sol, sadece Giriş/Kayıt -->
     <header class="auth-header">
       <a href="index.html" class="auth-brand" aria-label="Kuryemi Bul">
-        <img src="assets/logo.png" alt="" onerror="this.style.display='none'">Kuryemi&nbsp;Bul
+        <span class="auth-brand__mark"><img src="assets/logo.png" alt="" onerror="this.parentNode.textContent='🛵'"></span>Kuryemi&nbsp;Bul
       </a>
       <div class="auth-navbtns">
         <button type="button" id="navLogin" class="active" data-go="login">Giriş Yap</button>
@@ -265,10 +250,9 @@
     (function () {
       var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
 
-      /* ---- takımyıldız arka planı ---- */
+      /* ---- takımyıldız arka planı (devre dışı — sade dark tema) ---- */
       (function net() {
-        var c = document.getElementById("auth-net");
-        if (!c || window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+        return;
         var ctx = c.getContext("2d"), w, h, pts, raf;
         function size() { w = c.width = innerWidth; h = c.height = innerHeight; build(); }
         function build() {
