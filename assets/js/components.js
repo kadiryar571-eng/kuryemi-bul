@@ -76,34 +76,24 @@
     if (!isOnline() && getRole() !== "ziyaretci") return panelHref();
     return "index.html";
   }
-  // Rol-bazlı header nav linkleri. authed: ilk öğe "Panelim" (Dashboard); guest: "Ana Sayfa".
   var _activePage = "index.html";
   function buildNavLinks(activePage) {
-    var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
-    return NAV.map(function (n) {
-      var isHome = n.key === "nav.home";
-      var href = isHome ? homeHref() : n.href;
-      var label = (isHome && authed) ? T("cta.panel") : T(n.key);
-      var active = (href === activePage || n.href === activePage) ? " is-active" : "";
-      return '<a href="' + href + '" class="' + active.trim() + '"' + (isHome ? ' data-home' : '') + '>' + label + '</a>';
-    }).join("");
+    return NAV.filter(function (n) { return n.key !== "nav.home"; })
+      .map(function (n) {
+        var active = (n.href === activePage) ? " is-active" : "";
+        return '<a href="' + n.href + '" class="' + active.trim() + '">' + T(n.key) + '</a>';
+      }).join("");
   }
 
   /* ---------- Header ---------- */
   function renderHeader(activePage) {
     var host = document.getElementById("app-header");
     if (!host) return;
-    var role = getRole();
     _activePage = activePage;
 
     var navLinks = buildNavLinks(activePage);
-
-    var roleOptions = ROLE_KEYS.map(function (k) {
-      return '<option value="' + k + '"' + (k === role ? " selected" : "") + '>' + T("role." + k) + '</option>';
-    }).join("");
-
-    var panelLabel = role === "ziyaretci" ? T("cta.signin") : T("cta.panel");
     var otherLang = window.KBI18N ? window.KBI18N.other().toUpperCase() : "EN";
+    var themeIcon = getTheme() === "light" ? "🌙" : "☀️";
 
     host.innerHTML =
       '<header class="header">' +
@@ -112,15 +102,20 @@
             '<img class="logo__img" src="assets/logo.png" alt="Kuryemi Bul">' +
             '<span class="logo__text">Kuryemi&nbsp;Bul</span>' +
           '</a>' +
-          '<button class="nav-toggle" id="navToggle" aria-label="Menü" aria-expanded="false" aria-controls="anaMenu">' +
-            '<span></span><span></span><span></span>' +
-          '</button>' +
           '<nav class="nav" id="anaMenu" aria-label="Ana menü">' +
             '<span id="navLinks" style="display:contents">' + navLinks + '</span>' +
-            '<button id="themeToggle" class="theme-toggle" aria-label="' + T("theme.toggle") + '" title="' + T("theme.toggle") + '">' + (getTheme() === "light" ? "🌙" : "☀️") + '</button>' +
-            '<button id="langToggle" class="lang-toggle" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
-            '<span id="authArea" class="auth-area"></span>' +
           '</nav>' +
+          '<div class="header__util">' +
+            '<div class="util__toggles">' +
+              '<button id="themeToggle" class="theme-toggle" aria-label="' + T("theme.toggle") + '" title="' + T("theme.toggle") + '">' + themeIcon + '</button>' +
+              '<button id="langToggle" class="lang-toggle" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
+            '</div>' +
+            '<div class="util__divider"></div>' +
+            '<span id="authArea" class="auth-area"></span>' +
+            '<button class="nav-toggle" id="navToggle" aria-label="Menü" aria-expanded="false" aria-controls="anaMenu">' +
+              '<span></span><span></span><span></span>' +
+            '</button>' +
+          '</div>' +
         '</div>' +
       '</header>';
 
@@ -131,6 +126,13 @@
         var open = nav.classList.toggle("is-open");
         navToggle.classList.toggle("is-open", open);
         navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      document.addEventListener("click", function (e) {
+        if (nav.classList.contains("is-open") && !nav.contains(e.target) && !navToggle.contains(e.target)) {
+          nav.classList.remove("is-open");
+          navToggle.classList.remove("is-open");
+          navToggle.setAttribute("aria-expanded", "false");
+        }
       });
     }
     var langToggle = document.getElementById("langToggle");
@@ -349,10 +351,8 @@
       var profPage = roleToProfile(role);
       var pid = SESSION.profile && SESSION.profile.id;
       var profileLink = (profPage && pid) ? (profPage + "?id=" + pid) : "profil-duzenle.html";
-      return '<a href="havuzum.html" class="auth-link">★ ' + T("nav.pool") + '</a>' +
-        '<a href="mesajlar.html" class="auth-link notif-bell" aria-label="' + T("nav.messages") + '" title="' + T("nav.messages") + '">💬<span class="badge-count" id="msgBadge" style="display:none">0</span></a>' +
+      return '<a href="mesajlar.html" class="auth-link notif-bell" aria-label="' + T("nav.messages") + '" title="' + T("nav.messages") + '">💬<span class="badge-count" id="msgBadge" style="display:none">0</span></a>' +
         '<a href="bildirimler.html" class="auth-link notif-bell" aria-label="' + T("notif.title") + '" title="' + T("notif.title") + '">🔔<span class="badge-count" id="notifBadge" style="display:none">0</span></a>' +
-        '<a href="' + ph + '" class="btn btn--primary btn--sm nav__cta">' + T("cta.panel") + '</a>' +
         '<div class="acct" id="acctMenu">' +
           '<button type="button" class="acct__btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" title="' + esc(SESSION.user.email || "") + '">' +
             '<span class="acct__ava">👤</span><span class="acct__name">' + esc(nm) + '</span><span class="acct__caret" aria-hidden="true">▾</span></button>' +
@@ -361,7 +361,8 @@
               '<div style="font-weight:700;font-size:.92rem">' + esc(nm) + '</div>' +
               (role ? '<div style="font-size:.74rem;opacity:.65;margin-top:1px">' + esc(T("role." + role)) + '</div>' : '') +
             '</div>' +
-            '<a href="havuzum.html" role="menuitem" class="acct__cmd">★ ' + T("nav.pool") + '</a>' +
+            '<a href="' + ph + '" role="menuitem" class="acct__cmd">🏠 ' + T("cta.panel") + '</a>' +
+            '<a href="havuzum.html" role="menuitem">★ ' + T("nav.pool") + '</a>' +
             '<a href="mesajlar.html" role="menuitem">' + T("menu.messages") + '</a>' +
             '<a href="' + profileLink + '" role="menuitem">' + T("menu.profile") + '</a>' +
             '<a href="profil-duzenle.html" role="menuitem">' + T("menu.editProfile") + '</a>' +
