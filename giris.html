@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="assets/css/design-system.css">
     <style>
       /* ===== Auth sayfası — sade dark tema ===== */
-      body{background:#0d0d0d}
+      body{background:var(--bg,#0d0d0d)}
 
       /* minimal header (logo solda — konum korunur) */
       .auth-header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
@@ -40,9 +40,9 @@
 
       /* kart */
       .auth-card{width:100%;max-width:440px;position:relative;
-        background:rgba(255,255,255,.05);
-        border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:clamp(26px,4vw,38px);
-        box-shadow:0 8px 24px -6px rgba(0,0,0,0.55)}
+        background:var(--ds-panel,rgba(255,255,255,.05));
+        border:1px solid var(--ds-stroke,rgba(255,255,255,.10));border-radius:24px;padding:clamp(26px,4vw,38px);
+        box-shadow:var(--ds-shadow,0 8px 24px -6px rgba(0,0,0,0.55))}
 
       .auth-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,4vw,2rem);font-weight:700;color:#fff;text-align:center;letter-spacing:-.03em;line-height:1.1;margin:0}
       .auth-sub{color:#94a0b4;text-align:center;margin:9px 0 24px;font-size:.94rem;line-height:1.5}
