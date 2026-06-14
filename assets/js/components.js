@@ -718,6 +718,15 @@
     document.body.classList.add("has-bottom-nav");
   }
 
+  /* ---------- KuryemiBul AI widget yükleyici ---------- */
+  function loadAIAssistant() {
+    if (document.getElementById("kb-ai-script")) return;
+    var s = document.createElement("script");
+    s.id = "kb-ai-script";
+    s.src = "assets/js/ai-assistant.js";
+    document.head.appendChild(s);
+  }
+
   function init() {
     var active = (location.pathname.split("/").pop() || "index.html");
     renderAmbient();
@@ -727,6 +736,7 @@
     renderWhatsApp();
     renderToTop();
     renderA11y();
+    loadAIAssistant();
     renderBottomNav();
     renderCookieConsent();
     updateAuthArea();
