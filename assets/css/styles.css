@@ -823,12 +823,12 @@ body > .demo-banner ~ * .header { top: 0; }
 }
 
 /* ===================== ERİŞİLEBİLİRLİK PANELİ ===================== */
-.a11y { position: fixed; left: 22px; bottom: 22px; z-index: 91; }
+.a11y { position: fixed; right: 22px; bottom: 90px; z-index: 91; }
 .a11y-fab { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer;
     background: var(--surface-2); color: var(--navy); font-size: 1.25rem; line-height: 1; display: grid; place-items: center;
     box-shadow: 0 8px 22px -8px rgba(0,0,0,.5); transition: transform .2s, background .2s, color .2s; }
 .a11y-fab:hover { transform: translateY(-2px); background: var(--accent); color: var(--on-accent); }
-.a11y-panel { position: absolute; left: 0; bottom: 58px; width: 250px; background: var(--white); border: 1px solid var(--line);
+.a11y-panel { position: absolute; right: 0; bottom: 58px; width: 250px; background: var(--white); border: 1px solid var(--line);
     border-radius: 16px; padding: 16px; box-shadow: 0 22px 55px -18px rgba(0,0,0,.6); display: none; }
 .a11y-panel.is-open { display: block; }
 .a11y-panel__h { font-weight: 700; font-size: .95rem; margin-bottom: 12px; }
@@ -863,7 +863,7 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
         background: #ef4444; color: #fff; font-size: .6rem; font-weight: 700; display: grid; place-items: center; }
     body.has-bottom-nav { padding-bottom: 66px; }
     body.has-bottom-nav .wa-float { bottom: 80px; }
-    body.has-bottom-nav .a11y { bottom: 80px; }
+    body.has-bottom-nav .a11y { bottom: 148px; }
     body.has-bottom-nav .to-top { bottom: 138px; }
     body.has-bottom-nav .cookie-bar { bottom: 78px; }
     body.has-bottom-nav .kb-toasts { bottom: 78px; }
