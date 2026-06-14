@@ -67,7 +67,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey = Deno.env.get("GROQ_API_KEY");
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "AI servisi yapılandırılmamış" }), {
         status: 500,
@@ -75,36 +75,39 @@ serve(async (req: Request) => {
       });
     }
 
-    // Gemini API: "assistant" yerine "model" kullanır
-    const geminiContents = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
+    // Groq, OpenAI uyumlu format kullanır
+    const groqMessages = [
+      { role: "system", content: buildSystemPrompt(userContext) },
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ];
 
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: buildSystemPrompt(userContext) }] },
-          contents: geminiContents,
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
-        }),
-      }
-    );
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: groqMessages,
+        max_tokens: 1024,
+        temperature: 0.7,
+      }),
+    });
 
     if (!resp.ok) {
       const errText = await resp.text();
-      console.error("Gemini API hatası:", resp.status, errText);
-      return new Response(JSON.stringify({ error: "AI yanıt veremedi (" + resp.status + "). Gemini API key'inizin geçerli olduğunu kontrol edin." }), {
+      console.error("Groq API hatası:", resp.status, errText);
+      let detail = "";
+      try { detail = JSON.parse(errText)?.error?.message || ""; } catch (_) {}
+      return new Response(JSON.stringify({ error: "Groq " + resp.status + ": " + (detail || errText.slice(0, 120)) }), {
         status: 502,
         headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
 
     const data = await resp.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const reply = data.choices?.[0]?.message?.content || "";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...CORS, "Content-Type": "application/json" },
