@@ -215,7 +215,13 @@
     btn.setAttribute('aria-controls', 'ai-panel');
     btn.innerHTML =
       '<svg class="ai-float__ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
-        '<path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="currentColor"/>' +
+        '<path d="M11 5C9.2 3.9 6.8 4.1 5.3 5.8 3.8 7.4 3.8 9.6 5 11.2c-1 .9-1.5 2.1-1.5 3.4 0 2.2 1.6 4 3.8 4.2L7.5 20H11V5z" fill="currentColor"/>' +
+        '<path d="M13 5c1.8-1.1 4.2-.9 5.7.8 1.5 1.6 1.5 3.8.3 5.4 1 .9 1.5 2.1 1.5 3.4 0 2.2-1.6 4-3.8 4.2l.3 1.2H13V5z" fill="currentColor"/>' +
+        '<line x1="12" y1="5" x2="12" y2="20" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>' +
+        '<circle cx="8.5" cy="10" r="1.3" fill="rgba(255,255,255,0.6)"/>' +
+        '<circle cx="15.5" cy="10" r="1.3" fill="rgba(255,255,255,0.6)"/>' +
+        '<circle cx="9" cy="15" r="1" fill="rgba(255,255,255,0.45)"/>' +
+        '<circle cx="15" cy="15" r="1" fill="rgba(255,255,255,0.45)"/>' +
       '</svg>' +
       '<span class="ai-float__txt">KuryemiBul AI</span>';
     document.body.appendChild(btn);
@@ -230,7 +236,10 @@
       '<div class="ai-panel__head">' +
         '<div class="ai-panel__title">' +
           '<svg viewBox="0 0 24 24" fill="none" width="18" height="18" aria-hidden="true">' +
-            '<path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="currentColor"/>' +
+            '<path d="M11 5C9.2 3.9 6.8 4.1 5.3 5.8 3.8 7.4 3.8 9.6 5 11.2c-1 .9-1.5 2.1-1.5 3.4 0 2.2 1.6 4 3.8 4.2L7.5 20H11V5z" fill="currentColor"/>' +
+            '<path d="M13 5c1.8-1.1 4.2-.9 5.7.8 1.5 1.6 1.5 3.8.3 5.4 1 .9 1.5 2.1 1.5 3.4 0 2.2-1.6 4-3.8 4.2l.3 1.2H13V5z" fill="currentColor"/>' +
+            '<circle cx="8.5" cy="10" r="1.1" fill="rgba(255,255,255,0.7)"/>' +
+            '<circle cx="15.5" cy="10" r="1.1" fill="rgba(255,255,255,0.7)"/>' +
           '</svg>' +
           'KuryemiBul AI' +
         '</div>' +

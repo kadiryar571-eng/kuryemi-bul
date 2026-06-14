@@ -895,8 +895,8 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
 /* ===================== KuryemiBul AI Widget ===================== */
 /* Floating buton */
 .ai-float {
-    position: fixed; left: 22px; bottom: 22px; z-index: 90;
-    display: inline-flex; align-items: center; gap: 0;
+    position: fixed; right: 22px; bottom: 158px; z-index: 92;
+    display: inline-flex; align-items: center; gap: 0; flex-direction: row-reverse;
     background: linear-gradient(135deg, #7c3aed, #2563eb);
     color: #fff; border: none; cursor: pointer;
     height: 58px; padding: 0 16px; border-radius: 999px;
@@ -910,7 +910,7 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
 .ai-float__ic { flex-shrink: 0; width: 26px; height: 26px; }
 .ai-float__txt { max-width: 0; opacity: 0; white-space: nowrap; font-weight: 700; font-size: .88rem; transition: max-width 0.35s ease, opacity 0.3s ease, margin 0.35s ease; }
 .ai-float:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(124, 58, 237, 0.6); }
-.ai-float:hover .ai-float__txt { max-width: 160px; opacity: 1; margin-left: 8px; }
+.ai-float:hover .ai-float__txt { max-width: 160px; opacity: 1; margin-right: 8px; }
 .ai-float::after {
     content: ""; position: absolute; inset: 0; border-radius: 999px;
     box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.5);
@@ -924,7 +924,7 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
 
 /* Chat paneli */
 .ai-panel {
-    position: fixed; left: 22px; bottom: 90px; z-index: 91;
+    position: fixed; right: 22px; bottom: 226px; z-index: 91;
     width: 360px; height: 520px;
     display: flex; flex-direction: column;
     background: var(--white); border: 1px solid var(--line);
@@ -1051,12 +1051,12 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
 
 /* Mobil: alt nav varsa buton yukarı kayar */
 @media (max-width: 680px) {
-    body.has-bottom-nav .ai-float { bottom: 80px; }
-    body.has-bottom-nav .ai-panel { bottom: 148px; }
+    body.has-bottom-nav .ai-float { bottom: 218px; }
+    body.has-bottom-nav .ai-panel { bottom: 286px; }
 }
 /* Mobil: panel tam ekran */
 @media (max-width: 560px) {
-    .ai-float { left: 16px; bottom: 16px; height: 54px; }
+    .ai-float { right: 16px; bottom: 158px; height: 54px; }
     .ai-panel {
         left: 0; right: 0; bottom: 0; width: 100%;
         height: 85vh; border-radius: 20px 20px 0 0;
