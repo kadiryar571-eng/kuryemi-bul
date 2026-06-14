@@ -19,9 +19,9 @@ window.Platform = (function () {
       { id: 'delivery', ic: '📦', t: 'Teslimat İstihbaratı', href: 'teslimat.html' }
     ]},
     { group: 'Roller', items: [
-      { id: 'biz',     ic: '🏪', t: 'İşletme Paneli',  href: 'isletme-panel.html' },
-      { id: 'fleet',   ic: '🚚', t: 'Firma Merkezi',   href: 'firma-merkez.html' },
-      { id: 'courier', ic: '🛵', t: 'Kurye Profili',   href: 'kurye-kimlik.html' }
+      { id: 'biz',     ic: '🏪', t: 'İşletme Paneli',  href: 'panel-isletme.html' },
+      { id: 'fleet',   ic: '🚚', t: 'Firma Merkezi',   href: 'panel-firma.html' },
+      { id: 'courier', ic: '🛵', t: 'Kurye Profili',   href: 'panel-kurye.html' }
     ]},
     { group: 'Analiz', items: [
       { id: 'analytics', ic: '📊', t: 'Analitik & İçgörü', href: 'analitik.html' },
