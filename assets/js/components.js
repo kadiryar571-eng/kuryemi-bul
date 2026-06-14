@@ -70,6 +70,12 @@
     if (r === "firma") return "panel-firma.html";
     return "giris.html";
   }
+  // Home = Dashboard kuralı: girişliyse rolüne göre panel, değilse landing.
+  function homeHref() {
+    if (isOnline() && SESSION.user) return roleToPanel(SESSION.profile && SESSION.profile.role);
+    if (!isOnline() && getRole() !== "ziyaretci") return panelHref();
+    return "index.html";
+  }
 
   /* ---------- Header ---------- */
   function renderHeader(activePage) {
@@ -79,7 +85,7 @@
 
     var navLinks = NAV.map(function (n) {
       var active = n.href === activePage ? " is-active" : "";
-      return '<a href="' + n.href + '" class="' + active.trim() + '">' + T(n.key) + '</a>';
+      return '<a href="' + n.href + '" class="' + active.trim() + '"' + (n.key === "nav.home" ? ' data-home' : '') + '>' + T(n.key) + '</a>';
     }).join("");
 
     var roleOptions = ROLE_KEYS.map(function (k) {
@@ -92,7 +98,7 @@
     host.innerHTML =
       '<header class="header">' +
         '<div class="container header__inner">' +
-          '<a href="index.html" class="logo" aria-label="Kuryemi Bul">' +
+          '<a href="index.html" class="logo" data-home aria-label="Kuryemi Bul">' +
             '<img class="logo__img" src="assets/logo.png" alt="Kuryemi Bul">' +
             '<span class="logo__text">Kuryemi&nbsp;Bul</span>' +
           '</a>' +
@@ -387,6 +393,11 @@
     // Alt navigasyonu oturum yüklendikten sonra tazele (Panelim hedefi rol'e göre) + rozet
     var bn = document.getElementById("kb-bottomnav");
     if (bn) { bn.remove(); renderBottomNav(); if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge(); }
+    // Home = Dashboard: girişli kullanıcıda logo + "Ana Sayfa" linki panele gider (landing'e değil)
+    var hh = homeHref();
+    if (hh !== "index.html") {
+      document.querySelectorAll("[data-home]").forEach(function (a) { a.setAttribute("href", hh); });
+    }
   }
 
   /* ---------- Paylaşılan canvas ağ arka planı (landing DNA'sı) ---------- */
@@ -480,7 +491,7 @@
     var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
     var lastHref = authed ? (isOnline() ? roleToPanel(SESSION.profile && SESSION.profile.role) : panelHref()) : "giris.html";
     var items = [
-      { href: "index.html", ic: "🏠", key: "nav.home" },
+      { href: homeHref(), ic: "🏠", key: "nav.home" },
       { href: "ilanlar.html", ic: "💼", key: "nav.ilanlar" },
       { href: "harita.html", ic: "🗺️", key: "nav.map" },
       { href: "mesajlar.html", ic: "💬", key: "nav.messages", badge: "bnavMsgBadge" },
@@ -491,7 +502,7 @@
     nav.innerHTML = items.map(function (it) {
       var on = it.href === active ? " is-active" : "";
       var badge = it.badge ? '<span class="bottom-nav__badge" id="' + it.badge + '" style="display:none">0</span>' : "";
-      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '"><span class="bottom-nav__ic">' + it.ic + badge + '</span><span class="bottom-nav__l">' + T(it.key) + '</span></a>';
+      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '"' + (it.key === "nav.home" ? ' data-bnav-home' : '') + '><span class="bottom-nav__ic">' + it.ic + badge + '</span><span class="bottom-nav__l">' + T(it.key) + '</span></a>';
     }).join("");
     document.body.appendChild(nav);
     document.body.classList.add("has-bottom-nav");

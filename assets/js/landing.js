@@ -225,7 +225,9 @@
     }).catch(function () {});
   }
 
-  /* ---------- Auth-aware nav ---------- */
+  /* ---------- Home = Dashboard: landing yalnız guest'e ---------- */
+  // Girişli kullanıcı landing'e gelirse doğrudan paneline yönlendirilir
+  // (auth sonrası pazarlama sayfası gösterilmez — "çıkış yapmış" hissi olmaz).
   function panelFor(role) {
     return role === 'kurye' ? 'panel-kurye.html'
       : role === 'isletme' ? 'panel-isletme.html'
@@ -234,15 +236,10 @@
   if (window.SB && SB.isOn && SB.isOn() && SB.getUser) {
     SB.getUser().then(function (u) {
       if (!u) return;
-      var go = function (href) {
-        var cta = $('#navCta'), si = $('#navSignin'), cp = $('#ctaPrimary');
-        if (cta) { cta.textContent = 'Panelim'; cta.href = href; }
-        if (cp) { cp.textContent = 'Panele Git →'; cp.href = href; }
-        if (si) { si.textContent = 'Hesabım'; si.href = 'profil-duzenle.html'; }
-      };
       if (SB.myProfile) {
-        SB.myProfile().then(function (p) { go(panelFor(p && p.role)); }).catch(function () { go('havuzum.html'); });
-      } else { go('havuzum.html'); }
+        SB.myProfile().then(function (p) { location.replace(panelFor(p && p.role)); })
+          .catch(function () { location.replace('havuzum.html'); });
+      } else { location.replace('havuzum.html'); }
     }).catch(function () {});
   }
 })();
