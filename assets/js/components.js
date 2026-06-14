@@ -160,12 +160,6 @@
             '<a href="sartlar.html">' + T("footer.terms") + '</a>' +
             '<a href="cerez.html">' + T("footer.cookies") + '</a>' +
           '</nav>' +
-          '<div class="footer__contact">' +
-            '<h4>' + T("footer.contact") + '</h4>' +
-            '<p><a href="mailto:' + EMAIL + '">' + EMAIL + '</a></p>' +
-            '<p><a href="tel:+' + WA_NUMBER + '">' + TEL_DISPLAY + '</a></p>' +
-            '<div class="socials" aria-label="Sosyal medya">' + socials + '</div>' +
-          '</div>' +
         '</div>' +
         '<div class="footer__bottom"><p>' + new Date().getFullYear() + ' ' + T("footer.rights") + '</p></div>' +
       '</footer>';
