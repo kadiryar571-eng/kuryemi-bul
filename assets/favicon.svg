@@ -1,11 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kuryemi Bul">
-  <defs>
-    <linearGradient id="kbg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FF6B35"/>
-      <stop offset="1" stop-color="#FF8A4C"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="15" fill="url(#kbg)"/>
-  <!-- Beyaz 'K' monogram (path - her tarayicida net) -->
   <path fill="#fff" d="M21 16h7v13.5L40 16h8.5L34.5 31.2 49 48h-9L29 35.5V48h-7z"/>
 </svg>
