@@ -76,17 +76,27 @@
     if (!isOnline() && getRole() !== "ziyaretci") return panelHref();
     return "index.html";
   }
+  // Rol-bazlı header nav linkleri. authed: ilk öğe "Panelim" (Dashboard); guest: "Ana Sayfa".
+  var _activePage = "index.html";
+  function buildNavLinks(activePage) {
+    var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
+    return NAV.map(function (n) {
+      var isHome = n.key === "nav.home";
+      var href = isHome ? homeHref() : n.href;
+      var label = (isHome && authed) ? T("cta.panel") : T(n.key);
+      var active = (href === activePage || n.href === activePage) ? " is-active" : "";
+      return '<a href="' + href + '" class="' + active.trim() + '"' + (isHome ? ' data-home' : '') + '>' + label + '</a>';
+    }).join("");
+  }
 
   /* ---------- Header ---------- */
   function renderHeader(activePage) {
     var host = document.getElementById("app-header");
     if (!host) return;
     var role = getRole();
+    _activePage = activePage;
 
-    var navLinks = NAV.map(function (n) {
-      var active = n.href === activePage ? " is-active" : "";
-      return '<a href="' + n.href + '" class="' + active.trim() + '"' + (n.key === "nav.home" ? ' data-home' : '') + '>' + T(n.key) + '</a>';
-    }).join("");
+    var navLinks = buildNavLinks(activePage);
 
     var roleOptions = ROLE_KEYS.map(function (k) {
       return '<option value="' + k + '"' + (k === role ? " selected" : "") + '>' + T("role." + k) + '</option>';
@@ -106,7 +116,7 @@
             '<span></span><span></span><span></span>' +
           '</button>' +
           '<nav class="nav" id="anaMenu" aria-label="Ana menü">' +
-            navLinks +
+            '<span id="navLinks" style="display:contents">' + navLinks + '</span>' +
             '<button id="themeToggle" class="theme-toggle" aria-label="' + T("theme.toggle") + '" title="' + T("theme.toggle") + '">' + (getTheme() === "light" ? "🌙" : "☀️") + '</button>' +
             '<button id="langToggle" class="lang-toggle" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
             '<span id="authArea" class="auth-area"></span>' +
@@ -416,7 +426,10 @@
     // Alt navigasyonu oturum yüklendikten sonra tazele (Panelim hedefi rol'e göre) + rozet
     var bn = document.getElementById("kb-bottomnav");
     if (bn) { bn.remove(); renderBottomNav(); if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge(); }
-    // Home = Dashboard: girişli kullanıcıda logo + "Ana Sayfa" linki panele gider (landing'e değil)
+    // Rol-bazlı nav'ı oturum yüklendikten sonra yeniden çiz (authed: "Panelim" + doğru hedefler)
+    var nl = document.getElementById("navLinks");
+    if (nl) nl.innerHTML = buildNavLinks(_activePage);
+    // Home = Dashboard: girişli kullanıcıda logo da panele gider (landing'e değil)
     var hh = homeHref();
     if (hh !== "index.html") {
       document.querySelectorAll("[data-home]").forEach(function (a) { a.setAttribute("href", hh); });
