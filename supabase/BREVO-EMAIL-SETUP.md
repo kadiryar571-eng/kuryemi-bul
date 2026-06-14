@@ -76,16 +76,28 @@ Supabase → **Authentication** → **Providers** → **Email**:
 
 ---
 
-## 5) E-posta şablonunu yapıştır
+## 5) E-posta şablonlarını yapıştır
 
-Supabase → **Authentication** → **Email Templates** → **Confirm signup**:
+Her şablon için: Supabase → **Authentication** → **Email Templates** → ilgili tür → **Message body** alanına HTML içeriğini yapıştır.
 
-- **Message body** alanına `email-templates/confirm-signup.html` dosyasının içeriğini yapıştır.
-- Şablon, `{{ .SiteURL }}` ve `{{ .TokenHash }}` değişkenlerini kullanır; Supabase otomatik doldurur.
-- Doğrulama bağlantısı şu formattadır:
-  ```
-  https://kuryemibul.com/verify-email.html?token_hash=<HASH>&type=signup
-  ```
+### Confirm signup
+- **Şablon:** `email-templates/confirm-signup.html`
+- **Konu:** `E-postanı Doğrula · Kuryemi Bul`
+- **Değişkenler:** `{{ .SiteURL }}`, `{{ .TokenHash }}`
+- Doğrulama bağlantısı: `https://kuryemibul.com/verify-email.html?token_hash=<HASH>&type=signup`
+
+### Reset password
+- **Şablon:** `email-templates/reset-password.html`
+- **Konu:** `Şifreni Sıfırla · Kuryemi Bul`
+- **Değişkenler:** `{{ .SiteURL }}`, `{{ .TokenHash }}`
+- Sıfırlama bağlantısı: `https://kuryemibul.com/sifre-sifirla.html?token_hash=<HASH>&type=recovery`
+- Token geçerlilik süresi: **1 saat** (Supabase varsayılanı)
+
+### Change email address
+- **Şablon:** `email-templates/change-email.html`
+- **Konu:** `E-posta Adresini Onayla · Kuryemi Bul`
+- **Değişken:** `{{ .ConfirmationURL }}` (Supabase tam URL'i üretir)
+- Yeni adrese gönderilir; kullanıcı onaylayana kadar eski adres aktif kalır.
 
 ---
 
