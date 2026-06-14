@@ -1,0 +1,329 @@
+/* ============================================================
+   Kuryemi Bul — space-bg.css
+   Saf CSS uzay simulasyonu: akan yildizlar + renk supernova
+   • JS animasyonu yok  • Harici gorsel yok
+   • GPU dostu: yalnizca transform + opacity + filter
+   ============================================================ */
+
+/* ─── Arka plan tuvali ─────────────────────────────────────── */
+.space-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ─── Nebula / uzay bulutu ─────────────────────────────────── */
+.space-nebula {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 42% at 16% 22%,  rgba(168,85,247,.08)  0%, transparent 70%),
+    radial-gradient(ellipse 48% 55% at 84% 74%,  rgba(34,211,238,.06)  0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 50% 8%,   rgba(251,146,60,.04)  0%, transparent 58%),
+    radial-gradient(ellipse 62% 30% at 68% 50%,  rgba(236,72,153,.05)  0%, transparent 60%);
+  will-change: opacity;
+  animation: nebula-pulse 55s ease-in-out infinite alternate;
+}
+@keyframes nebula-pulse {
+  from { opacity: .6; }
+  to   { opacity: 1;  }
+}
+
+/* ─── Yildiz katmanlari ─────────────────────────────────────── */
+/* Teknik: 1×1 px element + box-shadow ile yildiz noktaciklari.
+   ::after ayni box-shadow deseni ile 100vh yukseliga konumlanir;
+   ana element 100vh asagi inerken after yukaridan girerek
+   kesintisiz dongü olusturur. */
+.space-stars {
+  position: absolute;
+  top: 0; left: 0;
+  background: transparent;
+  border-radius: 50%;
+  will-change: transform;
+}
+.space-stars::after {
+  content: '';
+  position: absolute;
+  top: -100vh; left: 0;
+  border-radius: 50%;
+  box-shadow: inherit;
+}
+
+/* YAVAS katman — 1px, soluk, 80 yildiz */
+.space-stars--s {
+  width: 1px; height: 1px;
+  opacity: .55;
+  animation: starfall 110s linear infinite;
+  box-shadow:
+    32px 78px rgba(255,255,255,.35),   145px 234px rgba(255,255,255,.25),
+    287px 56px rgba(255,255,255,.4),   412px 389px rgba(255,255,255,.2),
+    534px 145px rgba(255,255,255,.35), 667px 478px rgba(255,255,255,.3),
+    789px 23px rgba(255,255,255,.4),   823px 312px rgba(255,255,255,.25),
+    934px 567px rgba(255,255,255,.3),  1056px 89px rgba(255,255,255,.35),
+    1134px 423px rgba(255,255,255,.2), 1267px 178px rgba(255,255,255,.4),
+    1389px 534px rgba(255,255,255,.3), 1445px 67px rgba(255,255,255,.25),
+    1578px 289px rgba(255,255,255,.35),1634px 445px rgba(255,255,255,.4),
+    1756px 123px rgba(255,255,255,.3), 1867px 378px rgba(255,255,255,.25),
+    1923px 234px rgba(255,255,255,.35),78px 156px rgba(255,255,255,.4),
+    189px 467px rgba(255,255,255,.2),  345px 312px rgba(255,255,255,.3),
+    467px 89px rgba(255,255,255,.35),  589px 534px rgba(255,255,255,.25),
+    712px 234px rgba(255,255,255,.4),  834px 678px rgba(255,255,255,.3),
+    956px 145px rgba(255,255,255,.25), 1023px 489px rgba(255,255,255,.35),
+    1145px 356px rgba(255,255,255,.4), 1289px 678px rgba(255,255,255,.2),
+    1367px 234px rgba(255,255,255,.3), 1456px 512px rgba(255,255,255,.25),
+    1589px 89px rgba(255,255,255,.35), 1712px 389px rgba(255,255,255,.4),
+    1834px 167px rgba(255,255,255,.3), 1956px 478px rgba(255,255,255,.25),
+    56px 345px rgba(255,255,255,.35),  167px 123px rgba(255,255,255,.4),
+    278px 567px rgba(255,255,255,.2),  389px 234px rgba(255,255,255,.3),
+    512px 789px rgba(255,255,255,.35), 623px 56px rgba(255,255,255,.25),
+    734px 389px rgba(255,255,255,.4),  845px 156px rgba(255,255,255,.3),
+    967px 567px rgba(255,255,255,.25), 1089px 234px rgba(255,255,255,.35),
+    1167px 678px rgba(255,255,255,.4), 1289px 89px rgba(255,255,255,.2),
+    1412px 345px rgba(255,255,255,.3), 1534px 623px rgba(255,255,255,.35),
+    1656px 178px rgba(255,255,255,.25),1778px 456px rgba(255,255,255,.4),
+    1867px 289px rgba(255,255,255,.3), 1934px 678px rgba(255,255,255,.25),
+    12px 234px rgba(255,255,255,.35),  234px 789px rgba(255,255,255,.4),
+    389px 456px rgba(255,255,255,.2),  512px 178px rgba(255,255,255,.3),
+    645px 567px rgba(255,255,255,.35), 756px 89px rgba(255,255,255,.25),
+    878px 312px rgba(255,255,255,.4),  989px 634px rgba(255,255,255,.3),
+    1123px 178px rgba(255,255,255,.25),1234px 512px rgba(255,255,255,.35),
+    1356px 89px rgba(255,255,255,.4),  1478px 389px rgba(255,255,255,.2),
+    1567px 712px rgba(255,255,255,.3), 1689px 234px rgba(255,255,255,.35),
+    1812px 567px rgba(255,255,255,.25),1923px 89px rgba(255,255,255,.4),
+    98px 512px rgba(255,255,255,.3),   223px 345px rgba(255,255,255,.25),
+    367px 678px rgba(255,255,255,.35), 489px 123px rgba(255,255,255,.4),
+    634px 456px rgba(255,255,255,.2),  756px 789px rgba(255,255,255,.3),
+    889px 234px rgba(255,255,255,.35), 1012px 567px rgba(255,255,255,.25),
+    1145px 89px rgba(255,255,255,.4),  1312px 456px rgba(255,255,255,.3);
+}
+.space-stars--s::after { width: 1px; height: 1px; }
+
+/* ORTA katman — 2px, 60 yildiz */
+.space-stars--m {
+  width: 2px; height: 2px;
+  opacity: .75;
+  animation: starfall 65s linear infinite;
+  box-shadow:
+    67px 145px rgba(255,255,255,.65),  234px 389px rgba(255,255,255,.7),
+    412px 234px rgba(255,255,255,.55), 589px 567px rgba(255,255,255,.65),
+    734px 89px rgba(255,255,255,.7),   867px 423px rgba(255,255,255,.6),
+    1023px 189px rgba(255,255,255,.55),1156px 512px rgba(255,255,255,.7),
+    1289px 67px rgba(255,255,255,.65), 1467px 345px rgba(255,255,255,.6),
+    1589px 678px rgba(255,255,255,.55),1734px 178px rgba(255,255,255,.7),
+    1889px 456px rgba(255,255,255,.65),145px 567px rgba(255,255,255,.6),
+    289px 89px rgba(255,255,255,.7),   456px 412px rgba(255,255,255,.55),
+    612px 234px rgba(255,255,255,.65), 778px 678px rgba(255,255,255,.6),
+    934px 345px rgba(255,255,255,.7),  1089px 589px rgba(255,255,255,.65),
+    1234px 123px rgba(255,255,255,.6), 1389px 456px rgba(255,255,255,.55),
+    1567px 234px rgba(255,255,255,.7), 1712px 578px rgba(255,255,255,.65),
+    1856px 89px rgba(255,255,255,.6),  45px 312px rgba(255,255,255,.7),
+    223px 678px rgba(255,255,255,.55), 378px 145px rgba(255,255,255,.65),
+    545px 489px rgba(255,255,255,.6),  712px 312px rgba(255,255,255,.7),
+    878px 567px rgba(255,255,255,.65), 1034px 234px rgba(255,255,255,.6),
+    1212px 712px rgba(255,255,255,.55),1356px 89px rgba(255,255,255,.7),
+    1523px 423px rgba(255,255,255,.65),1678px 256px rgba(255,255,255,.6),
+    1823px 589px rgba(255,255,255,.7), 189px 234px rgba(255,255,255,.55),
+    345px 567px rgba(255,255,255,.65), 512px 89px rgba(255,255,255,.6),
+    678px 456px rgba(255,255,255,.7),  845px 178px rgba(255,255,255,.65),
+    1012px 634px rgba(255,255,255,.55),1189px 345px rgba(255,255,255,.7),
+    1334px 712px rgba(255,255,255,.65),1512px 178px rgba(255,255,255,.6),
+    1667px 489px rgba(255,255,255,.7), 1845px 312px rgba(255,255,255,.55),
+    89px 678px rgba(255,255,255,.65),  267px 123px rgba(255,255,255,.6),
+    434px 489px rgba(255,255,255,.7),  600px 256px rgba(255,255,255,.65),
+    767px 634px rgba(255,255,255,.55), 934px 89px rgba(255,255,255,.7),
+    1100px 412px rgba(255,255,255,.65),1278px 567px rgba(255,255,255,.6),
+    1445px 234px rgba(255,255,255,.7), 1612px 678px rgba(255,255,255,.55);
+}
+.space-stars--m::after { width: 2px; height: 2px; }
+
+/* HIZLI katman — 3px, parlak, 40 yildiz */
+.space-stars--f {
+  width: 3px; height: 3px;
+  opacity: .9;
+  animation: starfall 32s linear infinite;
+  box-shadow:
+    123px 234px rgba(255,255,255,.95), 389px 89px rgba(255,255,255,.9),
+    623px 456px rgba(255,255,255,.95), 878px 178px rgba(255,255,255,.9),
+    1134px 534px rgba(255,255,255,.95),1389px 89px rgba(255,255,255,.9),
+    1634px 345px rgba(255,255,255,.95),1878px 623px rgba(255,255,255,.9),
+    56px 512px rgba(255,255,255,.95),  312px 267px rgba(255,255,255,.9),
+    567px 678px rgba(255,255,255,.95), 823px 89px rgba(255,255,255,.9),
+    1078px 423px rgba(255,255,255,.95),1334px 567px rgba(255,255,255,.9),
+    1589px 89px rgba(255,255,255,.95), 1845px 423px rgba(255,255,255,.9),
+    234px 345px rgba(255,255,255,.95), 489px 123px rgba(255,255,255,.9),
+    745px 567px rgba(255,255,255,.95), 1000px 234px rgba(255,255,255,.9),
+    1256px 678px rgba(255,255,255,.95),1512px 123px rgba(255,255,255,.9),
+    1767px 456px rgba(255,255,255,.95),89px 678px rgba(255,255,255,.9),
+    345px 234px rgba(255,255,255,.95), 600px 89px rgba(255,255,255,.9),
+    856px 512px rgba(255,255,255,.95), 1112px 345px rgba(255,255,255,.9),
+    1367px 678px rgba(255,255,255,.95),1623px 178px rgba(255,255,255,.9),
+    1878px 489px rgba(255,255,255,.95),178px 145px rgba(255,255,255,.9),
+    434px 523px rgba(255,255,255,.95), 689px 289px rgba(255,255,255,.9),
+    945px 634px rgba(255,255,255,.95), 1200px 89px rgba(255,255,255,.9),
+    1456px 412px rgba(255,255,255,.95),1712px 234px rgba(255,255,255,.9),
+    267px 678px rgba(255,255,255,.95), 1923px 156px rgba(255,255,255,.9);
+}
+.space-stars--f::after { width: 3px; height: 3px; }
+
+@keyframes starfall {
+  to { transform: translateY(100vh); }
+}
+
+/* ─── Supernova efektleri ───────────────────────────────────── */
+/* Konum icin 0×0 anchor div; ::before=cekirdek, ::after=halka.
+   Buyume/kuculme yalnizca transform:scale() ile — GPU composite.
+   Renk degisimi filter:hue-rotate() ile — paint yok.        */
+.nova {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Cekirdek */
+.nova::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translate(-50%,-50%) scale(0) translateZ(0);
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+
+/* Dis halka */
+.nova::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid;
+  transform: translate(-50%,-50%) scale(0) translateZ(0);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ── Nova 1: mor / sol-ust ── */
+.nova--1 { top: 12%; left: 18%; }
+.nova--1::before {
+  background: radial-gradient(circle, #fff 0%, #a855f7 50%, transparent 100%);
+  animation: nova-core 18s ease-out 0s infinite;
+}
+.nova--1::after { border-color: #a855f7; animation: nova-ring 18s ease-out 0s infinite; }
+
+/* ── Nova 2: camgobegi / sag-ust ── */
+.nova--2 { top: 8%; left: 80%; }
+.nova--2::before {
+  background: radial-gradient(circle, #fff 0%, #22d3ee 50%, transparent 100%);
+  animation: nova-core 18s ease-out 3s infinite;
+}
+.nova--2::after { border-color: #22d3ee; animation: nova-ring 18s ease-out 3s infinite; }
+
+/* ── Nova 3: pembe / sol-orta ── */
+.nova--3 { top: 46%; left: 6%; }
+.nova--3::before {
+  background: radial-gradient(circle, #fff 0%, #ec4899 50%, transparent 100%);
+  animation: nova-core 18s ease-out 6s infinite;
+}
+.nova--3::after { border-color: #ec4899; animation: nova-ring 18s ease-out 6s infinite; }
+
+/* ── Nova 4: altin / sag-orta ── */
+.nova--4 { top: 40%; left: 92%; }
+.nova--4::before {
+  background: radial-gradient(circle, #fff 0%, #f59e0b 50%, transparent 100%);
+  animation: nova-core 18s ease-out 9s infinite;
+}
+.nova--4::after { border-color: #f59e0b; animation: nova-ring 18s ease-out 9s infinite; }
+
+/* ── Nova 5: violet / sol-alt ── */
+.nova--5 { top: 76%; left: 23%; }
+.nova--5::before {
+  background: radial-gradient(circle, #fff 0%, #8b5cf6 50%, transparent 100%);
+  animation: nova-core 18s ease-out 12s infinite;
+}
+.nova--5::after { border-color: #8b5cf6; animation: nova-ring 18s ease-out 12s infinite; }
+
+/* ── Nova 6: teal / sag-alt ── */
+.nova--6 { top: 72%; left: 83%; }
+.nova--6::before {
+  background: radial-gradient(circle, #fff 0%, #06b6d4 50%, transparent 100%);
+  animation: nova-core 18s ease-out 15s infinite;
+}
+.nova--6::after { border-color: #06b6d4; animation: nova-ring 18s ease-out 15s infinite; }
+
+/* Cekirdek animasyonu: buyur, renk kaydir, son */
+@keyframes nova-core {
+  0%,100% {
+    transform: translate(-50%,-50%) scale(0) translateZ(0);
+    opacity: 0;
+    filter: hue-rotate(0deg);
+  }
+  4% {
+    transform: translate(-50%,-50%) scale(1) translateZ(0);
+    opacity: 1;
+    filter: hue-rotate(0deg);
+  }
+  16% {
+    transform: translate(-50%,-50%) scale(3.5) translateZ(0);
+    opacity: .85;
+    filter: hue-rotate(35deg);
+  }
+  30% {
+    transform: translate(-50%,-50%) scale(7) translateZ(0);
+    opacity: .3;
+    filter: hue-rotate(75deg);
+  }
+  40% {
+    transform: translate(-50%,-50%) scale(10) translateZ(0);
+    opacity: 0;
+    filter: hue-rotate(110deg);
+  }
+}
+
+/* Halka animasyonu: dis yone dogru yayil, son */
+@keyframes nova-ring {
+  0%,100% {
+    transform: translate(-50%,-50%) scale(0) translateZ(0);
+    opacity: 0;
+  }
+  4% {
+    transform: translate(-50%,-50%) scale(1) translateZ(0);
+    opacity: .85;
+  }
+  42% {
+    transform: translate(-50%,-50%) scale(30) translateZ(0);
+    opacity: 0;
+  }
+}
+
+/* ─── Mobil optimizasyon ────────────────────────────────────── */
+/* 768 px alti: yavas katman kaldir, nova kucult, 2 nova gizle */
+@media (max-width: 768px) {
+  .space-stars--s    { display: none; }
+  .space-stars--f    { opacity: .6; }
+  .nova::before      { width: 6px;  height: 6px;  }
+  .nova::after       { width: 12px; height: 12px; }
+  .nova--3,
+  .nova--4           { display: none; }
+}
+
+/* 480 px alti: orta katman da kaldir, 2 nova daha gizle */
+@media (max-width: 480px) {
+  .space-stars--m    { display: none; }
+  .nova--5,
+  .nova--6           { display: none; }
+}
+
+/* Azaltilmis hareket tercihi: tum animasyonlar dur */
+@media (prefers-reduced-motion: reduce) {
+  .space-stars--s,
+  .space-stars--m,
+  .space-stars--f,
+  .space-nebula,
+  .nova::before,
+  .nova::after       { animation: none !important; }
+}
