@@ -119,6 +119,7 @@
     document.body.appendChild(div);
     div.querySelector(".modal__close").addEventListener("click", closeModal);
     div.addEventListener("click", function (e) { if (e.target === div) closeModal(); });
+    if (window.KB && KB.bindDraft) KB.bindDraft(document.getElementById("offerForm"), "offer_draft");
   }
   function closeModal() {
     var m = document.getElementById("offerModal");
@@ -143,7 +144,6 @@
     var form = document.getElementById("offerForm");
     var success = document.getElementById("offerSuccess");
     success.hidden = true;
-    form.reset();
     form.onsubmit = async function (e) {
       e.preventDefault();
       var msg = document.getElementById("offerMsg").value.trim();
@@ -152,6 +152,8 @@
         if (on) { await SB.sendOffer(targetId, targetType, fromRole, msg); }
         else { KB.addTeklif({ yon: fromRole + "-" + targetType, kimdenRol: fromRole, kimeTip: targetType, kime: target.ad, mesaj: msg }); }
       } catch (err) { KB.toast(err.message || "Hata", "error"); return; }
+      document.getElementById("offerMsg").value = "";
+      if (window.KB && KB.clearDraft) KB.clearDraft("offer_draft");
       success.hidden = false;
       setTimeout(closeModal, 1600);
     };
@@ -323,6 +325,7 @@
     var sortSel = document.getElementById("jobSort");
     var q = norm(search && search.value || "");
     var city = citySel && citySel.value, veh = vehSel && vehSel.value, sort = (sortSel && sortSel.value) || "new";
+    if (window.KB && KB.saveView) KB.saveView("flt_ilanlar", { q: (search && search.value) || "", city: city || "", veh: veh || "", sort: sort });
     var out = JOBS.list.filter(function (l) {
       if (city && l.sehir !== city) return false;
       if (veh && l.arac !== veh) return false;
@@ -370,6 +373,14 @@
     var vehSel = document.getElementById("jobVehicle");
     fillFilterSelect(citySel, uniqVals(list, function (x) { return x.sehir; }), T("ilan.allCities"));
     fillFilterSelect(vehSel, uniqVals(list, function (x) { return x.arac; }), T("ilan.allVehicles"));
+    // Filtre hafızası: geri dönünce son arama/filtre korunur (MP05 §4)
+    var savedF = window.KB && KB.loadView && KB.loadView("flt_ilanlar");
+    if (savedF) {
+      var se = document.getElementById("jobSearch"); if (se && savedF.q) se.value = savedF.q;
+      if (citySel && savedF.city) citySel.value = savedF.city;
+      if (vehSel && savedF.veh) vehSel.value = savedF.veh;
+      var so = document.getElementById("jobSort"); if (so && savedF.sort) so.value = savedF.sort;
+    }
     ["jobSearch", "jobCity", "jobVehicle", "jobSort"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el && !el._wired) { el._wired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", applyJobFilters); }
@@ -423,6 +434,7 @@
     document.body.appendChild(div);
     div.querySelector(".modal__close").addEventListener("click", function () { div.classList.remove("is-open"); });
     div.addEventListener("click", function (e) { if (e.target === div) div.classList.remove("is-open"); });
+    if (window.KB && KB.bindDraft) KB.bindDraft(document.getElementById("applyForm"), "apply_draft");
   }
   function openApplyModal(listingId, baslik, meta) {
     if (!canPool()) { location.href = "giris.html"; return; }
@@ -442,7 +454,6 @@
     var err = document.getElementById("applyErr"); err.hidden = true;
     var sendBtn = document.getElementById("applySend");
     sendBtn.disabled = false; sendBtn.classList.remove("is-loading"); sendBtn.textContent = T("apl.send");
-    form.reset();
     document.getElementById("applyCancel").onclick = function () { m.classList.remove("is-open"); };
     form.onsubmit = async function (e) {
       e.preventDefault();
@@ -451,6 +462,8 @@
       try {
         await SB.applyToListing(listingId, document.getElementById("applyMsg").value.trim());
         document.querySelectorAll('[data-apply="' + listingId + '"]').forEach(function (b) { b.outerHTML = '<span class="chip chip--ok">' + T("ilan.applied") + '</span>'; });
+        document.getElementById("applyMsg").value = "";
+        if (window.KB && KB.clearDraft) KB.clearDraft("apply_draft");
         document.getElementById("applyConfirm").hidden = true;
         document.getElementById("applySuccess").hidden = false;
         document.getElementById("applyTitle").textContent = T("apl.successTitle");
@@ -540,6 +553,7 @@
     var mine = await SB.myListings();
     var listHtml = mine.length ? mine.map(myListingRow).join("") : '<div class="empty">' + T("ilan.noneOwn") + '</div>';
     host.innerHTML = formHtml + listHtml;
+    if (window.KB && KB.bindDraft) KB.bindDraft(host.querySelector(".rev-form"), "ilan_create");
     mine.forEach(async function (l) {
       var box = host.querySelector('[data-apps="' + l.id + '"]');
       if (!box) return;
@@ -558,7 +572,7 @@
     if (e.target.closest("#liSubmit")) {
       var baslik = val2("liBaslik"); var msg = document.getElementById("liMsg");
       if (!baslik) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = T("ilan.baslikReq"); return; }
-      try { await SB.createListing({ baslik: baslik, sehir: val2("liSehir"), bolge: val2("liBolge"), arac: val2("liArac"), aciklama: val2("liAciklama") }); await renderMyListings(); }
+      try { await SB.createListing({ baslik: baslik, sehir: val2("liSehir"), bolge: val2("liBolge"), arac: val2("liArac"), aciklama: val2("liAciklama") }); if (window.KB && KB.clearDraft) KB.clearDraft("ilan_create"); await renderMyListings(); }
       catch (err) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = (err && err.message) || "Hata"; }
       return;
     }
@@ -677,6 +691,7 @@
     var search = document.getElementById("fSearch"), sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
     var type = POOLV.type;
     var q = norm(search && search.value || ""), v1 = sel1 && sel1.value, v2 = sel2 && sel2.value;
+    if (window.KB && KB.saveView) KB.saveView("flt_pool_" + type, { q: (search && search.value) || "", v1: v1 || "", v2: v2 || "" });
     var out = POOLV.src.filter(function (x) {
       if (q) {
         var hay = norm(x.ad + " " + (x.sehir || "") + " " + (x.bolgeler ? x.bolgeler.join(" ") : "") + " " + (x.bolge || "") + " " + (x.tur || "") + " " + (x.aciklama || ""));
@@ -733,6 +748,13 @@
       var el = document.getElementById(id);
       if (el && !el._poolWired) { el._poolWired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", poolApply); }
     });
+    // Filtre hafızası: geri dönünce son arama/filtre korunur (MP05 §4)
+    var savedF = window.KB && KB.loadView && KB.loadView("flt_pool_" + type);
+    if (savedF) {
+      var se = document.getElementById("fSearch"); if (se && savedF.q) se.value = savedF.q;
+      if (sel1 && savedF.v1) sel1.value = savedF.v1;
+      if (sel2 && savedF.v2) sel2.value = savedF.v2;
+    }
     var search = document.getElementById("fSearch"), sugg = document.getElementById("poolSuggest");
     if (search && sugg && !search._poolSugg) {
       search._poolSugg = 1;
@@ -1419,6 +1441,11 @@
     frm.forEach(function (f) { push("firma", f, f.lat, f.lng, f.ad, (f.bolgeler || []).slice(0, 2).join(", "), [], { view: "profil-firma.html", offer: "firma" }); });
 
     var activeLayers = { ilan: true, kurye: true, isletme: true, firma: true };
+    // Filtre hafızası: önceki katman + arama durumunu yükle (MP05 §4)
+    var mxSaved = window.KB && KB.loadView && KB.loadView("flt_mx");
+    if (mxSaved && mxSaved.layers) Object.keys(mxSaved.layers).forEach(function (k) { if (k in activeLayers) activeLayers[k] = !!mxSaved.layers[k]; });
+    if (mxSaved && mxSaved.q && searchEl) searchEl.value = mxSaved.q;
+    function saveMxState() { if (window.KB && KB.saveView) KB.saveView("flt_mx", { q: searchEl ? searchEl.value : "", layers: activeLayers }); }
     var markers = {}, cardEls = {}, selectedKey = null;
 
     function pinIcon(it, sel) {
@@ -1494,17 +1521,20 @@
       var c = e.target.closest("[data-mxkey]");
       if (c) select(c.getAttribute("data-mxkey"), false);
     });
-    // katman chip'leri
+    // katman chip'leri — kayıtlı durumu yansıt + değişimde kaydet
     document.querySelectorAll("[data-mxlayer]").forEach(function (chip) {
+      var t = chip.getAttribute("data-mxlayer");
+      chip.classList.toggle("is-on", activeLayers[t]);
+      chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
       chip.addEventListener("click", function () {
-        var t = chip.getAttribute("data-mxlayer");
         activeLayers[t] = !activeLayers[t];
         chip.classList.toggle("is-on", activeLayers[t]);
         chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
         refresh();
+        saveMxState();
       });
     });
-    if (searchEl) searchEl.addEventListener("input", refresh);
+    if (searchEl) searchEl.addEventListener("input", function () { refresh(); saveMxState(); });
     // mobil liste/harita geçişi
     var toggleBtn = document.getElementById("mxToggle");
     if (toggleBtn && container) toggleBtn.addEventListener("click", function () {

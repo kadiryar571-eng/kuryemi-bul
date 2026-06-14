@@ -11,21 +11,19 @@
    Landing'in tam palet değerlerini garantiye al
 ═══════════════════════════════════════════════════════════ */
 :root {
-  --ds-bg:        #050505;
-  --ds-panel:     rgba(255,255,255,0.032);
-  --ds-panel2:    rgba(255,255,255,0.055);
-  --ds-stroke:    rgba(255,255,255,0.09);
-  --ds-stroke2:   rgba(255,255,255,0.17);
+  --ds-bg:        #0d0d0d;
+  --ds-panel:     rgba(255,255,255,0.05);
+  --ds-panel2:    rgba(255,255,255,0.08);
+  --ds-stroke:    rgba(255,255,255,0.10);
+  --ds-stroke2:   rgba(255,255,255,0.18);
   --ds-cyan:      #22d3ee;
   --ds-blue:      #4f8bff;
   --ds-violet:    #a855f7;
-  --ds-muted:     rgba(233,238,250,0.45);
-  --ds-faint:     rgba(233,238,250,0.30);
+  --ds-muted:     rgba(233,238,250,0.50);
+  --ds-faint:     rgba(233,238,250,0.32);
   --ds-grad:      linear-gradient(120deg, #22d3ee 0%, #4f8bff 50%, #a855f7 100%);
-  --ds-grad-soft: linear-gradient(135deg,rgba(34,211,238,0.13),rgba(79,139,255,0.09) 50%,rgba(168,85,247,0.11));
-  --ds-glow:      0 0 48px -12px rgba(34,211,238,0.42);
-  --ds-glow-b:    0 0 48px -12px rgba(79,139,255,0.42);
-  --ds-shadow:    0 28px 72px -24px rgba(0,0,0,0.86);
+  --ds-grad-soft: rgba(255,255,255,0.04);
+  --ds-shadow:    0 8px 24px -6px rgba(0,0,0,0.55);
   --ds-ease:      cubic-bezier(.22,.61,.36,1);
   --ds-font:      'Inter', var(--font, system-ui, sans-serif);
   --ds-display:   'Space Grotesk', var(--ds-font);
@@ -34,32 +32,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   2. CANVAS NETWORK + AMBIENT ORBS BACKGROUND
-   components.js bu canvas + orb katmanını her sayfaya enjekte eder
-   (landing.css'teki bg-fx/orb ile birebir aynı — landing yüklenmez)
+   2. ZEMIN — canvas/orb kaldırıldı, sade dark arka plan
 ═══════════════════════════════════════════════════════════ */
-#kb-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.9;
-}
-.bg-fx { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
-.bg-fx::before {
-  content: ""; position: absolute; inset: -20%;
-  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 46px 46px;
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
-          mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
-}
-.orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5; }
-.orb--1 { width: 620px; height: 620px; top: -240px; left: -160px; background: radial-gradient(circle, rgba(47,107,255,0.55), transparent 70%); }
-.orb--2 { width: 560px; height: 560px; top: 6%;  right: -200px; background: radial-gradient(circle, rgba(34,211,238,0.40), transparent 70%); }
-.orb--3 { width: 680px; height: 680px; top: 130%; left: 30%;   background: radial-gradient(circle, rgba(139,92,246,0.38), transparent 70%); }
-[data-theme="light"] .bg-fx { opacity: 0.4; }
-[data-theme="light"] #kb-canvas { opacity: 0.5; }
-/* styles.css'in eski body grid/orb katmanını kapat — bg-fx onların yerini aldı */
 body.kb-page::before, body.kb-page::after { content: none !important; background: none !important; }
 
 /* ═══════════════════════════════════════════════════════════
@@ -71,18 +45,7 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   overflow: hidden;
   padding: clamp(110px, 14vw, 160px) 0 clamp(44px, 5.5vw, 70px);
 }
-/* hafif radyal glow — landing hero'yla aynı doku */
-.kb-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 72% 120% at 8% -10%, rgba(34,211,238,0.10), transparent 55%),
-    radial-gradient(ellipse 60% 100% at 95% 110%, rgba(79,139,255,0.09), transparent 55%),
-    radial-gradient(ellipse 55% 70% at 50% 0%, rgba(168,85,247,0.05), transparent 60%);
-  pointer-events: none;
-}
-/* ince yatay çizgi — landing section ayırıcısıyla uyumlu */
+/* ince yatay çizgi — section ayırıcı */
 .kb-hero::after {
   content: "";
   position: absolute;
@@ -177,35 +140,11 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
     border-color 0.35s,
     box-shadow 0.48s;
 }
-/* landing'deki sol kenar glow efekti */
-.kb-card::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 12%; bottom: 12%;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--ds-grad);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-/* üst iç ışık — landing glass panel gibi */
-.kb-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(120% 100% at 50% -5%, rgba(255,255,255,0.07), transparent 60%);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s;
-}
 .kb-card:hover {
-  transform: translateY(-7px);
-  border-color: rgba(34,211,238,0.30);
-  box-shadow: var(--ds-shadow), 0 0 45px -16px rgba(34,211,238,0.20);
+  transform: translateY(-4px);
+  border-color: var(--ds-stroke2);
+  box-shadow: var(--ds-shadow);
 }
-.kb-card:hover::before,
-.kb-card:hover::after { opacity: 1; }
 
 /* içerik padding */
 .kb-card__inner { padding: 22px; }
@@ -234,7 +173,6 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   color: #fbbf24;
   border-color: rgba(251,191,36,0.4);
   background: rgba(251,191,36,0.10);
-  box-shadow: 0 0 18px -6px rgba(251,191,36,0.4);
 }
 
 /* match score pill */
@@ -566,7 +504,6 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   border-color: rgba(34,211,238,0.45);
   background: rgba(34,211,238,0.09);
   color: var(--ds-cyan);
-  box-shadow: 0 0 22px -8px rgba(34,211,238,0.35);
 }
 
 /* eski .toolbar'ı premium cam filtre barına dönüştür (işlevsellik korunur) */
@@ -619,7 +556,7 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
 }
 .kb-page .result-count::before {
   content: ""; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--ds-cyan); box-shadow: 0 0 8px rgba(34,211,238,0.6);
+  background: var(--ds-cyan);
   margin-right: 0;
 }
 
@@ -637,7 +574,6 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--ds-cyan);
-  box-shadow: 0 0 8px rgba(34,211,238,0.6);
   flex: none;
 }
 
@@ -703,7 +639,7 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
    level badge güçlendirmesi
 ═══════════════════════════════════════════════════════════ */
 .kb-level { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; vertical-align: middle; }
-.kb-level--prem { background: linear-gradient(135deg,rgba(168,85,247,0.22),rgba(34,211,238,0.14)); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.42); box-shadow: 0 0 14px -5px rgba(168,85,247,0.45); }
+.kb-level--prem { background: linear-gradient(135deg,rgba(168,85,247,0.22),rgba(34,211,238,0.14)); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.42); }
 .kb-level--pro  { background: rgba(79,139,255,0.16); color: #93c5fd; border: 1px solid rgba(79,139,255,0.4); }
 .kb-level--std  { background: rgba(255,255,255,0.06); color: var(--ds-muted); border: 1px solid var(--ds-stroke); }
 .kb-verified    { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.32); }
@@ -763,8 +699,7 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   border-radius: 8px;
 }
 
-/* hover glow on buttons — landing buton sistemiyle uyumlu */
-.kb-btn-glow:hover { box-shadow: 0 0 30px -8px rgba(34,211,238,0.6); }
+.kb-btn-glow:hover { }
 
 /* ═══════════════════════════════════════════════════════════
    14. HARITA KATMAN PANELI (premium)
@@ -811,7 +746,6 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   width: 9px; height: 9px;
   border-radius: 50%;
   flex: none;
-  box-shadow: 0 0 10px currentColor;
 }
 .kb-layer__t { font-size: 0.87rem; font-weight: 600; color: #f4f6fb; }
 .kb-layer__d { font-size: 0.74rem; color: var(--ds-muted); }

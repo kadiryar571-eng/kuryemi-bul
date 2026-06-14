@@ -288,6 +288,7 @@
       ["obName", "obCity", "obPhone"].forEach(function (id) {
         document.getElementById(id).addEventListener("input", function () { fieldErr(id, ""); });
       });
+      if (window.KB && KB.bindDraft) KB.bindDraft(document.getElementById("step2"), "ob_basics");
       function validateBasics() {
         var ok = true;
         var ad = document.getElementById("obName").value.trim();
@@ -339,14 +340,14 @@
       });
       document.getElementById("obFinish").addEventListener("click", async function () {
         var btn = this; load(btn, true);
-        try { await save(); location.href = dest(); }
+        try { await save(); if (window.KB && KB.clearDraft) KB.clearDraft("ob_basics"); location.href = dest(); }
         catch (e) { showErr(e.message || t("auth.errGeneric")); load(btn, false); }
       });
       document.getElementById("obSkip").addEventListener("click", async function () {
         // Şu ana kadar girilenleri kaydet, panele geç (boş alanlar atlanır)
         if (state.step >= 2) { var ad = document.getElementById("obName").value.trim(); var city = document.getElementById("obCity").value.trim(); var tel = document.getElementById("obPhone").value.trim(); if (ad) state.ad = ad; if (city) state.sehir = city; if (tel) state.telefon = tel; }
         var btn = this;
-        try { btn.disabled = true; await save(); location.href = dest(); }
+        try { btn.disabled = true; await save(); if (window.KB && KB.clearDraft) KB.clearDraft("ob_basics"); location.href = dest(); }
         catch (e) { showErr(e.message || t("auth.errGeneric")); btn.disabled = false; }
       });
       document.getElementById("obSignout").addEventListener("click", async function () {

@@ -385,6 +385,7 @@
       wireLiveValidation("lEmail", function () { validateEmail("lEmail"); });
       wireLiveValidation("rName", function () { validateName("rName"); });
       wireLiveValidation("rEmail", function () { validateEmail("rEmail"); });
+      if (window.KB && KB.bindDraft) KB.bindDraft(registerForm, "auth_register");
 
       /* ---- buton loading / başarı durumu ---- */
       function setLoading(btn, on, label) {
@@ -476,6 +477,7 @@
           var r = await SB.signUp(email, pass, ad);
           if (r.error) { showErr(r.error.message || t("auth.errGeneric")); setLoading(btn, false); return; }
           if (r.data && r.data.session) {
+            if (window.KB && KB.clearDraft) KB.clearDraft("auth_register");
             setSuccess(btn, t("auth.successShort"));
             setTimeout(function () { location.href = "onboarding.html"; }, 1000);
           } else {

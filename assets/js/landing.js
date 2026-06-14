@@ -146,9 +146,9 @@
     svg.insertAdjacentHTML('beforeend', out);
   })();
 
-  /* ---------- Full-screen network canvas ---------- */
+  /* ---------- Full-screen network canvas (devre dışı) ---------- */
   (function () {
-    var cv = $('#net-canvas'); if (!cv || reduced) return;
+    return;
     var ctx = cv.getContext('2d'), W, H, DPR = Math.min(window.devicePixelRatio || 1, 2);
     var nodes = [], couriers = [];
     function resize() {

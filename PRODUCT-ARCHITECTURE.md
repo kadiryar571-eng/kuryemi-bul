@@ -110,8 +110,11 @@ Dashboard = ekosistemin kalbi; her özellik buraya bağlı, her şey buraya dön
 - **Admin:** Platform İstatistik · Kullanıcı/İşletme/Kurye Yönetimi · Moderasyon Kuyruğu · Şikayet · Rapor.
 - Ortak: kullanıcı bağlamı ("Merhaba Kadir · Kurye · 3 başvuru · 5 mesaj"), bildirim/mesaj kısayolu.
 
-## 9) NAVIGATION LOGIC & PERSISTENT STATE (MP04)
-- **Global state (bir kez yüklenir, her yerde):** auth durumu · rol · aktif ekran · önceki rota · okunmamış bildirim/mesaj · oturum. (Mevcut `KB`/`SESSION` genişletilir; `getSession` ile ağsız.)
+## 9) NAVIGATION LOGIC & PERSISTENT STATE (MP04 + MP05)
+- **Global state (bir kez yüklenir, her yerde):** auth durumu · rol · aktif ekran · önceki rota · okunmamış bildirim/mesaj · oturum. ✅ `KB`/`SESSION` + `KB.state` merkezi store + pub/sub (`KB.onState`/`KB.setState`) uygulandı; `getSession` ile ağsız çalışır.
+- **Rol-bazlı header navigasyonu:** ✅ authed kullanıcıda ilk nav öğesi rolüne göre panel linki (Panelim); guest'te landing. Dil anahtarı, tema, rol simülatörü header'da kalıcı.
+- **Navigasyon hafızası:** ✅ Filtre/arama durumu sessionStorage'a kaydedilir (`KB.saveView`/`KB.loadView`); sekme içinde geri dönünce son filtre korunur. Pool (kurye/işletme/firma) ve İlanlar sayfaları tam bağlı; Harita katman+arama durumu da korunur.
+- **Taslak koruma:** ✅ Form içerikleri (`KB.bindDraft`/`KB.clearDraft`) sessionStorage'a debounce ile yazılır; yenileme/geri dönüşte kaybolmaz. Teklif modalı, başvuru modalı, ilan oluşturma formu, kayıt formu ve onboarding adım 2 bağlı.
 - **Home logic:** authed→/dashboard, guest→/landing. authed `/` veya landing'e gelirse → /dashboard redirect (giriş sonrası pazarlama YASAK).
 - **Route guard'ları:** `public` / `auth` / `role:[…]`. Hibrit: içerik açık; aksiyon (başvur/teklif/mesaj/kaydet/ilan ver) → giriş duvarı (`?next=`), sonra kaldığı aksiyona döner.
 - **SPA geçiş:** sekme = yalnız içerik değişir; shell/oturum sabit → "binadaki odalar arası geçiş" hissi, "farklı binalara gitmek" değil.
@@ -135,4 +138,4 @@ Net kullanıcı bağlamı · en önemli 3-5 aksiyon öne · veri-yoksa anlamlı 
 KuryemiBul = tek SPA ekosistemi: **Public** (guest: landing/giriş/kayıt/yasal + hibrit göz-at) ve **Private** (authed: Dashboard merkezli her modül). Kalıcı header + rol-bazlı sidebar/bottom-nav + global state ile kullanıcı her an "hesabımdayım" hisseder; Home daima Dashboard. Tüm ekranlar Dashboard'a bağlı, izole/dead-end yok, akışlar ekosistem içinde. Görsel dil `DESIGN-SYSTEM.md`'ye, davranış bu blueprint'e uyar.
 - **İnşa sırası (MP01 fazları):** Faz A: SPA shell + router + state + Home=Dashboard + auth redirect. Faz B: view göçü (Dashboard→İlanlar→Profil→Mesajlar→Havuz→Harita→Admin) + eksik ekranlar (Ayarlar/Arama/Destek). Faz C: landing guest-route + eski MPA sayfalarını kaldır + SEO (prerender/meta).
 
-> Sonraki MASTER PROMPT'lar (05+) muhtemelen ekran UI'ı getirecek; bu blueprint + DESIGN-SYSTEM onları yönetir.
+> **MP05 tamamlandı:** State/Session & Behavioral Architecture (STATE-ARCHITECTURE.md) — `KB.state` merkezi store, pub/sub, kullanıcı bağlamı, navigasyon hafızası (filtre + taslak koruma) uygulandı. Sonraki fazlar (MP06+): Dashboard hub UI, Global Arama, Ayarlar/Destek/Aktivite ekranları.

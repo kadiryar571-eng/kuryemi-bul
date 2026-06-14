@@ -263,6 +263,34 @@
   function notifyState() { _stateSubs.forEach(function (cb) { try { cb(STATE); } catch (e) {} }); }
   function onState(cb) { if (typeof cb === "function") { _stateSubs.push(cb); try { cb(STATE); } catch (e) {} } }
   function setState(patch) { if (patch) Object.keys(patch).forEach(function (k) { STATE[k] = patch[k]; }); notifyState(); }
+
+  /* ---------- Navigasyon hafızası + taslak koruma (MP05 §4/§7) ---------- */
+  // View durumu (filtre/scroll vb.) — sekme boyu (sessionStorage)
+  function saveView(key, data) { try { sessionStorage.setItem("kb_view:" + key, JSON.stringify(data)); } catch (e) {} }
+  function loadView(key) { try { return JSON.parse(sessionStorage.getItem("kb_view:" + key)); } catch (e) { return null; } }
+  function clearView(key) { try { sessionStorage.removeItem("kb_view:" + key); } catch (e) {} }
+  // Form/konteyner taslağı: input'ları sessionStorage'a debounce ile yaz, dönünce geri yükle (boş alanlara)
+  function bindDraft(container, key) {
+    if (!container) return;
+    var k = "kb_draft:" + key, t;
+    try {
+      var d = JSON.parse(sessionStorage.getItem(k));
+      if (d) container.querySelectorAll("input,textarea,select").forEach(function (el) {
+        if (el.id && d[el.id] != null && el.type !== "file" && el.type !== "password" && !el.value) el.value = d[el.id];
+      });
+    } catch (e) {}
+    container.addEventListener("input", function () {
+      clearTimeout(t);
+      t = setTimeout(function () {
+        var o = {};
+        container.querySelectorAll("input,textarea,select").forEach(function (el) {
+          if (el.id && el.type !== "file" && el.type !== "password") o[el.id] = el.value;
+        });
+        try { sessionStorage.setItem(k, JSON.stringify(o)); } catch (e) {}
+      }, 400);
+    });
+  }
+  function clearDraft(key) { try { sessionStorage.removeItem("kb_draft:" + key); } catch (e) {} }
   function buildState() {
     STATE.auth = { status: SESSION.user ? "authed" : "guest", userId: SESSION.user && SESSION.user.id, email: SESSION.user && SESSION.user.email };
     STATE.user = SESSION.profile ? { name: SESSION.profile.ad, avatar: SESSION.profile.avatar_url, role: SESSION.profile.role, verification: SESSION.profile.dogrulama } : null;
@@ -436,59 +464,10 @@
     }
   }
 
-  /* ---------- Paylaşılan canvas ağ arka planı (landing DNA'sı) ---------- */
-  function renderCanvasBg() {
-    // Landing'de zaten kendi canvas'ı var (net-canvas) — orada ekleme
-    if (document.getElementById("net-canvas") || document.getElementById("kb-canvas")) return;
-    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var cv = document.createElement("canvas");
-    cv.id = "kb-canvas";
-    cv.setAttribute("aria-hidden", "true");
-    document.body.insertBefore(cv, document.body.firstChild);
-    if (reduced) return;
-    var ctx = cv.getContext("2d"), W, H, DPR = Math.min(window.devicePixelRatio || 1, 2);
-    var nodes = [], couriers = [];
-    function resize() {
-      W = cv.width = innerWidth * DPR; H = cv.height = innerHeight * DPR;
-      cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px";
-      var count = Math.min(60, Math.round(innerWidth * innerHeight / 26000));
-      nodes = [];
-      for (var i = 0; i < count; i++) nodes.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.16 * DPR, vy: (Math.random() - 0.5) * 0.16 * DPR });
-      couriers = [];
-      for (var j = 0; j < Math.max(4, (count / 7) | 0); j++) couriers.push({ a: (Math.random() * count) | 0, b: (Math.random() * count) | 0, t: Math.random(), sp: 0.0015 + Math.random() * 0.002 });
-    }
-    var MAXD;
-    function tick() {
-      MAXD = 150 * DPR; ctx.clearRect(0, 0, W, H);
-      var i, a, b;
-      for (i = 0; i < nodes.length; i++) { var n = nodes[i]; n.x += n.vx; n.y += n.vy; if (n.x < 0 || n.x > W) n.vx *= -1; if (n.y < 0 || n.y > H) n.vy *= -1; }
-      for (a = 0; a < nodes.length; a++) for (b = a + 1; b < nodes.length; b++) {
-        var dx = nodes[a].x - nodes[b].x, dy = nodes[a].y - nodes[b].y, d = Math.sqrt(dx * dx + dy * dy);
-        if (d < MAXD) { ctx.strokeStyle = "rgba(110,150,230," + ((1 - d / MAXD) * 0.15) + ")"; ctx.lineWidth = DPR * 0.55; ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y); ctx.stroke(); }
-      }
-      for (i = 0; i < nodes.length; i++) { ctx.fillStyle = "rgba(150,180,240,0.42)"; ctx.beginPath(); ctx.arc(nodes[i].x, nodes[i].y, DPR * 1.25, 0, 6.2832); ctx.fill(); }
-      for (var c = 0; c < couriers.length; c++) {
-        var cu = couriers[c], na = nodes[cu.a], nb = nodes[cu.b]; if (!na || !nb) continue;
-        cu.t += cu.sp; if (cu.t > 1) { cu.t = 0; cu.a = cu.b; cu.b = (Math.random() * nodes.length) | 0; }
-        var x = na.x + (nb.x - na.x) * cu.t, y = na.y + (nb.y - na.y) * cu.t;
-        var g = ctx.createRadialGradient(x, y, 0, x, y, DPR * 9);
-        g.addColorStop(0, "rgba(34,211,238,0.9)"); g.addColorStop(1, "rgba(34,211,238,0)");
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, DPR * 9, 0, 6.2832); ctx.fill();
-        ctx.fillStyle = "#dffaff"; ctx.beginPath(); ctx.arc(x, y, DPR * 1.6, 0, 6.2832); ctx.fill();
-      }
-      requestAnimationFrame(tick);
-    }
-    resize(); tick();
-    var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(resize, 200); });
-  }
+  function renderCanvasBg() { /* canvas animasyonu kaldırıldı — sade dark tema */ }
 
-  /* ---------- Ambient orb katmanı (markup ile, landing bg-fx gibi) ---------- */
+  /* ---------- Sayfa sınıfı (kb-page) ekleme ---------- */
   function renderAmbient() {
-    if (document.querySelector(".bg-fx")) return;
-    var d = document.createElement("div");
-    d.className = "bg-fx"; d.setAttribute("aria-hidden", "true");
-    d.innerHTML = '<span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span>';
-    document.body.insertBefore(d, document.body.firstChild);
     document.body.classList.add("kb-page");
   }
 
@@ -616,6 +595,8 @@
     isAuthed: function () { return !!SESSION.user; },
     currentRole: function () { return isOnline() ? (SESSION.profile && SESSION.profile.role) : getRole(); },
     // Merkezi state (MP05): KB.state oku, KB.onState(cb) abone ol, KB.setState(patch) güncelle
-    state: STATE, onState: onState, setState: setState, homeHref: homeHref
+    state: STATE, onState: onState, setState: setState, homeHref: homeHref,
+    // Navigasyon hafızası + taslak (MP05 §4/§7)
+    saveView: saveView, loadView: loadView, clearView: clearView, bindDraft: bindDraft, clearDraft: clearDraft
   };
 })();
