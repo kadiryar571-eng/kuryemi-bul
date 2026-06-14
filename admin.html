@@ -236,7 +236,7 @@
                 try { admin = await SB.amIAdmin(); } catch (e) {}
             }
             if (!admin) {
-                body.innerHTML = '<div class="empty" style="text-align:center;padding:24px 0">⛔ Bu sayfa yalnız yöneticiler içindir.</div>';
+                location.replace("index.html");
                 return;
             }
 
