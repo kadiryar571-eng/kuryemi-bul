@@ -57,11 +57,15 @@ Supabase → **Authentication** → **URL Configuration**:
 
 - **Site URL:** `https://kuryemibul.com`
 - **Redirect URLs** (allowlist) — şunları ekle:
+  - `https://kuryemibul.com/giris.html` ← **Google OAuth dönüşü için ZORUNLU**
   - `https://kuryemibul.com/verify-email.html`
   - `https://kuryemibul.com/profil-duzenle.html`
   - `https://kuryemibul.com/sifre-sifirla.html`
   - (geliştirme için) `https://kadiryar571-eng.github.io/kuryemi-bul/verify-email.html`
+  - (lokal test için) `http://localhost:3211/giris.html` ← **Google OAuth yerel test için**
   - (lokal test için) `http://localhost:3211/verify-email.html`
+
+> ⚠️ `giris.html` allowlist'te olmazsa Google OAuth sonrası kod kaybolur ve giriş tamamlanmaz.
 
 > ❗ verify-email.html allowlist'te yoksa Supabase yönlendirmeyi **reddeder** ve doğrulama tamamlanmaz.
 
