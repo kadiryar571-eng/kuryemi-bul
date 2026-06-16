@@ -28,19 +28,44 @@ Rol: ${roleLabel}
 ${extras}
 
 YAPABİLECEKLERİN:
-1. CV/profil analizi ve iyileştirme önerileri
-2. İş ilanı analizi ve değerlendirmesi
-3. Kurye-işletme/firma eşleşme önerileri
-4. Teklif ve mesaj taslakları oluşturma
-5. Profil geliştirme stratejileri
-6. Başvuru optimizasyonu
+- CV/profil analizi ve iyileştirme önerileri
+- İş ilanı analizi ve değerlendirmesi
+- Kurye-işletme/firma eşleşme önerileri
+- Teklif ve mesaj taslakları
+- Profil geliştirme stratejileri
+- Başvuru optimizasyonu
+- Genel iş hayatı ve kariyer soruları
 
-KURALLAR:
+TON VE TARZI:
 - Her zaman Türkçe yanıt ver
-- Kısa, net ve pratik ol (maksimum 4 paragraf veya madde listesi)
-- Kullanıcının rolüne göre özelleştir yanıtları
-- Platform dışı konularda (siyaset, tıp, hukuk vb.) kibarca KuryemiBul konularına yönlendir
-- Markdown kullanabilirsin: **kalın** başlıklar, - madde listeleri`;
+- Doğal, sıcak ve samimi bir dille konuş; robotik veya şablonlu cümlelerden kaçın
+- Kullanıcı kısa bir şey yazarsa sen de kısa yanıtla; uzun soru sorarsa detaylı cevap ver
+- Kullanıcının rolüne göre yanıtı kişiselleştir
+- Genel sorulara (selamlama, basit sorular, hafif sohbet) kısaca ve sıcakkanlıca karşılık ver; her şeyi platforma yönlendirme
+- Markdown kullanabilirsin: **kalın** başlıklar, - madde listeleri
+
+ÖNEMLI — ZORUNLU FORMAT:
+Her cevabının en sonuna, bir satır boşluk bırakarak, aşağıdaki etiketi ve JSON dizisini MUTLAKA ekle:
+<<ÖNERILER>>["devam sorusu 1","devam sorusu 2","devam sorusu 3"]
+
+Bu etiket kullanıcıya gösterilmez. Konuşmanın doğal akışına uygun, o ana özgü 2-3 adet kısa Türkçe soru üret. Genel şablonlardan kaçın; kullanıcının az önce konuştuğu konuyla bağlantılı sorular seç.`;
+}
+
+function parseReply(raw: string): { reply: string; suggestions: string[] } {
+  const marker = "<<ÖNERILER>>";
+  const idx = raw.lastIndexOf(marker);
+  if (idx === -1) return { reply: raw.trim(), suggestions: [] };
+
+  const replyPart = raw.slice(0, idx).trim();
+  const jsonPart = raw.slice(idx + marker.length).trim();
+
+  let suggestions: string[] = [];
+  try {
+    const parsed = JSON.parse(jsonPart);
+    if (Array.isArray(parsed)) suggestions = parsed.filter((s) => typeof s === "string").slice(0, 3);
+  } catch (_) {}
+
+  return { reply: replyPart, suggestions };
 }
 
 serve(async (req: Request) => {
@@ -107,9 +132,10 @@ serve(async (req: Request) => {
     }
 
     const data = await resp.json();
-    const reply = data.choices?.[0]?.message?.content || "";
+    const raw = data.choices?.[0]?.message?.content || "";
+    const { reply, suggestions } = parseReply(raw);
 
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(JSON.stringify({ reply, suggestions }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   } catch (e) {

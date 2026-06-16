@@ -11,14 +11,35 @@
   var HISTORY_KEY = 'kb_ai_history';
   var MAX_HISTORY = 20;
 
-  var QUICK_ACTIONS = [
-    { icon: '📄', label: 'CV Analizi', prompt: 'CV\'mi analiz etmek istiyorum. CV içeriğimi buraya yapıştıracağım, güçlü ve zayıf yönlerimi değerlendirir misin?' },
-    { icon: '📋', label: 'İlan Analizi', prompt: 'Bir iş ilanını analiz etmek istiyorum. İlan metnini paylaşacağım, bu ilana uygunluğumu ve dikkat etmem gerekenleri söyler misin?' },
-    { icon: '🤝', label: 'Eşleşme', prompt: 'Profilime göre hangi tür işletmeler veya firmalarla çalışmak daha uygun olur? Eşleşme önerileri verir misin?' },
-    { icon: '✉️', label: 'Mesaj Taslağı', prompt: 'Bir işletmeye veya kurye firmasına göndermek için profesyonel bir mesaj taslağı hazırlamama yardım eder misin?' },
-    { icon: '👤', label: 'Profil Geliştir', prompt: 'KuryemiBul profilimi daha çekici hale getirmek için somut öneriler verir misin?' },
-    { icon: '🚀', label: 'Başvuru Optimize', prompt: 'İş başvurularımı nasıl daha etkili hale getirebilirim? Başvuru stratejisi önerir misin?' }
-  ];
+  function getQuickActionsForRole(role) {
+    var sets = {
+      kurye: [
+        { icon: '📄', label: 'CV Analizi', prompt: 'CV\'mi analiz etmek istiyorum. İçeriğimi paylaşacağım, güçlü ve zayıf yönlerimi değerlendirir misin?' },
+        { icon: '👤', label: 'Profil Geliştir', prompt: 'KuryemiBul profilimi daha çekici hale getirmek için somut öneriler verir misin?' },
+        { icon: '🤝', label: 'Eşleşme Önerileri', prompt: 'Profilime göre hangi tür işletmeler veya firmalarla çalışmak daha uygun olur?' },
+        { icon: '🚀', label: 'Başvuru İpuçları', prompt: 'İş başvurularımı nasıl daha etkili hale getirebilirim?' }
+      ],
+      isletme: [
+        { icon: '🔍', label: 'Kurye Bul', prompt: 'İhtiyacıma uygun kurye nasıl bulurum? Hangi kriterlere dikkat etmeliyim?' },
+        { icon: '📋', label: 'İlan Yaz', prompt: 'Etkili bir kurye iş ilanı nasıl yazmalıyım? Örnek bir taslak hazırlar mısın?' },
+        { icon: '💰', label: 'Teklif Değerlendir', prompt: 'Gelen kurye tekliflerini nasıl değerlendirmeliyim? Nelere dikkat etmeliyim?' },
+        { icon: '⚖️', label: 'Firma Karşılaştır', prompt: 'Kurye firması ile bireysel kurye arasındaki farklar nelerdir, hangisi daha uygun olabilir?' }
+      ],
+      firma: [
+        { icon: '👥', label: 'Kurye Havuzu', prompt: 'Platformdaki kurye havuzunu nasıl daha verimli kullanabilirim?' },
+        { icon: '📊', label: 'Performans', prompt: 'Kurye performansını nasıl ölçmeli ve değerlendirmeliyim?' },
+        { icon: '📢', label: 'Toplu Başvuru', prompt: 'Birden fazla kurye için aynı anda nasıl ilan açabilirim veya başvuru toplayabilirim?' },
+        { icon: '📝', label: 'Sözleşme Taslağı', prompt: 'Kuryelerle çalışmak için standart bir anlaşma taslağı hazırlamama yardımcı olur musun?' }
+      ],
+      guest: [
+        { icon: '❓', label: 'Platform Nedir?', prompt: 'KuryemiBul nasıl bir platform? Ne işe yarar?' },
+        { icon: '🚴', label: 'Kurye mi Olayım?', prompt: 'Kurye olarak çalışmayı düşünüyorum, platformda neler yapabilirim?' },
+        { icon: '🏪', label: 'İşletme Sahibiyim', prompt: 'Kurye ihtiyacım var, bu platformda nasıl kurye bulabilirim?' },
+        { icon: '📝', label: 'Nasıl Kayıt Olunur?', prompt: 'Platforma nasıl kayıt olabilirim, adımları anlatır mısın?' }
+      ]
+    };
+    return sets[role] || sets.guest;
+  }
 
   var state = {
     open: false,
@@ -84,13 +105,28 @@
     if (!list) return;
 
     if (!state.messages.length) {
+      var ctx = state.userContext;
+      var role = ctx && ctx.role ? ctx.role : 'guest';
+      var name = ctx && ctx.name && ctx.name !== 'Misafir' ? ctx.name : null;
+      var roleGreets = {
+        kurye: 'Profil, başvuru veya iş ilanları hakkında konuşalım.',
+        isletme: 'Kurye arama, ilan yazma veya teklif değerlendirme konularında yardımcı olabilirim.',
+        firma: 'Kurye havuzu, performans veya süreç yönetimi hakkında konuşabiliriz.',
+        guest: 'Sana nasıl yardımcı olabilirim?'
+      };
+      var greetBody = roleGreets[role] || roleGreets.guest;
+      var welcomeText = name
+        ? 'Merhaba, ' + escHtml(name) + '! Ben KuryemiBul AI. ' + greetBody
+        : 'Merhaba! Ben KuryemiBul AI. ' + greetBody;
+
+      var actions = getQuickActionsForRole(role);
       list.innerHTML =
         '<div class="ai-welcome">' +
           '<div class="ai-welcome__icon">✨</div>' +
-          '<p class="ai-welcome__text">Merhaba! Ben KuryemiBul AI\'yım.<br>Sana nasıl yardımcı olabilirim?</p>' +
+          '<p class="ai-welcome__text">' + welcomeText + '</p>' +
         '</div>' +
         '<div class="ai-chips" id="ai-chips">' +
-          QUICK_ACTIONS.map(function (a) {
+          actions.map(function (a) {
             return '<button class="ai-chip" type="button" data-prompt="' + escHtml(a.prompt) + '">' +
               a.icon + ' ' + a.label + '</button>';
           }).join('') +
@@ -98,11 +134,24 @@
       return;
     }
 
-    list.innerHTML = state.messages.map(function (m) {
+    var lastAiIdx = -1;
+    for (var i = state.messages.length - 1; i >= 0; i--) {
+      if (state.messages[i].role === 'assistant') { lastAiIdx = i; break; }
+    }
+
+    list.innerHTML = state.messages.map(function (m, idx) {
       if (m.role === 'user') {
         return '<div class="ai-msg ai-msg--user"><div class="ai-bubble">' + escHtml(m.content) + '</div></div>';
       }
-      return '<div class="ai-msg ai-msg--ai"><div class="ai-avatar">✨</div><div class="ai-bubble"><p>' + markdownToHtml(m.content) + '</p></div></div>';
+      var suggHtml = '';
+      if (idx === lastAiIdx && m.suggestions && m.suggestions.length) {
+        suggHtml = '<div class="ai-suggestions">' +
+          m.suggestions.map(function (s) {
+            return '<button class="ai-chip ai-chip--suggestion" type="button" data-prompt="' + escHtml(s) + '">' + escHtml(s) + '</button>';
+          }).join('') +
+        '</div>';
+      }
+      return '<div class="ai-msg ai-msg--ai"><div class="ai-avatar">✨</div><div class="ai-bubble"><p>' + markdownToHtml(m.content) + '</p>' + suggHtml + '</div></div>';
     }).join('');
 
     list.scrollTop = list.scrollHeight;
@@ -164,9 +213,9 @@
       hideTyping();
 
       if (data.reply) {
-        state.messages.push({ role: 'assistant', content: data.reply });
+        state.messages.push({ role: 'assistant', content: data.reply, suggestions: data.suggestions || [] });
       } else {
-        state.messages.push({ role: 'assistant', content: data.error || 'Bir hata oluştu, lütfen tekrar deneyin.' });
+        state.messages.push({ role: 'assistant', content: data.error || 'Bir hata oluştu, lütfen tekrar deneyin.', suggestions: [] });
       }
     } catch (e) {
       hideTyping();
