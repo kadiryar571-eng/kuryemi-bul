@@ -803,4 +803,89 @@
     // Navigasyon hafızası + taslak (MP05 §4/§7)
     saveView: saveView, loadView: loadView, clearView: clearView, bindDraft: bindDraft, clearDraft: clearDraft
   };
+
+  /* ---- PWA: manifest + service worker + push izni ---- */
+  (function initPWA() {
+    // manifest.json bağlantısını head'e ekle
+    if (!document.querySelector('link[rel="manifest"]')) {
+      var ml = document.createElement('link');
+      ml.rel = 'manifest';
+      ml.href = '/manifest.json';
+      document.head.appendChild(ml);
+    }
+
+    // Service worker kaydı
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
+
+    // Realtime bildirim gelince SW üzerinden sistem bildirimi göster
+    var origSub = window.SB && SB.subscribeNotifications;
+    if (origSub) {
+      SB.subscribeNotifications = function (cb) {
+        return origSub(function (notif) {
+          if (typeof cb === 'function') cb(notif);
+          // SW'ye mesaj gönder → sistem bildirimi
+          if (navigator.serviceWorker.controller && Notification.permission === 'granted') {
+            var typeIcons = {
+              offer_new: '✉️', offer_accepted: '✅', offer_rejected: '❌',
+              application_new: '📨', application_accepted: '✅', application_rejected: '❌',
+              review_new: '⭐', kyc_verified: '🛡️', info: '🔔'
+            };
+            var icon = typeIcons[notif.type] || '🔔';
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SHOW_NOTIFICATION',
+              payload: {
+                title: icon + ' KuryemiBul',
+                body: notif.title || notif.body || '',
+                url: notif.link || '/',
+                tag: notif.type || 'kb'
+              }
+            });
+          }
+        });
+      };
+    }
+
+    // Push izni iste (login sonrası, 3 sn gecikmeyle)
+    function requestPushPermission() {
+      if (Notification.permission !== 'default') return;
+      if (!window.SB || !SB.savePushSubscription) return;
+      setTimeout(function () {
+        Notification.requestPermission().then(function (perm) {
+          if (perm !== 'granted') return;
+          subscribePush();
+        });
+      }, 3000);
+    }
+
+    function subscribePush() {
+      navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array('BFsPHwDgi84H_TC2ObvZ8ou3_HnI-XWUPkIAaz8Z74M16fiPQLHK0UAYXgkCEzG5Bvh8kJWg46O2qKZ4dDTJf1Y')
+        });
+      }).then(function (sub) {
+        return SB.savePushSubscription(sub);
+      }).catch(function () {});
+    }
+
+    function urlBase64ToUint8Array(b64) {
+      var pad = '='.repeat((4 - b64.length % 4) % 4);
+      var raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+      var arr = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      return arr;
+    }
+
+    // Auth değişikliğinde push izni iste
+    if (window.SB && SB.onAuthChange) {
+      SB.onAuthChange(function (ev) {
+        if (ev === 'SIGNED_IN') requestPushPermission();
+      });
+    }
+    // Sayfa açıkken zaten giriş yapılmışsa da iste
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.isOnline && isOnline()) requestPushPermission();
+    });
+  })();
 })();

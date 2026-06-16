@@ -541,19 +541,60 @@
   async function renderMyListings() {
     var host = document.getElementById("isletmeIlan");
     if (!host) return;
-    var formHtml = '<div class="rev-form" style="margin-bottom:20px">' +
-      '<div class="form-grid">' +
-      '<div class="field"><label>' + T("ilan.baslik") + '</label><input id="liBaslik" placeholder="' + T("ilan.baslikPh") + '"></div>' +
-      '<div class="field"><label>' + T("ilan.sehir") + '</label><input id="liSehir"></div>' +
-      '<div class="field"><label>' + T("ilan.bolge") + '</label><input id="liBolge"></div>' +
-      '<div class="field"><label>' + T("ilan.arac") + '</label><input id="liArac"></div>' +
-      '<div class="field field--full"><label>' + T("ilan.aciklama") + '</label><textarea id="liAciklama" rows="2"></textarea></div>' +
-      '</div><button type="button" class="btn btn--primary btn--sm" id="liSubmit">' + T("ilan.create") + '</button>' +
-      '<p class="form-success" id="liMsg" hidden></p></div>';
     var mine = await SB.myListings();
-    var listHtml = mine.length ? mine.map(myListingRow).join("") : '<div class="empty">' + T("ilan.noneOwn") + '</div>';
+
+    var formHtml =
+      '<div class="li-create-wrap">' +
+        '<div class="li-create-head">' +
+          '<span class="li-create-head__title">📋 İlanlarım' + (mine.length ? ' <span class="chip chip--sm">' + mine.length + '</span>' : '') + '</span>' +
+          '<button type="button" class="btn btn--primary btn--sm" id="liToggle">✚ Yeni İlan Oluştur</button>' +
+        '</div>' +
+        '<div class="li-create-form" id="liForm" style="display:none">' +
+          '<div class="form-grid">' +
+            '<div class="field field--required"><label>' + T("ilan.baslik") + '</label><input id="liBaslik" placeholder="' + T("ilan.baslikPh") + '" autocomplete="off"></div>' +
+            '<div class="field"><label>' + T("ilan.sehir") + '</label><input id="liSehir" autocomplete="off"></div>' +
+            '<div class="field"><label>' + T("ilan.bolge") + '</label><input id="liBolge" autocomplete="off"></div>' +
+            '<div class="field"><label>' + T("ilan.arac") + '</label>' +
+              '<select id="liArac"><option value="">— Seçiniz —</option>' +
+              ['Motosiklet','Bisiklet','Scooter','Araba','Yaya','Diğer'].map(function(v){ return '<option>' + v + '</option>'; }).join('') +
+              '</select>' +
+            '</div>' +
+            '<div class="field field--full"><label>' + T("ilan.aciklama") + '</label><textarea id="liAciklama" rows="3" placeholder="Kurye gereksinimlerini, çalışma saatlerini ve detayları buraya yazın…"></textarea></div>' +
+          '</div>' +
+          '<div class="li-create-foot">' +
+            '<button type="button" class="btn btn--primary" id="liSubmit">📤 İlanı Yayınla</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" id="liCancel">İptal</button>' +
+            '<span class="li-msg" id="liMsg" style="display:none"></span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    var listHtml = mine.length
+      ? mine.map(myListingRow).join("")
+      : '<div class="empty">Henüz ilan oluşturmadınız. Yukarıdan yeni ilan ekleyebilirsiniz.</div>';
+
     host.innerHTML = formHtml + listHtml;
-    if (window.KB && KB.bindDraft) KB.bindDraft(host.querySelector(".rev-form"), "ilan_create");
+
+    var toggle = document.getElementById("liToggle");
+    var form = document.getElementById("liForm");
+    var cancel = document.getElementById("liCancel");
+    if (toggle && form) {
+      toggle.addEventListener("click", function () {
+        var open = form.style.display !== "none";
+        form.style.display = open ? "none" : "block";
+        toggle.textContent = open ? "✚ Yeni İlan Oluştur" : "✕ Kapat";
+        if (!open) { var inp = document.getElementById("liBaslik"); if (inp) inp.focus(); }
+      });
+    }
+    if (cancel && form) {
+      cancel.addEventListener("click", function () {
+        form.style.display = "none";
+        if (toggle) toggle.textContent = "✚ Yeni İlan Oluştur";
+      });
+    }
+
+    if (window.KB && KB.bindDraft) KB.bindDraft(form, "ilan_create");
+
     mine.forEach(async function (l) {
       var box = host.querySelector('[data-apps="' + l.id + '"]');
       if (!box) return;
@@ -570,10 +611,23 @@
   });
   document.addEventListener("click", async function (e) {
     if (e.target.closest("#liSubmit")) {
-      var baslik = val2("liBaslik"); var msg = document.getElementById("liMsg");
-      if (!baslik) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = T("ilan.baslikReq"); return; }
-      try { await SB.createListing({ baslik: baslik, sehir: val2("liSehir"), bolge: val2("liBolge"), arac: val2("liArac"), aciklama: val2("liAciklama") }); if (window.KB && KB.clearDraft) KB.clearDraft("ilan_create"); await renderMyListings(); }
-      catch (err) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = (err && err.message) || "Hata"; }
+      var baslik = val2("liBaslik");
+      var msg = document.getElementById("liMsg");
+      var btn = document.getElementById("liSubmit");
+      if (!baslik) {
+        if (msg) { msg.style.display = "inline"; msg.style.color = "#c0392b"; msg.textContent = T("ilan.baslikReq") || "İlan başlığı zorunludur."; }
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = "Yayınlanıyor…"; }
+      try {
+        await SB.createListing({ baslik: baslik, sehir: val2("liSehir"), bolge: val2("liBolge"), arac: val2("liArac"), aciklama: val2("liAciklama") });
+        if (window.KB && KB.clearDraft) KB.clearDraft("ilan_create");
+        if (window.KB && KB.toast) KB.toast("İlan başarıyla yayınlandı! 🎉", "success");
+        await renderMyListings();
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = "📤 İlanı Yayınla"; }
+        if (msg) { msg.style.display = "inline"; msg.style.color = "#c0392b"; msg.textContent = (err && err.message) || "Bir hata oluştu."; }
+      }
       return;
     }
     var tog = e.target.closest("[data-listing-toggle]");
@@ -1413,9 +1467,34 @@
       }).join(""));
       setHTML("kuryeTeklif", listFor("kurye"));
     } else if (role === "isletme") {
-      var ai = prof ? (prof.acikIlan || 0) : "3";
-      // Görüşme/memnuniyet için gerçek veri yok → online'da "—"
-      setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric(online() ? "—" : "12", T("m.meetings")) + metric(online() ? "—" : "4.7", T("m.satisfaction")));
+      if (online() && window.SB && SB.myListingStats) {
+        SB.myListingStats().then(function (stats) {
+          var acceptRate = stats.totalApps > 0 ? Math.round(stats.acceptedApps / stats.totalApps * 100) : 0;
+          var analyticsHtml =
+            '<div class="kb-analytics" style="margin-top:16px">' +
+              '<div class="kb-analytics__title">📊 İlan Analitiği</div>' +
+              '<div class="kb-analytics__grid">' +
+                '<div class="kb-analytics__item"><span class="kb-analytics__val">' + stats.openCount + '</span><span class="kb-analytics__lbl">Açık İlan</span></div>' +
+                '<div class="kb-analytics__item"><span class="kb-analytics__val">' + stats.totalApps + '</span><span class="kb-analytics__lbl">Toplam Başvuru</span></div>' +
+                '<div class="kb-analytics__item"><span class="kb-analytics__val kb-analytics__val--ok">' + stats.acceptedApps + '</span><span class="kb-analytics__lbl">Kabul Edildi</span></div>' +
+                '<div class="kb-analytics__item"><span class="kb-analytics__val">' + stats.pendingApps + '</span><span class="kb-analytics__lbl">Bekleyen</span></div>' +
+                '<div class="kb-analytics__item"><span class="kb-analytics__val">' + acceptRate + '%</span><span class="kb-analytics__lbl">Kabul Oranı</span></div>' +
+                '<div class="kb-analytics__item"><span class="kb-analytics__val">' + stats.closedCount + '</span><span class="kb-analytics__lbl">Kapalı İlan</span></div>' +
+              '</div>' +
+            '</div>';
+          setHTML("isletmeMetrics",
+            metric(stats.openCount, T("m.openListings")) +
+            metric(offerCount, T("m.offers")) +
+            metric(stats.totalApps, "Başvuru") +
+            metric(acceptRate + "%", "Kabul Oranı") +
+            analyticsHtml
+          );
+        }).catch(function () {});
+        setHTML("isletmeMetrics", metric("…", T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("…", "Başvuru") + metric("…", "Kabul Oranı"));
+      } else {
+        var ai = prof ? (prof.acikIlan || 0) : "—";
+        setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("—", "Başvuru") + metric("—", "Kabul Oranı"));
+      }
       if (online()) renderMyListings();
       else setHTML("isletmeIlan", D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), T("soon.published") + " · " + KB.esc(i.tarih), '<span class="chip">' + T("state.active") + '</span>');

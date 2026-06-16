@@ -1076,3 +1076,24 @@ html.high-contrast :focus-visible { outline: 3px solid #ffcc00 !important; outli
     .ai-float::after, .ai-typing span { animation: none !important; }
     .ai-float, .ai-panel, .ai-chip { transition: none !important; }
 }
+
+/* ---- İşletme Analitik Widget ---- */
+.kb-analytics { background: var(--surface-2, rgba(255,255,255,.04)); border-radius: 14px; padding: 16px; border: 1px solid var(--line, rgba(255,255,255,.08)); }
+.kb-analytics__title { font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--navy-soft); margin-bottom: 12px; }
+.kb-analytics__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.kb-analytics__item { text-align: center; }
+.kb-analytics__val { display: block; font-size: 1.5rem; font-weight: 700; color: var(--ds-blue, #4f8bff); line-height: 1.2; }
+.kb-analytics__val--ok { color: #22c55e; }
+.kb-analytics__lbl { font-size: .72rem; color: var(--navy-soft); margin-top: 2px; display: block; }
+@media (max-width: 480px) { .kb-analytics__grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- İlan Oluşturma Formu ---- */
+.li-create-wrap { margin-bottom: 20px; }
+.li-create-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.li-create-head__title { font-weight: 600; font-size: .95rem; display: flex; align-items: center; gap: 8px; }
+.li-create-form { background: var(--surface-2, rgba(255,255,255,.04)); border: 1px solid var(--line, rgba(255,255,255,.1)); border-radius: 14px; padding: 18px; margin-bottom: 16px; animation: fadeIn .2s ease; }
+.li-create-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.li-msg { font-size: .82rem; }
+.chip--sm { font-size: .7rem; padding: 2px 7px; }
+.field--required label::after { content: " *"; color: #e74c3c; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }

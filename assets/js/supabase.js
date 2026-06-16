@@ -594,6 +594,43 @@
     return ch;
   }
 
+  /* ---- Push Subscription ---- */
+  async function savePushSubscription(sub) {
+    var u = await getUser();
+    if (!u) return;
+    var k = sub.toJSON ? sub.toJSON() : sub;
+    return client.from("push_subscriptions").upsert({
+      user_id: u.id,
+      endpoint: k.endpoint,
+      p256dh: k.keys.p256dh,
+      auth_key: k.keys.auth
+    }, { onConflict: "user_id,endpoint" });
+  }
+  async function deletePushSubscription(endpoint) {
+    return client.from("push_subscriptions").delete().eq("endpoint", endpoint);
+  }
+
+  /* ---- İşletme Analitik ---- */
+  async function myListingStats() {
+    var u = await getUser();
+    if (!u) return { openCount: 0, closedCount: 0, totalApps: 0, pendingApps: 0, acceptedApps: 0 };
+    var lr = await client.from("listings").select("id,durum").eq("owner_user", u.id);
+    var listings = lr.data || [];
+    var openCount = listings.filter(function (l) { return l.durum === "acik"; }).length;
+    var closedCount = listings.length - openCount;
+    if (!listings.length) return { openCount: 0, closedCount: 0, totalApps: 0, pendingApps: 0, acceptedApps: 0 };
+    var ids = listings.map(function (l) { return l.id; });
+    var ar = await client.from("applications").select("id,durum").in("listing_id", ids);
+    var apps = ar.data || [];
+    return {
+      openCount: openCount,
+      closedCount: closedCount,
+      totalApps: apps.length,
+      pendingApps: apps.filter(function (a) { return a.durum === "pending"; }).length,
+      acceptedApps: apps.filter(function (a) { return a.durum === "accepted"; }).length
+    };
+  }
+
   window.SB = {
     isOn: isOn,
     canMessage: canMessage, sendMessage: sendMessage, myConversations: myConversations,
@@ -615,6 +652,8 @@
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
     listingApplications: listingApplications, updateApplication: updateApplication,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
-    amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc
+    amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
+    savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
+    myListingStats: myListingStats
   };
 })();

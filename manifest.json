@@ -1,0 +1,18 @@
+{
+  "name": "KuryemiBul",
+  "short_name": "KuryemiBul",
+  "description": "Kuryelerin iş bulduğu, işletmelerin kurye bulduğu profesyonel platform",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050505",
+  "theme_color": "#4f8bff",
+  "lang": "tr",
+  "icons": [
+    { "src": "assets/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "productivity"],
+  "related_applications": []
+}
