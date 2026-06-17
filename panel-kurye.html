@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="title.panelKurye">Kurye Paneli · Kuryemi Bul</title>
     <meta name="description" content="Kurye paneli: başvurular, gelen teklifler ve profil.">
     <link rel="icon" href="assets/logo.png">
@@ -30,6 +30,20 @@
 
     <main class="section--sm">
         <div class="container">
+
+            <!-- Mobil dashboard welcome + aksiyon header -->
+            <div class="dash-welcome" id="dashWelcomeKurye" style="display:none">
+                <div class="dash-welcome__greeting">Merhaba,</div>
+                <div class="dash-welcome__name" id="dashWelcomeName">Kurye</div>
+            </div>
+
+            <!-- Mobil sonraki adım kartı -->
+            <div class="dash-next-action" id="dashNextAction" style="display:none">
+                <div class="dash-next-action__label">Sıradaki adım</div>
+                <div class="dash-next-action__text" id="dashNextText">Profilini tamamla ve ilk iş teklifini al.</div>
+                <a class="dash-next-action__btn" href="profil-duzenle.html" id="dashNextBtn">Profiles → Düzenle</a>
+            </div>
+
             <div class="dash">
                 <nav class="dash__nav">
                     <button data-tab="ozet" class="is-active">🎯 Kariyer Skorum</button>
@@ -38,21 +52,44 @@
                     <button data-tab="teklif">💼 İş Teklifleri</button>
                     <button data-tab="profil">🪪 Kimliğim</button>
                 </nav>
-                <div>
-                    <section id="panel-ozet" class="dash__panel is-active">
+                <div class="dash__feed">
+                    <section id="panel-ozet" class="dash__panel dash-section is-active">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Kariyer Skorum
+                        </div>
                         <div class="metric-row" id="kuryeMetrics"></div>
                         <div class="panel-box"><h3 data-i18n="panel.welcome.t">👋 Hoş geldin!</h3><p class="pcard__sub" data-i18n="panel.welcome.d">Buradan başvurularını ve sana gelen teklifleri yönetebilirsin.</p></div>
                     </section>
-                    <section id="panel-harita" class="dash__panel">
-                        <div id="panelMapKurye" style="width:100%;height:600px;border-radius:12px"></div>
+                    <section id="panel-harita" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/></svg>
+                            Bölge Haritası
+                        </div>
+                        <div class="dash-map-widget">
+                            <div id="panelMapKurye" style="width:100%;height:600px;border-radius:12px"></div>
+                            <a href="harita.html" class="dash-map-widget__expand">Tam Ekran →</a>
+                        </div>
                     </section>
-                    <section id="panel-basvuru" class="dash__panel">
+                    <section id="panel-basvuru" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Başvurularım
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.myApplications">📨 Başvurularım</h3><div id="kuryeBasvuru"></div></div>
                     </section>
-                    <section id="panel-teklif" class="dash__panel">
+                    <section id="panel-teklif" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                            İş Teklifleri
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.incomingOffers">✉️ Gelen Teklifler</h3><div id="kuryeTeklif"></div></div>
                     </section>
-                    <section id="panel-profil" class="dash__panel">
+                    <section id="panel-profil" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Kimliğim
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.myProfile">👤 Profilim</h3>
                             <p class="pcard__sub" data-i18n="panel.myProfile.d">Örnek profilin nasıl göründüğünü incele:</p>
                             <a class="btn btn--primary mt-24" href="profil-kurye.html?id=k1" data-i18n="btn.viewMyProfile">Genel Profilimi Gör →</a>
@@ -62,6 +99,35 @@
             </div>
         </div>
     </main>
+
+    <script>
+    // Mobil dashboard welcome header — session yüklendikten sonra
+    KB && KB.ready && KB.ready().then(function () {
+        var s = KB.session && KB.session();
+        if (!s || !s.profile) return;
+        var name = (s.profile.ad || "").split(" ")[0] || "Kurye";
+        var welcomeEl = document.getElementById("dashWelcomeKurye");
+        var nameEl    = document.getElementById("dashWelcomeName");
+        var nextEl    = document.getElementById("dashNextAction");
+        if (welcomeEl) welcomeEl.style.display = "";
+        if (nameEl)    nameEl.textContent = name;
+        // Dinamik aksiyon metni
+        if (nextEl) {
+            var role = s.profile.role;
+            var dogrulama = s.profile.dogrulama;
+            var nextText = document.getElementById("dashNextText");
+            var nextBtn  = document.getElementById("dashNextBtn");
+            if (dogrulama !== "onaylandi") {
+                if (nextText) nextText.textContent = "Profilini doğrula, daha fazla teklif al.";
+                if (nextBtn)  { nextBtn.textContent = "Profilimi Doğrula →"; nextBtn.href = "profil-duzenle.html"; }
+            } else {
+                if (nextText) nextText.textContent = "Yeni iş ilanlarını keşfet ve başvur.";
+                if (nextBtn)  { nextBtn.textContent = "İlanları Gör →"; nextBtn.href = "ilanlar.html"; }
+            }
+            nextEl.style.display = "";
+        }
+    });
+    </script>
 
     <div id="app-footer"></div>
     <script src="assets/js/i18n.js"></script>

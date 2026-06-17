@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="notif.title">Bildirimler · Kuryemi Bul</title>
     <meta name="robots" content="noindex">
     <link rel="icon" href="assets/logo.png">
@@ -87,14 +87,63 @@
                 '</a>';
         }
 
+        var activeFilter = "all";
+        var FILTER_CATS = [
+            { key: "all",     label: "Tümü" },
+            { key: "offer",   label: "Teklif" },
+            { key: "apply",   label: "Başvuru" },
+            { key: "message", label: "Mesaj" },
+            { key: "system",  label: "Sistem" }
+        ];
+        var TYPE_CAT = {
+            offer_new: "offer", offer_accepted: "offer", offer_rejected: "offer",
+            application_new: "apply", application_accepted: "apply", application_rejected: "apply",
+            bid_new: "offer", bid_accepted: "offer", bid_rejected: "offer",
+            review_new: "system", kyc_verified: "system", kyc_rejected: "system", info: "system"
+        };
+
+        function renderFilterChips(list) {
+            var chips = FILTER_CATS.map(function (c) {
+                var count = c.key === "all" ? list.length : list.filter(function (n) { return TYPE_CAT[n.type] === c.key; }).length;
+                if (c.key !== "all" && count === 0) return "";
+                var active = activeFilter === c.key ? " is-active" : "";
+                return '<button class="nlist-filter-chip' + active + '" data-cat="' + c.key + '">' + c.label +
+                    (count ? ' <span style="opacity:.6;margin-left:4px;font-size:.68rem">(' + count + ')</span>' : '') +
+                    '</button>';
+            }).join("");
+            return '<div class="nlist-filters" id="nlistFilters">' + chips + '</div>';
+        }
+
+        function filteredList(list) {
+            if (activeFilter === "all") return list;
+            return list.filter(function (n) { return TYPE_CAT[n.type] === activeFilter; });
+        }
+
+        var allList = [];
+
         function render(list) {
+            allList = list;
+            var filtered = filteredList(list);
             if (!list.length) {
                 wrap.innerHTML = '<div class="empty">🔔<br>' + t("notif.empty") + '</div>';
                 markAllBtn.hidden = true;
                 return;
             }
-            wrap.innerHTML = '<div class="nlist">' + list.map(rowHtml).join("") + '</div>';
+            var html = renderFilterChips(list);
+            html += filtered.length ? '<div class="nlist">' + filtered.map(rowHtml).join("") + '</div>'
+                : '<div class="empty" style="margin-top:24px">Bu kategoride bildirim yok.</div>';
+            wrap.innerHTML = html;
             markAllBtn.hidden = !list.some(function (n) { return !n.read_at; });
+            // Chip click
+            var filtersEl = document.getElementById("nlistFilters");
+            if (filtersEl) {
+                filtersEl.addEventListener("click", function (e) {
+                    var chip = e.target.closest("[data-cat]");
+                    if (!chip) return;
+                    activeFilter = chip.getAttribute("data-cat");
+                    render(allList);
+                });
+            }
         }
 
         async function start() {

@@ -581,10 +581,24 @@
     }
   }
 
+  /* Session guard: giriş yapmış kullanıcıyı landing/login sayfasından panel'e yönlendir */
+  var SESSION_GUARD_PAGES = ["index.html", "giris.html", ""];
+  function runSessionGuard() {
+    if (!isOnline()) return;
+    var cur = (location.pathname.split("/").pop() || "index.html");
+    if (SESSION_GUARD_PAGES.indexOf(cur) === -1) return;
+    if (!SESSION.user) return;
+    var role = SESSION.profile && SESSION.profile.role;
+    if (!role) return; // profil tamamlanmamış, onboarding'e devam
+    var dest = roleToPanel(role);
+    if (dest && dest !== cur) window.location.replace(dest);
+  }
+
   async function updateAuthArea() {
     var area = document.getElementById("authArea");
     if (!area) return;
     if (isOnline()) { area.innerHTML = '<span class="user-chip">…</span>'; await READY; }
+    runSessionGuard();
     area.innerHTML = buildAuthArea();
     wireAuthArea();
     buildState();
@@ -705,25 +719,43 @@
     sync();
   }
 
-  /* ---------- Mobil alt navigasyon ---------- */
+  /* ---------- Mobil alt navigasyon — SVG ikonlar ---------- */
+  var BNAV_ICONS = {
+    home:     '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>',
+    listings: '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>',
+    map:      '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/><line x1="9" y1="4" x2="9" y2="17"/><line x1="15" y1="7" x2="15" y2="20"/></svg>',
+    messages: '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    profile:  '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    signin:   '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>'
+  };
+
   function renderBottomNav() {
     if (document.getElementById("kb-bottomnav")) return;
     var active = (location.pathname.split("/").pop() || "index.html");
     var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
     var lastHref = authed ? (isOnline() ? roleToPanel(SESSION.profile && SESSION.profile.role) : panelHref()) : "giris.html";
     var items = [
-      { href: homeHref(), ic: "🏠", key: "nav.home" },
-      { href: "ilanlar.html", ic: "💼", key: "nav.ilanlar" },
-      { href: "harita.html", ic: "🗺️", key: "nav.map" },
-      { href: "mesajlar.html", ic: "💬", key: "nav.messages", badge: "bnavMsgBadge" },
-      { href: lastHref, ic: "👤", key: authed ? "cta.panel" : "cta.signin" }
+      { href: homeHref(),       icon: BNAV_ICONS.home,     key: "nav.home",     extra: 'data-bnav-home' },
+      { href: "ilanlar.html",   icon: BNAV_ICONS.listings,  key: "nav.ilanlar" },
+      { href: "harita.html",    icon: BNAV_ICONS.map,       key: "nav.map" },
+      { href: "mesajlar.html",  icon: BNAV_ICONS.messages,  key: "nav.messages", badge: "bnavMsgBadge" },
+      { href: lastHref,         icon: authed ? BNAV_ICONS.profile : BNAV_ICONS.signin,
+                                key: authed ? "cta.panel" : "cta.signin" }
     ];
     var nav = document.createElement("nav");
-    nav.id = "kb-bottomnav"; nav.className = "bottom-nav"; nav.setAttribute("aria-label", "Alt menü");
+    nav.id = "kb-bottomnav";
+    nav.className = "bottom-nav";
+    nav.setAttribute("aria-label", "Alt menü");
     nav.innerHTML = items.map(function (it) {
-      var on = it.href === active ? " is-active" : "";
+      var on    = (it.href === active || active.indexOf(it.href.replace(".html", "")) === 0) ? " is-active" : "";
       var badge = it.badge ? '<span class="bottom-nav__badge" id="' + it.badge + '" style="display:none">0</span>' : "";
-      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '"' + (it.key === "nav.home" ? ' data-bnav-home' : '') + '><span class="bottom-nav__ic">' + it.ic + badge + '</span><span class="bottom-nav__l">' + T(it.key) + '</span></a>';
+      var extra = it.extra ? (" " + it.extra) : "";
+      var labelTr = { "nav.home": "Ana Sayfa", "nav.ilanlar": "İlanlar", "nav.map": "Harita", "nav.messages": "Mesajlar", "cta.panel": "Panelim", "cta.signin": "Giriş" };
+      var label = T(it.key) || labelTr[it.key] || it.key;
+      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '"' + extra + '>' +
+        '<span class="bottom-nav__ic">' + it.icon + badge + '</span>' +
+        '<span class="bottom-nav__l">' + label + '</span>' +
+        '</a>';
     }).join("");
     document.body.appendChild(nav);
     document.body.classList.add("has-bottom-nav");
@@ -738,8 +770,18 @@
     document.head.appendChild(s);
   }
 
+  function injectMobileUX() {
+    if (document.getElementById("kb-mobile-ux-css")) return;
+    var link = document.createElement("link");
+    link.id = "kb-mobile-ux-css";
+    link.rel = "stylesheet";
+    link.href = "assets/css/mobile-ux.css";
+    document.head.appendChild(link);
+  }
+
   function init() {
     var active = (location.pathname.split("/").pop() || "index.html");
+    injectMobileUX();
     renderAmbient();
     renderCanvasBg();
     renderHeader(active);

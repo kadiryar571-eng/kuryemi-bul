@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="title.panelIsletme">İşletme Paneli · Kuryemi Bul</title>
     <meta name="description" content="İşletme paneli: ilanlar, havuzda arama ve gelen başvurular.">
     <link rel="icon" href="assets/logo.png">
@@ -30,6 +30,18 @@
 
     <main class="section--sm">
         <div class="container">
+
+            <div class="dash-welcome" id="dashWelcomeIsletme" style="display:none">
+                <div class="dash-welcome__greeting">Merhaba,</div>
+                <div class="dash-welcome__name" id="dashWelcomeNameI">İşletme</div>
+            </div>
+
+            <div class="dash-next-action" id="dashNextActionI" style="display:none">
+                <div class="dash-next-action__label">Sıradaki adım</div>
+                <div class="dash-next-action__text" id="dashNextTextI">Kurye havuzunu keşfet, ilanlarını yayınla.</div>
+                <a class="dash-next-action__btn" href="kuryeler.html" id="dashNextBtnI">Kurye Havuzu →</a>
+            </div>
+
             <div class="dash">
                 <nav class="dash__nav">
                     <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>
@@ -38,8 +50,12 @@
                     <button data-tab="ara">🔎 Yetenek Keşfi</button>
                     <button data-tab="basvuru">📥 Başvuru Hattı</button>
                 </nav>
-                <div>
-                    <section id="panel-ozet" class="dash__panel is-active">
+                <div class="dash__feed">
+                    <section id="panel-ozet" class="dash__panel dash-section is-active">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                            Genel Bakış
+                        </div>
                         <div class="metric-row" id="isletmeMetrics"></div>
                         <div class="panel-box"><h3 data-i18n="panel.quick.t">🚀 Hızlı İşlem</h3><p class="pcard__sub" data-i18n="panel.quick.iz">Yeni kurye bulmak için havuzda arama yap veya firmalardan toplu teklif al.</p>
                             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
@@ -48,25 +64,58 @@
                             </div>
                         </div>
                     </section>
-                    <section id="panel-harita" class="dash__panel">
-                        <div id="panelMapIsletme" style="width:100%;height:600px;border-radius:12px"></div>
+                    <section id="panel-harita" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/></svg>
+                            Bölge Haritası
+                        </div>
+                        <div class="dash-map-widget">
+                            <div id="panelMapIsletme" style="width:100%;height:600px;border-radius:12px"></div>
+                            <a href="harita.html" class="dash-map-widget__expand">Tam Ekran →</a>
+                        </div>
                     </section>
-                    <section id="panel-ilan" class="dash__panel">
+                    <section id="panel-ilan" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Pozisyonlarım
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.myListings">📋 İlanlarım</h3><div id="isletmeIlan"></div></div>
                     </section>
-                    <section id="panel-ara" class="dash__panel">
+                    <section id="panel-ara" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Yetenek Keşfi
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.searchPool">🔎 Havuzda Kurye Ara</h3>
                             <p class="pcard__sub" data-i18n="panel.searchPool.d">Tüm kurye havuzuna git, filtrele ve doğrudan teklif gönder.</p>
                             <a class="btn btn--primary mt-24" href="kuryeler.html" data-i18n="btn.goCourierPool">Kurye Havuzuna Git →</a>
                         </div>
                     </section>
-                    <section id="panel-basvuru" class="dash__panel">
+                    <section id="panel-basvuru" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Başvuru Hattı
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.applications">📨 Gelen Başvurular & Teklifler</h3><div id="isletmeBasvuru"></div></div>
                     </section>
                 </div>
             </div>
         </div>
     </main>
+
+    <script>
+    KB && KB.ready && KB.ready().then(function () {
+        var s = KB.session && KB.session();
+        if (!s || !s.profile) return;
+        var name = (s.profile.ad || "").split(" ")[0] || "İşletme";
+        var welcomeEl = document.getElementById("dashWelcomeIsletme");
+        var nameEl    = document.getElementById("dashWelcomeNameI");
+        var nextEl    = document.getElementById("dashNextActionI");
+        if (welcomeEl) welcomeEl.style.display = "";
+        if (nameEl)    nameEl.textContent = name;
+        if (nextEl)    nextEl.style.display = "";
+    });
+    </script>
 
     <div id="app-footer"></div>
     <script src="assets/js/i18n.js"></script>

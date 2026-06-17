@@ -31,6 +31,10 @@
   --ds-r:         20px;
   --ds-r-sm:      12px;
   --ds-text:      #f4f6fb;
+  /* Mobil token'lar */
+  --bottom-nav-height: 64px;
+  --safe-area-bottom:  env(safe-area-inset-bottom, 0px);
+  --safe-area-top:     env(safe-area-inset-top, 0px);
 }
 
 [data-theme="light"] {

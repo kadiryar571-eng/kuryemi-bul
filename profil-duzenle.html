@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="pe.title">Profilim · Kuryemi Bul</title>
     <meta name="robots" content="noindex">
     <link rel="icon" href="assets/logo.png">
@@ -34,19 +34,31 @@
 
     <main class="section--sm">
         <div class="container container--narrow">
-            <div class="form-card">
+            <div class="form-card profile-section">
+                <div class="profile-section__title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Temel Bilgiler
+                </div>
                 <form id="peForm"><p class="pcard__sub">…</p></form>
                 <p class="form-success" id="peMsg" hidden></p>
                 <p class="mt-24" id="peView" hidden><a class="btn btn--light btn--sm" id="peViewLink" href="#" data-i18n="pe.viewPublic">Herkese açık profilimi gör →</a></p>
             </div>
 
-            <div class="form-card mt-24" id="kycCard" hidden>
+            <div class="form-card profile-section mt-24" id="kycCard" hidden>
+                <div class="profile-section__title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Kimlik Doğrulama
+                </div>
                 <h3 style="margin-bottom:6px" data-i18n="kyc.title">🪪 Kimlik Doğrulama</h3>
                 <p class="pcard__sub" data-i18n="kyc.lead">Profilini doğrulat, havuzda "✓ Doğrulanmış" rozetiyle öne çık.</p>
                 <div id="kycBody" class="mt-24"></div>
             </div>
 
-            <div class="form-card mt-24" id="accCard" hidden>
+            <div class="form-card profile-section mt-24" id="accCard" hidden>
+                <div class="profile-section__title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>
+                    Hesap
+                </div>
                 <h3 style="margin-bottom:16px" data-i18n="acc.title">Hesap</h3>
                 <div class="field"><label for="accPass" data-i18n="acc.changePass">Şifre Değiştir</label>
                     <input type="password" id="accPass" minlength="6" data-i18n-ph="acc.newPass" placeholder="Yeni şifre (en az 6 karakter)"></div>

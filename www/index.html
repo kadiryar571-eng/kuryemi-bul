@@ -5,31 +5,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Kuryemi Bul</title>
   <style>
-    html,body{margin:0;height:100%;background:#050505;color:#f4f6fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif}
-    .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:24px}
-    .logo{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;background:linear-gradient(120deg,#22d3ee,#4f8bff 45%,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#4f8bff;animation:s .8s linear infinite}
-    @keyframes s{to{transform:rotate(360deg)}}
-    .sub{font-size:.9rem;color:#94a0b4}
-    .retry{display:none;margin-top:8px;padding:11px 22px;border-radius:999px;border:none;background:linear-gradient(135deg,#4f8bff,#a855f7);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;background:#050505;color:#f4f6fb;font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;overflow:hidden}
+
+    .splash{
+      position:fixed;inset:0;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      background:#050505;
+      padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+    }
+
+    .splash__icon{
+      width:80px;height:80px;border-radius:22px;
+      background:linear-gradient(135deg,#22d3ee 0%,#4f8bff 50%,#a855f7 100%);
+      display:flex;align-items:center;justify-content:center;
+      font-size:2.4rem;
+      margin-bottom:20px;
+      animation:logoIn .55s cubic-bezier(.22,.61,.36,1) both;
+      box-shadow:0 16px 40px -8px rgba(79,139,255,.45);
+    }
+
+    .splash__brand{
+      font-size:1.6rem;font-weight:800;letter-spacing:-.03em;
+      background:linear-gradient(120deg,#22d3ee,#4f8bff 50%,#a855f7);
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+      animation:textIn .55s .1s cubic-bezier(.22,.61,.36,1) both;
+      font-family:'Space Grotesk','Inter',system-ui,sans-serif;
+    }
+
+    .splash__tagline{
+      font-size:.82rem;color:rgba(180,190,220,.5);margin-top:7px;
+      font-weight:500;letter-spacing:.01em;
+      animation:textIn .55s .2s cubic-bezier(.22,.61,.36,1) both;
+    }
+
+    .splash__progress{
+      position:absolute;
+      bottom:calc(28px + env(safe-area-inset-bottom,0px));
+      left:48px;right:48px;height:2px;
+      background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;
+    }
+    .splash__progress-fill{
+      height:100%;width:0%;
+      background:linear-gradient(90deg,#22d3ee,#4f8bff,#a855f7);
+      border-radius:999px;
+      animation:progress 1.6s .15s ease-out forwards;
+    }
+
+    .splash__offline{
+      display:none;margin-top:28px;text-align:center;
+    }
+    .splash__offline p{font-size:.9rem;color:rgba(180,190,220,.55);margin-bottom:14px;}
+    .splash__retry{
+      padding:11px 28px;border-radius:999px;border:none;
+      background:linear-gradient(135deg,#4f8bff,#a855f7);
+      color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;
+      font-family:inherit;
+    }
+
+    @keyframes logoIn{from{opacity:0;transform:scale(.72) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes textIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes progress{0%{width:0%}60%{width:70%}100%{width:100%}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="logo">🛵 Kuryemi&nbsp;Bul</div>
-    <div class="spin" id="spin"></div>
-    <div class="sub" id="sub">Yükleniyor…</div>
-    <button class="retry" id="retry" onclick="location.href='https://kuryemibul.com'">Tekrar dene</button>
+  <div class="splash" id="splash">
+    <div class="splash__icon">🛵</div>
+    <div class="splash__brand">Kuryemi Bul</div>
+    <div class="splash__tagline">Kurye ekosistemi</div>
+    <div class="splash__offline" id="offlineMsg">
+      <p>İnternet bağlantısı yok.</p>
+      <button class="splash__retry" onclick="location.href='https://kuryemibul.com'">Tekrar dene</button>
+    </div>
+    <div class="splash__progress"><div class="splash__progress-fill"></div></div>
   </div>
   <script>
-    // server.url canlı siteyi yükler; bu ekran yalnız ilk açılışta ya da bağlantı yokken görünür.
     setTimeout(function () {
       if (!navigator.onLine) {
-        document.getElementById('spin').style.display = 'none';
-        document.getElementById('sub').textContent = 'İnternet bağlantısı yok.';
-        document.getElementById('retry').style.display = 'inline-block';
+        document.getElementById('offlineMsg').style.display = 'block';
       }
-    }, 4000);
+    }, 3500);
   </script>
 </body>
 </html>

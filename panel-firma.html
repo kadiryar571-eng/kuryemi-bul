@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="title.panelFirma">Firma Paneli · Kuryemi Bul</title>
     <meta name="description" content="Kurye firması paneli: personel havuzu ve teklifler.">
     <link rel="icon" href="assets/logo.png">
@@ -30,13 +30,31 @@
 
     <main class="section--sm">
         <div class="container">
+
+            <div class="dash-welcome" id="dashWelcomeFirma" style="display:none">
+                <div class="dash-welcome__greeting">Merhaba,</div>
+                <div class="dash-welcome__name" id="dashWelcomeNameF">Firma</div>
+            </div>
+
+            <div class="dash-next-action" id="dashNextActionF" style="display:none">
+                <div class="dash-next-action__label">Sıradaki adım</div>
+                <div class="dash-next-action__text" id="dashNextTextF">İşletme havuzunu keşfet ve yeni bağlantılar kur.</div>
+                <a class="dash-next-action__btn" href="isletmeler.html" id="dashNextBtnF">İşletme Havuzu →</a>
+            </div>
+
             <div class="dash">
                 <nav class="dash__nav">
-                    <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>                    <button data-tab="harita">🗺️ Bölge Haritası</button>                    <button data-tab="personel">👥 Yetenek Havuzum</button>
+                    <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>
+                    <button data-tab="harita">🗺️ Bölge Haritası</button>
+                    <button data-tab="personel">👥 Yetenek Havuzum</button>
                     <button data-tab="teklif">💼 İş Teklifleri</button>
                 </nav>
-                <div>
-                    <section id="panel-ozet" class="dash__panel is-active">
+                <div class="dash__feed">
+                    <section id="panel-ozet" class="dash__panel dash-section is-active">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                            Genel Bakış
+                        </div>
                         <div class="metric-row" id="firmaMetrics"></div>
                         <div class="panel-box"><h3 data-i18n="panel.quick.t">🚀 Hızlı İşlem</h3><p class="pcard__sub" data-i18n="panel.quick.fz">İşletmelere teklif gönder ya da personel havuzunu güçlendir.</p>
                             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
@@ -45,19 +63,48 @@
                             </div>
                         </div>
                     </section>
-                    <section id="panel-harita" class="dash__panel">
-                        <div id="panelMapFirma" style="width:100%;height:600px;border-radius:12px"></div>
+                    <section id="panel-harita" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/></svg>
+                            Bölge Haritası
+                        </div>
+                        <div class="dash-map-widget">
+                            <div id="panelMapFirma" style="width:100%;height:600px;border-radius:12px"></div>
+                            <a href="harita.html" class="dash-map-widget__expand">Tam Ekran →</a>
+                        </div>
                     </section>
-                    <section id="panel-personel" class="dash__panel">
+                    <section id="panel-personel" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Yetenek Havuzum
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.personnelPool">👥 Personel Havuzu</h3><div id="firmaPersonel"></div></div>
                     </section>
-                    <section id="panel-teklif" class="dash__panel">
+                    <section id="panel-teklif" class="dash__panel dash-section">
+                        <div class="dash-section__title">
+                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                            İş Teklifleri
+                        </div>
                         <div class="panel-box"><h3 data-i18n="box.businessOffers">✉️ İşletmelere/İşletmelerden Teklifler</h3><div id="firmaTeklif"></div></div>
                     </section>
                 </div>
             </div>
         </div>
     </main>
+
+    <script>
+    KB && KB.ready && KB.ready().then(function () {
+        var s = KB.session && KB.session();
+        if (!s || !s.profile) return;
+        var name = (s.profile.ad || "").split(" ")[0] || "Firma";
+        var welcomeEl = document.getElementById("dashWelcomeFirma");
+        var nameEl    = document.getElementById("dashWelcomeNameF");
+        var nextEl    = document.getElementById("dashNextActionF");
+        if (welcomeEl) welcomeEl.style.display = "";
+        if (nameEl)    nameEl.textContent = name;
+        if (nextEl)    nextEl.style.display = "";
+    });
+    </script>
 
     <div id="app-footer"></div>
     <script src="assets/js/i18n.js"></script>
