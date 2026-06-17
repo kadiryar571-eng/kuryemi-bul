@@ -324,6 +324,8 @@
   /* Desktop dashboard gizle — mob-dash devralır */
   .dash           { display: none !important; }
   #kuryePageHead  { display: none !important; }
+  #firmaPageHead  { display: none !important; }
+  #isletmePageHead { display: none !important; }
 
   /* Desktop tab navigasyonunu gizle */
   .dash__nav {
@@ -1513,6 +1515,132 @@
     color:           var(--ds-cyan, #22d3ee);
     text-decoration: none;
     font-weight:     700;
+  }
+
+  /* ── FİRMA AVATAR (kare logo tarzı) ────────────────── */
+  .mob-dash__avatar--firm {
+    border-radius: 14px;
+    background:    linear-gradient(135deg, #4f8bff 0%, #a855f7 100%);
+  }
+
+  /* ── KURYE HAVUZU — Yatay kaydırma ─────────────────── */
+  .mob-pool-scroll {
+    display:    flex;
+    gap:        10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    margin:     0 -16px;
+    padding-left:  16px;
+    padding-right: 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mob-pool-scroll::-webkit-scrollbar { display: none; }
+
+  .mob-pool-chip {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    gap:             5px;
+    flex-shrink:     0;
+    min-width:       70px;
+    padding:         10px 8px;
+    background:      var(--ds-panel2, rgba(255,255,255,0.06));
+    border:          1px solid var(--ds-stroke);
+    border-radius:   16px;
+    text-decoration: none;
+    color:           inherit;
+    transition:      border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-pool-chip:active { border-color: var(--ds-cyan); }
+  .mob-pool-chip__av {
+    width:           44px;
+    height:          44px;
+    border-radius:   50%;
+    background:      var(--ds-grad);
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    font-size:       1rem;
+    font-weight:     800;
+    color:           #fff;
+    overflow:        hidden;
+    flex-shrink:     0;
+  }
+  .mob-pool-chip__av img {
+    width:        100%;
+    height:       100%;
+    object-fit:   cover;
+    border-radius: 50%;
+  }
+  .mob-pool-chip__name {
+    font-size:   0.72rem;
+    font-weight: 700;
+    color:       var(--ds-text);
+    text-align:  center;
+    white-space: nowrap;
+    overflow:    hidden;
+    max-width:   64px;
+    text-overflow: ellipsis;
+  }
+  .mob-pool-chip__lvl {
+    font-size:   0.6rem;
+    color:       var(--ds-muted);
+    text-align:  center;
+    white-space: nowrap;
+  }
+  .mob-pool-chip__puan {
+    font-size:   0.65rem;
+    font-weight: 700;
+    color:       #eab308;
+  }
+
+  /* ── BAŞVURU LİSTİNG ETİKETİ ────────────────────────── */
+  .mob-app-listing-tag {
+    font-size:     0.72rem;
+    font-weight:   700;
+    color:         var(--ds-muted);
+    background:    var(--ds-panel2, rgba(255,255,255,0.05));
+    border:        1px solid var(--ds-stroke);
+    border-radius: 8px;
+    padding:       5px 10px;
+    margin-bottom: 10px;
+    display:       inline-block;
+    white-space:   nowrap;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+    max-width:     100%;
+  }
+
+  /* ── FİRMA PERFORMANS IZGARASI ──────────────────────── */
+  .mob-perf-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .mob-perf-item {
+    background:    var(--ds-panel2, rgba(255,255,255,0.05));
+    border:        1px solid var(--ds-stroke);
+    border-radius: 14px;
+    padding:       14px 12px;
+    text-align:    center;
+  }
+  .mob-perf-item__val {
+    font-size:   1.3rem;
+    font-weight: 800;
+    color:       var(--ds-text);
+    font-family: var(--ds-display, system-ui);
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .mob-perf-item__lbl {
+    font-size:   0.65rem;
+    font-weight: 600;
+    color:       var(--ds-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
 } /* end @media (max-width: 640px) */
