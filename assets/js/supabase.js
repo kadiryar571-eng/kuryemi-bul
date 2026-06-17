@@ -81,11 +81,17 @@
       try { var B = window.Capacitor.Plugins.Browser; if (B && B.close) await B.close(); } catch (e) {}
       try {
         var code = new URLSearchParams(url.split("?")[1] || "").get("code");
-        if (code) await client.auth.exchangeCodeForSession(code);
+        if (!code) throw new Error("OAuth kodу bulunamadı: " + url);
+        var result = await client.auth.exchangeCodeForSession(code);
+        if (result.error) throw result.error;
         var prof = null; try { prof = await myProfile(); } catch (e) {}
         location.href = (!prof || !prof.ad) ? "onboarding.html"
           : (window.KB && KB.roleToPanel ? KB.roleToPanel(prof.role) : "index.html");
-      } catch (e) { console.warn("native oauth:", e); }
+      } catch (e) {
+        console.error("native oauth hatası:", e);
+        if (window.KB && KB.toast) KB.toast("Google girişi başarısız: " + (e.message || "Bilinmeyen hata"), "error");
+        else alert("Google girişi başarısız. Lütfen tekrar deneyin.");
+      }
     });
   }
   try { initNativeAuth(); } catch (e) {}
@@ -127,7 +133,7 @@
     }
   }
   function onAuthChange(cb) {
-    if (client) client.auth.onAuthStateChange(function (_e, session) { cb(session && session.user); });
+    if (client) client.auth.onAuthStateChange(function (event, session) { cb(event, session && session.user); });
   }
 
   /* ---------- PROFİL ---------- */

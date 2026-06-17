@@ -916,8 +916,8 @@
 
     // Auth değişikliğinde push izni iste
     if (window.SB && SB.onAuthChange) {
-      SB.onAuthChange(function (ev) {
-        if (ev === 'SIGNED_IN') requestPushPermission();
+      SB.onAuthChange(function (event) {
+        if (event === 'SIGNED_IN') requestPushPermission();
       });
     }
     // Sayfa açıkken zaten giriş yapılmışsa da iste
