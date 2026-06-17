@@ -8,6 +8,8 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
+    <link rel="stylesheet" href="assets/css/mobile-design-system.css">
+    <link rel="stylesheet" href="assets/css/mobile-screens.css">
     <link rel="stylesheet" href="assets/css/space-bg.css">
     <style>
         .setting-row {
@@ -45,7 +47,7 @@
         .btn--danger:hover { background: rgba(239,68,68,0.25); }
     </style>
 </head>
-<body>
+<body class="ayarlar-page">
     <div id="app-header"></div>
 
     <section class="page-head">
@@ -57,7 +59,7 @@
 
     <main class="section--sm">
         <div class="container">
-            <div class="dash">
+            <div class="dash" id="ayarlar-dash">
                 <nav class="dash__nav">
                     <button data-tab="gorunum" class="is-active">🎨 Görünüm</button>
                     <button data-tab="bildirimler">🔔 Bildirimler</button>
