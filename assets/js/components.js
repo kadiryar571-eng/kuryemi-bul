@@ -330,8 +330,19 @@
             '<a href="cerez.html">' + T("footer.cookies") + '</a>' +
           '</nav>' +
         '</div>' +
-        '<div class="footer__bottom"><p>' + new Date().getFullYear() + ' ' + T("footer.rights") + '</p></div>' +
+        '<div class="footer__bottom"><p>' + new Date().getFullYear() + ' ' + T("footer.rights") + '</p><span id="kb-version-tag" style="font-size:.78rem;opacity:.45;margin-top:4px;display:block"></span></div>' +
       '</footer>';
+  }
+
+  /* ---------- Versiyon etiketi ---------- */
+  function renderVersion() {
+    fetch('/version.json?_=' + Date.now())
+      .then(function(r) { return r.json(); })
+      .then(function(v) {
+        var el = document.getElementById('kb-version-tag');
+        if (el) el.textContent = 'v' + v.version + '.' + v.build + ' · Beta';
+      })
+      .catch(function() {});
   }
 
   /* ---------- Yüzen WhatsApp butonu ---------- */
@@ -733,6 +744,7 @@
     renderCanvasBg();
     renderHeader(active);
     renderFooter();
+    renderVersion();
     renderWhatsApp();
     renderToTop();
     renderA11y();

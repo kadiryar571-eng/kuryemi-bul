@@ -361,7 +361,7 @@
       </div>
       <div class="foot__bottom">
         <span>© 2026 Kuryemi Bul. Tüm hakları saklıdır.</span>
-        <span>Türkiye'nin kurye ekosistemi platformu · Beta</span>
+        <span>Türkiye'nin kurye ekosistemi platformu · <span id="kb-version-tag">Beta</span></span>
       </div>
     </div>
   </footer>
@@ -370,5 +370,14 @@
   <script src="assets/js/data.js"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/landing.js"></script>
+  <script>
+    fetch('/version.json?_=' + Date.now())
+      .then(function(r) { return r.json(); })
+      .then(function(v) {
+        var el = document.getElementById('kb-version-tag');
+        if (el) el.textContent = 'v' + v.version + '.' + v.build;
+      })
+      .catch(function() {});
+  </script>
 </body>
 </html>
