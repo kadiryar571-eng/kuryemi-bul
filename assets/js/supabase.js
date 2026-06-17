@@ -88,26 +88,33 @@
       // Browser plugin'i kapat
       try { var B = window.Capacitor.Plugins.Browser; if (B && B.close) await B.close(); } catch (e) {}
 
-      // URL'den code parametresini al
-      var qs = url.indexOf("?") !== -1 ? url.split("?")[1] : "";
-      var code = new URLSearchParams(qs).get("code");
-
-      if (!code) {
-        var msg = "Deep link geldi ama code bulunamadı: " + url;
-        console.error(msg);
-        if (window.KB && KB.toast) KB.toast("Giriş kodu alınamadı, tekrar deneyin.", "error");
-        return;
-      }
+      // URL'den token parametrelerini al
+      // PKCE flow:     ?code=...
+      // Implicit flow: #access_token=...&refresh_token=...
+      var qs   = url.indexOf("?") !== -1 ? url.split("?")[1].split("#")[0] : "";
+      var hash = url.indexOf("#") !== -1 ? url.split("#")[1] : "";
+      var code         = new URLSearchParams(qs).get("code");
+      var accessToken  = new URLSearchParams(hash).get("access_token");
+      var refreshToken = new URLSearchParams(hash).get("refresh_token") || "";
 
       try {
-        var result = await client.auth.exchangeCodeForSession(code);
+        var result;
+        if (accessToken) {
+          // Implicit flow — access_token doğrudan hash'te
+          result = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        } else if (code) {
+          // PKCE flow — code ile exchange
+          result = await client.auth.exchangeCodeForSession(code);
+        } else {
+          throw new Error("OAuth parametresi bulunamadı. URL: " + url);
+        }
         if (result.error) throw result.error;
         var prof = null;
         try { prof = await myProfile(); } catch (e) {}
         location.href = (!prof || !prof.ad) ? "onboarding.html"
           : (window.KB && KB.roleToPanel ? KB.roleToPanel(prof.role) : "index.html");
       } catch (e) {
-        console.error("native oauth exchangeCodeForSession hatası:", e);
+        console.error("native oauth hatası:", e);
         var errMsg = (e && e.message) || "Bilinmeyen hata";
         if (window.KB && KB.toast) KB.toast("Google girişi başarısız: " + errMsg, "error");
         else alert("Google girişi başarısız: " + errMsg);
