@@ -602,13 +602,16 @@
     area.innerHTML = buildAuthArea();
     wireAuthArea();
     buildState();
+    updateMobileAppBar();
     // Bildirim rozeti: okunmamış bildirim sayısı (+ anlık güncelleme)
     if (isOnline() && SESSION.user && window.SB && SB.unreadCount) {
       var setBadge = function (n) {
-        var b = document.getElementById("notifBadge");
-        if (!b) return;
-        if (n > 0) { b.textContent = n > 99 ? "99+" : n; b.style.display = ""; }
-        else { b.style.display = "none"; }
+        ["notifBadge", "mobAppBarNotifBadge"].forEach(function (id) {
+          var b = document.getElementById(id);
+          if (!b) return;
+          if (n > 0) { b.textContent = n > 99 ? "99+" : n; b.style.display = ""; }
+          else { b.style.display = "none"; }
+        });
       };
       SB.unreadCount().then(setBadge).catch(function () {});
       // Anlık: yeni bildirim gelince rozeti +1 yap (sayfada zaten abone varsa çift saymamak için global kilit)
@@ -721,44 +724,153 @@
 
   /* ---------- Mobil alt navigasyon — SVG ikonlar ---------- */
   var BNAV_ICONS = {
-    home:     '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>',
-    listings: '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>',
-    map:      '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/><line x1="9" y1="4" x2="9" y2="17"/><line x1="15" y1="7" x2="15" y2="20"/></svg>',
-    messages: '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    profile:  '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    signin:   '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>'
+    home:         '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/><path d="M3 12v9h18v-9"/></svg>',
+    listings:     '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>',
+    map:          '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/><line x1="9" y1="4" x2="9" y2="17"/><line x1="15" y1="7" x2="15" y2="20"/></svg>',
+    messages:     '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    profile:      '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    signin:       '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
+    opportunities:'<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    matches:      '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    pool:         '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="4"/><path d="M2 20v-2a8 8 0 0 1 10.09-7.73"/><circle cx="19.5" cy="17.5" r="2.5"/><path d="m21.5 19.5 1.5 1.5"/></svg>',
+    requests:     '<svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
   };
+
+  function getRoleNavItems() {
+    var role = isOnline() ? (SESSION.profile && SESSION.profile.role) : getRole();
+    var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
+    var profHref = "profil-duzenle.html";
+    if (isOnline() && SESSION.profile && SESSION.profile.id) {
+      var rp = roleToProfile(SESSION.profile.role);
+      if (rp) profHref = rp + "?id=" + SESSION.profile.id;
+    }
+    if (!authed) {
+      return [
+        { href: "index.html",    icon: BNAV_ICONS.home,     label: "Ana Sayfa" },
+        { href: "ilanlar.html",  icon: BNAV_ICONS.listings,  label: "İlanlar" },
+        { href: "harita.html",   icon: BNAV_ICONS.map,       label: "Harita" },
+        { href: "mesajlar.html", icon: BNAV_ICONS.messages,  label: "Mesajlar" },
+        { href: "giris.html",    icon: BNAV_ICONS.signin,    label: "Giriş" }
+      ];
+    }
+    if (role === "kurye") {
+      return [
+        { href: homeHref(),       icon: BNAV_ICONS.home,         label: "Ana Sayfa" },
+        { href: "ilanlar.html",   icon: BNAV_ICONS.opportunities, label: "Fırsatlar" },
+        { href: "eslesme.html",   icon: BNAV_ICONS.matches,       label: "Eşleşmeler" },
+        { href: "mesajlar.html",  icon: BNAV_ICONS.messages,      label: "Mesajlar", badge: "bnavMsgBadge" },
+        { href: profHref,         icon: BNAV_ICONS.profile,       label: "Profil" }
+      ];
+    }
+    if (role === "isletme") {
+      return [
+        { href: homeHref(),       icon: BNAV_ICONS.home,     label: "Ana Sayfa" },
+        { href: "ilanlar.html",   icon: BNAV_ICONS.requests,  label: "Talepler" },
+        { href: "kuryeler.html",  icon: BNAV_ICONS.matches,   label: "Eşleşmeler" },
+        { href: "mesajlar.html",  icon: BNAV_ICONS.messages,  label: "Mesajlar", badge: "bnavMsgBadge" },
+        { href: profHref,         icon: BNAV_ICONS.profile,   label: "İşletme" }
+      ];
+    }
+    if (role === "firma") {
+      return [
+        { href: homeHref(),       icon: BNAV_ICONS.home,     label: "Ana Sayfa" },
+        { href: "kuryeler.html",  icon: BNAV_ICONS.pool,      label: "Havuz" },
+        { href: "ilanlar.html",   icon: BNAV_ICONS.listings,  label: "İlanlar" },
+        { href: "mesajlar.html",  icon: BNAV_ICONS.messages,  label: "Mesajlar", badge: "bnavMsgBadge" },
+        { href: profHref,         icon: BNAV_ICONS.profile,   label: "Firma" }
+      ];
+    }
+    // Giriş yapmış ama rol belirsiz — generik
+    return [
+      { href: homeHref(),       icon: BNAV_ICONS.home,     label: "Ana Sayfa" },
+      { href: "ilanlar.html",   icon: BNAV_ICONS.listings,  label: "İlanlar" },
+      { href: "harita.html",    icon: BNAV_ICONS.map,       label: "Harita" },
+      { href: "mesajlar.html",  icon: BNAV_ICONS.messages,  label: "Mesajlar", badge: "bnavMsgBadge" },
+      { href: profHref,         icon: BNAV_ICONS.profile,   label: "Profil" }
+    ];
+  }
 
   function renderBottomNav() {
     if (document.getElementById("kb-bottomnav")) return;
     var active = (location.pathname.split("/").pop() || "index.html");
-    var authed = isOnline() ? !!SESSION.user : (getRole() !== "ziyaretci");
-    var lastHref = authed ? (isOnline() ? roleToPanel(SESSION.profile && SESSION.profile.role) : panelHref()) : "giris.html";
-    var items = [
-      { href: homeHref(),       icon: BNAV_ICONS.home,     key: "nav.home",     extra: 'data-bnav-home' },
-      { href: "ilanlar.html",   icon: BNAV_ICONS.listings,  key: "nav.ilanlar" },
-      { href: "harita.html",    icon: BNAV_ICONS.map,       key: "nav.map" },
-      { href: "mesajlar.html",  icon: BNAV_ICONS.messages,  key: "nav.messages", badge: "bnavMsgBadge" },
-      { href: lastHref,         icon: authed ? BNAV_ICONS.profile : BNAV_ICONS.signin,
-                                key: authed ? "cta.panel" : "cta.signin" }
-    ];
+    var items = getRoleNavItems();
     var nav = document.createElement("nav");
     nav.id = "kb-bottomnav";
     nav.className = "bottom-nav";
     nav.setAttribute("aria-label", "Alt menü");
     nav.innerHTML = items.map(function (it) {
-      var on    = (it.href === active || active.indexOf(it.href.replace(".html", "")) === 0) ? " is-active" : "";
+      var itFile = it.href.split("?")[0].split("/").pop();
+      var on = (itFile === active) ? " is-active" : "";
       var badge = it.badge ? '<span class="bottom-nav__badge" id="' + it.badge + '" style="display:none">0</span>' : "";
-      var extra = it.extra ? (" " + it.extra) : "";
-      var labelTr = { "nav.home": "Ana Sayfa", "nav.ilanlar": "İlanlar", "nav.map": "Harita", "nav.messages": "Mesajlar", "cta.panel": "Panelim", "cta.signin": "Giriş" };
-      var label = T(it.key) || labelTr[it.key] || it.key;
-      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '"' + extra + '>' +
+      return '<a href="' + it.href + '" class="bottom-nav__item' + on + '">' +
         '<span class="bottom-nav__ic">' + it.icon + badge + '</span>' +
-        '<span class="bottom-nav__l">' + label + '</span>' +
-        '</a>';
+        '<span class="bottom-nav__l">' + it.label + '</span>' +
+      '</a>';
     }).join("");
     document.body.appendChild(nav);
     document.body.classList.add("has-bottom-nav");
+  }
+
+  /* ---------- Mobil App Bar — panel olmayan sayfalarda üst bar ---------- */
+  function renderMobileAppBar() {
+    if (document.getElementById("mob-app-bar")) return;
+    var curFile = (location.pathname.split("/").pop() || "index.html");
+    if (AUTH_FLOW_PAGES.indexOf(curFile) !== -1) return;
+    if (LANDING_PAGES.indexOf(curFile) !== -1) return;
+    // Panel sayfaları kendi mob-dash__header'larını kullanır
+    if (document.querySelector(".mob-dash")) return;
+
+    var title = "";
+    var h1 = document.querySelector(".page-head h1");
+    if (h1) title = h1.textContent.trim();
+    if (!title) title = document.title.split("·")[0].trim();
+
+    var bell = '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+    var bar = document.createElement("header");
+    bar.id = "mob-app-bar";
+    bar.className = "mob-app-bar";
+    bar.setAttribute("role", "banner");
+    bar.innerHTML =
+      '<a href="' + homeHref() + '" class="mob-app-bar__brand" aria-label="Ana Sayfa" data-home>' +
+        '<img src="assets/logo.png" class="mob-app-bar__logo" alt="KB" width="30" height="30">' +
+      '</a>' +
+      '<div class="mob-app-bar__title" id="mobAppBarTitle">' + esc(title) + '</div>' +
+      '<div class="mob-app-bar__actions">' +
+        '<a href="bildirimler.html" class="mob-app-bar__icon-btn" id="mobAppBarNotifBtn" aria-label="Bildirimler">' +
+          bell +
+          '<span class="mob-app-bar__badge" id="mobAppBarNotifBadge" style="display:none">0</span>' +
+        '</a>' +
+        '<a href="profil-duzenle.html" class="mob-app-bar__avatar" id="mobAppBarAvatarLink" aria-label="Profil">' +
+          '<span id="mobAppBarAvatarInner" class="mob-app-bar__avatar-inner">?</span>' +
+        '</a>' +
+      '</div>';
+
+    var host = document.getElementById("app-header");
+    if (host) host.appendChild(bar);
+    else document.body.insertAdjacentElement("afterbegin", bar);
+  }
+
+  function updateMobileAppBar() {
+    var avatarInner = document.getElementById("mobAppBarAvatarInner");
+    var avatarLink  = document.getElementById("mobAppBarAvatarLink");
+    if (!SESSION.user || !SESSION.profile) {
+      if (avatarInner) avatarInner.textContent = "?";
+      return;
+    }
+    var p = SESSION.profile;
+    // Rol aksanı için body attribute
+    if (p.role) document.body.setAttribute("data-role", p.role);
+    var nm = p.ad || "";
+    var ini = initials(nm) || "?";
+    if (avatarInner) {
+      if (p.avatar_url) {
+        avatarInner.innerHTML = '<img src="' + esc(p.avatar_url) + '" alt="' + esc(nm) + '">';
+      } else {
+        avatarInner.textContent = ini;
+      }
+    }
+    var rp = roleToProfile(p.role);
+    if (avatarLink && rp && p.id) avatarLink.href = rp + "?id=" + p.id;
   }
 
   /* ---------- KuryemiBul AI widget yükleyici ---------- */
@@ -791,6 +903,7 @@
     renderToTop();
     renderA11y();
     loadAIAssistant();
+    renderMobileAppBar();
     renderBottomNav();
     renderCookieConsent();
     updateAuthArea();
