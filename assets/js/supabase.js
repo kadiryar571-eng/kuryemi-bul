@@ -13,8 +13,13 @@
   var client = null;
   try {
     if (SUPABASE_URL && SUPABASE_ANON && window.supabase && window.supabase.createClient) {
+      var isNativeEnv = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
       client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-        auth: { persistSession: true, autoRefreshToken: true }
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: !isNativeEnv  // native'de URL'den oturum algılama kapatılır
+        }
       });
     }
   } catch (e) { console.warn("Supabase init hatası:", e); }
@@ -75,22 +80,37 @@
     if (!isNative()) return;
     var App = window.Capacitor.Plugins && window.Capacitor.Plugins.App;
     if (!App || !App.addListener) return;
+
     App.addListener("appUrlOpen", async function (ev) {
       var url = ev && ev.url;
       if (!url || url.indexOf("com.kuryemibul.app://") !== 0) return;
+
+      // Browser plugin'i kapat
       try { var B = window.Capacitor.Plugins.Browser; if (B && B.close) await B.close(); } catch (e) {}
+
+      // URL'den code parametresini al
+      var qs = url.indexOf("?") !== -1 ? url.split("?")[1] : "";
+      var code = new URLSearchParams(qs).get("code");
+
+      if (!code) {
+        var msg = "Deep link geldi ama code bulunamadı: " + url;
+        console.error(msg);
+        if (window.KB && KB.toast) KB.toast("Giriş kodu alınamadı, tekrar deneyin.", "error");
+        return;
+      }
+
       try {
-        var code = new URLSearchParams(url.split("?")[1] || "").get("code");
-        if (!code) throw new Error("OAuth kodу bulunamadı: " + url);
         var result = await client.auth.exchangeCodeForSession(code);
         if (result.error) throw result.error;
-        var prof = null; try { prof = await myProfile(); } catch (e) {}
+        var prof = null;
+        try { prof = await myProfile(); } catch (e) {}
         location.href = (!prof || !prof.ad) ? "onboarding.html"
           : (window.KB && KB.roleToPanel ? KB.roleToPanel(prof.role) : "index.html");
       } catch (e) {
-        console.error("native oauth hatası:", e);
-        if (window.KB && KB.toast) KB.toast("Google girişi başarısız: " + (e.message || "Bilinmeyen hata"), "error");
-        else alert("Google girişi başarısız. Lütfen tekrar deneyin.");
+        console.error("native oauth exchangeCodeForSession hatası:", e);
+        var errMsg = (e && e.message) || "Bilinmeyen hata";
+        if (window.KB && KB.toast) KB.toast("Google girişi başarısız: " + errMsg, "error");
+        else alert("Google girişi başarısız: " + errMsg);
       }
     });
   }
