@@ -344,6 +344,7 @@
       msgList.addEventListener('click', function (e) {
         var chip = e.target.closest('.ai-chip');
         if (chip) {
+          e.stopPropagation(); // renderMessages() DOM'u yenilediği için e.target panel dışına çıkıyor; kapanmayı engelle
           var prompt = chip.getAttribute('data-prompt');
           if (prompt) {
             var inp3 = document.getElementById('ai-input');
