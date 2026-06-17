@@ -48,10 +48,47 @@
         background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--navy, #f4f6fb); font-size: .92rem; line-height: 1.45; position: relative; word-wrap: break-word; }
       .msg-bubble--mine { align-self: flex-end; background: linear-gradient(135deg,#4f8bff,#a855f7); border-color: transparent; color: #fff; border-radius: 16px 16px 4px 16px; }
       .msg-bubble__t { display: block; font-size: .64rem; opacity: .6; margin-top: 4px; text-align: right; }
-      .msg-compose { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); }
+      .msg-bubble__status { font-size: .6rem; opacity: .7; margin-left: 3px; }
+      .msg-compose { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); background: var(--bg, #070809); }
+      .msg-compose form { flex: 1; display: flex; gap: 8px; align-items: center; }
       .msg-compose input { flex: 1; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 999px; padding: 11px 16px; color: var(--navy, #f4f6fb); font-family: inherit; font-size: .92rem; }
       .msg-compose input:focus { outline: none; border-color: #4f8bff; box-shadow: 0 0 0 3px rgba(79,139,255,.16); }
-      .msg-compose .btn { border-radius: 999px; }
+      .msg-attach-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(255,255,255,.4); cursor: pointer; border-radius: 50%; flex-shrink: 0; }
+      .msg-attach-btn:hover { color: rgba(255,255,255,.7); background: rgba(255,255,255,.05); }
+      .msg-send-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#4f8bff,#a855f7); border: none; color: #fff; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
+      .msg-send-btn:hover { opacity: .88; }
+      /* Conv list enhancements */
+      .msg__list-head-top { display: flex; align-items: center; justify-content: space-between; }
+      .msg-search { position: relative; margin-top: 10px; }
+      .msg-search__ic { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: .45; pointer-events: none; }
+      .msg-search input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 999px; color: var(--navy, #f4f6fb); font-family: inherit; font-size: .85rem; outline: none; box-sizing: border-box; }
+      .msg-search input:focus { border-color: #4f8bff; }
+      .msg-conv__time { font-size: .67rem; color: rgba(180,190,220,.5); white-space: nowrap; flex-shrink: 0; }
+      .msg-conv__bottom { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+      .msg-conv__bottom .msg-conv__last { flex: 1; margin-top: 0; }
+      .msg-conv--unread .msg-conv__name { font-weight: 800; }
+      .msg-conv--unread .msg-conv__time { color: #4f8bff; font-weight: 700; }
+      /* Thread enhancements */
+      .msg-thread__av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#4f8bff,#a855f7); display: grid; place-items: center; font-weight: 700; font-size: .8rem; color: #fff; flex-shrink: 0; }
+      .msg-thread__info { flex: 1; min-width: 0; }
+      .msg-thread__more { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(255,255,255,.5); cursor: pointer; border-radius: 50%; flex-shrink: 0; }
+      .msg-thread__more:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
+      .msg-empty-list { text-align: center; color: rgba(180,190,220,.5); font-size: .85rem; padding: 24px 16px; }
+      /* Context sheet */
+      .msg-ctx-sheet { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
+      .msg-ctx-sheet.is-open { pointer-events: all; }
+      .msg-ctx-sheet__bg { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background .28s; }
+      .msg-ctx-sheet.is-open .msg-ctx-sheet__bg { background: rgba(0,0,0,.6); }
+      .msg-ctx-sheet__panel { position: absolute; left: 0; right: 0; bottom: 0; background: #0f1120; border: 1px solid rgba(255,255,255,.1); border-radius: 24px 24px 0 0; padding: 0 0 20px; transform: translateY(100%); transition: transform .28s cubic-bezier(.22,.61,.36,1); }
+      .msg-ctx-sheet.is-open .msg-ctx-sheet__panel { transform: translateY(0); }
+      .msg-ctx-sheet__handle { width: 36px; height: 4px; background: rgba(255,255,255,.18); border-radius: 999px; margin: 10px auto 0; }
+      .msg-ctx-sheet__who { font-size: .82rem; font-weight: 700; color: rgba(180,190,220,.55); text-align: center; padding: 12px 20px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
+      .msg-ctx-sheet__items { display: flex; flex-direction: column; }
+      .msg-ctx-sheet__item { display: flex; align-items: center; gap: 12px; padding: 15px 20px; color: #f4f6fb; font-size: .92rem; text-decoration: none; background: none; border: none; cursor: pointer; min-height: 52px; text-align: left; transition: background .12s; }
+      .msg-ctx-sheet__item:hover { background: rgba(255,255,255,.04); }
+      .msg-ctx-sheet__item--muted { color: rgba(180,190,220,.55); }
+      .msg-ctx-sheet__cancel { display: flex; align-items: center; justify-content: center; width: calc(100% - 32px); margin: 8px 16px 0; padding: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; color: #f4f6fb; font-size: .92rem; font-weight: 600; cursor: pointer; min-height: 52px; }
+      .msg-ctx-sheet__cancel:hover { background: rgba(255,255,255,.08); }
 
       @media (max-width: 860px) {
         .msg { grid-template-columns: 1fr; height: calc(100vh - 170px); }
@@ -74,7 +111,13 @@
             <div id="msgRoot">
                 <div class="msg">
                     <aside class="msg__list">
-                        <div class="msg__list-head"><h2 data-i18n="msg.title">Mesajlar</h2></div>
+                        <div class="msg__list-head">
+                          <div class="msg__list-head-top"><h2 data-i18n="msg.title">Mesajlar</h2></div>
+                          <div class="msg-search">
+                            <svg class="msg-search__ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input id="msgSearchInput" type="search" placeholder="Konuşma ara..." autocomplete="off">
+                          </div>
+                        </div>
                         <div class="msg-conv-list" id="msgConvList"></div>
                     </aside>
                     <section class="msg__main" id="msgMain"></section>

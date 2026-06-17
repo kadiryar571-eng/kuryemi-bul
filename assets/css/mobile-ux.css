@@ -528,74 +528,211 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   8. MESAJLAR — NATIVE CHAT
+   8. MESAJLAR — PREMIUM NATIVE CHAT
 ═══════════════════════════════════════════════════════════ */
 @media (max-width: 680px) {
   .msg {
-    display:     flex;
+    display:        flex;
     flex-direction: column;
-    height:      calc(100dvh - var(--bottom-nav-height) - var(--safe-area-bottom) - 56px);
-    overflow:    hidden;
+    height:         calc(100dvh - var(--bottom-nav-height) - var(--safe-area-bottom) - 56px);
+    overflow:       hidden;
   }
 
-  /* Konuşma listesi tam ekran */
   .msg__list {
-    width:    100% !important;
-    flex:     1;
+    width:      100% !important;
+    flex:       1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-
-  /* Thread açıkken liste gizle, thread tam ekran */
-  .msg--threadopen .msg__list {
-    display: none !important;
-  }
+  .msg--threadopen .msg__list { display: none !important; }
 
   .msg__main {
-    display:         none;
-    flex-direction:  column;
-    position:        fixed;
-    inset:           0;
-    bottom:          calc(var(--bottom-nav-height) + var(--safe-area-bottom));
-    z-index:         150;
-    background:      var(--ds-bg, #0d0d0d);
+    display:        none;
+    flex-direction: column;
+    position:       fixed;
+    inset:          0;
+    bottom:         calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+    z-index:        150;
+    background:     var(--ds-bg, #0d0d0d);
   }
+  .msg--threadopen .msg__main { display: flex !important; }
 
-  .msg--threadopen .msg__main {
-    display: flex !important;
+  /* ── LIST HEAD & SEARCH ──────────────────────────────── */
+  .msg__list-head { padding: 14px 16px 8px; }
+  .msg__list-head h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  .msg-search { position: relative; margin-top: 8px; }
+  .msg-search__ic {
+    position:       absolute;
+    left:           12px;
+    top:            50%;
+    transform:      translateY(-50%);
+    stroke:         var(--ds-muted);
+    pointer-events: none;
   }
+  .msg-search input[type="search"] {
+    width:         100%;
+    padding:       9px 12px 9px 34px !important;
+    background:    var(--ds-panel2);
+    border:        1px solid var(--ds-stroke) !important;
+    border-radius: 999px !important;
+    color:         var(--ds-text);
+    font-size:     0.88rem !important;
+    outline:       none;
+    box-sizing:    border-box;
+    min-height:    unset;
+  }
+  .msg-search input[type="search"]:focus { border-color: var(--ds-cyan) !important; }
 
-  /* Mesaj compose safe-area */
-  .msg-compose {
-    padding-bottom: max(12px, var(--safe-area-bottom));
+  /* ── CONV CARD ───────────────────────────────────────── */
+  .msg-conv { min-height: 68px; padding: 12px 16px; gap: 12px; }
+  .msg-conv__av { width: 48px; height: 48px; }
+  .msg-conv__top { gap: 6px; }
+  .msg-conv__time {
+    font-size:   0.67rem;
+    color:       var(--ds-muted);
+    white-space: nowrap;
     flex-shrink: 0;
-    background: var(--ds-bg, #0d0d0d);
   }
-
-  /* Geri butonu */
-  .msg-back {
-    display:     inline-flex !important;
+  .msg-conv__bottom {
+    display:     flex;
     align-items: center;
+    gap:         6px;
+    margin-top:  3px;
+  }
+  .msg-conv__bottom .msg-conv__last { flex: 1; margin-top: 0; font-size: 0.8rem; }
+  .msg-conv--unread .msg-conv__name  { font-weight: 800; }
+  .msg-conv--unread .msg-conv__last  { color: var(--ds-text); font-weight: 500; }
+  .msg-conv--unread .msg-conv__time  { color: var(--ds-cyan); font-weight: 700; }
+  .msg-conv--unread .msg-conv__badge { background: var(--ds-cyan); color: #0a0c14; }
+  .msg-empty-list { text-align: center; color: var(--ds-muted); font-size: 0.85rem; padding: 24px 16px; }
+
+  /* ── THREAD HEAD ─────────────────────────────────────── */
+  .msg-thread__head { padding: 10px 10px 10px 4px; gap: 6px; }
+  .msg-thread__av {
+    width:           38px;
+    height:          38px;
+    border-radius:   50%;
+    background:      var(--ds-grad);
+    display:         flex;
+    align-items:     center;
     justify-content: center;
-    min-width:   var(--mob-touch);
-    min-height:  var(--mob-touch);
-    border-radius: 50%;
-    background:  var(--ds-panel);
+    font-weight:     700;
+    font-size:       0.8rem;
+    color:           #fff;
+    flex-shrink:     0;
+  }
+  .msg-thread__who { flex: 1; gap: 10px; }
+  .msg-thread__info { flex: 1; min-width: 0; }
+  .msg-thread__name {
+    font-size:     0.93rem;
+    font-weight:   700;
+    white-space:   nowrap;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+  }
+  .msg-thread__role { font-size: 0.72rem; color: var(--ds-muted); }
+  .msg-thread__more {
+    width:           40px;
+    height:          40px;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    background:      none;
+    border:          none;
+    color:           var(--ds-muted);
+    cursor:          pointer;
+    border-radius:   50%;
+    flex-shrink:     0;
+    min-height:      unset;
+  }
+  .msg-thread__more:active { background: rgba(255,255,255,0.06); color: var(--ds-text); }
+
+  /* ── BACK BUTTON ─────────────────────────────────────── */
+  .msg-back {
+    display:         inline-flex !important;
+    align-items:     center;
+    justify-content: center;
+    min-width:       40px;
+    min-height:      40px;
+    border-radius:   50%;
+    background:      var(--ds-panel);
   }
 
-  /* Konuşma satırı touch target */
-  .msg-conv {
-    min-height: 64px;
-    padding:    12px 16px;
-  }
-
-  /* Thread scroll alanı */
+  /* ── THREAD SCROLL & BUBBLES ─────────────────────────── */
   .msg-thread__scroll {
-    flex:     1;
+    flex:       1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding:  12px 16px;
+    padding:    14px;
+    gap:        10px;
   }
+  .msg-bubble     { max-width: 78%; padding: 10px 13px; }
+  .msg-bubble__status { font-size: 0.6rem; opacity: 0.65; margin-left: 2px; }
+
+  /* ── COMPOSE ─────────────────────────────────────────── */
+  .msg-compose {
+    display:        flex;
+    align-items:    center;
+    gap:            8px;
+    padding:        10px 12px max(14px, var(--safe-area-bottom));
+    flex-shrink:    0;
+    background:     var(--ds-bg, #0d0d0d);
+    border-top:     1px solid var(--ds-stroke);
+  }
+  .msg-compose form {
+    flex:        1;
+    display:     flex;
+    gap:         8px;
+    align-items: center;
+    min-width:   0;
+  }
+  .msg-compose input {
+    flex:          1 !important;
+    padding:       10px 14px !important;
+    border-radius: 999px !important;
+    font-size:     0.9rem !important;
+    min-height:    unset;
+  }
+  .msg-attach-btn {
+    width:           40px;
+    height:          40px;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    background:      none;
+    border:          none;
+    color:           var(--ds-muted);
+    cursor:          pointer;
+    border-radius:   50%;
+    flex-shrink:     0;
+    min-height:      unset;
+  }
+  .msg-attach-btn:active { background: rgba(255,255,255,0.06); }
+  .msg-send-btn {
+    width:           40px;
+    height:          40px;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    background:      linear-gradient(135deg, #4f8bff, #a855f7);
+    border:          none;
+    color:           #fff;
+    border-radius:   50%;
+    cursor:          pointer;
+    flex-shrink:     0;
+    min-height:      unset;
+  }
+  .msg-send-btn:active { opacity: 0.8; }
+
+  /* ── CONTEXT MENU SHEET (mobile overlay) ─────────────── */
+  .msg-ctx-sheet.is-open { pointer-events: all; }
+  .msg-ctx-sheet__panel {
+    padding-bottom: calc(16px + var(--safe-area-bottom));
+    background:     rgba(10, 12, 20, 0.97);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  }
+  .msg-ctx-sheet__cancel { min-height: 52px; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -754,15 +891,66 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   11. BİLDİRİMLER — TOUCH HEDEF GENİŞLETME
+   11. BİLDİRİMLER — PREMIUM NOTIFICATION CARDS
 ═══════════════════════════════════════════════════════════ */
 @media (max-width: 680px) {
   .nrow {
-    min-height: 62px;
-    padding:    14px 16px;
+    min-height:    68px;
+    padding:       14px 16px;
+    border-radius: 16px;
+    gap:           12px;
+    position:      relative;
   }
 
-  /* Kategori filtre chips */
+  /* Priority visual treatment */
+  .nrow--high   { border-color: rgba(34,211,238,0.25); background: rgba(34,211,238,0.04); }
+  .nrow--medium { border-color: rgba(79,139,255,0.2); }
+  .nrow--low    { border-color: var(--ds-stroke); }
+  .nrow--unread.nrow--high   { background: rgba(34,211,238,0.07); }
+  .nrow--unread.nrow--medium { background: rgba(79,139,255,0.07); }
+  .nrow--unread.nrow--low    { background: rgba(255,255,255,0.04); }
+
+  /* SVG icon container */
+  .nrow__ic {
+    width:           44px;
+    height:          44px;
+    border-radius:   14px;
+    display:         grid;
+    place-items:     center;
+    flex:            none;
+    background:      rgba(255,255,255,0.05);
+    border:          1px solid rgba(255,255,255,0.08);
+    color:           var(--ic-color, var(--ds-cyan));
+  }
+  .nrow--high   .nrow__ic { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.18); }
+  .nrow--medium .nrow__ic { background: rgba(79,139,255,0.1); border-color: rgba(79,139,255,0.18); }
+  .nrow__ic svg { stroke: var(--ic-color, var(--ds-cyan)); }
+
+  /* Action arrow */
+  .nrow__arrow {
+    color:       var(--ds-muted);
+    font-size:   1.3rem;
+    flex-shrink: 0;
+    align-self:  center;
+    opacity:     0.5;
+    line-height: 1;
+  }
+  .nrow:hover .nrow__arrow { opacity: 1; }
+
+  /* Unread dot */
+  .nrow__dot {
+    width:         8px;
+    height:        8px;
+    flex-shrink:   0;
+    border-radius: 50%;
+    align-self:    flex-start;
+    margin-top:    3px;
+  }
+  .nrow--high   .nrow__dot { background: var(--ds-cyan); }
+  .nrow--medium .nrow__dot { background: var(--ds-blue); }
+  .nrow--low    .nrow__dot { background: var(--ds-muted); }
+
+  /* Category filter chips */
   .nlist-filters {
     display:    flex;
     gap:        8px;
@@ -1812,6 +2000,101 @@
     bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 12px) !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   19. MESAJ CONTEXT MENU SHEET
+   Role-based action sheet triggered by "..." in thread head
+═══════════════════════════════════════════════════════════ */
+.msg-ctx-sheet {
+  position:       fixed;
+  inset:          0;
+  z-index:        200;
+  pointer-events: none;
+}
+.msg-ctx-sheet.is-open { pointer-events: all; }
+
+.msg-ctx-sheet__bg {
+  position:   absolute;
+  inset:      0;
+  background: rgba(0,0,0,0);
+  transition: background 0.28s;
+}
+.msg-ctx-sheet.is-open .msg-ctx-sheet__bg { background: rgba(0,0,0,0.65); }
+
+.msg-ctx-sheet__panel {
+  position:   absolute;
+  left:       0;
+  right:      0;
+  bottom:     0;
+  background: rgba(10, 12, 20, 0.97);
+  border:     1px solid rgba(255,255,255,0.1);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  padding-bottom: 20px;
+  transform:  translateY(100%);
+  transition: transform 0.28s cubic-bezier(.22,.61,.36,1);
+}
+.msg-ctx-sheet.is-open .msg-ctx-sheet__panel { transform: translateY(0); }
+
+.msg-ctx-sheet__handle {
+  width:         36px;
+  height:        4px;
+  background:    rgba(255,255,255,0.18);
+  border-radius: 999px;
+  margin:        10px auto 0;
+}
+
+.msg-ctx-sheet__who {
+  font-size:  0.82rem;
+  font-weight: 700;
+  color:      rgba(180,190,220,0.55);
+  text-align: center;
+  padding:    12px 20px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin:     0;
+}
+
+.msg-ctx-sheet__items { display: flex; flex-direction: column; padding: 6px 0; }
+
+.msg-ctx-sheet__item {
+  display:         flex;
+  align-items:     center;
+  gap:             12px;
+  padding:         14px 24px;
+  color:           #f4f6fb;
+  font-size:       0.92rem;
+  font-weight:     500;
+  text-decoration: none;
+  background:      none;
+  border:          none;
+  cursor:          pointer;
+  min-height:      52px;
+  text-align:      left;
+  transition:      background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.msg-ctx-sheet__item:active { background: rgba(255,255,255,0.05); }
+.msg-ctx-sheet__item--muted { color: rgba(180,190,220,0.5); }
+
+.msg-ctx-sheet__cancel {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           calc(100% - 32px);
+  margin:          8px 16px 0;
+  padding:         14px;
+  background:      rgba(255,255,255,0.05);
+  border:          1px solid rgba(255,255,255,0.1);
+  border-radius:   16px;
+  color:           #f4f6fb;
+  font-size:       0.92rem;
+  font-weight:     600;
+  cursor:          pointer;
+  min-height:      52px;
+  transition:      background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.msg-ctx-sheet__cancel:active { background: rgba(255,255,255,0.08); }
 
 /* ═══════════════════════════════════════════════════════════
    18. ROL BAZLI ALT NAVİGASYON RENK AKSENTLARI
