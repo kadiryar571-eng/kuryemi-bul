@@ -151,7 +151,7 @@
           }).join('') +
         '</div>';
       }
-      return '<div class="ai-msg ai-msg--ai"><div class="ai-avatar">✨</div><div class="ai-bubble"><p>' + markdownToHtml(m.content) + '</p>' + suggHtml + '</div></div>';
+      return '<div class="ai-msg ai-msg--ai"><div class="ai-avatar"><img src="assets/ai-brain.png.png" alt="" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(34,211,238,0.5))"></div><div class="ai-bubble"><p>' + markdownToHtml(m.content) + '</p>' + suggHtml + '</div></div>';
     }).join('');
 
     list.scrollTop = list.scrollHeight;
@@ -163,7 +163,7 @@
     var el = document.createElement('div');
     el.id = 'ai-typing';
     el.className = 'ai-msg ai-msg--ai';
-    el.innerHTML = '<div class="ai-avatar">✨</div><div class="ai-bubble ai-typing"><span></span><span></span><span></span></div>';
+    el.innerHTML = '<div class="ai-avatar"><img src="assets/ai-brain.png.png" alt="" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(34,211,238,0.5))"></div><div class="ai-bubble ai-typing"><span></span><span></span><span></span></div>';
     list.appendChild(el);
     list.scrollTop = list.scrollHeight;
   }
@@ -263,15 +263,7 @@
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', 'ai-panel');
     btn.innerHTML =
-      '<svg class="ai-float__ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
-        '<path d="M11 5C9.2 3.9 6.8 4.1 5.3 5.8 3.8 7.4 3.8 9.6 5 11.2c-1 .9-1.5 2.1-1.5 3.4 0 2.2 1.6 4 3.8 4.2L7.5 20H11V5z" fill="currentColor"/>' +
-        '<path d="M13 5c1.8-1.1 4.2-.9 5.7.8 1.5 1.6 1.5 3.8.3 5.4 1 .9 1.5 2.1 1.5 3.4 0 2.2-1.6 4-3.8 4.2l.3 1.2H13V5z" fill="currentColor"/>' +
-        '<line x1="12" y1="5" x2="12" y2="20" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>' +
-        '<circle cx="8.5" cy="10" r="1.3" fill="rgba(255,255,255,0.6)"/>' +
-        '<circle cx="15.5" cy="10" r="1.3" fill="rgba(255,255,255,0.6)"/>' +
-        '<circle cx="9" cy="15" r="1" fill="rgba(255,255,255,0.45)"/>' +
-        '<circle cx="15" cy="15" r="1" fill="rgba(255,255,255,0.45)"/>' +
-      '</svg>' +
+      '<img src="assets/ai-brain.png.png" class="ai-float__ic" alt="" aria-hidden="true" style="width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(34,211,238,0.7))">' +
       '<span class="ai-float__txt">KuryemiBul AI</span>';
     document.body.appendChild(btn);
 
@@ -284,12 +276,7 @@
     panel.innerHTML =
       '<div class="ai-panel__head">' +
         '<div class="ai-panel__title">' +
-          '<svg viewBox="0 0 24 24" fill="none" width="18" height="18" aria-hidden="true">' +
-            '<path d="M11 5C9.2 3.9 6.8 4.1 5.3 5.8 3.8 7.4 3.8 9.6 5 11.2c-1 .9-1.5 2.1-1.5 3.4 0 2.2 1.6 4 3.8 4.2L7.5 20H11V5z" fill="currentColor"/>' +
-            '<path d="M13 5c1.8-1.1 4.2-.9 5.7.8 1.5 1.6 1.5 3.8.3 5.4 1 .9 1.5 2.1 1.5 3.4 0 2.2-1.6 4-3.8 4.2l.3 1.2H13V5z" fill="currentColor"/>' +
-            '<circle cx="8.5" cy="10" r="1.1" fill="rgba(255,255,255,0.7)"/>' +
-            '<circle cx="15.5" cy="10" r="1.1" fill="rgba(255,255,255,0.7)"/>' +
-          '</svg>' +
+          '<img src="assets/ai-brain.png.png" alt="" width="22" height="22" aria-hidden="true" style="object-fit:contain;vertical-align:middle;margin-right:5px;filter:drop-shadow(0 0 4px rgba(34,211,238,0.6))">' +
           'KuryemiBul AI' +
         '</div>' +
         '<div class="ai-panel__acts">' +
