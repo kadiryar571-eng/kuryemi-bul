@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -24,13 +24,183 @@
 <body>
     <div id="app-header"></div>
 
-    <section class="page-head">
+    <section class="page-head" id="isletmePageHead">
         <div class="container"><h1>🏪 İşe Alım Merkezim</h1><p>Pozisyonlarım, aday hattım ve yetenek keşfi.</p></div>
     </section>
 
     <main class="section--sm">
         <div class="container">
 
+            <!-- ===== MOBİL PREMİUM DASHBOARD (≤640px) ===== -->
+            <div class="mob-dash" id="mobDash">
+
+                <!-- 1. HEADER: İşletme logosu + isim + rozet + bildirimler -->
+                <div class="mob-dash__header">
+                    <div class="mob-dash__identity">
+                        <div class="mob-dash__avatar mob-dash__avatar--biz" id="mobAvatar">
+                            <span id="mobAvatarLetter">İ</span>
+                        </div>
+                        <div class="mob-dash__userinfo">
+                            <div class="mob-dash__greeting">Hoş Geldiniz</div>
+                            <div class="mob-dash__name" id="mobUserName">İşletme</div>
+                            <div id="mobUserLevel"><span class="mob-level-chip">İşletme</span></div>
+                        </div>
+                    </div>
+                    <a href="bildirimler.html" class="mob-dash__notif-btn" aria-label="Bildirimler">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span class="mob-dash__notif-badge" id="mobNotifBadge" style="display:none">0</span>
+                    </a>
+                </div>
+
+                <!-- 2. GÜNLÜK ÖZET — 4 stat chip -->
+                <div class="mob-stats-row">
+                    <a href="ilanlar.html" class="mob-stat-chip">
+                        <div class="mob-stat-chip__val" id="mobStatListings">—</div>
+                        <div class="mob-stat-chip__lbl">Aktif İlan</div>
+                    </a>
+                    <a href="ilanlar.html" class="mob-stat-chip">
+                        <div class="mob-stat-chip__val" id="mobStatApps">—</div>
+                        <div class="mob-stat-chip__lbl">Başvuru</div>
+                    </a>
+                    <a href="mesajlar.html" class="mob-stat-chip">
+                        <div class="mob-stat-chip__val" id="mobStatOffers">—</div>
+                        <div class="mob-stat-chip__lbl">Teklif</div>
+                    </a>
+                    <a href="mesajlar.html" class="mob-stat-chip">
+                        <div class="mob-stat-chip__val" id="mobStatMsgs">—</div>
+                        <div class="mob-stat-chip__lbl">Mesaj</div>
+                    </a>
+                </div>
+
+                <!-- SONRAKI ADIM KARTI -->
+                <div class="dash-next-action" id="dashNextAction" style="display:none">
+                    <div class="dash-next-action__label">Sıradaki adım</div>
+                    <div class="dash-next-action__text" id="dashNextText">Kurye havuzunu keşfet ve yeni ilanlar yayınla.</div>
+                    <a class="dash-next-action__btn" href="kuryeler.html" id="dashNextBtn">Kurye Havuzu →</a>
+                </div>
+
+                <!-- 3. AKTİF TALEPLER (benim ilanlarım) -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                            Aktif Taleplerim
+                        </span>
+                        <a href="ilanlar.html" class="mob-section__more">Yönet</a>
+                    </div>
+                    <div id="mobListings">
+                        <div class="mob-skel"></div>
+                        <div class="mob-skel" style="margin-top:10px"></div>
+                    </div>
+                </div>
+
+                <!-- 4. YENİ BAŞVURULAR (ilk aktif ilana gelenler) -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Yeni Başvurular
+                        </span>
+                        <a href="ilanlar.html" class="mob-section__more">İncele</a>
+                    </div>
+                    <div id="mobApplications">
+                        <div class="mob-skel"></div>
+                        <div class="mob-skel" style="margin-top:10px"></div>
+                    </div>
+                </div>
+
+                <!-- 5. YENİ EŞLEŞMELER (kabul edilen başvurular) -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            Yeni Eşleşmeler
+                        </span>
+                    </div>
+                    <div id="mobMatches">
+                        <div class="mob-skel"></div>
+                    </div>
+                </div>
+
+                <!-- 6. FİRMA TEKLİFLERİ (gelen teklifler) -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Firma Teklifleri
+                        </span>
+                        <a href="firmalar.html" class="mob-section__more">Tümünü Gör</a>
+                    </div>
+                    <div id="mobFirmaOffers">
+                        <div class="mob-skel"></div>
+                        <div class="mob-skel" style="margin-top:10px"></div>
+                    </div>
+                </div>
+
+                <!-- 7. SON MESAJLAR -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            Son Mesajlar
+                        </span>
+                        <a href="mesajlar.html" class="mob-section__more">Tümünü Gör</a>
+                    </div>
+                    <div id="mobMsgPreview">
+                        <div class="mob-skel"></div>
+                        <div class="mob-skel" style="margin-top:10px"></div>
+                    </div>
+                </div>
+
+                <!-- 8. İŞGÜCÜ DURUMU -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            İşgücü Durumu
+                        </span>
+                    </div>
+                    <div id="mobWorkforce"><div class="mob-skel" style="height:80px"></div></div>
+                </div>
+
+                <!-- 9. PERFORMANS ÖZETİ -->
+                <div class="mob-section">
+                    <div class="mob-section__head">
+                        <span class="mob-section__title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                            Performans Özeti
+                        </span>
+                    </div>
+                    <div id="mobPerformance"><div class="mob-skel" style="height:72px"></div></div>
+                </div>
+
+                <!-- 10. HIZLI İŞLEMLER -->
+                <div class="mob-quick-grid">
+                    <a href="ilanlar.html?new=1" class="mob-qa-btn">
+                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>
+                        <span>İlan Oluştur</span>
+                    </a>
+                    <a href="ilanlar.html" class="mob-qa-btn">
+                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
+                        <span>İlanlarım</span>
+                    </a>
+                    <a href="kuryeler.html" class="mob-qa-btn">
+                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></span>
+                        <span>Kuryeler</span>
+                    </a>
+                    <a href="mesajlar.html" class="mob-qa-btn">
+                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+                        <span>Mesajlar</span>
+                    </a>
+                    <a href="firmalar.html" class="mob-qa-btn">
+                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                        <span>Firmalar</span>
+                    </a>
+                </div>
+
+            </div><!-- /.mob-dash -->
+
+            <!-- MASAÜSTÜ DASHBOARD (mobilde CSS ile gizlenir) -->
             <div class="dash-welcome" id="dashWelcomeIsletme" style="display:none">
                 <div class="dash-welcome__greeting">Merhaba,</div>
                 <div class="dash-welcome__name" id="dashWelcomeNameI">İşletme</div>
@@ -100,22 +270,9 @@
                     </section>
                 </div>
             </div>
+
         </div>
     </main>
-
-    <script>
-    KB && KB.ready && KB.ready().then(function () {
-        var s = KB.session && KB.session();
-        if (!s || !s.profile) return;
-        var name = (s.profile.ad || "").split(" ")[0] || "İşletme";
-        var welcomeEl = document.getElementById("dashWelcomeIsletme");
-        var nameEl    = document.getElementById("dashWelcomeNameI");
-        var nextEl    = document.getElementById("dashNextActionI");
-        if (welcomeEl) welcomeEl.style.display = "";
-        if (nameEl)    nameEl.textContent = name;
-        if (nextEl)    nextEl.style.display = "";
-    });
-    </script>
 
     <div id="app-footer"></div>
     <script src="assets/js/i18n.js"></script>
@@ -125,5 +282,316 @@
     <script src="assets/js/components.js"></script>
     <script src="assets/js/app.js"></script>
     <script>KBApp.initPanel("isletme");</script>
+    <script>
+    /* ========= İŞLETME MOBİL PREMİUM DASHBOARD ========= */
+    (function () {
+        function el(id) { return document.getElementById(id); }
+        function esc(s) {
+            return (window.KB && KB.esc) ? KB.esc(s)
+                : String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+                    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+                });
+        }
+        function timeAgo(iso) {
+            if (!iso) return "";
+            var d = new Date(iso), now = new Date(), s = Math.floor((now - d) / 1000);
+            if (s < 60) return "şimdi";
+            var m = Math.floor(s / 60); if (m < 60) return m + " dk";
+            var h = Math.floor(m / 60); if (h < 24) return h + " sa";
+            var gun = Math.floor(h / 24); if (gun < 7) return gun + " gün";
+            return d.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+        }
+
+        var LISTING_STATUS = {
+            acik:       { lbl: "Aktif",      cls: "accepted" },
+            kapali:     { lbl: "Kapalı",     cls: "rejected" },
+            taslak:     { lbl: "Taslak",     cls: "pending" },
+            durduruldu: { lbl: "Durduruldu", cls: "pending" }
+        };
+        var OFFER_STATUS = {
+            pending:  { lbl: "Beklemede",    cls: "pending" },
+            accepted: { lbl: "Kabul Edildi", cls: "accepted" },
+            rejected: { lbl: "Reddedildi",   cls: "rejected" }
+        };
+        var APP_STATUS = {
+            pending:   { lbl: "İnceleniyor", cls: "pending" },
+            accepted:  { lbl: "Kabul",       cls: "accepted" },
+            rejected:  { lbl: "Reddedildi",  cls: "rejected" },
+            interview: { lbl: "Görüşme",     cls: "interview" }
+        };
+
+        function renderListings(listings) {
+            var host = el("mobListings"); if (!host) return;
+            var open = listings.filter(function (l) { return l.durum === "acik"; });
+            if (!open.length) {
+                host.innerHTML = '<div class="mob-empty">Aktif ilan yok. <a href="ilanlar.html" class="mob-empty__link">İlan Oluştur →</a></div>';
+                return;
+            }
+            host.innerHTML = open.slice(0, 4).map(function (l) {
+                var st  = LISTING_STATUS[l.durum] || LISTING_STATUS.acik;
+                var d   = l.tarih ? new Date(l.tarih).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
+                var ini = (l.baslik || "İ").charAt(0).toUpperCase();
+                return '<div class="mob-opp-row">' +
+                    '<div class="mob-opp-row__av">' + esc(ini) + '</div>' +
+                    '<div class="mob-opp-row__body">' +
+                        '<div class="mob-opp-row__title">' + esc(l.baslik || "") + '</div>' +
+                        (l.sehir ? '<div class="mob-opp-row__meta">' + esc(l.sehir) + (l.arac ? " · " + esc(l.arac) : "") + '</div>' : '') +
+                        (d ? '<div class="mob-opp-row__date">' + d + ' yayınlandı</div>' : '') +
+                    '</div>' +
+                    '<div class="mob-match-row__end">' +
+                        '<span class="mob-status mob-status--' + st.cls + '">' + st.lbl + '</span>' +
+                    '</div>' +
+                '</div>';
+            }).join("");
+        }
+
+        function renderApplications(apps, listing) {
+            var host = el("mobApplications"); if (!host) return;
+            var pending = apps.filter(function (a) { return a.durum === "pending"; });
+            if (!pending.length) {
+                host.innerHTML = '<div class="mob-empty">Bekleyen başvuru yok.</div>';
+                return;
+            }
+            var tagHtml = listing
+                ? '<div class="mob-app-listing-tag">📋 ' + esc(listing.baslik) + '</div>'
+                : '';
+            host.innerHTML = tagHtml + pending.slice(0, 4).map(function (a) {
+                var ini   = (a.ad || "K").charAt(0).toUpperCase();
+                var stars = a.puan ? "★ " + Number(a.puan).toFixed(1) : "";
+                var d     = a.tarih ? new Date(a.tarih).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
+                return '<div class="mob-match-row">' +
+                    '<div class="mob-match-row__av">' + esc(ini) + '</div>' +
+                    '<div class="mob-match-row__body">' +
+                        '<div class="mob-match-row__title">' + esc(a.ad || "Kurye") + '</div>' +
+                        '<div class="mob-match-row__sub">' + (a.sehir ? esc(a.sehir) : "") + (stars ? " · " + stars : "") + '</div>' +
+                    '</div>' +
+                    '<div class="mob-match-row__end">' +
+                        '<span class="mob-status mob-status--pending">İnceleniyor</span>' +
+                        (d ? '<div class="mob-match-row__date">' + d + '</div>' : '') +
+                    '</div>' +
+                '</div>';
+            }).join("");
+        }
+
+        function renderMatches(apps) {
+            var host = el("mobMatches"); if (!host) return;
+            var accepted = apps.filter(function (a) { return a.durum === "accepted"; });
+            if (!accepted.length) {
+                host.innerHTML = '<div class="mob-empty">Henüz eşleşme yok. <a href="kuryeler.html" class="mob-empty__link">Kurye Bul →</a></div>';
+                return;
+            }
+            host.innerHTML = accepted.slice(0, 3).map(function (a) {
+                var ini   = (a.ad || "K").charAt(0).toUpperCase();
+                var stars = a.puan ? "★ " + Number(a.puan).toFixed(1) : "";
+                var d     = a.tarih ? new Date(a.tarih).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
+                return '<div class="mob-match-row">' +
+                    '<div class="mob-match-row__av" style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.25)">' + esc(ini) + '</div>' +
+                    '<div class="mob-match-row__body">' +
+                        '<div class="mob-match-row__title">' + esc(a.ad || "Kurye") + '</div>' +
+                        '<div class="mob-match-row__sub">' + (a.sehir ? esc(a.sehir) : "") + (stars ? " · " + stars : "") + '</div>' +
+                    '</div>' +
+                    '<div class="mob-match-row__end">' +
+                        '<span class="mob-status mob-status--accepted">Kabul</span>' +
+                        (d ? '<div class="mob-match-row__date">' + d + '</div>' : '') +
+                    '</div>' +
+                '</div>';
+            }).join("");
+        }
+
+        function renderFirmaOffers(offers) {
+            var host = el("mobFirmaOffers"); if (!host) return;
+            var firmaOffers = offers.filter(function (o) { return o.gelen && o.kimdenRol === "firma"; });
+            if (!firmaOffers.length) {
+                var allIncoming = offers.filter(function (o) { return o.gelen; });
+                if (!allIncoming.length) {
+                    host.innerHTML = '<div class="mob-empty">Gelen teklif yok. <a href="firmalar.html" class="mob-empty__link">Firmaları Keşfet →</a></div>';
+                    return;
+                }
+                firmaOffers = allIncoming;
+            }
+            host.innerHTML = firmaOffers.slice(0, 4).map(function (o) {
+                var st   = OFFER_STATUS[o.durum] || OFFER_STATUS.pending;
+                var name = esc(o.kimden || "Firma");
+                var ini  = name.charAt(0).toUpperCase();
+                var d    = o.tarih ? new Date(o.tarih).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
+                return '<div class="mob-match-row">' +
+                    '<div class="mob-match-row__av" style="background:rgba(168,85,247,0.15);color:#a855f7;border:1px solid rgba(168,85,247,0.25)">' + esc(ini) + '</div>' +
+                    '<div class="mob-match-row__body">' +
+                        '<div class="mob-match-row__title">' + name + '</div>' +
+                        '<div class="mob-match-row__sub">Gelen teklif' + (d ? " · " + d : "") + '</div>' +
+                    '</div>' +
+                    '<div class="mob-match-row__end">' +
+                        '<span class="mob-status mob-status--' + st.cls + '">' + st.lbl + '</span>' +
+                    '</div>' +
+                '</div>';
+            }).join("");
+        }
+
+        function renderMessages(convs) {
+            var host = el("mobMsgPreview"); if (!host) return;
+            if (!convs.length) {
+                host.innerHTML = '<div class="mob-empty">Henüz mesaj yok. <a href="kuryeler.html" class="mob-empty__link">Kurye Bul →</a></div>';
+                return;
+            }
+            host.innerHTML = convs.slice(0, 3).map(function (c) {
+                var ini     = (c.ad || "?").charAt(0).toUpperCase();
+                var preview = c.lastBody ? (c.lastBody.length > 40 ? c.lastBody.slice(0, 40) + "…" : c.lastBody) : "";
+                var hasUnread = c.unread > 0;
+                return '<a href="mesajlar.html?pid=' + esc(c.profileId) + '" class="mob-msg-row' + (hasUnread ? " is-unread" : "") + '">' +
+                    '<div class="mob-msg-row__av">' + (c.avatar ? '<img src="' + esc(c.avatar) + '" alt="">' : esc(ini)) + '</div>' +
+                    '<div class="mob-msg-row__body">' +
+                        '<div class="mob-msg-row__name">' + esc(c.ad || "Kullanıcı") + '</div>' +
+                        '<div class="mob-msg-row__last">' + (c.lastMine ? '<span class="mob-msg-row__mine">Sen: </span>' : "") + esc(preview) + '</div>' +
+                    '</div>' +
+                    '<div class="mob-msg-row__end">' +
+                        '<div class="mob-msg-row__time">' + timeAgo(c.lastAt) + '</div>' +
+                        (hasUnread ? '<div class="mob-msg-row__dot">' + (c.unread > 9 ? "9+" : c.unread) + '</div>' : '') +
+                    '</div>' +
+                '</a>';
+            }).join("");
+        }
+
+        function renderWorkforce(stats) {
+            var host = el("mobWorkforce"); if (!host) return;
+            var total = stats.totalApps || 0;
+            var acceptedPct = total > 0 ? Math.round(stats.acceptedApps / total * 100) : 0;
+            var pendingPct  = total > 0 ? Math.round(stats.pendingApps  / total * 100) : 0;
+            host.innerHTML =
+                '<div class="mob-wf-list">' +
+                    wfRow("Aktif Talepler",    stats.openCount,    "#22d3ee",  100) +
+                    wfRow("Bekleyen Başvuru",  stats.pendingApps,  "#f59e0b",  pendingPct) +
+                    wfRow("Eşleşen Kurye",     stats.acceptedApps, "#22c55e",  acceptedPct) +
+                    wfRow("Kapalı İlan",       stats.closedCount,  "#6b7280",  100) +
+                '</div>';
+        }
+        function wfRow(lbl, val, color, pct) {
+            return '<div class="mob-wf-row">' +
+                '<div class="mob-wf-row__head"><span class="mob-wf-row__lbl">' + lbl + '</span><span class="mob-wf-row__val">' + (val || 0) + '</span></div>' +
+                '<div class="mob-wf-bar"><div class="mob-wf-bar__fill" style="width:' + Math.min(pct, 100) + '%;background:' + color + '"></div></div>' +
+            '</div>';
+        }
+
+        function renderPerformance(stats) {
+            var host = el("mobPerformance"); if (!host) return;
+            var acceptRate = stats.totalApps > 0 ? Math.round(stats.acceptedApps / stats.totalApps * 100) + "%" : "—";
+            host.innerHTML =
+                '<div class="mob-perf-grid">' +
+                    '<div class="mob-perf-item">' +
+                        '<div class="mob-perf-item__val">' + (stats.acceptedApps || 0) + '</div>' +
+                        '<div class="mob-perf-item__lbl">Toplam Eşleşme</div>' +
+                    '</div>' +
+                    '<div class="mob-perf-item">' +
+                        '<div class="mob-perf-item__val">' + esc(acceptRate) + '</div>' +
+                        '<div class="mob-perf-item__lbl">Kabul Oranı</div>' +
+                    '</div>' +
+                    '<div class="mob-perf-item">' +
+                        '<div class="mob-perf-item__val">' + (stats.totalApps || 0) + '</div>' +
+                        '<div class="mob-perf-item__lbl">Toplam Başvuru</div>' +
+                    '</div>' +
+                    '<div class="mob-perf-item">' +
+                        '<div class="mob-perf-item__val">' + (stats.openCount || 0) + '</div>' +
+                        '<div class="mob-perf-item__lbl">Aktif İlan</div>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        async function initMobDash() {
+            if (window.KB && KB.ready) await KB.ready();
+            if (!window.KB || !KB.isAuthed || !KB.isAuthed()) return;
+
+            var sess = KB.session && KB.session();
+            var p    = sess && sess.profile;
+            if (!p) return;
+
+            /* --- HEADER --- */
+            var bizName = (p.ad || "İşletme");
+            if (el("mobUserName"))     el("mobUserName").textContent = bizName;
+            if (el("mobAvatarLetter")) el("mobAvatarLetter").textContent = bizName.charAt(0).toUpperCase();
+            if (p.avatar_url && el("mobAvatar")) {
+                el("mobAvatar").innerHTML = '<img src="' + esc(p.avatar_url) + '" alt="' + esc(p.ad || "") + '" style="width:100%;height:100%;object-fit:cover;border-radius:16px">';
+            }
+            var lvlText = p.tur ? esc(p.tur) : "İşletme";
+            var lvlCls  = "";
+            if (p.dogrulama === "onaylandi")   { lvlText = "✓ Doğrulanmış İşletme"; lvlCls = " mob-level-chip--verified"; }
+            else if (p.dogrulama === "beklemede") { lvlText = "⏳ Doğrulama Bekleniyor"; }
+            if (el("mobUserLevel")) el("mobUserLevel").innerHTML = '<span class="mob-level-chip' + lvlCls + '">' + lvlText + '</span>';
+
+            /* --- PARALEL VERİ YÜKLEMESİ --- */
+            var results = await Promise.allSettled([
+                window.SB ? SB.myListingStats()     : Promise.resolve({ openCount:0, closedCount:0, totalApps:0, pendingApps:0, acceptedApps:0 }),
+                window.SB ? SB.myListings()          : Promise.resolve([]),
+                window.SB ? SB.myOffers()            : Promise.resolve([]),
+                window.SB ? SB.myConversations()     : Promise.resolve([]),
+                window.SB ? SB.unreadCount()         : Promise.resolve(0),
+                window.SB ? SB.unreadMessageCount()  : Promise.resolve(0)
+            ]);
+
+            var stats    = results[0].value || { openCount:0, closedCount:0, totalApps:0, pendingApps:0, acceptedApps:0 };
+            var listings = results[1].value || [];
+            var offers   = results[2].value || [];
+            var convs    = results[3].value || [];
+            var notifCnt = results[4].value || 0;
+            var msgCnt   = results[5].value || 0;
+
+            /* --- İSTATİSTİKLER --- */
+            var incomingOffers = offers.filter(function (o) { return o.gelen; });
+            if (el("mobStatListings")) el("mobStatListings").textContent = stats.openCount;
+            if (el("mobStatApps"))     el("mobStatApps").textContent     = stats.pendingApps;
+            if (el("mobStatOffers"))   el("mobStatOffers").textContent   = incomingOffers.length;
+            if (el("mobStatMsgs"))     el("mobStatMsgs").textContent     = msgCnt;
+
+            /* --- BİLDİRİM BADGE --- */
+            if (notifCnt > 0 && el("mobNotifBadge")) {
+                el("mobNotifBadge").textContent   = notifCnt > 9 ? "9+" : String(notifCnt);
+                el("mobNotifBadge").style.display = "";
+            }
+
+            /* --- SONRAKI ADIM --- */
+            var nextEl = el("dashNextAction");
+            if (nextEl) {
+                if (stats.pendingApps > 0) {
+                    if (el("dashNextText")) el("dashNextText").textContent = stats.pendingApps + " kurye başvurusu incelemenizi bekliyor.";
+                    if (el("dashNextBtn"))  { el("dashNextBtn").textContent = "Başvuruları İncele →"; el("dashNextBtn").href = "ilanlar.html"; }
+                } else if (incomingOffers.filter(function (o) { return o.durum === "pending"; }).length > 0) {
+                    var cnt = incomingOffers.filter(function (o) { return o.durum === "pending"; }).length;
+                    if (el("dashNextText")) el("dashNextText").textContent = cnt + " bekleyen firma teklifiniz var.";
+                    if (el("dashNextBtn"))  { el("dashNextBtn").textContent = "Teklifleri İncele →"; el("dashNextBtn").href = "firmalar.html"; }
+                } else if (stats.openCount === 0) {
+                    if (el("dashNextText")) el("dashNextText").textContent = "Kurye ilanı yayınlayarak aday hattını başlat.";
+                    if (el("dashNextBtn"))  { el("dashNextBtn").textContent = "İlan Oluştur →"; el("dashNextBtn").href = "ilanlar.html?new=1"; }
+                } else {
+                    if (el("dashNextText")) el("dashNextText").textContent = "Kurye havuzunu keşfet ve yeni bağlantılar kur.";
+                    if (el("dashNextBtn"))  { el("dashNextBtn").textContent = "Kurye Havuzu →"; el("dashNextBtn").href = "kuryeler.html"; }
+                }
+                nextEl.style.display = "";
+            }
+
+            /* --- BÖLÜMLER --- */
+            renderListings(listings);
+            renderFirmaOffers(offers);
+            renderMessages(convs);
+            renderWorkforce(stats);
+            renderPerformance(stats);
+
+            /* --- BAŞVURULAR & EŞLEŞMELER: ilk açık ilan için ayrı çağrı --- */
+            var openListing = listings.find(function (l) { return l.durum === "acik"; });
+            if (openListing && window.SB) {
+                try {
+                    var apps = await SB.listingApplications(openListing.id);
+                    renderApplications(apps, openListing);
+                    renderMatches(apps);
+                } catch (e) {
+                    renderApplications([], null);
+                    renderMatches([]);
+                }
+            } else {
+                renderApplications([], null);
+                renderMatches([]);
+            }
+        }
+
+        initMobDash();
+    })();
+    </script>
 </body>
 </html>
