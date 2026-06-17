@@ -889,55 +889,199 @@
     if (!x) { host.innerHTML = '<div class="empty">' + T("empty.generic") + '</div>'; return; }
     await loadPoolSet();
 
-    var avatarCls = type === "kurye" ? "" : type === "isletme" ? " avatar--blue" : " avatar--navy";
-    var sideExtra = "", body = "";
+    /* ── Avatar ───────────────────────────────────────────── */
+    var avHtml = x.avatar_url
+      ? '<img class="prf__av-img" src="' + KB.esc(x.avatar_url) + '" alt="" onerror="this.style.display=\'none\'">'
+      : '<div class="prf__av-ph">' + KB.initials(x.ad || "?") + '</div>';
 
+    /* ── Verification badge inline ────────────────────────── */
+    var verSvg = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    var verHtml = x.dogrulama === "verified"
+      ? '<span class="prf__badge prf__badge--ver" title="' + T("kyc.verified") + '">' + verSvg + T("kyc.verifiedShort") + '</span>'
+      : '<span class="prf__badge prf__badge--pend">Doğrulanmadı</span>';
+
+    /* ── Level badge (kurye only) ─────────────────────────── */
+    var lvlCls = { standart: "prf__lvl--std", profesyonel: "prf__lvl--pro", premium: "prf__lvl--prm" };
+    var lvlIco  = { standart: "🥉", profesyonel: "🥈", premium: "🥇" };
+    var lvlLbl  = { standart: T("level.standart"), profesyonel: T("level.profesyonel"), premium: T("level.premium") };
+
+    /* ── Quick-trust row (role-specific KPI pills) ────────── */
+    function kpi(val, lbl, hi) {
+      return '<div class="prf__kpi' + (hi ? " prf__kpi--hi" : "") + '"><div class="prf__kpi-val">' + val + '</div><div class="prf__kpi-lbl">' + lbl + '</div></div>';
+    }
+    var trustRow;
     if (type === "kurye") {
-      var fill = xpFill(x.puan);
-      sideExtra =
-        careerTrackHtml(x.seviye) +
-        '<div class="xp-bar" style="margin:10px 0 14px">' +
-          '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (x.puan ? Number(x.puan).toFixed(1) : "—") + ' / 5</b></div>' +
-          '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + fill + '%"></div></div>' +
-        '</div>';
-      var certHtml = x.sertifikalar.length
-        ? '<div class="achv-grid">' + x.sertifikalar.map(function (c) {
-            return '<div class="achv-badge"><div class="achv-badge__ic">🏅</div><div class="achv-badge__t">' + KB.esc(c) + '</div></div>';
-          }).join("") + '</div>'
-        : '<p class="pcard__sub">' + T("prof.noCert") + '</p>';
-      body =
-        box(T("prof.general"), '<dl class="kv">' +
-          '<dt>' + T("kv.city") + '</dt><dd>' + KB.esc(x.sehir) + '</dd>' +
-          '<dt>' + T("kv.vehicle") + '</dt><dd>' + KB.esc(x.arac) + '</dd>' +
-          '<dt>' + T("kv.exp") + '</dt><dd>' + x.deneyim + ' ' + T("unit.years") + '</dd>' +
-          '<dt>' + T("kv.completed") + '</dt><dd>' + x.tamamlanan + ' ' + T("unit.deliveries") + '</dd>' +
-          '<dt>' + T("kv.regions") + '</dt><dd>' + KB.esc(x.bolgeler.join(", ")) + '</dd></dl>') +
-        box(T("prof.certs"), certHtml) +
-        box(T("prof.worked"), x.calistigi.length ? chips(x.calistigi) : '<p class="pcard__sub">' + T("prof.noHistory") + '</p>') +
-        box(T("prof.refs"), x.referanslar.length ?
-          '<ul class="reflist">' + x.referanslar.map(function (r) {
-            return '<li><span class="ref__name">' + KB.esc(r.ad) + '</span> <span class="ref__role">· ' + KB.esc(r.rol) + '</span><br>"' + KB.esc(r.not) + '"</li>';
-          }).join("") + '</ul>' : '<p class="pcard__sub">' + T("prof.noRef") + '</p>');
+      trustRow = kpi(x.puan ? Number(x.puan).toFixed(1) : "—", T("kv.score"), true) +
+                 kpi(x.tamamlanan || 0, "Teslimat", false) +
+                 kpi((x.deneyim || 0) + " yıl", T("kv.exp"), false) +
+                 kpi((x.bolgeler || []).length, "Bölge", false);
     } else if (type === "isletme") {
-      sideExtra = '<div class="profile__badges"><span class="chip">' + KB.esc(x.tur) + '</span><span class="chip">' + T("pcard.openListings", { n: x.acikIlan }) + '</span></div>';
-      body =
-        box(T("prof.bizInfo"), '<dl class="kv">' +
-          '<dt>' + T("kv.type") + '</dt><dd>' + KB.esc(x.tur) + '</dd>' +
-          '<dt>' + T("kv.cityRegion") + '</dt><dd>' + KB.esc(x.sehir) + ' · ' + KB.esc(x.bolge) + '</dd>' +
-          '<dt>' + T("kv.openListing") + '</dt><dd>' + x.acikIlan + '</dd></dl>') +
-        box(T("prof.about"), '<p>' + KB.esc(x.aciklama) + '</p>') +
-        box(T("prof.need"), '<p>' + KB.esc(x.ihtiyac) + '</p>');
+      trustRow = kpi(x.puan ? Number(x.puan).toFixed(1) : "—", "Puan", true) +
+                 kpi(x.acikIlan || 0, "Açık İlan", false) +
+                 kpi((x.bolgeler || []).length, "Bölge", false);
     } else {
-      sideExtra = '<div class="profile__badges">' + KB.stars(x.puan) + '<span class="chip">' + x.kapasite + ' ' + T("unit.couriers") + '</span></div>';
-      body =
-        box(T("prof.firmInfo"), '<dl class="kv">' +
-          '<dt>' + T("kv.serviceRegions") + '</dt><dd>' + KB.esc(x.bolgeler.join(", ")) + '</dd>' +
-          '<dt>' + T("kv.capacity") + '</dt><dd>' + x.kapasite + ' ' + T("unit.couriers") + '</dd></dl>') +
-        box(T("prof.about"), '<p>' + KB.esc(x.aciklama) + '</p>') +
-        box(T("prof.services"), chips(x.hizmetler));
+      trustRow = kpi(x.puan ? Number(x.puan).toFixed(1) : "—", "Puan", true) +
+                 kpi(x.kapasite || 0, "Kurye Kap.", false) +
+                 kpi((x.bolgeler || []).length, "Bölge", false) +
+                 kpi((x.hizmetler || []).length, "Hizmet", false);
     }
 
-    // Değerlendirmeler
+    /* ── Sub-title & tagline ──────────────────────────────── */
+    var sub = type === "kurye"    ? (x.sehir || "")
+            : type === "isletme" ? [x.tur, x.sehir].filter(Boolean).join(" · ")
+            : (x.bolgeler || []).slice(0, 2).join(", ");
+    var tagline = type === "kurye"    ? (lvlLbl[x.seviye] || "Kurye")
+                : type === "isletme" ? (x.tur || "İşletme")
+                : "Kurye Firması";
+
+    /* ── Verification center checklist ───────────────────── */
+    var okIco  = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    var noIco  = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
+    function verifItem(ok, label) {
+      return '<div class="prf-verif__item' + (ok ? " prf-verif__item--ok" : "") + '">' +
+        '<div class="prf-verif__ic">' + (ok ? okIco : noIco) + '</div>' +
+        '<span class="prf-verif__lbl">' + label + '</span>' +
+        (ok ? '<span class="prf-verif__status">Doğrulandı</span>' : '<span class="prf-verif__status prf-verif__status--no">Bekliyor</span>') +
+      '</div>';
+    }
+    var verifHtml =
+      verifItem(x.dogrulama === "verified", "Kimlik Doğrulama") +
+      verifItem(!!(x.telefon), "Telefon") +
+      verifItem(true, "Platform Üyeliği") +
+      verifItem(x.dogrulama === "verified", "Güvenilir Hesap");
+
+    /* ── KYC back-link (built into page-head via JS rendered hero) */
+    var backHref = type === "kurye" ? "kuryeler.html" : type === "isletme" ? "isletmeler.html" : "firmalar.html";
+    var backLabel = type === "kurye" ? "← Yetenek Keşfi" : type === "isletme" ? "← İşverenler" : "← Kurye Firmaları";
+
+    /* ── HERO HTML ────────────────────────────────────────── */
+    var heroHtml =
+      '<div class="prf">' +
+        '<a class="prf__back" href="' + backHref + '">' +
+          '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>' +
+          backLabel +
+        '</a>' +
+        '<div class="prf__cover"></div>' +
+        '<div class="prf__head">' +
+          '<div class="prf__av">' + avHtml + '</div>' +
+          '<div class="prf__meta">' +
+            '<div class="prf__name-row">' +
+              '<span class="prf__name">' + KB.esc(x.ad) + '</span>' +
+              verHtml +
+            '</div>' +
+            (type === "kurye"
+              ? '<span class="prf__lvl ' + (lvlCls[x.seviye] || "prf__lvl--std") + '">' + (lvlIco[x.seviye] || "") + ' ' + (lvlLbl[x.seviye] || x.seviye) + '</span>'
+              : '<span class="prf__tagline">' + KB.esc(tagline) + '</span>') +
+            (sub ? '<div class="prf__loc"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + KB.esc(sub) + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="prf__trust-row">' + trustRow + '</div>' +
+        '<div class="prf__cta-row">' +
+          '<button class="prf__btn prf__btn--primary" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
+          '<a class="prf__btn prf__btn--ghost" id="profMsgBtn" href="mesajlar.html?to=' + x.id + '" hidden>💬 ' + T("msg.btn") + '</a>' +
+        '</div>' +
+      '</div>';
+
+    /* ── SECTIONS ─────────────────────────────────────────── */
+    var sections = "";
+
+    function prfSection(title, inner) {
+      return '<div class="prf-section"><div class="prf-section__h">' + title + '</div><div class="prf-section__body">' + inner + '</div></div>';
+    }
+    function prfKv(pairs) {
+      return '<dl class="prf-kv">' + pairs.map(function(p){ return '<dt>' + p[0] + '</dt><dd>' + p[1] + '</dd>'; }).join("") + '</dl>';
+    }
+    function prfKpiGrid(items) {
+      return '<div class="prf-kpi-grid">' + items.map(function(k){
+        return '<div class="prf-kpi-card' + (k.hi ? " prf-kpi-card--hi" : "") + '"><div class="prf-kpi-card__val">' + k.val + '</div><div class="prf-kpi-card__lbl">' + k.lbl + '</div></div>';
+      }).join("") + '</div>';
+    }
+    function prfChips(arr) {
+      return '<div class="prf-chips">' + arr.map(function(s){ return '<span class="chip">' + KB.esc(s) + '</span>'; }).join("") + '</div>';
+    }
+
+    if (type === "kurye") {
+      /* Kariyer seviyesi */
+      sections += prfSection("Kariyer Seviyesi",
+        careerTrackHtml(x.seviye) +
+        '<div class="xp-bar" style="margin-top:14px">' +
+          '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (x.puan ? Number(x.puan).toFixed(1) : "—") + ' / 5</b></div>' +
+          '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + xpFill(x.puan) + '%"></div></div>' +
+        '</div>');
+
+      /* Doğrulama merkezi */
+      sections += prfSection("Doğrulama Merkezi", '<div class="prf-verif">' + verifHtml + '</div>');
+
+      /* Aktivite KPI */
+      sections += prfSection("Aktivite & Deneyim", prfKpiGrid([
+        { val: x.tamamlanan || 0, lbl: "Teslimat", hi: true },
+        { val: (x.deneyim || 0) + " yıl", lbl: "Deneyim", hi: false },
+        { val: (x.bolgeler || []).length, lbl: "Bölge", hi: false },
+        { val: (x.sertifikalar || []).length, lbl: "Sertifika", hi: false }
+      ]));
+
+      /* Genel bilgiler */
+      sections += prfSection(T("prof.general"), prfKv([
+        [T("kv.city"), KB.esc(x.sehir)],
+        [T("kv.vehicle"), KB.esc(x.arac)],
+        [T("kv.regions"), KB.esc((x.bolgeler || []).join(", "))]
+      ]));
+
+      /* Başarılar / sertifikalar */
+      if (x.sertifikalar && x.sertifikalar.length) {
+        sections += prfSection(T("prof.certs"),
+          '<div class="prf-achv-grid">' + x.sertifikalar.map(function(c){
+            return '<div class="prf-achv"><div class="prf-achv__ic">🏅</div><div class="prf-achv__lbl">' + KB.esc(c) + '</div></div>';
+          }).join("") + '</div>');
+      } else {
+        sections += prfSection(T("prof.certs"), '<p class="prf-empty-sub">' + T("prof.noCert") + '</p>');
+      }
+
+      /* Çalışma geçmişi */
+      sections += prfSection(T("prof.worked"),
+        (x.calistigi && x.calistigi.length) ? prfChips(x.calistigi) : '<p class="prf-empty-sub">' + T("prof.noHistory") + '</p>');
+
+      /* Referanslar */
+      if (x.referanslar && x.referanslar.length) {
+        sections += prfSection(T("prof.refs"),
+          '<div class="prf-ref-list">' + x.referanslar.map(function(r){
+            return '<div class="prf-ref"><div class="prf-ref__head"><span class="prf-ref__name">' + KB.esc(r.ad) + '</span><span class="prf-ref__role">' + KB.esc(r.rol) + '</span></div>' +
+              '<p class="prf-ref__note">"' + KB.esc(r.not) + '"</p></div>';
+          }).join("") + '</div>');
+      } else {
+        sections += prfSection(T("prof.refs"), '<p class="prf-empty-sub">' + T("prof.noRef") + '</p>');
+      }
+
+    } else if (type === "isletme") {
+      sections += prfSection("Doğrulama Merkezi", '<div class="prf-verif">' + verifHtml + '</div>');
+      sections += prfSection("İşletme Metrikleri", prfKpiGrid([
+        { val: x.puan ? Number(x.puan).toFixed(1) : "—", lbl: "Puan", hi: true },
+        { val: x.acikIlan || 0, lbl: "Açık İlan", hi: false }
+      ]));
+      sections += prfSection(T("prof.bizInfo"), prfKv([
+        [T("kv.type"), KB.esc(x.tur)],
+        [T("kv.cityRegion"), KB.esc(x.sehir) + (x.bolge ? ' · ' + KB.esc(x.bolge) : "")]
+      ]));
+      if (x.ihtiyac) sections += prfSection(T("prof.need"), '<p class="prf-about">' + KB.esc(x.ihtiyac) + '</p>');
+      if (x.aciklama) sections += prfSection(T("prof.about"), '<p class="prf-about">' + KB.esc(x.aciklama) + '</p>');
+
+    } else { /* firma */
+      sections += prfSection("Doğrulama Merkezi", '<div class="prf-verif">' + verifHtml + '</div>');
+      sections += prfSection("Firma Metrikleri", prfKpiGrid([
+        { val: x.puan ? Number(x.puan).toFixed(1) : "—", lbl: "Puan", hi: true },
+        { val: x.kapasite || 0, lbl: "Kurye Kapasitesi", hi: false }
+      ]));
+      sections += prfSection(T("kv.serviceRegions"), prfChips(x.bolgeler || []));
+      if (x.hizmetler && x.hizmetler.length) sections += prfSection(T("prof.services"), prfChips(x.hizmetler));
+      if (x.aciklama) sections += prfSection(T("prof.about"), '<p class="prf-about">' + KB.esc(x.aciklama) + '</p>');
+    }
+
+    /* Pool toggle */
+    if (canPool()) {
+      sections += '<div class="prf-pool-wrap">' + poolBtnFull(x.id) + '</div>';
+    }
+
+    /* Değerlendirmeler */
     if (online()) {
       var reviews = [], canRev = false, myRev = null;
       try {
@@ -947,31 +1091,14 @@
           if (!meP || meP.id !== x.id) { canRev = await SB.canReview(x.id); if (canRev) myRev = await SB.myReviewFor(x.id); }
         }
       } catch (e) {}
-      body += reviewsBox(x.id, reviews, canRev, myRev);
+      sections += '<div class="prf-section">' + reviewsBox(x.id, reviews, canRev, myRev) + '</div>';
     }
 
-    var msgBtn = '<a class="btn btn--light btn--block mt-24" id="profMsgBtn" href="mesajlar.html?to=' + x.id + '" hidden>💬 ' + T("msg.btn") + '</a>';
-    // Tüm roller için premium kimlik kartı (cover + avatar)
-    var sideWrapper = '<aside class="profile-identity">' +
-        '<div class="profile-identity__cover"></div>' +
-        '<div class="profile-identity__body">' +
-          '<div class="avatar' + avatarCls + '">' + avInner(x) + '</div>' +
-          '<div class="profile__name">' + KB.esc(x.ad) + ' ' + verBadge(x.dogrulama) + '</div>' +
-          '<div class="profile__sub">' + KB.esc(x.sehir || (x.bolgeler && x.bolgeler.join(", ")) || "") + '</div>' +
-          sideExtra +
-          '<button class="btn btn--primary btn--block" style="margin-top:16px" data-teklif="' + type + '" data-id="' + x.id + '">✉️ ' + T("btn.sendOffer") + '</button>' +
-          msgBtn +
-          poolBtnFull(x.id) +
-        '</div>' +
-      '</aside>';
-    host.innerHTML =
-      '<div class="profile">' +
-        sideWrapper +
-        '<div class="profile__body">' + body + '</div>' +
-      '</div>';
-    // Eşleşme (kabul edilmiş teklif/başvuru) varsa "Mesaj Gönder" butonunu göster
+    host.innerHTML = heroHtml + '<div class="prf__body">' + sections + '</div>';
+
+    /* Eşleşme varsa "Mesaj Gönder" butonunu göster */
     if (online() && KB.isAuthed && KB.isAuthed() && SB.canMessage) {
-      SB.canMessage(x.id).then(function (ok) { if (ok) { var mb = document.getElementById("profMsgBtn"); if (mb) mb.hidden = false; } }).catch(function () {});
+      SB.canMessage(x.id).then(function(ok) { if (ok) { var mb = document.getElementById("profMsgBtn"); if (mb) mb.hidden = false; } }).catch(function(){});
     }
   }
 

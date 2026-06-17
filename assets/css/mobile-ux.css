@@ -2097,6 +2097,373 @@
 .msg-ctx-sheet__cancel:active { background: rgba(255,255,255,0.08); }
 
 /* ═══════════════════════════════════════════════════════════
+   20. PROFİL — PREMIUM TRUST & REPUTATION SYSTEM
+   Tüm rollerde çalışır: kurye / isletme / firma
+   Mevcut iş mantığı, skor hesaplamaları korundu.
+═══════════════════════════════════════════════════════════ */
+
+/* ── Page layout ─────────────────────────────────────────── */
+.prf-main {
+  padding-top: 0 !important;
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 24px);
+}
+.prf-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ── Profile card wrapper ────────────────────────────────── */
+.prf {
+  background: linear-gradient(180deg, rgba(34,211,238,0.06) 0%, transparent 100%);
+  border-bottom: 1px solid var(--ds-stroke);
+  padding-bottom: 0;
+  position: relative;
+}
+
+/* ── Cover gradient ──────────────────────────────────────── */
+.prf__cover {
+  height:     120px;
+  background: linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(79,139,255,0.15) 50%, rgba(168,85,247,0.18) 100%);
+  position:   relative;
+}
+.prf__cover::after {
+  content:    "";
+  position:   absolute;
+  inset:      0;
+  background: radial-gradient(ellipse at 30% 60%, rgba(34,211,238,0.12), transparent 70%);
+}
+
+/* ── Back link ───────────────────────────────────────────── */
+.prf__back {
+  position:    absolute;
+  top:         calc(var(--safe-area-top) + 10px);
+  left:        14px;
+  z-index:     10;
+  display:     inline-flex;
+  align-items: center;
+  gap:         6px;
+  color:       rgba(244,246,251,0.75);
+  font-size:   0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding:     6px 10px;
+  border-radius: 999px;
+  background:  rgba(0,0,0,0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:  color 0.15s, background 0.15s;
+}
+.prf__back:hover { color: var(--ds-text); background: rgba(0,0,0,0.5); }
+
+/* ── Head row: avatar + meta ─────────────────────────────── */
+.prf__head {
+  display:     flex;
+  align-items: flex-end;
+  gap:         14px;
+  padding:     0 18px 16px;
+  margin-top:  -40px;
+  position:    relative;
+  z-index:     2;
+}
+
+/* ── Avatar ──────────────────────────────────────────────── */
+.prf__av {
+  width:       80px;
+  height:      80px;
+  border-radius: 50%;
+  border:      3px solid var(--ds-bg, #0d0d0d);
+  background:  var(--ds-grad);
+  overflow:    hidden;
+  flex-shrink: 0;
+  display:     grid;
+  place-items: center;
+  font-weight: 800;
+  font-size:   1.4rem;
+  color:       #fff;
+  box-shadow:  0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.5);
+}
+.prf__av-img {
+  width:      100%;
+  height:     100%;
+  object-fit: cover;
+  display:    block;
+}
+.prf__av-ph {
+  width:       100%;
+  height:      100%;
+  display:     grid;
+  place-items: center;
+  background:  var(--ds-grad);
+  color:       #fff;
+  font-weight: 800;
+  font-size:   1.35rem;
+}
+
+/* ── Name + badges ───────────────────────────────────────── */
+.prf__meta {
+  flex:       1;
+  min-width:  0;
+  padding-top: 40px;
+}
+.prf__name-row {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  flex-wrap:   wrap;
+}
+.prf__name {
+  font-size:   1.15rem;
+  font-weight: 800;
+  color:       var(--ds-text);
+  line-height: 1.2;
+}
+.prf__badge {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             4px;
+  padding:         3px 9px;
+  border-radius:   999px;
+  font-size:       0.68rem;
+  font-weight:     700;
+  letter-spacing:  0.02em;
+  flex-shrink:     0;
+}
+.prf__badge--ver {
+  background: rgba(34,211,238,0.15);
+  border:     1px solid rgba(34,211,238,0.4);
+  color:      #22d3ee;
+}
+.prf__badge--pend {
+  background: rgba(148,163,184,0.1);
+  border:     1px solid rgba(148,163,184,0.2);
+  color:      var(--ds-muted);
+}
+.prf__lvl {
+  display:      inline-flex;
+  align-items:  center;
+  gap:          4px;
+  padding:      3px 10px;
+  border-radius: 999px;
+  font-size:    0.72rem;
+  font-weight:  700;
+  margin-top:   5px;
+}
+.prf__lvl--std { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.25); color: #94a3b8; }
+.prf__lvl--pro { background: rgba(79,139,255,0.12); border: 1px solid rgba(79,139,255,0.3);   color: #4f8bff; }
+.prf__lvl--prm { background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);  color: #a855f7; }
+.prf__tagline  { font-size: 0.82rem; color: var(--ds-muted); margin-top: 5px; }
+.prf__loc      { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--ds-muted); margin-top: 4px; }
+
+/* ── Trust KPI row ───────────────────────────────────────── */
+.prf__trust-row {
+  display:        grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:            1px;
+  background:     var(--ds-stroke);
+  border-top:     1px solid var(--ds-stroke);
+  border-bottom:  1px solid var(--ds-stroke);
+}
+.prf__kpi {
+  background:   var(--ds-bg, #0d0d0d);
+  padding:      12px 8px;
+  text-align:   center;
+}
+.prf__kpi-val {
+  font-size:   1.05rem;
+  font-weight: 800;
+  color:       var(--ds-text);
+  line-height: 1;
+}
+.prf__kpi-lbl {
+  font-size:  0.65rem;
+  color:      var(--ds-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow:   hidden;
+  text-overflow: ellipsis;
+}
+.prf__kpi--hi .prf__kpi-val { color: var(--ds-cyan); }
+
+/* ── CTA buttons ─────────────────────────────────────────── */
+.prf__cta-row {
+  display:        flex;
+  gap:            10px;
+  padding:        14px 16px calc(14px + var(--safe-area-bottom, 0px));
+}
+.prf__btn {
+  flex:            1;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             6px;
+  padding:         12px 14px;
+  border-radius:   14px;
+  font-size:       0.88rem;
+  font-weight:     700;
+  cursor:          pointer;
+  border:          none;
+  text-decoration: none;
+  min-height:      48px;
+  transition:      opacity 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.prf__btn--primary {
+  background: var(--ds-grad);
+  color:      #fff;
+}
+.prf__btn--primary:active { opacity: 0.82; }
+.prf__btn--ghost {
+  background: rgba(255,255,255,0.07);
+  border:     1px solid var(--ds-stroke);
+  color:      var(--ds-text);
+}
+.prf__btn--ghost:active { background: rgba(255,255,255,0.1); }
+
+/* ── Body sections ───────────────────────────────────────── */
+.prf__body {
+  display:        flex;
+  flex-direction: column;
+  gap:            0;
+  padding:        0;
+}
+.prf-section {
+  padding:       18px 18px 16px;
+  border-bottom: 1px solid var(--ds-stroke);
+}
+.prf-section:last-child { border-bottom: none; }
+.prf-section__h {
+  font-size:     0.7rem;
+  font-weight:   700;
+  color:         var(--ds-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.prf-section__body { display: flex; flex-direction: column; gap: 0; }
+
+/* ── KV list ─────────────────────────────────────────────── */
+.prf-kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; margin: 0; }
+.prf-kv dt { color: var(--ds-muted); font-size: 0.82rem; }
+.prf-kv dd { color: var(--ds-text);  font-size: 0.88rem; font-weight: 600; margin: 0; }
+
+/* ── KPI cards grid ──────────────────────────────────────── */
+.prf-kpi-grid {
+  display:               grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:                   10px;
+}
+.prf-kpi-card {
+  background:    var(--ds-panel);
+  border:        1px solid var(--ds-stroke);
+  border-radius: 14px;
+  padding:       14px 14px 12px;
+  text-align:    center;
+}
+.prf-kpi-card--hi {
+  background:    rgba(34,211,238,0.08);
+  border-color:  rgba(34,211,238,0.25);
+}
+.prf-kpi-card__val {
+  font-size:   1.5rem;
+  font-weight: 800;
+  color:       var(--ds-text);
+  line-height: 1.1;
+}
+.prf-kpi-card--hi .prf-kpi-card__val { color: var(--ds-cyan); }
+.prf-kpi-card__lbl {
+  font-size:  0.72rem;
+  color:      var(--ds-muted);
+  margin-top: 4px;
+}
+
+/* ── Verification checklist ──────────────────────────────── */
+.prf-verif { display: flex; flex-direction: column; gap: 8px; }
+.prf-verif__item {
+  display:       flex;
+  align-items:   center;
+  gap:           10px;
+  padding:       11px 14px;
+  background:    rgba(255,255,255,0.03);
+  border:        1px solid var(--ds-stroke);
+  border-radius: 12px;
+}
+.prf-verif__item--ok {
+  background:  rgba(34,211,238,0.05);
+  border-color: rgba(34,211,238,0.2);
+}
+.prf-verif__ic {
+  width:           30px;
+  height:          30px;
+  border-radius:   50%;
+  display:         grid;
+  place-items:     center;
+  flex-shrink:     0;
+  background:      rgba(148,163,184,0.1);
+  border:          1px solid rgba(148,163,184,0.15);
+  color:           var(--ds-muted);
+}
+.prf-verif__item--ok .prf-verif__ic {
+  background: rgba(34,211,238,0.12);
+  border-color: rgba(34,211,238,0.3);
+  color: #22d3ee;
+}
+.prf-verif__lbl  { flex: 1; font-size: 0.86rem; font-weight: 600; color: var(--ds-text); }
+.prf-verif__status { font-size: 0.7rem; font-weight: 700; color: #22d3ee; }
+.prf-verif__status--no { color: var(--ds-muted); }
+
+/* ── Achievement badges ──────────────────────────────────── */
+.prf-achv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.prf-achv {
+  background:    var(--ds-panel);
+  border:        1px solid var(--ds-stroke);
+  border-radius: 14px;
+  padding:       12px 8px 10px;
+  text-align:    center;
+}
+.prf-achv__ic  { font-size: 1.5rem; line-height: 1; margin-bottom: 6px; }
+.prf-achv__lbl { font-size: 0.72rem; color: var(--ds-text); font-weight: 600; line-height: 1.3; }
+
+/* ── Chips ───────────────────────────────────────────────── */
+.prf-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── Reference cards ─────────────────────────────────────── */
+.prf-ref-list { display: flex; flex-direction: column; gap: 10px; }
+.prf-ref {
+  background:    var(--ds-panel);
+  border:        1px solid var(--ds-stroke);
+  border-radius: 14px;
+  padding:       14px;
+}
+.prf-ref__head  { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.prf-ref__name  { font-weight: 700; font-size: 0.88rem; color: var(--ds-text); }
+.prf-ref__role  { font-size: 0.76rem; color: var(--ds-muted); }
+.prf-ref__note  { font-size: 0.84rem; color: var(--ds-muted); line-height: 1.5; margin: 0; font-style: italic; }
+
+/* ── About paragraph ─────────────────────────────────────── */
+.prf-about { font-size: 0.88rem; color: var(--ds-muted); line-height: 1.65; margin: 0; }
+
+/* ── Empty sub text ──────────────────────────────────────── */
+.prf-empty-sub { font-size: 0.84rem; color: var(--ds-muted); margin: 0; }
+
+/* ── Pool button wrapper ─────────────────────────────────── */
+.prf-pool-wrap { padding: 16px 18px; border-bottom: 1px solid var(--ds-stroke); }
+.prf-pool-wrap .pool-toggle { border-radius: 14px !important; min-height: 48px; font-size: 0.9rem; }
+
+/* ── Existing reviewsBox inside prf-section ─────────────── */
+.prf-section .panel-box { border: none; padding: 0; background: none; }
+.prf-section .panel-box h3 { font-size: 0.7rem; font-weight: 700; color: var(--ds-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── Career track subtle mobile override ─────────────────── */
+@media (max-width: 680px) {
+  .prf__av { width: 72px; height: 72px; }
+  .prf__name { font-size: 1.05rem; }
+  .prf-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .prf__trust-row { grid-template-columns: repeat(2, 1fr); }
+  .prf-section { padding: 16px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    18. ROL BAZLI ALT NAVİGASYON RENK AKSENTLARI
    Her rol için farklı aktif renk isteğe bağlı — opsiyonel
 ═══════════════════════════════════════════════════════════ */

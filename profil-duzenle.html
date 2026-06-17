@@ -9,20 +9,36 @@
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
     <link rel="stylesheet" href="assets/css/space-bg.css">
+    <link rel="stylesheet" href="assets/css/mobile-ux.css">
     <style>
-      /* Rol seçici (profil tamamlamada) */
+      /* Rol seçici */
       .role-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-      .role-pick__btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:12px;
-        border:1px solid var(--line);background:var(--surface,#fff);color:var(--muted,#667);cursor:pointer;
-        font-family:inherit;font-weight:600;font-size:.85rem;transition:all .2s}
+      .role-pick__btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:14px;
+        border:1px solid var(--ds-stroke,rgba(255,255,255,.1));background:var(--ds-panel,rgba(255,255,255,.05));
+        color:var(--ds-muted,rgba(233,238,250,.5));cursor:pointer;font-family:inherit;font-weight:600;font-size:.85rem;
+        transition:all .18s;min-height:72px}
       .role-pick__btn .em{font-size:1.5rem;line-height:1}
-      .role-pick__btn:hover{border-color:var(--primary,#4f8bff)}
-      .role-pick__btn.active{border-color:var(--primary,#4f8bff);color:var(--primary,#4f8bff);
-        background:rgba(79,139,255,.08);box-shadow:0 0 0 1px var(--primary,#4f8bff) inset}
+      .role-pick__btn:hover{border-color:var(--ds-cyan,#22d3ee);color:var(--ds-text,#f4f6fb)}
+      .role-pick__btn.active{border-color:var(--ds-cyan,#22d3ee);color:var(--ds-cyan,#22d3ee);
+        background:rgba(34,211,238,.08);box-shadow:0 0 0 1px var(--ds-cyan,#22d3ee) inset}
       /* Avatar yükleyici */
-      .avatar-edit{display:flex;flex-direction:column;align-items:center;gap:12px}
-      .avatar-preview{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--line);background:var(--surface,#f3f4f6)}
-      .avatar-hint{font-size:.8rem;color:var(--muted,#667)}
+      .avatar-edit{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0}
+      .avatar-preview{width:96px;height:96px;border-radius:50%;object-fit:cover;
+        border:3px solid rgba(34,211,238,.3);background:var(--ds-panel,rgba(255,255,255,.05));
+        box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+      .avatar-hint{font-size:.78rem;color:var(--ds-muted,rgba(233,238,250,.5));text-align:center}
+      /* Profil edit section card dark */
+      .profile-section{background:var(--ds-panel,rgba(255,255,255,.04)) !important;
+        border:1px solid var(--ds-stroke,rgba(255,255,255,.08)) !important;border-radius:20px !important}
+      .profile-section__title{color:var(--ds-muted,rgba(233,238,250,.5)) !important;font-size:.72rem !important;
+        text-transform:uppercase;letter-spacing:.06em}
+      /* Form fields touch size */
+      @media(max-width:680px){
+        .form-grid{display:flex;flex-direction:column;gap:10px}
+        .field input,.field select,.field textarea{min-height:50px;font-size:.92rem !important;
+          border-radius:12px !important;padding:12px 14px !important}
+        .btn--block{min-height:52px;border-radius:14px !important;font-size:.95rem !important}
+      }
     </style>
 </head>
 <body>
