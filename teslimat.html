@@ -70,7 +70,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
   <script>
-    var wrap = Platform.init({ active: 'application', title: 'Başvuru Takibi', subtitle: 'Her başvuru bir yolculuk · canlı süreç izleme' });
+    var wrap = Platform.init({ active: 'application', title: 'Başvuru Takibi', subtitle: 'Her başvuru bir yolculuk · canlı süreç izleme · <a href="panel-kurye.html#basvuru" style="color:var(--cyan)">Tüm başvurularım →</a>' });
     wrap.innerHTML = document.getElementById('page').innerHTML;
     Platform.buildMap(document.getElementById('routemap'),
       [[110,240],[210,180],[300,210],[390,140],[470,180]],

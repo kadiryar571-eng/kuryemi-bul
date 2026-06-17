@@ -82,7 +82,7 @@
       { href: "harita.html",     label: T("nav.map")        || "Harita",      ic: SIC.map },
       { href: "havuzum.html",    label: T("nav.pool")       || "Havuzum",     ic: SIC.pool },
       { href: "admin.html",      label: "Admin",             ic: SIC.admin,   id: "sidebarAdminLink", hidden: true },
-      { href: "profil-duzenle.html", label: lang() === "en" ? "Settings" : "Ayarlar", ic: SIC.settings }
+      { href: "ayarlar.html", label: lang() === "en" ? "Settings" : "Ayarlar", ic: SIC.settings }
     ];
     return items.map(function (it) {
       var isActive = it.active !== undefined ? it.active : (it.href.split("/").pop() === curFile);
@@ -846,16 +846,41 @@
       };
     }
 
-    // Push izni iste (login sonrası, 3 sn gecikmeyle)
+    // Push izni banner'ı: doğrudan permission istemek yerine kullanıcıya sor
+    function renderPushBanner() {
+      if (document.getElementById('kbPushBar')) return;
+      if (localStorage.getItem('kb_push_dismissed') === '1') return;
+      if (!('Notification' in window) || Notification.permission !== 'default') return;
+      var bar = document.createElement('div');
+      bar.id = 'kbPushBar';
+      bar.className = 'cookie-bar';
+      bar.innerHTML =
+        '<p class="cookie-bar__txt">🔔 Teklifleri ve mesajları anında görmek için bildirimlere izin ver.</p>' +
+        '<div class="cookie-bar__act">' +
+          '<button type="button" class="btn btn--light btn--sm" id="pushBarDismiss">Şimdi Değil</button>' +
+          '<button type="button" class="btn btn--primary btn--sm" id="pushBarAllow">İzin Ver</button>' +
+        '</div>';
+      document.body.appendChild(bar);
+      function closeBanner(dismissed) {
+        if (dismissed) localStorage.setItem('kb_push_dismissed', '1');
+        bar.classList.add('is-hidden');
+        setTimeout(function() { if (bar.parentNode) bar.parentNode.removeChild(bar); }, 350);
+      }
+      document.getElementById('pushBarDismiss').addEventListener('click', function() { closeBanner(true); });
+      document.getElementById('pushBarAllow').addEventListener('click', function() {
+        closeBanner(false);
+        Notification.requestPermission().then(function(perm) {
+          if (perm === 'granted') subscribePush();
+        });
+      });
+      requestAnimationFrame(function() { bar.classList.add('is-in'); });
+    }
+
     function requestPushPermission() {
       if (Notification.permission !== 'default') return;
       if (!window.SB || !SB.savePushSubscription) return;
-      setTimeout(function () {
-        Notification.requestPermission().then(function (perm) {
-          if (perm !== 'granted') return;
-          subscribePush();
-        });
-      }, 3000);
+      if (localStorage.getItem('kb_push_dismissed') === '1') return;
+      setTimeout(renderPushBanner, 4000);
     }
 
     function subscribePush() {
