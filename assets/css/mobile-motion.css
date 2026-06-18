@@ -889,8 +889,7 @@ main,
 }
 
 .kb-bottom-sheet,
-.kb-ptr__content,
-.bottom-nav {
+.kb-ptr__content {
   will-change: transform;
 }
 
