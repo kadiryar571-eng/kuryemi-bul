@@ -111,6 +111,22 @@ a { color: inherit; text-decoration: none; }
 .container { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: 24px; }
 .container--narrow { max-width: 760px; }
 
+/* ─── Sidebar layout anti-FOUC ───────────────────────────────────────────────
+   sidebar.css dinamik yükleniyor; has-sidebar sınıfı JS ile eklendiğinde
+   sidebar.css henüz hazır olmayabilir → kısa süre layout kayması görünür.
+   Bu kuralları statik styles.css'e kopyalayarak FOUC'u önlüyoruz.
+   ─────────────────────────────────────────────────────────────────────────── */
+body.has-sidebar { padding-left: 240px; padding-top: 64px; }
+@media (max-width: 1024px) {
+  body.has-sidebar { padding-left: 0 !important; }
+}
+@media (max-width: 680px) {
+  body.has-sidebar {
+    padding-left: 0 !important;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
 /* ===================== BETA BANNER ===================== */
 /* landing page tutarlılığı: gizli — landing sayfasında da yok */
 .demo-banner { display: none; }

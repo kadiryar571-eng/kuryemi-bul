@@ -219,8 +219,8 @@
     var searchPh = lang() === "en" ? "Search…" : "Ara…";
 
     host.innerHTML =
-      // ── SIDEBAR ──
-      '<aside class="sidebar' + (collapsed ? ' is-collapsed' : '') + '" id="kbSidebar" aria-label="Kenar menüsü">' +
+      // ── SIDEBAR — position:fixed inline: sidebar.css yüklenmeden normal akışa girmesin
+      '<aside class="sidebar' + (collapsed ? ' is-collapsed' : '') + '" id="kbSidebar" aria-label="Kenar menüsü" style="position:fixed;">' +
         '<div class="sidebar__head">' +
           '<a href="index.html" class="sidebar__brand" data-home aria-label="Kuryemi Bul Ana Sayfa">' +
             '<img class="sidebar__logo-img" src="assets/logo.png" alt="Kuryemi Bul">' +
@@ -238,8 +238,8 @@
         '</div>' +
       '</aside>' +
       '<div class="sidebar-overlay" id="sidebarOverlay"></div>' +
-      // ── TOPBAR ──
-      '<header class="topbar">' +
+      // ── TOPBAR — position:fixed inline: sidebar.css yüklenmeden normal akışa girmesin
+      '<header class="topbar" style="position:fixed;">' +
         '<button class="topbar__hamburger" id="topbarHamburger" aria-label="Menü aç/kapat">☰</button>' +
         '<div class="topbar__search">' +
           SIC.search +

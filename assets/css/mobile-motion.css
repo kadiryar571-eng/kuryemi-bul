@@ -168,6 +168,8 @@ main,
 
 /* Sidebar layout: animasyon layout kaymasına yol açıyor, iptal et */
 body.has-sidebar main,
+body.has-sidebar .prf-main,
+body.has-sidebar .platform-main,
 body.has-sidebar .kb-hero,
 body.has-sidebar .section--sm,
 body.has-sidebar .kb-section {
