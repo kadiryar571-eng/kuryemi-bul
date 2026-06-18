@@ -166,6 +166,14 @@ main,
   animation: kb-page-enter var(--kb-dur-slow) var(--kb-ease-out) 80ms both;
 }
 
+/* Sidebar layout: animasyon layout kaymasına yol açıyor, iptal et */
+body.has-sidebar main,
+body.has-sidebar .kb-hero,
+body.has-sidebar .section--sm,
+body.has-sidebar .kb-section {
+  animation: none;
+}
+
 #app-header {
   animation: kb-fade-in var(--kb-dur-base) var(--kb-ease-out) both;
 }

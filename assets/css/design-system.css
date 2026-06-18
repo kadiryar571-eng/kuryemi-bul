@@ -65,6 +65,11 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   overflow: hidden;
   padding: clamp(110px, 14vw, 160px) 0 clamp(44px, 5.5vw, 70px);
 }
+/* Sidebar layout: topbar zaten 64px boşluk sağlıyor, hero padding'i küçült */
+body.has-sidebar .kb-hero {
+  padding-top: clamp(32px, 4vw, 56px);
+  padding-bottom: clamp(24px, 3vw, 40px);
+}
 /* ince yatay çizgi — section ayırıcı */
 .kb-hero::after {
   content: "";
@@ -527,16 +532,20 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
 }
 
 /* eski .toolbar'ı premium cam filtre barına dönüştür (işlevsellik korunur) */
-.kb-page .toolbar {
+.kb-page .toolbar,
+body.has-sidebar .toolbar {
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
   background: none; border: none; padding: 0; margin-bottom: 22px; box-shadow: none;
 }
-.kb-page .toolbar .search {
+.kb-page .toolbar .search,
+body.has-sidebar .toolbar .search {
   flex: 1; min-width: 220px; max-width: 380px;
   display: flex; align-items: center;
 }
 .kb-page .toolbar .search input,
-.kb-page .toolbar input[type="search"] {
+.kb-page .toolbar input[type="search"],
+body.has-sidebar .toolbar .search input,
+body.has-sidebar .toolbar input[type="search"] {
   width: 100%;
   padding: 12px 16px;
   border-radius: var(--ds-r-sm);
@@ -549,10 +558,14 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   outline: none;
   transition: border-color 0.25s, background 0.25s;
 }
-.kb-page .toolbar .search input::placeholder { color: var(--ds-muted); }
+.kb-page .toolbar .search input::placeholder,
+body.has-sidebar .toolbar .search input::placeholder { color: var(--ds-muted); }
 .kb-page .toolbar .search input:focus,
-.kb-page .toolbar input[type="search"]:focus { border-color: rgba(34,211,238,0.4); background: rgba(255,255,255,0.06); }
-.kb-page .toolbar select {
+.kb-page .toolbar input[type="search"]:focus,
+body.has-sidebar .toolbar .search input:focus,
+body.has-sidebar .toolbar input[type="search"]:focus { border-color: rgba(34,211,238,0.4); background: rgba(255,255,255,0.06); }
+.kb-page .toolbar select,
+body.has-sidebar .toolbar select {
   appearance: none; -webkit-appearance: none;
   padding: 12px 36px 12px 14px;
   border-radius: var(--ds-r-sm);
@@ -567,14 +580,18 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
   outline: none;
   transition: border-color 0.25s, background-color 0.25s;
 }
-.kb-page .toolbar select:focus { border-color: rgba(34,211,238,0.42); }
-.kb-page .toolbar select option { background: var(--ds-bg2); color: var(--ds-text); }
+.kb-page .toolbar select:focus,
+body.has-sidebar .toolbar select:focus { border-color: rgba(34,211,238,0.42); }
+.kb-page .toolbar select option,
+body.has-sidebar .toolbar select option { background: var(--ds-bg2); color: var(--ds-text); }
 /* result-count'u premium kb-count görünümüne çevir */
-.kb-page .result-count {
+.kb-page .result-count,
+body.has-sidebar .result-count {
   font-size: 0.84rem; font-weight: 600; color: var(--ds-muted);
   padding: 0 0 18px; display: flex; align-items: center; gap: 8px;
 }
-.kb-page .result-count::before {
+.kb-page .result-count::before,
+body.has-sidebar .result-count::before {
   content: ""; width: 8px; height: 8px; border-radius: 50%;
   background: var(--ds-cyan);
   margin-right: 0;
