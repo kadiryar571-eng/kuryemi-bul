@@ -74,7 +74,7 @@
 [data-theme="light"] .leaflet-container { background: #E8EEF6; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; overscroll-behavior: none; }
 body {
     font-family: var(--font);
     background: var(--bg);
