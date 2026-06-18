@@ -611,7 +611,7 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
 /* Talent grid alias — js kodunu kırmamak için */
 .talent-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
 }
 
@@ -775,7 +775,7 @@ body.kb-page::before, body.kb-page::after { content: none !important; background
 ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .kb-hero { padding: 100px 0 38px; }
-  .kb-grid, .talent-grid { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
+  .kb-grid, .talent-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
   .kb-stats { flex-wrap: wrap; }
   .kb-search-wrap { max-width: none; }
 }
