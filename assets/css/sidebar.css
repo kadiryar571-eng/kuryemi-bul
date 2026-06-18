@@ -264,6 +264,10 @@ body.has-sidebar .header__util, body.has-sidebar .nav { display: none !important
 }
 .dash-hero__sub { font-size: 0.92rem; color: rgba(148,163,184,0.68); margin-top: 5px; }
 
+/* Dashboard tab panels — sadece aktif olan görünür */
+.dash .dash__feed .dash__panel { display: none; }
+.dash .dash__feed .dash__panel.is-active { display: block; }
+
 /* Section */
 .dash-section { margin-bottom: 28px; }
 .dash-section__hd {
