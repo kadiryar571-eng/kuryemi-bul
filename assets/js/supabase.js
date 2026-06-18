@@ -643,6 +643,19 @@
     return client.from("push_subscriptions").delete().eq("endpoint", endpoint);
   }
 
+  /* ---- Native Device Token ---- */
+  async function savePushToken(token) {
+    var u = await getUser();
+    if (!u || !token) return;
+    var platform = (window.Capacitor && window.Capacitor.getPlatform) ? window.Capacitor.getPlatform() : 'android';
+    return client.from("device_tokens").upsert({
+      user_id: u.id,
+      token: token,
+      platform: platform,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id,token" });
+  }
+
   /* ---- İşletme Analitik ---- */
   async function myListingStats() {
     var u = await getUser();
@@ -687,6 +700,7 @@
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
+    savePushToken: savePushToken,
     myListingStats: myListingStats
   };
 })();

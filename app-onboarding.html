@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kuryemi Bul</title>
+<link rel="icon" href="assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --cyan:#22d3ee;--blue:#4f8bff;--violet:#a855f7;
+  --grad:linear-gradient(120deg,#22d3ee 0%,#4f8bff 50%,#a855f7 100%);
+  --bg:#060810;--text:#f4f6fb;--muted:rgba(233,238,250,0.55);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+  --font:'Inter',system-ui,sans-serif;--display:'Space Grotesk',var(--font);
+}
+
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);user-select:none;-webkit-user-select:none}
+
+/* ── Sayfa kapsayıcı ── */
+.ob{
+  position:relative;width:100%;height:100%;display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* ── Arkaplan gradient orb'lar ── */
+.ob__bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ob__orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35}
+.ob__orb--1{width:360px;height:360px;background:#4f8bff;top:-80px;right:-80px}
+.ob__orb--2{width:300px;height:300px;background:#a855f7;bottom:-60px;left:-60px}
+.ob__orb--3{width:200px;height:200px;background:#22d3ee;top:40%;left:50%;transform:translate(-50%,-50%)}
+
+/* ── Slider ── */
+.ob__slides{
+  display:flex;flex:1;transition:transform .42s cubic-bezier(.22,.61,.36,1);
+  will-change:transform;
+}
+.ob__slide{
+  min-width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:clamp(40px,8vh,80px) 32px clamp(20px,4vh,40px);
+  position:relative;text-align:center;
+}
+
+/* ── İkon / İllüstrasyon ── */
+.ob__icon{
+  width:clamp(100px,28vw,140px);height:clamp(100px,28vw,140px);
+  border-radius:32px;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(3rem,12vw,4.5rem);margin-bottom:clamp(24px,5vh,40px);
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 16px 48px -12px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);
+  position:relative;overflow:hidden;
+}
+.ob__icon::before{
+  content:'';position:absolute;inset:0;
+  background:var(--grad);opacity:.12;
+}
+
+/* ── Metin ── */
+.ob__eyebrow{
+  font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:10px;
+}
+.ob__title{
+  font-family:var(--display);font-size:clamp(1.6rem,6vw,2.2rem);font-weight:700;
+  letter-spacing:-.04em;line-height:1.1;margin-bottom:14px;
+}
+.ob__title span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ob__desc{
+  font-size:.97rem;color:var(--muted);line-height:1.6;
+  max-width:300px;margin:0 auto;
+}
+
+/* ── Dots ── */
+.ob__dots{
+  display:flex;gap:8px;justify-content:center;margin-top:auto;padding-top:32px;
+}
+.ob__dot{
+  width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.2);
+  transition:all .3s;
+}
+.ob__dot.is-active{width:24px;background:var(--grad)}
+
+/* ── Alt buton alanı ── */
+.ob__footer{
+  padding:clamp(16px,4vh,28px) 24px calc(clamp(16px,4vh,28px) + var(--safe-bot));
+  display:flex;flex-direction:column;gap:12px;flex-shrink:0;
+}
+.ob__btn-primary{
+  width:100%;padding:17px 24px;border:none;border-radius:18px;cursor:pointer;
+  font-family:var(--display);font-size:1rem;font-weight:700;color:#fff;
+  background:var(--grad);
+  box-shadow:0 8px 32px -8px rgba(79,139,255,.55);
+  transition:opacity .18s,transform .18s;
+  letter-spacing:-.01em;
+}
+.ob__btn-primary:active{opacity:.88;transform:scale(.98)}
+.ob__btn-skip{
+  width:100%;padding:12px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font);font-size:.88rem;font-weight:600;color:var(--muted);
+  transition:color .18s;
+}
+.ob__btn-skip:active{color:var(--text)}
+
+/* ── Rol seçim ekranı ── */
+.ob__roles{
+  display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;margin-top:24px;
+}
+.ob__role-btn{
+  display:flex;align-items:center;gap:14px;padding:16px 18px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;cursor:pointer;text-align:left;
+  transition:background .18s,border-color .18s,transform .15s;
+  font-family:var(--font);color:var(--text);width:100%;
+}
+.ob__role-btn:active{transform:scale(.98);background:rgba(255,255,255,.08)}
+.ob__role-btn.is-selected{
+  background:rgba(79,139,255,.12);border-color:rgba(79,139,255,.35);
+}
+.ob__role-ic{
+  width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:1.4rem;flex-shrink:0;
+}
+.ob__role-ic--kurye{background:rgba(34,211,238,.12)}
+.ob__role-ic--isletme{background:rgba(79,139,255,.12)}
+.ob__role-ic--firma{background:rgba(168,85,247,.12)}
+.ob__role-label{font-size:.95rem;font-weight:700}
+.ob__role-desc{font-size:.75rem;color:var(--muted);margin-top:2px}
+
+/* ── Giriş/Kayıt yönlendirme ── */
+.ob__auth-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin-top:28px}
+.ob__btn-outline{
+  width:100%;padding:15px;border:1px solid rgba(255,255,255,.15);border-radius:16px;
+  background:rgba(255,255,255,.04);color:var(--text);font-family:var(--display);
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:background .18s;
+}
+.ob__btn-outline:active{background:rgba(255,255,255,.08)}
+
+/* ── Animasyon ── */
+@keyframes ob-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.ob__slide.is-current .ob__icon,
+.ob__slide.is-current .ob__eyebrow,
+.ob__slide.is-current .ob__title,
+.ob__slide.is-current .ob__desc,
+.ob__slide.is-current .ob__roles,
+.ob__slide.is-current .ob__auth-btns{animation:ob-in .4s .05s cubic-bezier(.22,.61,.36,1) both}
+.ob__slide.is-current .ob__title{animation-delay:.1s}
+.ob__slide.is-current .ob__desc{animation-delay:.16s}
+.ob__slide.is-current .ob__roles,.ob__slide.is-current .ob__auth-btns{animation-delay:.2s}
+</style>
+</head>
+<body>
+<div class="ob" id="ob">
+
+  <!-- Arkaplan -->
+  <div class="ob__bg">
+    <div class="ob__orb ob__orb--1"></div>
+    <div class="ob__orb ob__orb--2"></div>
+    <div class="ob__orb ob__orb--3"></div>
+  </div>
+
+  <!-- Slides -->
+  <div class="ob__slides" id="obSlides">
+
+    <!-- Ekran 1: Hoş Geldin -->
+    <div class="ob__slide is-current" id="slide0">
+      <div class="ob__icon">🚀</div>
+      <div class="ob__eyebrow">KuryemiBul</div>
+      <h1 class="ob__title">Kurye dünyasına <span>hoş geldin</span></h1>
+      <p class="ob__desc">Kuryeler iş bulur, işletmeler kurye bulur. Türkiye'nin kurye ekosistemi tek uygulamada.</p>
+      <div class="ob__dots">
+        <div class="ob__dot is-active" id="dot0"></div>
+        <div class="ob__dot" id="dot1"></div>
+        <div class="ob__dot" id="dot2"></div>
+      </div>
+    </div>
+
+    <!-- Ekran 2: Rol Seçimi -->
+    <div class="ob__slide" id="slide1">
+      <div class="ob__icon">🎯</div>
+      <div class="ob__eyebrow">Adım 1</div>
+      <h1 class="ob__title">Sen <span>kimsin?</span></h1>
+      <p class="ob__desc">Rolünü seç — her şey buna göre şekillenecek.</p>
+      <div class="ob__roles">
+        <button class="ob__role-btn" id="roleKurye" onclick="selectRole('kurye')">
+          <div class="ob__role-ic ob__role-ic--kurye">🛵</div>
+          <div>
+            <div class="ob__role-label">Kurye</div>
+            <div class="ob__role-desc">İş ilanlarına başvur, teklifler al</div>
+          </div>
+        </button>
+        <button class="ob__role-btn" id="roleIsletme" onclick="selectRole('isletme')">
+          <div class="ob__role-ic ob__role-ic--isletme">🏪</div>
+          <div>
+            <div class="ob__role-label">İşletme</div>
+            <div class="ob__role-desc">Kurye bul, teslimat yönet</div>
+          </div>
+        </button>
+        <button class="ob__role-btn" id="roleFirma" onclick="selectRole('firma')">
+          <div class="ob__role-ic ob__role-ic--firma">🏢</div>
+          <div>
+            <div class="ob__role-label">Kurye Firması</div>
+            <div class="ob__role-desc">Personel havuzu yönet, ilan ver</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Ekran 3: Hazır -->
+    <div class="ob__slide" id="slide2">
+      <div class="ob__icon">✨</div>
+      <div class="ob__eyebrow">Hazırsın!</div>
+      <h1 class="ob__title">Haydi <span>başlayalım</span></h1>
+      <p class="ob__desc">Hesabını oluştur veya zaten üyeysen giriş yap. 30 saniyede hazır olursun.</p>
+      <div class="ob__auth-btns">
+        <button class="ob__btn-outline" onclick="goRegister()">Hesap Oluştur</button>
+        <button class="ob__btn-outline" style="border-color:rgba(255,255,255,.08);color:rgba(233,238,250,.7)" onclick="goLogin()">Zaten üyeyim — Giriş Yap</button>
+      </div>
+    </div>
+
+  </div><!-- /slides -->
+
+  <!-- Alt butonlar -->
+  <div class="ob__footer" id="obFooter">
+    <button class="ob__btn-primary" id="obNextBtn" onclick="next()">Devam Et</button>
+    <button class="ob__btn-skip" id="obSkipBtn" onclick="skip()">Atla</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var _slide = 0;
+  var _role  = null;
+  var TOTAL  = 3;
+
+  function goTo(n) {
+    if (n < 0 || n >= TOTAL) return;
+    var slides = document.querySelectorAll('.ob__slide');
+    slides[_slide].classList.remove('is-current');
+    _slide = n;
+    slides[_slide].classList.add('is-current');
+    document.getElementById('obSlides').style.transform = 'translateX(-' + (n * 100) + '%)';
+
+    // Dots
+    for (var i = 0; i < TOTAL; i++) {
+      var d = document.getElementById('dot' + i);
+      if (d) d.classList.toggle('is-active', i === _slide);
+    }
+
+    // Buton metni
+    var btn = document.getElementById('obNextBtn');
+    var skip = document.getElementById('obSkipBtn');
+    if (_slide === TOTAL - 1) {
+      btn.style.display = 'none';
+      skip.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      btn.textContent = _slide === 1 ? 'Rol Seçildi, Devam Et' : 'Devam Et';
+      skip.style.display = '';
+    }
+  }
+
+  window.selectRole = function(role) {
+    _role = role;
+    localStorage.setItem('kb_rol', role);
+    ['kurye','isletme','firma'].forEach(function(r){
+      var el = document.getElementById('role' + r.charAt(0).toUpperCase() + r.slice(1));
+      if (el) el.classList.toggle('is-selected', r === role);
+    });
+    var btn = document.getElementById('obNextBtn');
+    if (btn) { btn.textContent = 'Devam Et'; }
+  };
+
+  window.next = function() {
+    if (_slide === 1 && !_role) {
+      // Rol seçilmeden geçilemez — hafif shake
+      var roles = document.querySelector('.ob__roles');
+      roles.style.animation = 'none';
+      roles.offsetHeight; // reflow
+      roles.style.animation = 'ob-in .3s';
+      return;
+    }
+    goTo(_slide + 1);
+  };
+
+  window.skip = function() {
+    finish();
+  };
+
+  window.goRegister = function() {
+    finish();
+    location.href = 'giris.html?mode=register' + (_role ? '&rol=' + _role : '');
+  };
+
+  window.goLogin = function() {
+    finish();
+    location.href = 'giris.html';
+  };
+
+  function finish() {
+    localStorage.setItem('kb_onboarded', '1');
+  }
+
+  // Touch/swipe desteği
+  var _startX = null;
+  var slides = document.getElementById('obSlides');
+  slides.addEventListener('touchstart', function(e){ _startX = e.touches[0].clientX; }, {passive:true});
+  slides.addEventListener('touchend', function(e){
+    if (_startX === null) return;
+    var dx = e.changedTouches[0].clientX - _startX;
+    _startX = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0 && _slide < TOTAL - 1) next();
+    else if (dx > 0 && _slide > 0) goTo(_slide - 1);
+  }, {passive:true});
+
+  // Dots ilk render
+  for (var i = 1; i < TOTAL; i++) {
+    if (!document.getElementById('dot'+i)) {
+      var d = document.createElement('div');
+      d.className = 'ob__dot'; d.id = 'dot'+i;
+      document.querySelector('.ob__dots').appendChild(d);
+    }
+  }
+})();
+</script>
+</body>
+</html>

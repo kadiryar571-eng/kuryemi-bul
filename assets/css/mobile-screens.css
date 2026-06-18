@@ -112,28 +112,6 @@ body {
 }
 
 /* ================================================================
-   3. BOTTOM NAVIGATION — Electric Blue Active State
-   ================================================================ */
-@media (max-width: 680px) {
-  .bottom-nav__item.is-active {
-    color: var(--kb-blue-400);
-  }
-
-  .bottom-nav__item.is-active::before {
-    background: var(--kb-grad-h);
-  }
-
-  .bottom-nav__badge {
-    background: var(--kb-error);
-  }
-
-  /* Active icon scale */
-  .bottom-nav__item.is-active .bottom-nav__ic svg {
-    stroke: var(--kb-blue-400);
-  }
-}
-
-/* ================================================================
    4. DASHBOARD SCREENS — All Three Roles
    ================================================================ */
 @media (max-width: 640px) {

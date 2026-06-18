@@ -1235,6 +1235,10 @@
     background:    transparent;
   }
 
+  .bottom-nav__item.is-active .bottom-nav__ic svg {
+    stroke: var(--kb-blue-400);
+  }
+
   /* Unread badge */
   .bottom-nav__badge { background: var(--kb-error); }
 

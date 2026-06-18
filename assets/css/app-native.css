@@ -1,0 +1,181 @@
+/* ============================================================
+   KuryemiBul — app-native.css
+   Yalnızca body.kb-native sınıfı aktifken geçerlidir.
+   Capacitor/WebView içinde çalışan native APK deneyimi.
+   components.js tarafından dinamik olarak yüklenir.
+   ============================================================ */
+
+/* ═══════════════════════════════════════════════════════════
+   1. SIDEBAR — TAMAMEN GİZLE
+   Native app'te sidebar yoktur; yalnızca bottom nav kullanılır.
+═══════════════════════════════════════════════════════════ */
+body.kb-native .sidebar,
+body.kb-native .sidebar-overlay,
+body.kb-native .sidebar__toggle,
+body.kb-native .topbar__sidebar-btn { display: none !important; }
+
+/* Sidebar'ın body'ye eklediği padding'i sıfırla */
+body.kb-native.has-sidebar,
+body.kb-native.has-sidebar.sidebar-collapsed {
+  padding-left: 0 !important;
+}
+
+/* Topbar desktop'ta sidebar genişliği kadar offset alır — sıfırla */
+body.kb-native .topbar {
+  left: 0 !important;
+  width: 100% !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   2. BOTTOM NAV — NATIVE TAB-BAR
+   Blur kaldırıldı (WebView'de performans ve artefact sorunu).
+   Her ekran boyutunda göster (sadece ≤680px değil).
+   72px yükseklik, daha büyük ikonlar, gradient aktif indicator.
+═══════════════════════════════════════════════════════════ */
+body.kb-native .bottom-nav {
+  display:        flex !important;
+  height:         calc(72px + var(--safe-area-bottom, 0px)) !important;
+  padding-bottom: var(--safe-area-bottom, 0px) !important;
+  background:     #09090f !important;          /* tam opak — blur yok */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-top:     1px solid rgba(255,255,255,0.09) !important;
+  box-shadow:     0 -4px 24px rgba(0,0,0,0.5) !important;
+}
+
+/* Her item biraz daha büyük touch target */
+body.kb-native .bottom-nav__item {
+  min-height:  72px !important;
+  padding:     10px 4px 8px !important;
+  gap:         5px !important;
+}
+
+/* Aktif item — üst çizgi yerine dolgulu yuvarlak pill indicator */
+body.kb-native .bottom-nav__item.is-active::before {
+  top:          auto !important;
+  bottom:       auto !important;
+  width:        36px !important;
+  height:       4px !important;
+  top:          0 !important;
+  border-radius: 0 0 4px 4px !important;
+}
+
+/* İkonlar %20 büyük */
+body.kb-native .bottom-nav__ic svg {
+  width:  28px !important;
+  height: 28px !important;
+}
+
+/* Label biraz daha büyük */
+body.kb-native .bottom-nav__l {
+  font-size: 0.62rem !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. MOBİL APP BAR — NATIVE HEADER
+   Blur kaldırıldı, tam opak arka plan.
+   Tüm ekran boyutlarında her zaman göster.
+═══════════════════════════════════════════════════════════ */
+body.kb-native .mob-app-bar {
+  display:          flex !important;           /* her zaman göster */
+  background:       #09090f !important;        /* tam opak */
+  backdrop-filter:  none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom:    1px solid rgba(255,255,255,0.08) !important;
+  box-shadow:       none !important;
+}
+
+/* Desktop topbar native modda gizle — mob-app-bar devralır */
+body.kb-native .topbar {
+  display: none !important;
+}
+
+/* body padding-top topbar yerine mob-app-bar yüksekliğiyle hizala */
+body.kb-native.has-sidebar {
+  padding-top: calc(56px + var(--safe-area-top, 0px)) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. GİRİŞ EKRANI DÜZELTMELERİ
+   mobile-ux.css'teki global `input { font-size: max(16px, ...) !important }`
+   auth formunun tasarımını bozuyor. Native modda geri al.
+═══════════════════════════════════════════════════════════ */
+body.kb-native .auth-inp input,
+body.kb-native .auth-inp input:focus {
+  font-size: 0.97rem !important;
+}
+
+/* Auth kart — native'de tam ekran hissi */
+body.kb-native .auth-wrap {
+  padding-top: calc(80px + var(--safe-area-top, 0px));
+  padding-bottom: calc(40px + var(--safe-area-bottom, 0px));
+}
+
+/* Google btn ve tab seçici dokunma hedefleri — daha büyük */
+body.kb-native .auth-tabs button,
+body.kb-native .auth-navbtns button {
+  min-height: 48px !important;
+  padding: 12px 20px !important;
+}
+
+body.kb-native .auth-submit {
+  min-height: 52px !important;
+  font-size: 1rem !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   5. SAYFA GEÇİŞ ANİMASYONU
+   Native hissi için hafif slide-in.
+═══════════════════════════════════════════════════════════ */
+body.kb-native {
+  animation: kb-native-page-in 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes kb-native-page-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   6. GENEL NATIVE DOKUNMA AYARLARI
+   Tüm tıklanabilir elementlerde tap highlight kapat.
+   Metin seçimini kapat (native app hissi).
+═══════════════════════════════════════════════════════════ */
+body.kb-native * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.kb-native p,
+body.kb-native h1, body.kb-native h2, body.kb-native h3,
+body.kb-native span, body.kb-native div {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Input ve textarea'da seçim açık kalsın */
+body.kb-native input,
+body.kb-native textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   7. SAFE AREA & SCROLL
+   Overscroll gizle — native app'te rubber-band scroll olmamalı.
+═══════════════════════════════════════════════════════════ */
+body.kb-native {
+  overscroll-behavior: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   8. KART & BUTON DOKUNMA HEDEFLERİ
+   Tüm butonlar en az 48px yüksekliğinde.
+═══════════════════════════════════════════════════════════ */
+body.kb-native .btn,
+body.kb-native button:not(.mob-dash__notif-btn):not(.mob-app-bar__icon-btn) {
+  min-height: 48px;
+}
+
+body.kb-native .mob-stat-chip,
+body.kb-native .mob-qa-btn {
+  min-height: 52px !important;
+}

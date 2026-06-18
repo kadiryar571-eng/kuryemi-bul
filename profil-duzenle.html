@@ -6,14 +6,10 @@
     <title data-i18n="pe.title">Profilim · Kuryemi Bul</title>
     <meta name="robots" content="noindex">
     <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/mobile-ux.css">
+    <link rel="stylesheet" href="assets/css/bundle-core.css">
+    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
     <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
     <link rel="stylesheet" href="assets/css/space-bg.css">
-    <link rel="stylesheet" href="assets/css/mobile-design-system.css">
-    <link rel="stylesheet" href="assets/css/mobile-screens.css">
-    <link rel="stylesheet" href="assets/css/mobile-motion.css">
     <style>
       /* Rol seçici */
       .role-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -222,8 +218,9 @@
                 var av = p.avatar_url ? String(p.avatar_url).replace(/"/g, "&quot;") : "";
                 html += '<div class="field field--full"><div class="avatar-edit">' +
                     '<img id="pAvatarImg" class="avatar-preview" alt="" src="' + av + '" onerror="this.removeAttribute(\'src\')">' +
-                    '<label class="btn btn--light btn--sm">' + t("pe.uploadPhoto") +
+                    '<label class="btn btn--light btn--sm" id="pAvatarLabel">' + t("pe.uploadPhoto") +
                     '<input type="file" id="pAvatarFile" accept="image/*" hidden></label>' +
+                    '<button type="button" id="pAvatarNative" class="btn btn--light btn--sm" style="display:none">📷 Fotoğraf Çek</button>' +
                     '<span class="avatar-hint" id="pAvatarHint"></span>' +
                     '</div></div>';
                 html += roleSegHtml();
@@ -272,6 +269,44 @@
                         if (hint) hint.textContent = t("pe.photoUploaded");
                     } catch (e) { if (hint) hint.textContent = e.message || t("auth.errGeneric"); }
                 });
+                // Native kamera (yalnız body.kb-native)
+                var avNative = document.getElementById("pAvatarNative");
+                if (avNative && document.body.classList.contains('kb-native') && window.KBNative) {
+                    avNative.style.display = '';
+                    var avLabel = document.getElementById("pAvatarLabel");
+                    if (avLabel) avLabel.style.display = 'none';
+                    avNative.addEventListener('click', function () {
+                        var hint = document.getElementById("pAvatarHint");
+                        var img  = document.getElementById("pAvatarImg");
+                        KBNative.pickPhoto(function (dataUrl) {
+                            try {
+                                var arr  = dataUrl.split(',');
+                                var mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+                                var bstr = atob(arr[1]);
+                                var n    = bstr.length;
+                                var u8   = new Uint8Array(n);
+                                while (n--) u8[n] = bstr.charCodeAt(n);
+                                var file = new File([u8], 'avatar.jpg', { type: mime });
+                                if (img) img.src = dataUrl;
+                                if (hint) hint.textContent = t("pe.photoUploading");
+                                SB.uploadAvatar(file).then(function (url) {
+                                    p.avatar_url = url;
+                                    if (hint) hint.textContent = t("pe.photoUploaded");
+                                }).catch(function (e) {
+                                    if (hint) hint.textContent = e.message || t("auth.errGeneric");
+                                });
+                            } catch (convErr) {
+                                if (hint) hint.textContent = t("auth.errGeneric");
+                            }
+                        }, function (err) {
+                            if (err && String(err).indexOf('cancel') === -1) {
+                                var hint = document.getElementById("pAvatarHint");
+                                if (hint) hint.textContent = t("auth.errGeneric");
+                            }
+                        });
+                    });
+                }
+
                 var rp = document.getElementById("rolePick");
                 if (rp) rp.querySelectorAll("button").forEach(function (b) {
                     b.addEventListener("click", function () {

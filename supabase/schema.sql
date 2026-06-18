@@ -482,3 +482,33 @@ revoke all on function public.list_pending_kyc() from public;
 grant execute on function public.list_pending_kyc() to authenticated;
 
 -- Bitti. Tablolar: ...+ public.admins. Admin yapmak için: insert into admins(user_id) values('<uid>');
+
+-- ---------- 12) DEVICE_TOKENS (native push bildirimleri) ----------
+-- Her kullanıcının cihaz başına bir satırı olur. APK push token alınca upsert eder.
+create table if not exists public.device_tokens (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  token       text not null,
+  platform    text not null default 'android' check (platform in ('android','ios')),
+  updated_at  timestamptz default now(),
+  unique (user_id, token)
+);
+create index if not exists device_tokens_user_idx on public.device_tokens(user_id);
+alter table public.device_tokens enable row level security;
+
+-- Kullanıcı yalnız KENDİ tokenlarını görür/yönetir
+drop policy if exists device_tokens_select_own on public.device_tokens;
+create policy device_tokens_select_own on public.device_tokens
+  for select using (auth.uid() = user_id);
+
+drop policy if exists device_tokens_insert_own on public.device_tokens;
+create policy device_tokens_insert_own on public.device_tokens
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists device_tokens_update_own on public.device_tokens;
+create policy device_tokens_update_own on public.device_tokens
+  for update using (auth.uid() = user_id);
+
+drop policy if exists device_tokens_delete_own on public.device_tokens;
+create policy device_tokens_delete_own on public.device_tokens
+  for delete using (auth.uid() = user_id);

@@ -893,6 +893,28 @@
   }
 
   function init() {
+    // ── Capacitor Native Algılama ──
+    // APK içinde çalışıyorsa body'ye kb-native class'ı ekle ve native CSS katmanını yükle.
+    // Bu switch sonraki tüm CSS override'larını aktive eder.
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      document.body.classList.add('kb-native');
+      // Native CSS katmanı — sidebar gizle, bottom nav yeniden tasarla, native hissi
+      var _nativeLink = document.createElement('link');
+      _nativeLink.rel = 'stylesheet';
+      _nativeLink.href = '/assets/css/app-native.css';
+      document.head.appendChild(_nativeLink);
+      // Native plugin yöneticisi — geri tuşu, app state, push/camera/geo (Faz 5)
+      var _nativeScript = document.createElement('script');
+      _nativeScript.src = '/assets/js/app-native.js';
+      document.body.appendChild(_nativeScript);
+      // Onboarding: ilk açılışta (kb_onboarded yoksa) karşılama akışına yönlendir
+      var _page = location.pathname.split('/').pop() || 'index.html';
+      var _onboardingPages = ['app-onboarding.html', 'giris.html', 'verify-email.html', 'sifre-sifirla.html'];
+      if (!localStorage.getItem('kb_onboarded') && _onboardingPages.indexOf(_page) === -1) {
+        location.replace('/app-onboarding.html');
+      }
+    }
+
     var active = (location.pathname.split("/").pop() || "index.html");
     injectMobileUX();
     renderAmbient();
