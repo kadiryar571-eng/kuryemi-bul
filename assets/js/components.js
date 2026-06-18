@@ -830,6 +830,7 @@
     bar.id = "mob-app-bar";
     bar.className = "mob-app-bar";
     bar.setAttribute("role", "banner");
+    bar.style.position = "fixed"; // mobile-ux.css yüklenmeden normal akışa girmesin
     bar.innerHTML =
       '<a href="' + homeHref() + '" class="mob-app-bar__brand" aria-label="Ana Sayfa" data-home>' +
         '<img src="assets/logo.png" class="mob-app-bar__logo" alt="KB" width="30" height="30">' +
