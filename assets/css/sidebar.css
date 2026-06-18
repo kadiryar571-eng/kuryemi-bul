@@ -387,3 +387,140 @@ body.has-sidebar .header__util, body.has-sidebar .nav { display: none !important
 
 /* KYC table inside dashboard */
 .dash-card-wrap .list-row { border-radius: 10px; }
+
+/* ===== PANEL: MOB-DASH DESKTOP STYLES =====
+   Panel sayfalarında (body.has-sidebar) mob-dash tüm ekranlarda görünür.
+   Stilleri media query'siz tanımla. */
+@media (min-width: 641px) {
+  body.has-sidebar #mobDash {
+    max-width: 860px;
+  }
+  body.has-sidebar #mobDash .mob-dash__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 18px;
+  }
+  body.has-sidebar #mobDash .mob-dash__identity {
+    display: flex; align-items: center; gap: 14px;
+  }
+  body.has-sidebar #mobDash .mob-dash__avatar {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, #a855f7, #22d3ee);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  body.has-sidebar #mobDash .mob-dash__greeting { font-size: 0.8rem; color: rgba(148,163,184,0.7); }
+  body.has-sidebar #mobDash .mob-dash__name { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; }
+  body.has-sidebar #mobDash .mob-dash__notif-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(255,255,255,0.06); color: #94a3b8;
+    position: relative; text-decoration: none;
+  }
+  body.has-sidebar #mobDash .mob-stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  body.has-sidebar #mobDash .mob-stat-chip {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 18px 12px; text-align: center;
+    text-decoration: none; transition: background 0.2s; display: block;
+  }
+  body.has-sidebar #mobDash .mob-stat-chip:hover { background: rgba(255,255,255,0.07); }
+  body.has-sidebar #mobDash .mob-stat-chip__val {
+    font-size: 1.7rem; font-weight: 800; color: #f1f5f9; line-height: 1; display: block;
+  }
+  body.has-sidebar #mobDash .mob-stat-chip__lbl {
+    font-size: 0.72rem; color: rgba(148,163,184,0.7); margin-top: 5px;
+    font-weight: 600; display: block;
+  }
+  body.has-sidebar #mobDash .mob-section {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 18px;
+  }
+  body.has-sidebar #mobDash .mob-section__head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+  }
+  body.has-sidebar #mobDash .mob-section__title {
+    display: flex; align-items: center; gap: 7px; font-size: 0.8rem; font-weight: 700;
+    color: rgba(148,163,184,0.8); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  body.has-sidebar #mobDash .mob-section__more {
+    font-size: 0.78rem; color: #a78bfa; text-decoration: none;
+  }
+  body.has-sidebar #mobDash .dash-next-action {
+    background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(79,139,255,0.07));
+    border: 1px solid rgba(34,211,238,0.2); border-radius: 16px; padding: 18px;
+  }
+  body.has-sidebar #mobDash .mob-quick-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  }
+  body.has-sidebar #mobDash .mob-qa-btn {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 16px 8px; display: flex; flex-direction: column;
+    align-items: center; gap: 8px; text-decoration: none; font-size: 0.75rem;
+    color: #94a3b8; transition: all 0.2s; text-align: center;
+  }
+  body.has-sidebar #mobDash .mob-qa-btn:hover { background: rgba(168,85,247,0.12); color: #a78bfa; }
+  body.has-sidebar #mobDash .mob-qa-btn__ic { color: #a78bfa; }
+  body.has-sidebar #mobDash .mob-match-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  body.has-sidebar #mobDash .mob-match-row:last-child { border-bottom: none; }
+  body.has-sidebar #mobDash .mob-match-row__av {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(168,85,247,0.2); color: #a78bfa;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
+  }
+  body.has-sidebar #mobDash .mob-match-row__body { flex: 1; min-width: 0; }
+  body.has-sidebar #mobDash .mob-match-row__title { font-size: 0.88rem; font-weight: 600; color: #e2e8f0; }
+  body.has-sidebar #mobDash .mob-match-row__sub { font-size: 0.76rem; color: #64748b; }
+  body.has-sidebar #mobDash .mob-match-row__end { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  body.has-sidebar #mobDash .mob-msg-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06); text-decoration: none;
+  }
+  body.has-sidebar #mobDash .mob-msg-row:last-child { border-bottom: none; }
+  body.has-sidebar #mobDash .mob-msg-row__av {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(34,211,238,0.2); color: #22d3ee;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
+  }
+  body.has-sidebar #mobDash .mob-msg-row__body { flex: 1; min-width: 0; }
+  body.has-sidebar #mobDash .mob-msg-row__name { font-size: 0.88rem; font-weight: 600; color: #e2e8f0; }
+  body.has-sidebar #mobDash .mob-msg-row__last { font-size: 0.76rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.has-sidebar #mobDash .mob-msg-row__end { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  body.has-sidebar #mobDash .mob-msg-row__time { font-size: 0.72rem; color: #475569; }
+  body.has-sidebar #mobDash .mob-empty { font-size: 0.84rem; color: #475569; padding: 8px 0; }
+  body.has-sidebar #mobDash .mob-empty__link { color: #a78bfa; text-decoration: none; }
+  body.has-sidebar #mobDash .mob-pool-scroll {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px;
+  }
+  body.has-sidebar #mobDash .mob-pool-chip {
+    flex-shrink: 0; width: 80px; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; text-decoration: none;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 10px 6px;
+  }
+  body.has-sidebar #mobDash .mob-opp-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06); text-decoration: none;
+  }
+  body.has-sidebar #mobDash .mob-opp-row:last-child { border-bottom: none; }
+  body.has-sidebar #mobDash .mob-opp-row__av {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(168,85,247,0.2); color: #a78bfa;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
+  }
+  body.has-sidebar #mobDash .mob-opp-row__body { flex: 1; min-width: 0; }
+  body.has-sidebar #mobDash .mob-opp-row__title { font-size: 0.88rem; font-weight: 600; color: #e2e8f0; }
+  body.has-sidebar #mobDash .mob-opp-row__meta,
+  body.has-sidebar #mobDash .mob-opp-row__date { font-size: 0.76rem; color: #64748b; }
+  body.has-sidebar #mobDash .mob-status {
+    font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+  }
+  body.has-sidebar #mobDash .mob-status--pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  body.has-sidebar #mobDash .mob-status--accepted { background: rgba(34,197,94,0.15); color: #22c55e; }
+  body.has-sidebar #mobDash .mob-status--rejected { background: rgba(239,68,68,0.15); color: #ef4444; }
+  body.has-sidebar #mobDash .mob-skel { display: none; }
+}
