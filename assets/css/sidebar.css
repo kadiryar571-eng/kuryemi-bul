@@ -388,6 +388,13 @@ body.has-sidebar .header__util, body.has-sidebar .nav { display: none !important
 /* KYC table inside dashboard */
 .dash-card-wrap .list-row { border-radius: 10px; }
 
+/* Panel sayfalarında page-head desktop'ta gizle — mob-dash kendi header'ını yönetir */
+@media (min-width: 641px) {
+  body.has-sidebar #firmaPageHead,
+  body.has-sidebar #kuryePageHead,
+  body.has-sidebar #isletmePageHead { display: none !important; }
+}
+
 /* ===== PANEL: MOB-DASH DESKTOP STYLES =====
    Panel sayfalarında (body.has-sidebar) mob-dash tüm ekranlarda görünür.
    Stilleri media query'siz tanımla. */
