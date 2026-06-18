@@ -632,6 +632,34 @@ body.has-sidebar .result-count::before {
   gap: 20px;
 }
 
+/* ─── Sidebar sayfaları: layout sıkışma düzeltmesi ──────────────────────────
+   Sidebar (240px) + orijinal max-width (1180px) = 1420px minimum viewport
+   gerektirir. Bu blok sidebar varlığında container'ı genişletir ve hero
+   text max-width'lerini rahatlatır — landing/auth sayfalarına dokunmaz.
+   ─────────────────────────────────────────────────────────────────────────── */
+body.has-sidebar .container {
+  max-width: 1440px;
+}
+body.has-sidebar .kb-hero__title {
+  max-width: 28ch;
+}
+body.has-sidebar .kb-hero__sub {
+  max-width: 72ch;
+}
+@media (min-width: 1025px) {
+  body.has-sidebar .talent-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  body.has-sidebar .kb-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .container {
+    padding-inline: 16px;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    9. FLOATING STATS STRIP
 ═══════════════════════════════════════════════════════════ */

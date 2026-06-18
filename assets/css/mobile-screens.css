@@ -2557,28 +2557,10 @@ body {
 
 /* ================================================================
    26. PULL-TO-REFRESH INDICATOR
+   mobile-motion.css'de doğru kurallar mevcut (.kb-ptr container wrapper).
+   Burası eski implementasyon kalıntısıydı — height:0 + overflow:hidden
+   tüm sayfalarda <main> içeriğini yok ediyordu. Kaldırıldı.
    ================================================================ */
-.kb-ptr {
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  height:          0;
-  overflow:        hidden;
-  transition:      height var(--kb-dur-base) var(--kb-ease);
-}
-
-.kb-ptr.is-pulling {
-  height: 56px;
-}
-
-.kb-ptr__spinner {
-  width:          24px;
-  height:         24px;
-  border:         2.5px solid var(--kb-border);
-  border-top-color: var(--kb-blue-500);
-  border-radius:  50%;
-  animation:      kb-spin 0.7s linear infinite;
-}
 
 /* ================================================================
    27. LIGHT THEME OVERRIDES

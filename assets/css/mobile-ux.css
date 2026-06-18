@@ -2105,12 +2105,22 @@
 /* ── Page layout ─────────────────────────────────────────── */
 .prf-main {
   padding-top: 0 !important;
-  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 24px);
+}
+/* Bottom nav padding sadece mobilde */
+@media (max-width: 680px) {
+  .prf-main {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 24px);
+  }
 }
 .prf-container {
-  max-width: 640px;
+  max-width: 900px; /* desktop-friendly; 640px sıkıştırıyordu */
   margin: 0 auto;
   padding: 0;
+}
+@media (max-width: 680px) {
+  .prf-container {
+    max-width: 640px;
+  }
 }
 
 /* ── Profile card wrapper ────────────────────────────────── */

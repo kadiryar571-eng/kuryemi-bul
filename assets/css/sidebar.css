@@ -152,6 +152,7 @@
 .topbar__search-input {
   background: none; border: none; outline: none;
   color: #e2e8f0; font-size: 0.86rem; width: 100%; font-family: inherit;
+  flex-grow: 1; min-width: 0;
 }
 .topbar__search-input::placeholder { color: rgba(148,163,184,0.38); }
 
@@ -252,7 +253,7 @@ body.has-sidebar .header__util, body.has-sidebar .nav { display: none !important
 
 /* ===== DASHBOARD CONTENT ===== */
 .dash-content { padding: 24px 0 48px; }
-.dash-content .container { max-width: 1280px; }
+.dash-content .container { max-width: 1440px; }
 
 /* Welcome Hero */
 .dash-hero { margin-bottom: 28px; }
