@@ -24,6 +24,11 @@
     <link rel="stylesheet" href="assets/css/mobile-screens.css">
     <link rel="stylesheet" href="assets/css/mobile-motion.css">
     <link rel="stylesheet" href="assets/css/space-bg.css">
+    <style>
+      @media (min-width: 641px) {
+        #mobDash { display: flex !important; flex-direction: column; gap: 16px; max-width: 860px; }
+      }
+    </style>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&libraries=marker&loading=async" async defer></script>
 </head>
 <body>
@@ -217,64 +222,6 @@
                 <a class="dash-next-action__btn" href="kuryeler.html" id="dashNextBtnI">Kurye Havuzu →</a>
             </div>
 
-            <div class="dash">
-                <nav class="dash__nav">
-                    <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>
-                    <button data-tab="harita">🗺️ Bölge Haritası</button>
-                    <button data-tab="ilan">📋 Pozisyonlarım</button>
-                    <button data-tab="ara">🔎 Yetenek Keşfi</button>
-                    <button data-tab="basvuru">📥 Başvuru Hattı</button>
-                </nav>
-                <div class="dash__feed">
-                    <section id="panel-ozet" class="dash__panel dash-section is-active">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                            Genel Bakış
-                        </div>
-                        <div class="metric-row" id="isletmeMetrics"></div>
-                        <div class="panel-box"><h3 data-i18n="panel.quick.t">🚀 Hızlı İşlem</h3><p class="pcard__sub" data-i18n="panel.quick.iz">Yeni kurye bulmak için havuzda arama yap veya firmalardan toplu teklif al.</p>
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-                                <a class="btn btn--primary btn--sm" href="kuryeler.html" data-i18n="btn.courierPool">Kurye Havuzu</a>
-                                <a class="btn btn--light btn--sm" href="firmalar.html" data-i18n="btn.firmPool">Firma Havuzu</a>
-                            </div>
-                        </div>
-                    </section>
-                    <section id="panel-harita" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/></svg>
-                            Bölge Haritası
-                        </div>
-                        <div class="dash-map-widget">
-                            <div id="panelMapIsletme" style="width:100%;height:600px;border-radius:12px"></div>
-                            <a href="harita.html" class="dash-map-widget__expand">Tam Ekran →</a>
-                        </div>
-                    </section>
-                    <section id="panel-ilan" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            Pozisyonlarım
-                        </div>
-                        <div class="panel-box"><h3 data-i18n="box.myListings">📋 İlanlarım</h3><div id="isletmeIlan"></div></div>
-                    </section>
-                    <section id="panel-ara" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            Yetenek Keşfi
-                        </div>
-                        <div class="panel-box"><h3 data-i18n="box.searchPool">🔎 Havuzda Kurye Ara</h3>
-                            <p class="pcard__sub" data-i18n="panel.searchPool.d">Tüm kurye havuzuna git, filtrele ve doğrudan teklif gönder.</p>
-                            <a class="btn btn--primary mt-24" href="kuryeler.html" data-i18n="btn.goCourierPool">Kurye Havuzuna Git →</a>
-                        </div>
-                    </section>
-                    <section id="panel-basvuru" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            Başvuru Hattı
-                        </div>
-                        <div class="panel-box"><h3 data-i18n="box.applications">📨 Gelen Başvurular & Teklifler</h3><div id="isletmeBasvuru"></div></div>
-                    </section>
-                </div>
-            </div>
 
         </div>
     </main>

@@ -24,6 +24,12 @@
     <link rel="stylesheet" href="assets/css/mobile-screens.css">
     <link rel="stylesheet" href="assets/css/mobile-motion.css">
     <link rel="stylesheet" href="assets/css/space-bg.css">
+    <style>
+      /* Firma paneli: tek akış — mob-dash tüm ekranlarda görünür */
+      @media (min-width: 641px) {
+        #mobDash { display: flex !important; flex-direction: column; gap: 16px; max-width: 860px; }
+      }
+    </style>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&libraries=marker&loading=async" async defer></script>
 </head>
 <body>
@@ -198,54 +204,6 @@
 
             </div><!-- /.mob-dash -->
 
-            <!-- MASAÜSTÜ DASHBOARD (mobilde CSS ile gizlenir) -->
-            <div class="dash">
-                <nav class="dash__nav">
-                    <button data-tab="ozet" class="is-active">📊 Genel Bakış</button>
-                    <button data-tab="harita">🗺️ Bölge Haritası</button>
-                    <button data-tab="personel">👥 Yetenek Havuzum</button>
-                    <button data-tab="teklif">💼 İş Teklifleri</button>
-                </nav>
-                <div class="dash__feed">
-                    <section id="panel-ozet" class="dash__panel dash-section is-active">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                            Genel Bakış
-                        </div>
-                        <div class="metric-row" id="firmaMetrics"></div>
-                        <div class="panel-box"><h3 data-i18n="panel.quick.t">🚀 Hızlı İşlem</h3><p class="pcard__sub" data-i18n="panel.quick.fz">İşletmelere teklif gönder ya da personel havuzunu güçlendir.</p>
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-                                <a class="btn btn--primary btn--sm" href="isletmeler.html" data-i18n="btn.businessPool">İşletme Havuzu</a>
-                                <a class="btn btn--light btn--sm" href="kuryeler.html" data-i18n="btn.courierPool">Kurye Havuzu</a>
-                            </div>
-                        </div>
-                    </section>
-                    <section id="panel-harita" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/></svg>
-                            Bölge Haritası
-                        </div>
-                        <div class="dash-map-widget">
-                            <div id="panelMapFirma" style="width:100%;height:600px;border-radius:12px"></div>
-                            <a href="harita.html" class="dash-map-widget__expand">Tam Ekran →</a>
-                        </div>
-                    </section>
-                    <section id="panel-personel" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            Yetenek Havuzum
-                        </div>
-                        <div class="panel-box"><h3 data-i18n="box.personnelPool">👥 Personel Havuzu</h3><div id="firmaPersonel"></div></div>
-                    </section>
-                    <section id="panel-teklif" class="dash__panel dash-section">
-                        <div class="dash-section__title">
-                            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            İş Teklifleri
-                        </div>
-                        <div class="panel-box"><h3 data-i18n="box.businessOffers">✉️ İşletmelere/İşletmelerden Teklifler</h3><div id="firmaTeklif"></div></div>
-                    </section>
-                </div>
-            </div><!-- /.dash -->
 
         </div>
     </main>
