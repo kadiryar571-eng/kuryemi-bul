@@ -32,5 +32,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.json
-          git diff --staged --quiet || git commit -m "chore: v$(node -e \"process.stdout.write(require('./version.json').version)\").$(node -e \"process.stdout.write(String(require('./version.json').build))\") [skip ci]"
+          VER=$(node -e "process.stdout.write(require('./version.json').version)")
+          BLD=$(node -e "process.stdout.write(String(require('./version.json').build))")
+          git diff --staged --quiet || git commit -m "chore: v${VER}.${BLD} [skip ci]"
           git push
