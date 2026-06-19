@@ -125,14 +125,22 @@ body.kb-native .auth-submit {
 
 /* ═══════════════════════════════════════════════════════════
    5. SAYFA GEÇİŞ ANİMASYONU
-   Native hissi için hafif slide-in.
+   Giriş: sağdan gelir. Çıkış: sola gider (app-native.js tetikler).
 ═══════════════════════════════════════════════════════════ */
-body.kb-native {
-  animation: kb-native-page-in 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
 @keyframes kb-native-page-in {
-  from { opacity: 0; transform: translateX(16px); }
+  from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: none; }
+}
+@keyframes kb-native-page-out {
+  to   { opacity: 0; transform: translateX(-16px); }
+}
+
+body.kb-native {
+  animation: kb-native-page-in 0.26s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+body.kb-native.kb-page-exit {
+  animation: kb-native-page-out 0.18s cubic-bezier(0.55, 0, 1, 0.45) forwards !important;
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -178,4 +186,246 @@ body.kb-native button:not(.mob-dash__notif-btn):not(.mob-app-bar__icon-btn) {
 body.kb-native .mob-stat-chip,
 body.kb-native .mob-qa-btn {
   min-height: 52px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   9. AÇIK TEMA TEMELI (Revolut/N26 ruhu)
+   Zemin beyaz, accent #2563EB, güçlü tipografi hiyerarşisi.
+═══════════════════════════════════════════════════════════ */
+body.kb-native {
+  --nb-bg:       #F8FAFC;
+  --nb-surface:  #FFFFFF;
+  --nb-border:   #E2E8F0;
+  --nb-text:     #0F172A;
+  --nb-muted:    #64748B;
+  --nb-accent:   #2563EB;
+  --nb-accent-h: #1D4ED8;
+  --nb-success:  #16A34A;
+  --nb-danger:   #DC2626;
+  background: var(--nb-bg) !important;
+  color: var(--nb-text) !important;
+}
+
+/* Sayfa içerikleri */
+body.kb-native .kb-content,
+body.kb-native main,
+body.kb-native .page-wrap {
+  background: var(--nb-bg) !important;
+  color: var(--nb-text) !important;
+}
+
+/* Space background native'de gizle */
+body.kb-native #space-bg,
+body.kb-native .space-bg { display: none !important; }
+
+/* WhatsApp butonu native'de gizle */
+body.kb-native #waFloat { display: none !important; }
+
+/* A11y ve erişilebilirlik paneli native'de gizle */
+body.kb-native .a11y { display: none !important; }
+
+/* Footer native'de gizle */
+body.kb-native #app-footer { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════
+   10. BOTTOM NAV — MİNİMAL AÇIK TASARIM
+═══════════════════════════════════════════════════════════ */
+body.kb-native .bottom-nav {
+  background:  var(--nb-surface) !important;
+  border-top:  1px solid var(--nb-border) !important;
+  box-shadow:  0 -1px 12px rgba(0,0,0,0.06) !important;
+}
+
+body.kb-native .bottom-nav__item {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .bottom-nav__item svg {
+  stroke: var(--nb-muted) !important;
+}
+body.kb-native .bottom-nav__item.is-active {
+  color: var(--nb-accent) !important;
+}
+body.kb-native .bottom-nav__item.is-active svg {
+  stroke: var(--nb-accent) !important;
+}
+body.kb-native .bottom-nav__item.is-active::before {
+  background: var(--nb-accent) !important;
+}
+body.kb-native .bottom-nav__l {
+  color: inherit !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   11. MOBİL APP BAR — AÇIK MİNİMAL HEADER
+═══════════════════════════════════════════════════════════ */
+body.kb-native .mob-app-bar {
+  background:    var(--nb-surface) !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+  box-shadow:    0 1px 8px rgba(0,0,0,0.06) !important;
+}
+
+body.kb-native .mob-app-bar__title {
+  color: var(--nb-text) !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  letter-spacing: -0.02em !important;
+}
+
+body.kb-native .mob-app-bar__icon-btn svg {
+  stroke: var(--nb-muted) !important;
+}
+
+body.kb-native .mob-app-bar__avatar-inner {
+  background: var(--nb-accent) !important;
+  color: #fff !important;
+}
+
+/* Panel sayfaları mob-dash header */
+body.kb-native .mob-dash__header {
+  background:    var(--nb-surface) !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+  box-shadow:    0 1px 8px rgba(0,0,0,0.06) !important;
+}
+body.kb-native .mob-dash__greeting,
+body.kb-native .mob-dash__name {
+  color: var(--nb-text) !important;
+}
+body.kb-native .mob-dash__notif-btn svg {
+  stroke: var(--nb-muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   12. KARTLAR & SURFACE'LER
+═══════════════════════════════════════════════════════════ */
+body.kb-native .card,
+body.kb-native .kurye-card,
+body.kb-native .isletme-card,
+body.kb-native .firma-card,
+body.kb-native .profile-card,
+body.kb-native .mob-stat-card,
+body.kb-native .teklif-card,
+body.kb-native .eslesme-card,
+body.kb-native .bildirim-item {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 16px !important;
+  box-shadow:    0 2px 12px rgba(0,0,0,0.06) !important;
+  color:         var(--nb-text) !important;
+}
+
+/* Panel stat chip'leri */
+body.kb-native .mob-stat-chip {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 16px !important;
+  box-shadow:    0 2px 8px rgba(0,0,0,0.05) !important;
+}
+body.kb-native .mob-stat-chip__val {
+  color: var(--nb-text) !important;
+  font-weight: 800 !important;
+}
+body.kb-native .mob-stat-chip__label {
+  color: var(--nb-muted) !important;
+}
+
+/* Quick action butonlar */
+body.kb-native .mob-qa-btn {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 16px !important;
+  color:         var(--nb-text) !important;
+  box-shadow:    0 2px 8px rgba(0,0,0,0.05) !important;
+}
+body.kb-native .mob-qa-btn__label {
+  color: var(--nb-muted) !important;
+  font-size: 0.72rem !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   13. TİPOGRAFİ
+═══════════════════════════════════════════════════════════ */
+body.kb-native h1,
+body.kb-native h2,
+body.kb-native h3 {
+  color:          var(--nb-text) !important;
+  letter-spacing: -0.03em !important;
+  font-weight:    800 !important;
+}
+
+body.kb-native .page-head h1 {
+  font-size:   1.5rem !important;
+  font-weight: 800 !important;
+  color:       var(--nb-text) !important;
+}
+
+body.kb-native p,
+body.kb-native .muted,
+body.kb-native small {
+  color: var(--nb-muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   14. BUTONLAR
+═══════════════════════════════════════════════════════════ */
+body.kb-native .btn--primary {
+  background:    var(--nb-accent) !important;
+  border-color:  var(--nb-accent) !important;
+  color:         #fff !important;
+  font-weight:   700 !important;
+  border-radius: 14px !important;
+  box-shadow:    0 4px 16px rgba(37,99,235,0.25) !important;
+}
+body.kb-native .btn--primary:active {
+  background: var(--nb-accent-h) !important;
+  transform: scale(0.98) !important;
+}
+
+body.kb-native .btn--light,
+body.kb-native .btn--outline {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  color:         var(--nb-text) !important;
+  border-radius: 14px !important;
+}
+
+/* Auth submit butonu */
+body.kb-native .auth-submit {
+  background:    var(--nb-accent) !important;
+  border-color:  var(--nb-accent) !important;
+  color:         #fff !important;
+  border-radius: 14px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   15. FORM ELEMENTLERİ
+═══════════════════════════════════════════════════════════ */
+body.kb-native input:not([type=checkbox]):not([type=radio]),
+body.kb-native textarea,
+body.kb-native select {
+  background:    var(--nb-surface) !important;
+  border:        1.5px solid var(--nb-border) !important;
+  border-radius: 12px !important;
+  color:         var(--nb-text) !important;
+}
+body.kb-native input:focus,
+body.kb-native textarea:focus {
+  border-color: var(--nb-accent) !important;
+  box-shadow:   0 0 0 3px rgba(37,99,235,0.12) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   16. SECTION BAŞLIKLARI & AYRAÇLAR
+═══════════════════════════════════════════════════════════ */
+body.kb-native .section-title,
+body.kb-native .mob-section-title {
+  color:       var(--nb-text) !important;
+  font-weight: 700 !important;
+  font-size:   0.78rem !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+body.kb-native hr,
+body.kb-native .divider {
+  border-color: var(--nb-border) !important;
 }

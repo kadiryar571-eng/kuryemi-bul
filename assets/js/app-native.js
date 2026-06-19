@@ -174,13 +174,44 @@ window.KBNative = (function () {
   }
 
   /* ══════════════════════════════════════════════════════════
-     7. İNİT
+     7. SAYFA GEÇİŞ ANİMASYONU
+     Link tıklanınca body'ye kb-page-exit ekle, animasyon
+     bittikten sonra navigate et.
+  ══════════════════════════════════════════════════════════ */
+  function initPageTransitions() {
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href) return;
+      if (
+        href.charAt(0) === '#' ||
+        href.indexOf('http') === 0 ||
+        href.indexOf('tel:') === 0 ||
+        href.indexOf('mailto:') === 0 ||
+        href.indexOf('javascript:') === 0 ||
+        a.target === '_blank'
+      ) return;
+
+      var curFile = location.pathname.split('/').pop() || 'index.html';
+      var destFile = href.split('?')[0].split('/').pop() || 'index.html';
+      if (curFile === destFile) return;
+
+      e.preventDefault();
+      document.body.classList.add('kb-page-exit');
+      setTimeout(function () { location.href = href; }, 200);
+    }, true);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     8. İNİT
   ══════════════════════════════════════════════════════════ */
   function init() {
     _platform = getPlatform();
     initBackButton();
     initAppState();
     initPush();
+    initPageTransitions();
     _ready = true;
     console.log('[KBNative] hazır — platform:', _platform);
   }

@@ -911,7 +911,20 @@
       var _page = location.pathname.split('/').pop() || 'index.html';
       var _onboardingPages = ['app-onboarding.html', 'giris.html', 'verify-email.html', 'sifre-sifirla.html'];
       if (!localStorage.getItem('kb_onboarded') && _onboardingPages.indexOf(_page) === -1) {
+        // İlk açılış: onboarding akışına gönder
         location.replace('/app-onboarding.html');
+      } else if (_page === 'index.html' || _page === '') {
+        // Native modda landing page asla gösterilmez — oturum yüklenince doğru sayfaya yönlendir
+        document.documentElement.style.visibility = 'hidden';
+        READY.then(function () {
+          if (isOnline() && SESSION.user) {
+            location.replace('/' + roleToPanel(SESSION.profile && SESSION.profile.role));
+          } else if (!isOnline() && getRole() !== 'ziyaretci') {
+            location.replace('/' + panelHref());
+          } else {
+            location.replace('/giris.html');
+          }
+        });
       }
     }
 
