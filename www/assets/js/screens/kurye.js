@@ -56,52 +56,175 @@ window.KuryeScreens = (function () {
 
   /* ── 1. PANEL (Dashboard) ───────────────────────────────── */
   function panel() {
-    showAppBar('', false,
-      '<button class="kb-appbar__action" onclick="Router.go(\'/bildirimler\')">' + ICON.bell + '</button>'
-    );
+    showDashboardBar();
     showBottomNav();
-    setActiveNav('harita');
+    setActiveNav('panel');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.display_name)) || 'Kullanıcı';
-    var score = (APP.profile && APP.profile.score) || '4.8';
+    var name = (APP.profile && (APP.profile.full_name || APP.profile.display_name)) || 'Kurye';
 
     renderScreen(
       '<div class="kb-screen-inner">' +
 
-        /* Greeting */
-        '<div class="flex items-center justify-between mb-16">' +
-          '<div>' +
-            '<div style="font-size:.85rem;color:var(--muted)">Merhaba,</div>' +
-            '<div style="font-size:1.1rem;font-weight:800">' + name + '</div>' +
+        /* ── S1: Profile Summary ── */
+        '<div class="dash-profile-card" onclick="Router.go(\'/kurye/profil\')">' +
+          '<div class="dash-profile-card__avatar">' +
+            '<div class="kb-avatar kb-avatar--lg">' + initials(name) + '</div>' +
+            '<div class="dash-profile-card__verified">✓</div>' +
           '</div>' +
-          '<div class="kb-avatar kb-avatar--lg" onclick="Router.go(\'/kurye/profil\')">' +
-            initials(name) +
+          '<div class="dash-profile-card__info">' +
+            '<div class="dash-profile-card__name">' + name + '</div>' +
+            '<div class="dash-profile-card__role">Kurye</div>' +
+            '<div class="dash-profile-card__score">' + ICON.star + '<span>4.8</span><span style="color:var(--muted);font-size:.68rem;font-weight:400">&nbsp;/ 5.0</span></div>' +
+            '<div class="kb-progress" style="margin-top:8px">' +
+              '<div class="kb-progress__track"><div class="kb-progress__fill" style="width:75%"></div></div>' +
+              '<div class="kb-progress__labels"><span>Profil tamamlama</span><span>75%</span></div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
 
-        /* Stats */
-        '<div class="kb-stats">' +
-          '<div class="kb-stat"><div class="kb-stat__val">⭐ ' + score + '</div><div class="kb-stat__lbl">Puan</div></div>' +
-          '<div class="kb-stat"><div class="kb-stat__val">8</div><div class="kb-stat__lbl">Başvurum</div></div>' +
-          '<div class="kb-stat"><div class="kb-stat__val">3</div><div class="kb-stat__lbl">Görüşme</div></div>' +
+        /* ── S2: Quick Metrics ── */
+        '<div class="metric-grid">' +
+          _mCard('check',     '3',  'Aktif Başvuru',       'rgba(59,130,246,.12)',  '#3B82F6', '/kurye/basvurular') +
+          _mCard('briefcase', '1',  'Görüşme Bekleyen',    'rgba(245,158,11,.12)',  '#F59E0B', '/kurye/basvurular') +
+          _mCard('crown',     '12', 'Onaylanan İşler',     'rgba(34,197,94,.12)',   '#22C55E', '/kurye/basvurular') +
+          _mCard('eye',       '89', 'Profil Görüntülenme', 'rgba(168,85,247,.12)',  '#A855F7', '/kurye/profil') +
         '</div>' +
 
-        /* Suggested jobs */
+        /* ── S3: Active Applications ── */
         '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Öne Çıkan İlanlar</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/kurye/ilanlar\')">Tümü</button>' +
+          '<div class="kb-section-title">Aktif Başvurularım</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/kurye/basvurular\')">Tümünü Gör</button>' +
         '</div>' +
-        MOCK_ILANLAR.slice(0, 3).map(_jobCard).join('') +
+        _appCard('🏢', 'Motorlu Kurye',  'ABC Lojistik', 'Başvuru İnceleniyor', 'review',   '2 saat önce') +
+        _appCard('🏪', 'Yaya Kurye',     'XYZ Kargo',    'Görüşme Aşamasında',  'approved', 'Dün') +
 
-        /* Nearby */
+        /* ── S4: Recommended Jobs ── */
         '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Yakınındaki İlanlar</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/kurye/harita\')">Haritada Gör</button>' +
+          '<div class="kb-section-title">Sana Özel İlanlar</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/kurye/ilanlar\')">Tümünü Gör</button>' +
         '</div>' +
-        MOCK_ILANLAR.slice(3, 5).map(_jobCard).join('') +
+        _jobRec('1', '🏢', 'Motorlu Kurye',  'Hub Dağıtım A.Ş.',   '28.000 - 33.000 ₺', 'Kadıköy',  'Tam Zamanlı', ['acil', 'yeni']) +
+        _jobRec('2', '🏪', 'Yaya Kurye',     'Lezzetli Restoran',   '15.000 - 20.000 ₺', 'Beşiktaş', 'Part-Time',   ['yakin']) +
+
+        /* ── S5: Recent Messages ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Son Mesajlar</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/kurye/mesajlar\')">Tümünü Gör</button>' +
+        '</div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          _miniMsg('ABC Lojistik', 'Başvurunuzu inceledik, görüşme yapmak istiyoruz.', '15:30', 2, '/kurye/mesajlar') +
+          _miniMsg('XYZ Kargo',    'Müsait olduğunuzda arayabilir misiniz?',            'Dün',   0, '/kurye/mesajlar') +
+        '</div>' +
+
+        /* ── S6: Recent Notifications ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Son Bildirimler</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/bildirimler\')">Tümünü Gör</button>' +
+        '</div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          '<div class="notif-item"><div class="notif-item__dot"></div><div class="notif-item__text"><div class="notif-item__title">Profiliniz görüntülendi</div><div class="notif-item__sub">ABC Lojistik profilinizi inceledi.</div></div><div class="notif-item__time">5 dk</div></div>' +
+          '<div class="notif-item"><div class="notif-item__dot notif-item__dot--read"></div><div class="notif-item__text"><div class="notif-item__title">Yeni ilan açıldı</div><div class="notif-item__sub">Kadıköy\'de motorlu kurye aranıyor.</div></div><div class="notif-item__time">1 sa</div></div>' +
+        '</div>' +
+
+        /* ── S7: Performance ── */
+        '<div class="kb-section-head"><div class="kb-section-title">Bu Hafta</div></div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+            '<span style="font-size:.82rem;font-weight:700">Aktivite</span>' +
+            '<span style="font-size:.75rem;color:var(--c-success);font-weight:600">+12% bu hafta</span>' +
+          '</div>' +
+          '<div class="perf-week">' +
+            _wBar(40,'Pzt') + _wBar(65,'Sal') + _wBar(30,'Çar') +
+            _wBar(80,'Per') + _wBar(55,'Cum') + _wBar(20,'Cmt') + _wBarToday(90,'Paz') +
+          '</div>' +
+          '<div style="display:flex;gap:20px;margin-top:10px">' +
+            '<div><div style="font-size:1.2rem;font-weight:800">89</div><div style="font-size:.7rem;color:var(--muted)">Görüntülenme</div></div>' +
+            '<div><div style="font-size:1.2rem;font-weight:800">3</div><div style="font-size:.7rem;color:var(--muted)">Aktif Başvuru</div></div>' +
+            '<div><div style="font-size:1.2rem;font-weight:800;color:var(--c-success)">85%</div><div style="font-size:.7rem;color:var(--muted)">Eşleşme Skoru</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        /* ── S8: Profile Completion ── */
+        '<div class="kb-section-head"><div class="kb-section-title">Profil Tamamlama</div></div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
+            '<div><div style="font-size:1.6rem;font-weight:800;color:var(--c-accent)">75%</div><div style="font-size:.75rem;color:var(--muted)">Profilin tamamlandı</div></div>' +
+            '<button class="btn btn--primary btn--sm" style="width:auto;padding:8px 16px" onclick="Router.go(\'/kurye/profil\')">Tamamla</button>' +
+          '</div>' +
+          '<div class="kb-progress"><div class="kb-progress__track"><div class="kb-progress__fill" style="width:75%"></div></div></div>' +
+          '<div style="margin-top:8px;font-size:.76rem;color:var(--muted)">Eksik: Kimlik belgesi, Profil fotoğrafı</div>' +
+        '</div>' +
 
       '</div>'
     );
+  }
+
+  /* ── Dashboard helpers ──────────────────────────────────── */
+  function _mCard(icon, val, lbl, iconBg, iconColor, route) {
+    return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
+      '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
+      '<div class="metric-card__val">' + val + '</div>' +
+      '<div class="metric-card__lbl">' + lbl + '</div>' +
+    '</div>';
+  }
+
+  function _appCard(ico, title, company, statusLbl, statusCls, time) {
+    return '<div class="actapp-card" onclick="Router.go(\'/kurye/basvurular\')">' +
+      '<div class="actapp-card__top">' +
+        '<div class="actapp-card__ico">' + ico + '</div>' +
+        '<div class="actapp-card__info">' +
+          '<div class="actapp-card__title">' + title + '</div>' +
+          '<div class="actapp-card__company">' + company + '</div>' +
+        '</div>' +
+        '<div class="actapp-card__time">' + time + '</div>' +
+      '</div>' +
+      '<div class="actapp-card__bottom">' +
+        '<span class="app-status app-status--' + statusCls + '">' + statusLbl + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function _jobRec(id, ico, title, company, salary, loc, type, badges) {
+    var BADGE_LABELS = { acil: '🔥 Acil', yeni: '✨ Yeni', popular: '⭐ Popüler', yakin: '📍 Yakın' };
+    return '<div class="rec-job-card" onclick="Router.go(\'/kurye/ilan/' + id + '\')">' +
+      '<div class="rec-job-card__top">' +
+        '<div class="rec-job-card__avatar">' + ico + '</div>' +
+        '<div class="rec-job-card__info">' +
+          '<div class="rec-job-card__title">' + title + '</div>' +
+          '<div class="rec-job-card__company">' + company + '</div>' +
+        '</div>' +
+        '<div class="rec-job-card__salary">' + salary + '</div>' +
+      '</div>' +
+      '<div class="rec-job-card__meta">' +
+        '<div class="rec-job-card__tags">' +
+          badges.map(function (b) { return '<span class="job-badge job-badge--' + b + '">' + (BADGE_LABELS[b] || b) + '</span>'; }).join('') +
+        '</div>' +
+        '<span style="font-size:.7rem;color:var(--muted)">' + type + ' · ' + loc + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function _miniMsg(name, preview, time, unread, route) {
+    return '<div class="mini-msg" onclick="Router.go(\'' + route + '\')">' +
+      '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem">' + initials(name) + '</div>' +
+      '<div class="mini-msg__info">' +
+        '<div class="mini-msg__name">' + name + '</div>' +
+        '<div class="mini-msg__preview">' + preview + '</div>' +
+      '</div>' +
+      '<div class="mini-msg__meta">' +
+        '<span class="mini-msg__time">' + time + '</span>' +
+        (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function _wBar(pct, day) {
+    var h = Math.max(4, Math.round(pct * 0.44));
+    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--fill" style="height:' + h + 'px"></div><div class="perf-week__day">' + day + '</div></div>';
+  }
+  function _wBarToday(pct, day) {
+    var h = Math.max(4, Math.round(pct * 0.44));
+    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--today" style="height:' + h + 'px"></div><div class="perf-week__day" style="color:var(--c-accent);font-weight:700">' + day + '</div></div>';
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */

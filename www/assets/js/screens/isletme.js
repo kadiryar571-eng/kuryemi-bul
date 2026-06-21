@@ -33,59 +33,161 @@ window.IsletmeScreens = (function () {
 
   /* ── 1. PANEL ───────────────────────────────────────────── */
   function panel() {
-    showAppBar('', false,
-      '<button class="kb-appbar__action" onclick="Router.go(\'/bildirimler\')">' + ICON.bell + '</button>'
-    );
+    showDashboardBar();
     showBottomNav();
-    setActiveNav('basvurular');
+    setActiveNav('panel');
 
     var name = (APP.profile && (APP.profile.full_name || APP.profile.business_name)) || 'İşletme';
 
     renderScreen(
       '<div class="kb-screen-inner">' +
 
-        '<div class="flex items-center justify-between mb-16">' +
-          '<div>' +
-            '<div style="font-size:.85rem;color:var(--muted)">Merhaba,</div>' +
-            '<div style="font-size:1.1rem;font-weight:800">' + name + '</div>' +
+        /* ── S1: Profile Summary ── */
+        '<div class="dash-profile-card" onclick="Router.go(\'/isletme/profil\')">' +
+          '<div class="dash-profile-card__avatar">' +
+            '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
+            '<div class="dash-profile-card__verified">✓</div>' +
           '</div>' +
-          '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-isletme)" onclick="Router.go(\'/isletme/profil\')">' +
-            initials(name) +
+          '<div class="dash-profile-card__info">' +
+            '<div class="dash-profile-card__name">' + name + '</div>' +
+            '<div class="dash-profile-card__role" style="background:rgba(249,115,22,.14);color:var(--c-isletme)">Esnaf / İşletme</div>' +
+            '<div class="dash-profile-card__score">' + ICON.star + '<span>4.7</span><span style="color:var(--muted);font-size:.68rem;font-weight:400">&nbsp;/ 5.0</span></div>' +
+            '<div class="kb-progress" style="margin-top:8px">' +
+              '<div class="kb-progress__track"><div class="kb-progress__fill" style="width:70%;background:linear-gradient(90deg,var(--c-isletme),#FCD34D)"></div></div>' +
+              '<div class="kb-progress__labels"><span>İşletme profili</span><span>70%</span></div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
 
-        '<div class="kb-stats kb-stats--2" style="grid-template-columns:1fr 1fr 1fr">' +
-          '<div class="kb-stat"><div class="kb-stat__val" style="color:var(--c-isletme)">3</div><div class="kb-stat__lbl">Aktif Talep</div></div>' +
-          '<div class="kb-stat"><div class="kb-stat__val" style="color:var(--c-isletme)">12</div><div class="kb-stat__lbl">Başvuru</div></div>' +
-          '<div class="kb-stat"><div class="kb-stat__val" style="color:var(--c-isletme)">2</div><div class="kb-stat__lbl">Aktif Kurye</div></div>' +
+        /* ── S2: Quick Metrics ── */
+        '<div class="metric-grid">' +
+          _iMCard('briefcase', '3',  'Aktif Talep',         'rgba(249,115,22,.12)', '#F97316', '/isletme/basvurular') +
+          _iMCard('check',     '12', 'Gelen Başvuru',       'rgba(59,130,246,.12)', '#3B82F6', '/isletme/basvurular') +
+          _iMCard('users',     '2',  'Aktif Kurye',         'rgba(34,197,94,.12)',  '#22C55E', '/isletme/basvurular') +
+          _iMCard('eye',       '67', 'Profil Görüntülenme', 'rgba(168,85,247,.12)', '#A855F7', '/isletme/profil')     +
         '</div>' +
 
-        '<div class="quick-actions">' +
+        /* ── S3: Active Requests ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Aktif Taleplerim</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/isletme/basvurular\')">Tümünü Gör</button>' +
+        '</div>' +
+        _iAppCard('🛵', 'Yaya Kurye Talebi',   'Hafta içi 09:00-18:00', 'Başvuru Bekleyen', 'pending', '1 saat önce') +
+        _iAppCard('🚗', 'Araçlı Kurye Talebi', 'Cumartesi 10:00-22:00', 'İnceleniyor',      'review',  'Dün') +
+
+        /* ── S4: Recommended Candidates ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Önerilen Kuryeler</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/isletme/harita\')">Haritada Gör</button>' +
+        '</div>' +
+        _iCandCard('1', 'Ayşe Demir',   '1.5 yıl yaya kurye', 'Kadıköy',  '4.7') +
+        _iCandCard('2', 'Can Bağlar',   '1 yıl deneyim',       'Beşiktaş', '4.5') +
+
+        /* ── S5: Recent Messages ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Son Mesajlar</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/isletme/mesajlar\')">Tümünü Gör</button>' +
+        '</div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          _iMiniMsg('Ayşe Demir', 'Merhaba, ilanınızı gördüm, müsaitim...', '14:30', 1) +
+          _iMiniMsg('Can Bağlar', 'Yarın saat kaçta başlayacağım?',          'Dün',   0) +
+        '</div>' +
+
+        /* ── S6: Recent Notifications ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Son Bildirimler</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/bildirimler\')">Tümünü Gör</button>' +
+        '</div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          '<div class="notif-item"><div class="notif-item__dot" style="background:var(--c-isletme)"></div><div class="notif-item__text"><div class="notif-item__title">Yeni başvuru!</div><div class="notif-item__sub">Ayşe Demir talebi kabul etti.</div></div><div class="notif-item__time">5 dk</div></div>' +
+          '<div class="notif-item"><div class="notif-item__dot notif-item__dot--read"></div><div class="notif-item__text"><div class="notif-item__title">İlanınız yayında</div><div class="notif-item__sub">Yaya kurye talebiniz onaylandı.</div></div><div class="notif-item__time">2 sa</div></div>' +
+        '</div>' +
+
+        /* ── S7: Weekly Activity ── */
+        '<div class="kb-section-head"><div class="kb-section-title">Bu Hafta</div></div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+            '<span style="font-size:.82rem;font-weight:700">Talep Aktivitesi</span>' +
+            '<span style="font-size:.75rem;color:var(--c-isletme);font-weight:600">+5% bu hafta</span>' +
+          '</div>' +
+          '<div class="perf-week">' +
+            _iBar(20,'Pzt') + _iBar(40,'Sal') + _iBar(60,'Çar') +
+            _iBar(35,'Per') + _iBar(70,'Cum') + _iBar(50,'Cmt') + _iBarToday(80,'Paz') +
+          '</div>' +
+          '<div style="display:flex;gap:20px;margin-top:10px">' +
+            '<div><div style="font-size:1.2rem;font-weight:800">12</div><div style="font-size:.7rem;color:var(--muted)">Gelen Başvuru</div></div>' +
+            '<div><div style="font-size:1.2rem;font-weight:800">3</div><div style="font-size:.7rem;color:var(--muted)">Aktif Talep</div></div>' +
+            '<div><div style="font-size:1.2rem;font-weight:800;color:var(--c-isletme)">2</div><div style="font-size:.7rem;color:var(--muted)">Çalışan Kurye</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        /* ── S8: Quick Actions ── */
+        '<div class="kb-section-head"><div class="kb-section-title">Hızlı İşlemler</div></div>' +
+        '<div class="quick-actions" style="margin-bottom:0">' +
           '<button class="quick-btn" onclick="Router.go(\'/isletme/ilan/yeni\')">' +
-            '<div class="quick-btn__icon" style="background:#FFF7ED">📋</div>' +
+            '<div class="quick-btn__icon">📋</div>' +
             '<div class="quick-btn__label">İlan Oluştur</div>' +
           '</button>' +
           '<button class="quick-btn" onclick="Router.go(\'/isletme/basvurular\')">' +
-            '<div class="quick-btn__icon" style="background:#F0FDF4">👥</div>' +
+            '<div class="quick-btn__icon">👥</div>' +
             '<div class="quick-btn__label">Başvuruları Gör</div>' +
-          '</button>' +
-          '<button class="quick-btn" onclick="Router.go(\'/isletme/mesajlar\')">' +
-            '<div class="quick-btn__icon" style="background:#F5F3FF">💬</div>' +
-            '<div class="quick-btn__label">Mesajlar</div>' +
-          '</button>' +
-          '<button class="quick-btn" onclick="Router.go(\'/isletme/harita\')">' +
-            '<div class="quick-btn__icon" style="background:#EFF6FF">🗺️</div>' +
-            '<div class="quick-btn__label">Harita</div>' +
           '</button>' +
         '</div>' +
 
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Son Başvurular</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/isletme/basvurular\')">Tümü</button>' +
-        '</div>' +
-        MOCK_ADAYLAR.slice(0, 2).map(_adayCard).join('') +
       '</div>'
     );
+  }
+
+  /* ── İşletme dashboard helpers ──────────────────────────── */
+  function _iMCard(icon, val, lbl, iconBg, iconColor, route) {
+    return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
+      '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
+      '<div class="metric-card__val">' + val + '</div>' +
+      '<div class="metric-card__lbl">' + lbl + '</div>' +
+    '</div>';
+  }
+
+  function _iAppCard(ico, title, desc, statusLbl, statusCls, time) {
+    return '<div class="actapp-card" onclick="Router.go(\'/isletme/basvurular\')">' +
+      '<div class="actapp-card__top">' +
+        '<div class="actapp-card__ico">' + ico + '</div>' +
+        '<div class="actapp-card__info">' +
+          '<div class="actapp-card__title">' + title + '</div>' +
+          '<div class="actapp-card__company">' + desc + '</div>' +
+        '</div>' +
+        '<div class="actapp-card__time">' + time + '</div>' +
+      '</div>' +
+      '<div class="actapp-card__bottom"><span class="app-status app-status--' + statusCls + '">' + statusLbl + '</span></div>' +
+    '</div>';
+  }
+
+  function _iCandCard(id, name, exp, loc, score) {
+    return '<div class="rec-cand-card" onclick="Router.go(\'/isletme/aday/' + id + '\')">' +
+      '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
+      '<div class="rec-cand-card__info">' +
+        '<div class="rec-cand-card__name">' + name + '</div>' +
+        '<div class="rec-cand-card__sub">' + exp + ' · ' + loc + '</div>' +
+        '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + score + '</span></div>' +
+      '</div>' +
+      ICON.chevron +
+    '</div>';
+  }
+
+  function _iMiniMsg(name, preview, time, unread) {
+    return '<div class="mini-msg" onclick="Router.go(\'/isletme/mesajlar\')">' +
+      '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem;background:var(--c-isletme)">' + initials(name) + '</div>' +
+      '<div class="mini-msg__info"><div class="mini-msg__name">' + name + '</div><div class="mini-msg__preview">' + preview + '</div></div>' +
+      '<div class="mini-msg__meta"><span class="mini-msg__time">' + time + '</span>' + (unread > 0 ? '<span class="mini-msg__badge" style="background:var(--c-isletme)">' + unread + '</span>' : '') + '</div>' +
+    '</div>';
+  }
+
+  function _iBar(pct, day) {
+    var h = Math.max(4, Math.round(pct * 0.44));
+    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--fill" style="height:' + h + 'px;background:rgba(249,115,22,.35)"></div><div class="perf-week__day">' + day + '</div></div>';
+  }
+  function _iBarToday(pct, day) {
+    var h = Math.max(4, Math.round(pct * 0.44));
+    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--today" style="height:' + h + 'px;background:var(--c-isletme);box-shadow:0 0 10px rgba(249,115,22,.4)"></div><div class="perf-week__day" style="color:var(--c-isletme);font-weight:700">' + day + '</div></div>';
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */

@@ -40,57 +40,161 @@ window.FirmaScreens = (function () {
 
   /* ── 1. PANEL ───────────────────────────────────────────── */
   function panel() {
-    showAppBar('', false,
-      '<button class="kb-appbar__action" onclick="Router.go(\'/bildirimler\')">' + ICON.bell + '</button>'
-    );
+    showDashboardBar();
     showBottomNav();
-    setActiveNav('ilanlarim');
+    setActiveNav('panel');
 
     var name = (APP.profile && (APP.profile.full_name || APP.profile.company_name)) || 'Firma';
 
     renderScreen(
       '<div class="kb-screen-inner">' +
 
-        '<div class="flex items-center justify-between mb-16">' +
-          '<div>' +
-            '<div style="font-size:.85rem;color:var(--muted)">Merhaba,</div>' +
-            '<div style="font-size:1.1rem;font-weight:800">' + name + '</div>' +
+        /* ── S1: Profile Summary ── */
+        '<div class="dash-profile-card" onclick="Router.go(\'/firma/profil\')">' +
+          '<div class="dash-profile-card__avatar">' +
+            '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-firma)">' + initials(name) + '</div>' +
+            '<div class="dash-profile-card__verified">✓</div>' +
           '</div>' +
-          '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-firma)" onclick="Router.go(\'/firma/profil\')">' +
-            initials(name) +
+          '<div class="dash-profile-card__info">' +
+            '<div class="dash-profile-card__name">' + name + '</div>' +
+            '<div class="dash-profile-card__role" style="background:rgba(34,197,94,.14);color:var(--c-firma)">Firma</div>' +
+            '<div class="dash-profile-card__score">' + ICON.star + '<span>4.6</span><span style="color:var(--muted);font-size:.68rem;font-weight:400">&nbsp;/ 5.0</span></div>' +
+            '<div class="kb-progress" style="margin-top:8px">' +
+              '<div class="kb-progress__track"><div class="kb-progress__fill" style="width:85%;background:linear-gradient(90deg,var(--c-firma),#4ADE80)"></div></div>' +
+              '<div class="kb-progress__labels"><span>Firma profili</span><span>85%</span></div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
 
-        '<div class="kb-stats">' +
-          '<div class="kb-stat"><div class="kb-stat__val">8</div><div class="kb-stat__lbl">Açık İlan</div></div>' +
-          '<div class="kb-stat"><div class="kb-stat__val">58</div><div class="kb-stat__lbl">Başvuru</div></div>' +
-          '<div class="kb-stat"><div class="kb-stat__val">12</div><div class="kb-stat__lbl">Aktif Aday</div></div>' +
+        /* ── S2: Quick Metrics ── */
+        '<div class="metric-grid">' +
+          _fMCard('list',      '8',   'Açık İlan',           'rgba(34,197,94,.12)',  '#22C55E', '/firma/ilanlarim')  +
+          _fMCard('check',     '14',  'Yeni Başvuru',        'rgba(59,130,246,.12)', '#3B82F6', '/firma/basvurular') +
+          _fMCard('users',     '3',   'Aktif Aday',          'rgba(249,115,22,.12)', '#F97316', '/firma/basvurular') +
+          _fMCard('eye',       '245', 'Profil Görüntülenme', 'rgba(168,85,247,.12)', '#A855F7', '/firma/profil')     +
         '</div>' +
 
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Hızlı İşlemler</div>' +
-        '</div>' +
-        '<div class="quick-actions">' +
-          _qBtn('📋', 'Yeni İlan\nOluştur',   '/firma/ilan/yeni',   '#EFF6FF') +
-          _qBtn('👥', 'Başvuruları\nGör',      '/firma/basvurular',  '#F0FDF4') +
-          _qBtn('💬', 'Mesajlar',              '/firma/mesajlar',    '#F5F3FF') +
-          _qBtn('🗺️', 'Haritada\nGör',         '/firma/harita',      '#FFF7ED') +
-        '</div>' +
-
+        /* ── S3: Recent Candidate Applications ── */
         '<div class="kb-section-head">' +
           '<div class="kb-section-title">Son Başvurular</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümü</button>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
         '</div>' +
-        MOCK_ADAYLAR.slice(0, 2).map(function (a) { return _adayCard(a, 'firma'); }).join('') +
+        _fAppCard('MK', 'Mehmet Kaya',   '3.5 yıl deneyim',   'Başvuru Bekleyen', 'pending', '15:20') +
+        _fAppCard('AD', 'Ayşe Demir',    '2 yıl deneyim',     'İnceleniyor',      'review',  '13:45') +
+
+        /* ── S4: Recommended Candidates ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Önerilen Adaylar</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
+        '</div>' +
+        _fCandCard('1', 'Can Bağlar',    '1 yıl deneyim',    'Ümraniye', '4.6') +
+        _fCandCard('2', 'Selin Çelik',   '4 yıl deneyim',    'Kadıköy',  '4.9') +
+
+        /* ── S5: Recent Messages ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Son Mesajlar</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/firma/mesajlar\')">Tümünü Gör</button>' +
+        '</div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          _fMiniMsg('Mehmet Kaya', 'Merhaba, profilimi incelemenizi...', '15:20', 1) +
+          _fMiniMsg('Ayşe Demir',  'Görüşme için uygun saatler...',       '13:45', 0) +
+        '</div>' +
+
+        /* ── S6: Recent Notifications ── */
+        '<div class="kb-section-head">' +
+          '<div class="kb-section-title">Son Bildirimler</div>' +
+          '<button class="kb-section-link" onclick="Router.go(\'/bildirimler\')">Tümünü Gör</button>' +
+        '</div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          '<div class="notif-item"><div class="notif-item__dot" style="background:var(--c-firma)"></div><div class="notif-item__text"><div class="notif-item__title">Yeni başvuru geldi!</div><div class="notif-item__sub">ABC İlanınıza yeni bir aday başvurdu.</div></div><div class="notif-item__time">5 dk</div></div>' +
+          '<div class="notif-item"><div class="notif-item__dot notif-item__dot--read"></div><div class="notif-item__text"><div class="notif-item__title">İlanınız onaylandı</div><div class="notif-item__sub">Motorlu kurye ilanınız yayında.</div></div><div class="notif-item__time">2 sa</div></div>' +
+        '</div>' +
+
+        /* ── S7: Weekly Activity ── */
+        '<div class="kb-section-head"><div class="kb-section-title">Bu Hafta</div></div>' +
+        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+            '<span style="font-size:.82rem;font-weight:700">Başvuru Aktivitesi</span>' +
+            '<span style="font-size:.75rem;color:var(--c-firma);font-weight:600">+8% bu hafta</span>' +
+          '</div>' +
+          '<div class="perf-week">' +
+            _fBar(30,'Pzt') + _fBar(50,'Sal') + _fBar(80,'Çar') +
+            _fBar(45,'Per') + _fBar(90,'Cum') + _fBar(60,'Cmt') + _fBarToday(75,'Paz') +
+          '</div>' +
+          '<div style="display:flex;gap:20px;margin-top:10px">' +
+            '<div><div style="font-size:1.2rem;font-weight:800">58</div><div style="font-size:.7rem;color:var(--muted)">Toplam Başvuru</div></div>' +
+            '<div><div style="font-size:1.2rem;font-weight:800">8</div><div style="font-size:.7rem;color:var(--muted)">Açık İlan</div></div>' +
+            '<div><div style="font-size:1.2rem;font-weight:800;color:var(--c-firma)">92%</div><div style="font-size:.7rem;color:var(--muted)">Yanıt Oranı</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        /* ── S8: Quick Actions ── */
+        '<div class="kb-section-head"><div class="kb-section-title">Hızlı İşlemler</div></div>' +
+        '<div class="quick-actions" style="margin-bottom:0">' +
+          '<button class="quick-btn" onclick="Router.go(\'/firma/ilan/yeni\')">' +
+            '<div class="quick-btn__icon">📋</div>' +
+            '<div class="quick-btn__label">Yeni İlan Oluştur</div>' +
+          '</button>' +
+          '<button class="quick-btn" onclick="Router.go(\'/firma/basvurular\')">' +
+            '<div class="quick-btn__icon">👥</div>' +
+            '<div class="quick-btn__label">Başvuruları Gör</div>' +
+          '</button>' +
+        '</div>' +
+
       '</div>'
     );
   }
 
-  function _qBtn(icon, label, route, bg) {
-    return '<button class="quick-btn" onclick="Router.go(\'' + route + '\')">' +
-      '<div class="quick-btn__icon" style="background:' + bg + '">' + icon + '</div>' +
-      '<div class="quick-btn__label">' + label.replace('\n', '<br>') + '</div>' +
-    '</button>';
+  /* ── Firma dashboard helpers ─────────────────────────────── */
+  function _fMCard(icon, val, lbl, iconBg, iconColor, route) {
+    return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
+      '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
+      '<div class="metric-card__val">' + val + '</div>' +
+      '<div class="metric-card__lbl">' + lbl + '</div>' +
+    '</div>';
+  }
+
+  function _fAppCard(abbr, name, exp, statusLbl, statusCls, time) {
+    return '<div class="actapp-card" onclick="Router.go(\'/firma/basvurular\')">' +
+      '<div class="actapp-card__top">' +
+        '<div class="kb-avatar" style="width:38px;height:38px;font-size:.78rem;background:var(--c-firma);flex-shrink:0">' + abbr + '</div>' +
+        '<div class="actapp-card__info">' +
+          '<div class="actapp-card__title">' + name + '</div>' +
+          '<div class="actapp-card__company">' + exp + '</div>' +
+        '</div>' +
+        '<div class="actapp-card__time">' + time + '</div>' +
+      '</div>' +
+      '<div class="actapp-card__bottom"><span class="app-status app-status--' + statusCls + '">' + statusLbl + '</span></div>' +
+    '</div>';
+  }
+
+  function _fCandCard(id, name, exp, loc, score) {
+    return '<div class="rec-cand-card" onclick="Router.go(\'/firma/aday/' + id + '\')">' +
+      '<div class="kb-avatar" style="background:var(--c-firma)">' + initials(name) + '</div>' +
+      '<div class="rec-cand-card__info">' +
+        '<div class="rec-cand-card__name">' + name + '</div>' +
+        '<div class="rec-cand-card__sub">' + exp + ' · ' + loc + '</div>' +
+        '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + score + '</span></div>' +
+      '</div>' +
+      ICON.chevron +
+    '</div>';
+  }
+
+  function _fMiniMsg(name, preview, time, unread) {
+    return '<div class="mini-msg" onclick="Router.go(\'/firma/mesajlar\')">' +
+      '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem;background:var(--c-firma)">' + initials(name) + '</div>' +
+      '<div class="mini-msg__info"><div class="mini-msg__name">' + name + '</div><div class="mini-msg__preview">' + preview + '</div></div>' +
+      '<div class="mini-msg__meta"><span class="mini-msg__time">' + time + '</span>' + (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') + '</div>' +
+    '</div>';
+  }
+
+  function _fBar(pct, day) {
+    var h = Math.max(4, Math.round(pct * 0.44));
+    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--fill" style="height:' + h + 'px;background:rgba(34,197,94,.35)"></div><div class="perf-week__day">' + day + '</div></div>';
+  }
+  function _fBarToday(pct, day) {
+    var h = Math.max(4, Math.round(pct * 0.44));
+    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--today" style="height:' + h + 'px;background:var(--c-firma);box-shadow:0 0 10px rgba(34,197,94,.4)"></div><div class="perf-week__day" style="color:var(--c-firma);font-weight:700">' + day + '</div></div>';
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */

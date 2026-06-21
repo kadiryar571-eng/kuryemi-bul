@@ -34,7 +34,12 @@
     eye:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
     eyeoff:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
     home:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-    crown:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M4 20L2 8l6 4 4-6 4 6 6-4-2 12"/></svg>'
+    crown:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M4 20L2 8l6 4 4-6 4 6 6-4-2 12"/></svg>',
+    menu:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+    x:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    camera:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    id:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    ref:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
   };
 
   /* ── State ─────────────────────────────────────────────── */
@@ -62,6 +67,7 @@
   };
 
   window.showAppBar = function (title, showBack, rightHtml) {
+    $appbar.className = 'kb-appbar'; /* reset dash variant */
     $appbar.style.display = '';
     $appbar.innerHTML =
       (showBack
@@ -69,6 +75,29 @@
         : '') +
       '<div class="kb-appbar__title">' + (title || '') + '</div>' +
       (rightHtml || '');
+  };
+
+  /* Dashboard greeting bar — greeting left, bell+hamburger right */
+  window.showDashboardBar = function () {
+    var profile = APP.profile || {};
+    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
+    var firstName = name.split(' ')[0];
+    $appbar.className = 'kb-appbar kb-appbar--dash';
+    $appbar.style.display = '';
+    $appbar.innerHTML =
+      '<div class="kb-appbar__greet">' +
+        '<div class="kb-appbar__greet-name">Merhaba, ' + firstName + ' 👋</div>' +
+        '<div class="kb-appbar__greet-sub">Bugün yeni fırsatlara hazır mısın?</div>' +
+      '</div>' +
+      '<div class="kb-appbar__actions">' +
+        '<button class="dash-icon-btn" onclick="Router.go(\'/bildirimler\')">' +
+          ICON.bell +
+          '<span class="dash-icon-btn__dot"></span>' +
+        '</button>' +
+        '<button class="dash-icon-btn" onclick="toggleDrawer()">' +
+          ICON.menu +
+        '</button>' +
+      '</div>';
   };
 
   window.hideAppBar = function () {
@@ -107,6 +136,106 @@
     setTimeout(function () { el.remove(); }, dur || 2500);
   };
 
+  /* ── Drawer system ────────────────────────────────────── */
+  function _buildDrawer() {
+    var role = APP.role || 'kurye';
+    var profile = APP.profile || {};
+    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
+    var roleLabels = { kurye: 'Kurye', firma: 'Firma', isletme: 'Esnaf / İşletme', admin: 'Admin' };
+    var roleLabel = roleLabels[role] || role;
+    var profilRoute = '/' + role + '/profil';
+
+    var quickLinks = role === 'kurye' ? [
+      { icon: 'check',   label: 'Başvurularım',     route: '/kurye/basvurular' },
+      { icon: 'heart',   label: 'Favori İlanlarım', route: '/favoriler'         },
+      { icon: 'map',     label: 'Yakın İlanlar',    route: '/kurye/harita'     },
+      { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'      }
+    ] : role === 'firma' ? [
+      { icon: 'list',    label: 'İlanlarım',         route: '/firma/ilanlarim'  },
+      { icon: 'check',   label: 'Başvurular',        route: '/firma/basvurular' },
+      { icon: 'heart',   label: 'Kaydedilenler',     route: '/favoriler'         },
+      { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'      }
+    ] : [
+      { icon: 'list',    label: 'İlanlarım',         route: '/isletme/basvurular' },
+      { icon: 'heart',   label: 'Kaydedilenler',     route: '/favoriler'           },
+      { icon: 'map',     label: 'Yakın Kuryeler',    route: '/isletme/harita'     },
+      { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'        }
+    ];
+
+    function item(icon, label, route) {
+      return '<div class="kb-drawer__item" onclick="closeDrawer();Router.go(\'' + route + '\')">' +
+        '<div class="kb-drawer__item__icon">' + ICON[icon] + '</div>' +
+        '<span class="kb-drawer__item__label">' + label + '</span>' +
+        ICON.chevron +
+      '</div>';
+    }
+
+    return (
+      '<div class="kb-drawer__head">' +
+        '<div class="kb-drawer__profile">' +
+          '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-accent)">' + initials(name) + '</div>' +
+          '<div class="kb-drawer__name">' + name + '</div>' +
+          '<div class="kb-drawer__rating">' + ICON.star + '&nbsp;4.8 puan</div>' +
+          '<div class="kb-drawer__role-badge">' + roleLabel + '</div>' +
+        '</div>' +
+        '<button class="kb-drawer__view-btn" onclick="closeDrawer();Router.go(\'' + profilRoute + '\')">Profili Görüntüle →</button>' +
+      '</div>' +
+      '<div class="kb-drawer__body">' +
+        '<div class="kb-drawer__section">' +
+          '<div class="kb-drawer__section-title">Hızlı Erişim</div>' +
+          quickLinks.map(function (l) { return item(l.icon, l.label, l.route); }).join('') +
+        '</div>' +
+        '<div class="kb-drawer__section" style="margin-top:8px">' +
+          '<div class="kb-drawer__section-title">Hesabım</div>' +
+          item('user',    'Profil Düzenle',    profilRoute) +
+          item('camera',  'Profil Fotoğrafı',  profilRoute) +
+          item('id',      'Kimlik Bilgilerim', profilRoute) +
+          item('ref',     'Referanslarım',     profilRoute) +
+          item('settings','Ayarlar',           '/ayarlar')  +
+        '</div>' +
+        '<div class="kb-drawer__section" style="margin-top:8px">' +
+          '<div class="kb-drawer__section-title">Destek</div>' +
+          item('help', 'Yardım Merkezi',         '/yardim') +
+          item('help', 'Sık Sorulan Sorular',    '/yardim') +
+          item('msg',  'Bize Ulaşın',            '/yardim') +
+          item('doc',  'Gizlilik Politikası',    '/ayarlar') +
+          item('doc',  'Kullanım Şartları',      '/ayarlar') +
+        '</div>' +
+      '</div>' +
+      '<div class="kb-drawer__footer">' +
+        '<button class="btn btn--danger btn--sm w-full" onclick="closeDrawer();signOut()">' + ICON.logout + '&nbsp;Çıkış Yap</button>' +
+      '</div>'
+    );
+  }
+
+  window.toggleDrawer = function () {
+    var drawer = document.getElementById('kb-drawer');
+    if (!drawer) {
+      var ov = document.createElement('div');
+      ov.id = 'kb-drawer-overlay';
+      ov.className = 'kb-drawer-overlay';
+      ov.style.display = 'none';
+      ov.onclick = closeDrawer;
+      var dr = document.createElement('div');
+      dr.id = 'kb-drawer';
+      dr.className = 'kb-drawer';
+      dr.innerHTML = _buildDrawer();
+      document.body.appendChild(ov);
+      document.body.appendChild(dr);
+      drawer = dr;
+    }
+    var overlay = document.getElementById('kb-drawer-overlay');
+    var isOpen = drawer.classList.toggle('open');
+    if (overlay) overlay.style.display = isOpen ? '' : 'none';
+  };
+
+  window.closeDrawer = function () {
+    var drawer = document.getElementById('kb-drawer');
+    var overlay = document.getElementById('kb-drawer-overlay');
+    if (drawer) drawer.classList.remove('open');
+    if (overlay) overlay.style.display = 'none';
+  };
+
   window.initials = function (name) {
     if (!name) return '?';
     var parts = String(name).trim().split(' ');
@@ -117,25 +246,25 @@
 
   /* ── Bottom Nav renderers ─────────────────────────────── */
   var NAV_KURYE = [
-    { key: 'harita',     label: 'Harita',      icon: 'map',      route: '/kurye/harita'     },
-    { key: 'ilanlar',    label: 'İlanlar',      icon: 'list',     route: '/kurye/ilanlar'    },
-    { key: 'basvurular', label: 'Başvurularım', icon: 'check',    route: '/kurye/basvurular' },
-    { key: 'mesajlar',   label: 'Mesajlar',     icon: 'msg',      route: '/kurye/mesajlar'   },
-    { key: 'profil',     label: 'Profil',       icon: 'user',     route: '/kurye/profil'     }
+    { key: 'panel',    label: 'Ana Sayfa', icon: 'home',  route: '/kurye/panel'   },
+    { key: 'harita',   label: 'Harita',    icon: 'map',   route: '/kurye/harita'  },
+    { key: 'ilanlar',  label: 'İlanlar',   icon: 'list',  route: '/kurye/ilanlar' },
+    { key: 'mesajlar', label: 'Mesajlar',  icon: 'msg',   route: '/kurye/mesajlar'},
+    { key: 'profil',   label: 'Profil',    icon: 'user',  route: '/kurye/profil'  }
   ];
   var NAV_FIRMA = [
-    { key: 'harita',     label: 'Harita',    icon: 'map',      route: '/firma/harita'     },
-    { key: 'ilanlarim',  label: 'İlanlarım', icon: 'list',     route: '/firma/ilanlarim'  },
-    { key: 'basvurular', label: 'Başvurular', icon: 'check',   route: '/firma/basvurular' },
-    { key: 'mesajlar',   label: 'Mesajlar',  icon: 'msg',      route: '/firma/mesajlar'   },
-    { key: 'profil',     label: 'Profil',    icon: 'user',     route: '/firma/profil'     }
+    { key: 'panel',      label: 'Ana Sayfa', icon: 'home',  route: '/firma/panel'     },
+    { key: 'harita',     label: 'Harita',    icon: 'map',   route: '/firma/harita'    },
+    { key: 'ilanlarim',  label: 'İlanlarım', icon: 'list',  route: '/firma/ilanlarim' },
+    { key: 'mesajlar',   label: 'Mesajlar',  icon: 'msg',   route: '/firma/mesajlar'  },
+    { key: 'profil',     label: 'Profil',    icon: 'user',  route: '/firma/profil'    }
   ];
   var NAV_ISLETME = [
-    { key: 'harita',     label: 'Harita',      icon: 'map',    route: '/isletme/harita'     },
-    { key: 'yeni',       label: 'İlan Oluştur', icon: 'plus',  route: '/isletme/ilan/yeni'  },
-    { key: 'basvurular', label: 'Başvurular',   icon: 'check', route: '/isletme/basvurular' },
-    { key: 'mesajlar',   label: 'Mesajlar',     icon: 'msg',   route: '/isletme/mesajlar'   },
-    { key: 'profil',     label: 'Profil',       icon: 'user',  route: '/isletme/profil'     }
+    { key: 'panel',    label: 'Ana Sayfa',    icon: 'home',  route: '/isletme/panel'    },
+    { key: 'harita',   label: 'Harita',       icon: 'map',   route: '/isletme/harita'   },
+    { key: 'yeni',     label: 'İlan Oluştur', icon: 'plus',  route: '/isletme/ilan/yeni'},
+    { key: 'mesajlar', label: 'Mesajlar',     icon: 'msg',   route: '/isletme/mesajlar' },
+    { key: 'profil',   label: 'Profil',       icon: 'user',  route: '/isletme/profil'   }
   ];
   var NAV_ADMIN = [
     { key: 'panel',         label: 'Komuta',      icon: 'crown',  route: '/admin/panel'         },
