@@ -429,3 +429,311 @@ body.kb-native hr,
 body.kb-native .divider {
   border-color: var(--nb-border) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   17. PANEL (MOB-DASH) ÖZEL STILLER
+═══════════════════════════════════════════════════════════ */
+
+/* Dashboard sarmalayıcı */
+body.kb-native .mob-dash {
+  background: var(--nb-bg) !important;
+  gap: 12px !important;
+}
+
+/* Avatar */
+body.kb-native .mob-dash__avatar {
+  background:    var(--nb-accent) !important;
+  border-radius: 18px !important;
+  border:        none !important;
+  box-shadow:    0 4px 16px rgba(37,99,235,0.2) !important;
+  color:         #fff !important;
+  font-weight:   800 !important;
+}
+
+/* Level chip */
+body.kb-native .mob-level-chip {
+  background:    rgba(37,99,235,0.08) !important;
+  color:         var(--nb-accent) !important;
+  border:        1px solid rgba(37,99,235,0.18) !important;
+  border-radius: 20px !important;
+  font-weight:   600 !important;
+  font-size:     0.72rem !important;
+}
+body.kb-native .mob-level-chip--verified {
+  background: rgba(22,163,74,0.08) !important;
+  color:      var(--nb-success) !important;
+  border-color: rgba(22,163,74,0.18) !important;
+}
+
+/* Bildirim butonu */
+body.kb-native .mob-dash__notif-btn {
+  background:    var(--nb-bg) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 14px !important;
+  color:         var(--nb-muted) !important;
+}
+
+/* Sonraki adım kartı */
+body.kb-native .dash-next-action {
+  background:    linear-gradient(135deg, var(--nb-accent) 0%, #1D4ED8 100%) !important;
+  border-radius: 16px !important;
+  border:        none !important;
+  color:         #fff !important;
+  box-shadow:    0 4px 20px rgba(37,99,235,0.3) !important;
+}
+body.kb-native .dash-next-action__label {
+  color: rgba(255,255,255,0.75) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+body.kb-native .dash-next-action__text {
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+body.kb-native .dash-next-action__btn {
+  background:    rgba(255,255,255,0.18) !important;
+  color:         #fff !important;
+  border-radius: 10px !important;
+  font-weight:   700 !important;
+  border:        1px solid rgba(255,255,255,0.25) !important;
+}
+
+/* Mob section sarmalayıcı */
+body.kb-native .mob-section {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 18px !important;
+  padding:       16px !important;
+  box-shadow:    0 2px 10px rgba(0,0,0,0.05) !important;
+}
+body.kb-native .mob-section__title {
+  color:       var(--nb-text) !important;
+  font-weight: 700 !important;
+  font-size:   0.88rem !important;
+}
+body.kb-native .mob-section__title svg {
+  stroke: var(--nb-accent) !important;
+}
+body.kb-native .mob-section__more {
+  color:       var(--nb-accent) !important;
+  font-weight: 600 !important;
+  font-size:   0.82rem !important;
+}
+
+/* Skeleton loader — açık modda gri */
+body.kb-native .mob-skel {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%) !important;
+  background-size: 200% 100% !important;
+  border-radius: 10px !important;
+}
+
+/* Boş durum */
+body.kb-native .mob-empty {
+  color: var(--nb-muted) !important;
+  font-size: 0.9rem !important;
+  text-align: center !important;
+  padding: 12px 0 !important;
+}
+body.kb-native .mob-empty__link {
+  color: var(--nb-accent) !important;
+  font-weight: 600 !important;
+}
+
+/* ── Başvuru satırları (.mob-match-row) ── */
+body.kb-native .mob-match-row {
+  display:       flex !important;
+  align-items:   center !important;
+  gap:           12px !important;
+  padding:       12px 0 !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+}
+body.kb-native .mob-match-row:last-child { border-bottom: none !important; }
+body.kb-native .mob-match-row__av {
+  background:    var(--nb-accent) !important;
+  color:         #fff !important;
+  border-radius: 12px !important;
+  font-weight:   700 !important;
+  flex-shrink:   0 !important;
+}
+body.kb-native .mob-match-row__title {
+  color:       var(--nb-text) !important;
+  font-weight: 600 !important;
+  font-size:   0.9rem !important;
+}
+body.kb-native .mob-match-row__sub,
+body.kb-native .mob-match-row__date {
+  color:     var(--nb-muted) !important;
+  font-size: 0.78rem !important;
+}
+
+/* ── İlan fırsatları (.mob-opp-row) ── */
+body.kb-native .mob-opp-row {
+  display:       flex !important;
+  align-items:   center !important;
+  gap:           12px !important;
+  padding:       12px 0 !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+  color:         var(--nb-text) !important;
+  text-decoration: none !important;
+}
+body.kb-native .mob-opp-row:last-child { border-bottom: none !important; }
+body.kb-native .mob-opp-row__av {
+  background:    rgba(37,99,235,0.08) !important;
+  color:         var(--nb-accent) !important;
+  border-radius: 12px !important;
+  font-weight:   700 !important;
+  flex-shrink:   0 !important;
+}
+body.kb-native .mob-opp-row__title {
+  color:       var(--nb-text) !important;
+  font-weight: 600 !important;
+  font-size:   0.9rem !important;
+}
+body.kb-native .mob-opp-row__meta,
+body.kb-native .mob-opp-row__date {
+  color:     var(--nb-muted) !important;
+  font-size: 0.78rem !important;
+}
+body.kb-native .mob-opp-row__arrow {
+  color:       var(--nb-muted) !important;
+  font-size:   1.2rem !important;
+  margin-left: auto !important;
+}
+
+/* ── Mesaj önizleme (.mob-msg-row) ── */
+body.kb-native .mob-msg-row {
+  display:       flex !important;
+  align-items:   center !important;
+  gap:           12px !important;
+  padding:       12px 0 !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+  color:         var(--nb-text) !important;
+  text-decoration: none !important;
+}
+body.kb-native .mob-msg-row:last-child { border-bottom: none !important; }
+body.kb-native .mob-msg-row__av {
+  background:    rgba(37,99,235,0.1) !important;
+  color:         var(--nb-accent) !important;
+  border-radius: 50% !important;
+  font-weight:   700 !important;
+  flex-shrink:   0 !important;
+}
+body.kb-native .mob-msg-row__name {
+  color:       var(--nb-text) !important;
+  font-weight: 600 !important;
+  font-size:   0.9rem !important;
+}
+body.kb-native .mob-msg-row__last {
+  color:     var(--nb-muted) !important;
+  font-size: 0.8rem !important;
+}
+body.kb-native .mob-msg-row__time {
+  color:     var(--nb-muted) !important;
+  font-size: 0.72rem !important;
+}
+body.kb-native .mob-msg-row__dot {
+  background:    var(--nb-accent) !important;
+  color:         #fff !important;
+  border-radius: 20px !important;
+  font-size:     0.68rem !important;
+  font-weight:   700 !important;
+}
+body.kb-native .mob-msg-row.is-unread .mob-msg-row__name {
+  font-weight: 800 !important;
+}
+
+/* ── Durum etiketleri (.mob-status) ── */
+body.kb-native .mob-status {
+  border-radius: 8px !important;
+  font-size:     0.72rem !important;
+  font-weight:   700 !important;
+  padding:       3px 8px !important;
+}
+body.kb-native .mob-status--pending {
+  background: rgba(234,179,8,0.1) !important;
+  color:      #854D0E !important;
+}
+body.kb-native .mob-status--accepted {
+  background: rgba(22,163,74,0.1) !important;
+  color:      var(--nb-success) !important;
+}
+body.kb-native .mob-status--rejected {
+  background: rgba(220,38,38,0.08) !important;
+  color:      var(--nb-danger) !important;
+}
+
+/* ── Profil tamamlanma (.mob-prog) ── */
+body.kb-native .mob-prog__row {
+  display:     flex !important;
+  align-items: baseline !important;
+  gap:         6px !important;
+}
+body.kb-native .mob-prog__pct {
+  color:       var(--nb-accent) !important;
+  font-weight: 800 !important;
+  font-size:   1.4rem !important;
+}
+body.kb-native .mob-prog__lbl {
+  color:     var(--nb-muted) !important;
+  font-size: 0.82rem !important;
+}
+body.kb-native .mob-prog__track {
+  background:    var(--nb-border) !important;
+  border-radius: 999px !important;
+  height:        6px !important;
+  margin:        8px 0 !important;
+}
+body.kb-native .mob-prog__fill {
+  background:    var(--nb-accent) !important;
+  border-radius: 999px !important;
+  height:        100% !important;
+}
+body.kb-native .mob-prog__tip {
+  color:     var(--nb-muted) !important;
+  font-size: 0.82rem !important;
+}
+body.kb-native .mob-kyc {
+  background:    rgba(37,99,235,0.06) !important;
+  border:        1px solid rgba(37,99,235,0.15) !important;
+  border-radius: 10px !important;
+  color:         var(--nb-accent) !important;
+  font-size:     0.82rem !important;
+  padding:       8px 12px !important;
+  margin-top:    8px !important;
+}
+body.kb-native .mob-kyc--ok {
+  background:   rgba(22,163,74,0.06) !important;
+  border-color: rgba(22,163,74,0.15) !important;
+  color:        var(--nb-success) !important;
+}
+body.kb-native .mob-kyc--pending {
+  background:   rgba(234,179,8,0.06) !important;
+  border-color: rgba(234,179,8,0.2) !important;
+  color:        #854D0E !important;
+}
+
+/* ── Hızlı işlemler grid (.mob-quick-grid) ── */
+body.kb-native .mob-quick-grid {
+  display:               grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap:                   10px !important;
+}
+body.kb-native .mob-qa-btn {
+  flex-direction: column !important;
+  gap:            6px !important;
+  font-size:      0.78rem !important;
+  font-weight:    600 !important;
+}
+body.kb-native .mob-qa-btn__ic {
+  background:    rgba(37,99,235,0.08) !important;
+  border-radius: 14px !important;
+  padding:       10px !important;
+  display:       flex !important;
+  align-items:   center !important;
+  justify-content: center !important;
+}
+body.kb-native .mob-qa-btn__ic svg {
+  stroke: var(--nb-accent) !important;
+}
