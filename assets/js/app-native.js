@@ -65,22 +65,39 @@ window.KBNative = (function () {
 
   /* ══════════════════════════════════════════════════════════
      4. PUSH BİLDİRİMLER
+     NOT: Push.register() için google-services.json + Firebase Console
+     kurulumu gerekir. Yapılandırılmadan çağrılırsa native crash olur.
+     Kurulum: Firebase Console → Android app ekle → google-services.json
+     dosyasını android/app/ klasörüne koy → APK'yı yeniden derle.
   ══════════════════════════════════════════════════════════ */
   function initPush() {
     var Push = plug('PushNotifications');
     if (!Push) { console.warn('[KBNative] PushNotifications plugin bulunamadı'); return; }
 
-    Push.checkPermissions().then(function (result) {
-      if (result.receive === 'granted') {
-        Push.register();
-      } else if (result.receive !== 'denied') {
-        Push.requestPermissions().then(function (res) {
-          if (res.receive === 'granted') Push.register();
-        });
-      }
-    }).catch(function (e) {
-      console.warn('[KBNative] Push izin hatası:', e);
-    });
+    // google-services.json olmadan Push.register() native crash yaratır.
+    // Firebase kurulumu tamamlanana kadar yalnız listener'ları kur, register etme.
+    var _fcmReady = (function () {
+      try {
+        // Capacitor native bridge üzerinden basit kontrol: plugin var mı?
+        // google-services.json + Firebase kurulumu kullanıcı tarafından
+        // yapıldıktan sonra bu flag'ı true yapıp APK'yı yeniden derle.
+        return false; // Firebase henüz yapılandırılmadı
+      } catch (e) { return false; }
+    })();
+
+    if (_fcmReady) {
+      Push.checkPermissions().then(function (result) {
+        if (result.receive === 'granted') {
+          Push.register();
+        } else if (result.receive !== 'denied') {
+          Push.requestPermissions().then(function (res) {
+            if (res.receive === 'granted') Push.register();
+          });
+        }
+      }).catch(function (e) {
+        console.warn('[KBNative] Push izin hatası:', e);
+      });
+    }
 
     /* Token alındığında Supabase'e kaydet */
     Push.addListener('registration', function (token) {
