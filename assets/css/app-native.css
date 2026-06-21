@@ -737,3 +737,357 @@ body.kb-native .mob-qa-btn__ic {
 body.kb-native .mob-qa-btn__ic svg {
   stroke: var(--nb-accent) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   18. DÜZELTMELER — mob-stat-chip__lbl (önceki __label hatalıydı)
+═══════════════════════════════════════════════════════════ */
+body.kb-native .mob-stat-chip__lbl {
+  color: var(--nb-muted) !important;
+  font-size: 0.7rem !important;
+}
+
+/* Avatar varyantları — biz / firm */
+body.kb-native .mob-dash__avatar--biz {
+  background: linear-gradient(135deg, #2563EB, #0EA5E9) !important;
+}
+body.kb-native .mob-dash__avatar--firm {
+  background: linear-gradient(135deg, #7C3AED, #A855F7) !important;
+}
+
+/* Bildirim rozeti */
+body.kb-native .mob-dash__notif-badge {
+  background:    var(--nb-danger) !important;
+  color:         #fff !important;
+  border-radius: 999px !important;
+}
+
+/* Page head — native'de kompakt ve açık */
+body.kb-native .page-head {
+  background:    var(--nb-surface) !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+  padding:       14px 0 !important;
+}
+body.kb-native .page-head h1 {
+  font-size:   1.35rem !important;
+  font-weight: 800 !important;
+  color:       var(--nb-text) !important;
+  margin:      0 !important;
+}
+body.kb-native .page-head p {
+  color:     var(--nb-muted) !important;
+  font-size: 0.85rem !important;
+  margin:    4px 0 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   19. HAVUZ SAYFASLARI — .talent-card
+═══════════════════════════════════════════════════════════ */
+body.kb-native .talent-card {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 18px !important;
+  box-shadow:    0 2px 12px rgba(0,0,0,0.06) !important;
+  color:         var(--nb-text) !important;
+}
+body.kb-native .talent-card__name,
+body.kb-native .talent-card__title {
+  color:       var(--nb-text) !important;
+  font-weight: 700 !important;
+}
+body.kb-native .talent-card__meta,
+body.kb-native .talent-card__sub,
+body.kb-native .talent-card__city {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .talent-card__avatar,
+body.kb-native .talent-card__av {
+  background:    var(--nb-accent) !important;
+  color:         #fff !important;
+  border-radius: 14px !important;
+}
+body.kb-native .talent-card .btn--primary {
+  background:    var(--nb-accent) !important;
+  border-color:  var(--nb-accent) !important;
+}
+body.kb-native .talent-card .level {
+  background:    rgba(37,99,235,0.08) !important;
+  color:         var(--nb-accent) !important;
+  border-radius: 8px !important;
+}
+body.kb-native .talent-card .stars {
+  color: #F59E0B !important;
+}
+
+/* Filtre & arama çubuğu */
+body.kb-native .talent-toolbar,
+body.kb-native .pool-toolbar,
+body.kb-native .filter-bar {
+  background:    var(--nb-surface) !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+}
+body.kb-native .search-box,
+body.kb-native .pool-search {
+  background:    var(--nb-bg) !important;
+  border:        1.5px solid var(--nb-border) !important;
+  border-radius: 12px !important;
+  color:         var(--nb-text) !important;
+}
+body.kb-native .active-chips .chip {
+  background:    rgba(37,99,235,0.1) !important;
+  color:         var(--nb-accent) !important;
+  border:        1px solid rgba(37,99,235,0.2) !important;
+  border-radius: 20px !important;
+}
+body.kb-native .result-count {
+  color: var(--nb-muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   20. MESAJLAR SAYFASI — Chat UI
+   Inline stiller dark hardcode'lu, body.kb-native ile eziyoruz.
+═══════════════════════════════════════════════════════════ */
+body.kb-native .msg {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  box-shadow:    0 4px 24px rgba(0,0,0,0.08) !important;
+}
+body.kb-native .msg__list,
+body.kb-native .msg__list-head {
+  background:    var(--nb-surface) !important;
+  border-color:  var(--nb-border) !important;
+}
+body.kb-native .msg__list-head h2 {
+  color: var(--nb-text) !important;
+}
+body.kb-native .msg-conv {
+  border-color: var(--nb-border) !important;
+  color:        var(--nb-text) !important;
+}
+body.kb-native .msg-conv:hover {
+  background: rgba(37,99,235,0.04) !important;
+}
+body.kb-native .msg-conv.is-active {
+  background: rgba(37,99,235,0.08) !important;
+}
+body.kb-native .msg-conv__name {
+  color: var(--nb-text) !important;
+}
+body.kb-native .msg-conv__last,
+body.kb-native .msg-conv__time {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .msg-conv--unread .msg-conv__name {
+  color: var(--nb-text) !important;
+  font-weight: 800 !important;
+}
+body.kb-native .msg-conv--unread .msg-conv__time {
+  color: var(--nb-accent) !important;
+}
+body.kb-native .msg-search input {
+  background:   var(--nb-bg) !important;
+  border-color: var(--nb-border) !important;
+  color:        var(--nb-text) !important;
+}
+
+/* Thread bölümü */
+body.kb-native .msg__main {
+  background: var(--nb-bg) !important;
+}
+body.kb-native .msg-thread__head {
+  background:   var(--nb-surface) !important;
+  border-color: var(--nb-border) !important;
+}
+body.kb-native .msg-thread__name {
+  color: var(--nb-text) !important;
+}
+body.kb-native .msg-thread__role {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .msg-back {
+  color: var(--nb-text) !important;
+}
+body.kb-native .msg-thread__more {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .msg-thread__more:hover {
+  background: rgba(0,0,0,0.05) !important;
+  color:      var(--nb-text) !important;
+}
+
+/* Mesaj balonları */
+body.kb-native .msg-thread__scroll {
+  background: var(--nb-bg) !important;
+}
+body.kb-native .msg-bubble {
+  background:   var(--nb-surface) !important;
+  border-color: var(--nb-border) !important;
+  color:        var(--nb-text) !important;
+}
+body.kb-native .msg-bubble--mine {
+  background:   linear-gradient(135deg, var(--nb-accent), #3B82F6) !important;
+  border-color: transparent !important;
+  color:        #fff !important;
+}
+body.kb-native .msg-bubble__t {
+  color: inherit !important;
+  opacity: 0.6 !important;
+}
+
+/* Yazım alanı */
+body.kb-native .msg-compose {
+  background:   var(--nb-surface) !important;
+  border-color: var(--nb-border) !important;
+}
+body.kb-native .msg-compose input {
+  background:   var(--nb-bg) !important;
+  border-color: var(--nb-border) !important;
+  color:        var(--nb-text) !important;
+}
+body.kb-native .msg-attach-btn {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .msg-attach-btn:hover {
+  background: rgba(37,99,235,0.08) !important;
+  color:      var(--nb-accent) !important;
+}
+body.kb-native .msg-empty-list {
+  color: var(--nb-muted) !important;
+}
+
+/* Context sheet (bottom sheet) */
+body.kb-native .msg-ctx-sheet__panel {
+  background:   var(--nb-surface) !important;
+  border-color: var(--nb-border) !important;
+}
+body.kb-native .msg-ctx-sheet__handle {
+  background: var(--nb-border) !important;
+}
+body.kb-native .msg-ctx-sheet__who {
+  color:        var(--nb-muted) !important;
+  border-color: var(--nb-border) !important;
+}
+body.kb-native .msg-ctx-sheet__item {
+  color: var(--nb-text) !important;
+}
+body.kb-native .msg-ctx-sheet__item:hover {
+  background: var(--nb-bg) !important;
+}
+body.kb-native .msg-ctx-sheet__cancel {
+  background:   var(--nb-bg) !important;
+  border-color: var(--nb-border) !important;
+  color:        var(--nb-text) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   21. BİLDİRİMLER SAYFASI
+═══════════════════════════════════════════════════════════ */
+body.kb-native .notif-item,
+body.kb-native .bildirim-item,
+body.kb-native .notification-item {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 14px !important;
+  color:         var(--nb-text) !important;
+}
+body.kb-native .notif-item.is-unread,
+body.kb-native .bildirim-item.is-unread {
+  background:    rgba(37,99,235,0.04) !important;
+  border-color:  rgba(37,99,235,0.15) !important;
+}
+body.kb-native .notif-item__title,
+body.kb-native .bildirim-item__title {
+  color:       var(--nb-text) !important;
+  font-weight: 600 !important;
+}
+body.kb-native .notif-item__body,
+body.kb-native .bildirim-item__body,
+body.kb-native .notif-item__time {
+  color: var(--nb-muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   22. İLANLAR & BAŞVURU SAYFASI
+═══════════════════════════════════════════════════════════ */
+body.kb-native .listing-card,
+body.kb-native .ilan-card,
+body.kb-native .job-card {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 16px !important;
+  box-shadow:    0 2px 10px rgba(0,0,0,0.05) !important;
+  color:         var(--nb-text) !important;
+}
+body.kb-native .listing-card__title,
+body.kb-native .ilan-card__title {
+  color:       var(--nb-text) !important;
+  font-weight: 700 !important;
+}
+body.kb-native .listing-card__meta,
+body.kb-native .ilan-card__meta {
+  color: var(--nb-muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   23. PROFIL SAYFASI
+═══════════════════════════════════════════════════════════ */
+body.kb-native .profile-hero,
+body.kb-native .profil-hero {
+  background:    var(--nb-surface) !important;
+  border-bottom: 1px solid var(--nb-border) !important;
+}
+body.kb-native .profile-hero__name,
+body.kb-native .profil-hero__name {
+  color:       var(--nb-text) !important;
+  font-weight: 800 !important;
+}
+body.kb-native .profile-hero__role,
+body.kb-native .profil-hero__role {
+  color: var(--nb-muted) !important;
+}
+body.kb-native .profile-section,
+body.kb-native .profil-section {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 16px !important;
+}
+body.kb-native .profile-section h3,
+body.kb-native .profil-section h3 {
+  color:       var(--nb-text) !important;
+  font-weight: 700 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   24. GİRİŞ SAYFASI (giris.html) ek düzeltmeler
+═══════════════════════════════════════════════════════════ */
+body.kb-native .auth-card,
+body.kb-native .auth-box {
+  background:    var(--nb-surface) !important;
+  border:        1px solid var(--nb-border) !important;
+  border-radius: 20px !important;
+  box-shadow:    0 4px 24px rgba(0,0,0,0.08) !important;
+}
+body.kb-native .auth-title,
+body.kb-native .auth-head h1 {
+  color:       var(--nb-text) !important;
+  font-weight: 800 !important;
+}
+body.kb-native .auth-tabs button {
+  background: transparent !important;
+  color:      var(--nb-muted) !important;
+  border:     none !important;
+}
+body.kb-native .auth-tabs button.is-active {
+  color:         var(--nb-accent) !important;
+  border-bottom: 2px solid var(--nb-accent) !important;
+  font-weight:   700 !important;
+}
+body.kb-native .auth-label,
+body.kb-native .field label {
+  color:       var(--nb-text) !important;
+  font-weight: 600 !important;
+  font-size:   0.88rem !important;
+}
+body.kb-native .auth-link,
+body.kb-native .auth-extra a {
+  color: var(--nb-accent) !important;
+}
