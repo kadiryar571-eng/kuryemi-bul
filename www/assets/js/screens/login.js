@@ -55,16 +55,6 @@ window.LoginScreens = (function () {
           'Giriş Yap' +
         '</button>' +
 
-        /* Demo bypass — geliştirme ve test için */
-        '<div style="margin-top:14px;background:rgba(108,77,255,.08);border:1px solid rgba(108,77,255,.2);border-radius:14px;padding:14px">' +
-          '<div style="font-size:.72rem;font-weight:700;color:#8B6DFF;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px">Demo Mod — Hesap Gerekmez</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
-            '<button onclick="LoginScreens.demoLogin(\'kurye\')"   style="background:rgba(108,77,255,.15);border:1px solid rgba(108,77,255,.3);border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#BBA0FF;cursor:pointer">🛵 Kurye</button>'  +
-            '<button onclick="LoginScreens.demoLogin(\'firma\')"   style="background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.3); border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#4ADE80;cursor:pointer">🏢 Firma</button>'   +
-            '<button onclick="LoginScreens.demoLogin(\'isletme\')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#FB923C;cursor:pointer">🏪 Esnaf</button>'   +
-          '</div>' +
-        '</div>' +
-
         '<p class="text-center fs-sm text-muted mt-12">' +
           'Giriş yaparak ' +
           '<a href="#" style="color:var(--c-kurye)">Kullanım Koşullarını</a>' +
@@ -298,24 +288,11 @@ window.LoginScreens = (function () {
     el.style.display = '';
   }
 
-  /* Demo / geliştirme bypass — Supabase gerekmez */
-  function demoLogin(role) {
-    role = role || 'kurye';
-    var names = { kurye: 'Kadir Yar', firma: 'ABC Lojistik', isletme: 'Lezzet Dükkânı' };
-    APP.role    = role;
-    APP.profile = { full_name: names[role] || 'Demo Kullanıcı', role: role, score: 4.8, yayinda: true };
-    document.body.setAttribute('data-role', role);
-    showLayout();
-    if (window.renderNav) window.renderNav(role);
-    Router.go('/' + role + '/panel');
-  }
-
   return {
     entry       : entry,
     register    : register,
     showLogin   : showLogin,
     startRole   : startRole,
-    demoLogin   : demoLogin,
     _tab        : _tab,
     _togglePass : _togglePass,
     _doLogin    : _doLogin,

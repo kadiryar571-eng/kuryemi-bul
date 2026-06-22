@@ -789,31 +789,8 @@ window.SharedScreens = (function () {
       setTimeout(_enableChatLayout, 130);
       _sharedLoadRealChat(id, rolePrefix);
     } else {
-      renderScreen(
-        '<div class="chat-screen">' +
-          '<div class="chat-hdr">' +
-            '<button class="chat-hdr__back" onclick="Router.back?Router.back():Router.go(\'' + backRoute + '\')">' + ICON.back + '</button>' +
-            '<div class="chat-hdr__ava" style="background:#6C4DFF">🛵</div>' +
-            '<div class="chat-hdr__info"><div class="chat-hdr__name">Demo Konuşma</div><div class="chat-hdr__status">Demo</div></div>' +
-            '<div class="chat-hdr__acts"></div>' +
-          '</div>' +
-          '<div class="chat-context" style="border-color:#6C4DFF33">' +
-            '<div class="chat-context__dot" style="background:#6C4DFF"></div>' +
-            '<div class="chat-context__text"><span class="chat-context__role">Demo İlan</span></div>' +
-            '<span class="chat-context__tag" style="color:#6C4DFF">Başvuru</span>' +
-          '</div>' +
-          '<div class="chat-msgs" id="chat-msgs">' +
-            '<div class="chat-date-sep"><span>Bugün</span></div>' +
-            '<div class="chat-bubble chat-bubble--in"><div class="chat-bubble__text">Merhaba, nasıl yardımcı olabilirim?</div><div class="chat-bubble__meta">10:00</div></div>' +
-          '</div>' +
-          _sharedChatFooterHTML() +
-        '</div>'
-      );
-      setTimeout(function () {
-        _enableChatLayout();
-        var el = document.getElementById('chat-msgs');
-        if (el) el.scrollTop = el.scrollHeight;
-      }, 130);
+      toast('Konuşma bulunamadı');
+      Router.go(backRoute);
     }
   }
 

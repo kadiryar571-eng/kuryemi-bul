@@ -6,15 +6,7 @@
 window.IsletmeScreens = (function () {
   'use strict';
 
-  var MOCK_ADAYLAR = [
-    { id: '1', name: 'Ayşe Demir',   score: '4.7', exp: '1.5 yıl yaya kurye', loc: 'Kadıköy',  time: '5 dk önce'  },
-    { id: '2', name: 'Can Bağlar',   score: '4.5', exp: '1 yıl deneyim',      loc: 'Beşiktaş', time: '10 dk önce' },
-    { id: '3', name: 'Fatma Yıldız', score: '4.8', exp: '3 yıl deneyim',      loc: 'Üsküdar',  time: '25 dk önce' }
-  ];
-
-  var MOCK_MESAJLAR = [
-    { id: '1', name: 'Ayşe Demir', preview: 'Merhaba, ilanınızı gördüm...', time: '14:30', unread: 1 }
-  ];
+  var _adaylarCache = [];
 
   function _adayCard(a) {
     return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/isletme/aday/' + a.id + '\')">' +
@@ -263,20 +255,44 @@ window.IsletmeScreens = (function () {
           '<button class="kb-tab"        onclick="IsletmeScreens._basFilter(\'yeni\',this)">Yeni</button>' +
           '<button class="kb-tab"        onclick="IsletmeScreens._basFilter(\'deger\',this)">Değerlendirilen</button>' +
         '</div>' +
-        '<div id="isletme-bas-list">' + MOCK_ADAYLAR.map(_adayCard).join('') + '</div>' +
+        '<div id="isletme-bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
       '</div>'
     );
+    _loadAdaylar();
+  }
+
+  async function _loadAdaylar() {
+    var el = document.getElementById('isletme-bas-list');
+    if (!el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myApplications() : [];
+      _adaylarCache = items;
+      el.innerHTML = items.length
+        ? items.map(_adayCard).join('')
+        : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yok</div></div>';
+    } catch(e) {
+      _adaylarCache = [];
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yüklenemedi</div></div>';
+    }
   }
 
   function _basFilter(type, btn) {
     document.querySelectorAll('#isletme-bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
+    var filtered = _adaylarCache;
+    if (type === 'yeni')  filtered = _adaylarCache.filter(function (a) { return (a.durum || a.status) === 'pending'; });
+    if (type === 'deger') filtered = _adaylarCache.filter(function (a) { return (a.durum || a.status) === 'reviewed'; });
+    var el = document.getElementById('isletme-bas-list');
+    if (el) el.innerHTML = filtered.length
+      ? filtered.map(_adayCard).join('')
+      : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yok</div></div>';
   }
 
   /* ── 5. ADAY DETAY ──────────────────────────────────────── */
   function adayDetay(ctx) {
     var id = ctx.params.id;
-    var a  = MOCK_ADAYLAR.find(function (x) { return x.id === id; }) || MOCK_ADAYLAR[0];
+    var a  = _adaylarCache.find(function (x) { return String(x.id) === String(id); })
+          || { id: id, name: 'Aday', score: '—', exp: '—', loc: '—', time: '—' };
 
     showAppBar(a.name, true);
     showBottomNav();
@@ -321,7 +337,7 @@ window.IsletmeScreens = (function () {
 
   /* ── 6. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
-    SharedScreens.sharedMesajlar('isletme', MOCK_MESAJLAR);
+    SharedScreens.sharedMesajlar('isletme');
   }
 
   /* ── 6b. CHAT ───────────────────────────────────────────── */

@@ -6,22 +6,7 @@
 window.FirmaScreens = (function () {
   'use strict';
 
-  var MOCK_ILANLAR = [
-    { id: '1', title: 'Motorlu Kurye', type: 'Tam Zamanlı', salary: '25.000 - 35.000 ₺', basvuru: 8,  active: true  },
-    { id: '2', title: 'Yaya Kurye',    type: 'Part Time',   salary: '15.000 - 22.000 ₺', basvuru: 14, active: true  },
-    { id: '3', title: 'Araçlı Kurye',  type: 'Tam Zamanlı', salary: '28.000 - 34.000 ₺', basvuru: 3,  active: false }
-  ];
-
-  var MOCK_ADAYLAR = [
-    { id: '1', name: 'Mehmet Kaya',   score: '4.8', exp: '3.5 yıl deneyim', loc: 'Kadıköy, İstanbul', status: 'pending'   },
-    { id: '2', name: 'Ayşe Demir',    score: '4.7', exp: '2 yıl deneyim',   loc: 'Beşiktaş, İstanbul', status: 'reviewed' },
-    { id: '3', name: 'Can Bağlar',    score: '4.6', exp: '1 yıl deneyim',   loc: 'Ümraniye, İstanbul', status: 'pending'  }
-  ];
-
-  var MOCK_MESAJLAR = [
-    { id: '1', name: 'Mehmet Kaya', preview: 'Merhaba, profilimi incelemenizi...', time: '15:20', unread: 1 },
-    { id: '2', name: 'Ayşe Demir', preview: 'Görüşme için uygun saatler...', time: '13:45', unread: 0 }
-  ];
+  var _adaylarCache = [];
 
   function _adayCard(a, role) {
     return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/' + role + '/aday/' + a.id + '\')">' +
@@ -227,19 +212,19 @@ window.FirmaScreens = (function () {
     var el = document.getElementById('firma-ilan-list');
     if (!el) return;
     try {
-      var items = (window.SB && SB.isOn()) ? await SB.myListings() : MOCK_ILANLAR;
+      var items = (window.SB && SB.isOn()) ? await SB.myListings() : [];
       _ilanlarimCache = items;
       if (el) el.innerHTML = _renderIlanList(items);
     } catch(e) {
-      _ilanlarimCache = MOCK_ILANLAR;
-      if (el) el.innerHTML = _renderIlanList(MOCK_ILANLAR);
+      _ilanlarimCache = [];
+      if (el) el.innerHTML = _renderIlanList([]);
     }
   }
 
   function _ilanFilter(type, btn) {
     document.querySelectorAll('#ilan-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
-    var all = _ilanlarimCache.length ? _ilanlarimCache : MOCK_ILANLAR;
+    var all = _ilanlarimCache;
     var filtered = type === 'tumu' ? all
       : type === 'acik'  ? all.filter(function (x) { return (x.durum || '') === 'acik' || x.active === true; })
       : all.filter(function (x) { return (x.durum || '') !== 'acik' && x.active !== true; });
@@ -356,27 +341,44 @@ window.FirmaScreens = (function () {
           '<button class="kb-tab"        onclick="FirmaScreens._basFilter(\'yeni\',this)">Yeni</button>' +
           '<button class="kb-tab"        onclick="FirmaScreens._basFilter(\'deger\',this)">Değerlendirilen</button>' +
         '</div>' +
-        '<div id="firma-bas-list">' +
-          MOCK_ADAYLAR.map(function (a) { return _adayCard(a, 'firma'); }).join('') +
-        '</div>' +
+        '<div id="firma-bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
       '</div>'
     );
+    _loadAdaylar();
+  }
+
+  async function _loadAdaylar() {
+    var el = document.getElementById('firma-bas-list');
+    if (!el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myApplications() : [];
+      _adaylarCache = items;
+      el.innerHTML = items.length
+        ? items.map(function (a) { return _adayCard(a, 'firma'); }).join('')
+        : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yok</div></div>';
+    } catch(e) {
+      _adaylarCache = [];
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yüklenemedi</div></div>';
+    }
   }
 
   function _basFilter(type, btn) {
     document.querySelectorAll('#firma-bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
-    var filtered = MOCK_ADAYLAR;
-    if (type === 'yeni')  filtered = MOCK_ADAYLAR.filter(function (a) { return a.status === 'pending'; });
-    if (type === 'deger') filtered = MOCK_ADAYLAR.filter(function (a) { return a.status === 'reviewed'; });
+    var filtered = _adaylarCache;
+    if (type === 'yeni')  filtered = _adaylarCache.filter(function (a) { return (a.durum || a.status) === 'pending'; });
+    if (type === 'deger') filtered = _adaylarCache.filter(function (a) { return (a.durum || a.status) === 'reviewed'; });
     var el = document.getElementById('firma-bas-list');
-    if (el) el.innerHTML = filtered.map(function (a) { return _adayCard(a, 'firma'); }).join('');
+    if (el) el.innerHTML = filtered.length
+      ? filtered.map(function (a) { return _adayCard(a, 'firma'); }).join('')
+      : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yok</div></div>';
   }
 
   /* ── 6. ADAY DETAY ──────────────────────────────────────── */
   function adayDetay(ctx) {
     var id = ctx.params.id;
-    var a  = MOCK_ADAYLAR.find(function (x) { return x.id === id; }) || MOCK_ADAYLAR[0];
+    var a  = _adaylarCache.find(function (x) { return String(x.id) === String(id); })
+          || { id: id, name: 'Aday', score: '—', exp: '—', loc: '—', status: 'pending' };
 
     showAppBar(a.name, true);
     showBottomNav();
@@ -427,7 +429,7 @@ window.FirmaScreens = (function () {
 
   /* ── 7. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
-    SharedScreens.sharedMesajlar('firma', MOCK_MESAJLAR);
+    SharedScreens.sharedMesajlar('firma');
   }
 
   /* ── 7b. CHAT ───────────────────────────────────────────── */
