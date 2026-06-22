@@ -1199,52 +1199,237 @@ window.KuryeScreens = (function () {
 
   /* ── 7. PROFİL ──────────────────────────────────────────── */
   function profil() {
-    showAppBar('Profilim', false,
-      '<button class="kb-appbar__action" onclick="Router.go(\'/ayarlar\')">' + ICON.settings + '</button>'
-    );
+    if (typeof showAppBar === 'function') {
+      showAppBar('', false, '');
+      var bar = document.getElementById('kb-appbar');
+      if (bar) bar.style.display = 'none';
+    }
     showBottomNav();
     setActiveNav('profil');
 
-    var name  = (APP.profile && APP.profile.full_name) || 'Kullanıcı';
-    var score = (APP.profile && APP.profile.score) || '4.8';
-    var verif = (APP.profile && APP.profile.yayinda) ? 'Doğrulandı' : 'Doğrulanmadı';
+    var name = (APP.profile && APP.profile.full_name) || 'Kadir Demir';
 
     renderScreen(
-      '<div>' +
-        '<div class="profile-hero">' +
-          '<div class="kb-avatar kb-avatar--xl">' + initials(name) + '</div>' +
-          '<div class="profile-hero__name">' + name + '</div>' +
-          '<div class="profile-hero__sub">Kurye</div>' +
-          '<div class="profile-hero__badges">' +
-            '<span class="kb-chip kb-chip--accent">' + ICON.star + score + '</span>' +
-            '<span class="kb-chip kb-chip--success">' + ICON.shield + verif + '</span>' +
+      '<div class="pr-screen">' +
+
+        /* ── Top header ── */
+        '<div class="pr-topbar">' +
+          '<div class="pr-topbar__text">' +
+            '<div class="pr-topbar__title">Profilim</div>' +
+            '<div class="pr-topbar__sub">Profesyonel profilinle daha fazla iş fırsatı yakala ✨</div>' +
+          '</div>' +
+          '<div class="pr-topbar__acts">' +
+            '<button class="pr-topbar__btn" onclick="Router.go(\'/profil-duzenle\')">' + ICON.eye + '</button>' +
+            '<button class="pr-topbar__btn" onclick="Router.go(\'/ayarlar\')">' + ICON.settings + '</button>' +
           '</div>' +
         '</div>' +
 
-        '<div class="kb-card" style="margin:0 16px 16px;padding:0 0 0 0">' +
-          _menuItem('Profil Bilgileri',   'user',      '/ayarlar') +
-          _menuItem('Kimlik & Belgelerim','doc',        '/ayarlar') +
-          _menuItem('Puanlamalarım',      'star',       '/ayarlar') +
-          _menuItem('Favori İlanlarım',   'heart',      '/favoriler') +
-          _menuItem('Bildirimler',        'bell',       '/bildirimler') +
-          _menuItem('Ayarlar',            'settings',   '/ayarlar') +
-          _menuItem('Yardım & Destek',    'help',       '/yardim') +
-          '<div class="profile-menu-item profile-menu-item--danger" onclick="signOut()">' +
-            '<div class="profile-menu-item__icon">' + ICON.logout + '</div>' +
-            '<div class="profile-menu-item__label">Çıkış Yap</div>' +
+        /* ── Hero card ── */
+        '<div class="pr-hero">' +
+          '<div class="pr-hero__left">' +
+            '<div class="pr-avatar">' +
+              '<div class="pr-avatar__initials">' + _prInitials(name) + '</div>' +
+              '<div class="pr-avatar__online"></div>' +
+            '</div>' +
+            '<div class="pr-hero__info">' +
+              '<div class="pr-hero__name">' + name + '</div>' +
+              '<div class="pr-hero__role">🛵 Moto Kurye</div>' +
+              '<div class="pr-hero__loc">' +
+                '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                ' İstanbul, Türkiye' +
+              '</div>' +
+              '<div class="pr-hero__status"><span class="pr-dot"></span>Çevrimiçi</div>' +
+              '<div class="pr-hero__minibadges">' +
+                '<span class="pr-minibadge">⏱ 2y 8a deneyim</span>' +
+                '<span class="pr-minibadge pr-minibadge--star">⭐ 4.8 (128)</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pr-hero__premium">' +
+            '<div class="pr-premium-badge">' +
+              '<div class="pr-premium-badge__icon">✨</div>' +
+              '<div class="pr-premium-badge__label">Premium Üye</div>' +
+              '<div class="pr-premium-badge__sub">Profilin öne çıkıyor</div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
+
+        /* ── Trust score card ── */
+        '<div class="pr-trust">' +
+          '<div class="pr-trust__head">' +
+            '<div class="pr-trust__title">Profil Güven Skoru</div>' +
+            '<div class="pr-trust__score">4.8 <span>/ 5.0</span></div>' +
+          '</div>' +
+          '<div class="pr-trust__bar-wrap">' +
+            '<div class="pr-trust__bar"><div class="pr-trust__fill" style="width:96%"></div></div>' +
+          '</div>' +
+          '<div class="pr-trust__metrics">' +
+            _prMetric('128', 'Tamamlanan Başvuru', '#6C4DFF') +
+            _prMetric('%92', 'Görüşme Oranı',      '#22C55E') +
+            _prMetric('%78', 'Kabul Oranı',         '#4A90E2') +
+            _prMetric('1s',  'Ort. Cevap Süresi',  '#F97316') +
+          '</div>' +
+        '</div>' +
+
+        /* ── Verifications ── */
+        '<div class="pr-section">' +
+          '<div class="pr-section__title">Doğrulamalarım</div>' +
+          '<div class="pr-verifs">' +
+            _prVerif('Kimlik',    true)  +
+            _prVerif('Ehliyet',   true)  +
+            _prVerif('Araç',      true)  +
+            _prVerif('Adres',     true)  +
+            _prVerif('Telefon',   true)  +
+          '</div>' +
+        '</div>' +
+
+        /* ── Experience ── */
+        '<div class="pr-section">' +
+          '<div class="pr-section__title">Deneyimim</div>' +
+          '<div class="pr-exp-list">' +
+            _prExp('🚀', 'Getir',        'Moto Kurye',  '1y 4a', '2023 – Devam ediyor', '#6C4DFF', true) +
+            _prExp('🍔', 'Yemeksepeti',  'Moto Kurye',  '9 ay',  '2022 – 2023',         '#EF4444', false) +
+            _prExp('🛒', 'Trendyol Go',  'Araçlı Kurye','7 ay',  '2021 – 2022',         '#F97316', false) +
+          '</div>' +
+        '</div>' +
+
+        /* ── Work preferences ── */
+        '<div class="pr-section">' +
+          '<div class="pr-section__hd">' +
+            '<div class="pr-section__title">Çalışabileceğim Alanlar</div>' +
+            '<button class="pr-section__edit" onclick="KuryeScreens._prEditAreas()">Düzenle</button>' +
+          '</div>' +
+          '<div class="pr-tags">' +
+            ['Levent','Maslak','Beşiktaş','Şişli','Beyoğlu','Kadıköy'].map(function (a) {
+              return '<span class="pr-tag pr-tag--area">📍 ' + a + '</span>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+
+        /* ── Skills ── */
+        '<div class="pr-section">' +
+          '<div class="pr-section__title">Uzmanlık Alanlarım</div>' +
+          '<div class="pr-tags">' +
+            ['Hızlı teslimat','Trafik yönetimi','Müşteri iletişimi','Şehir içi navigasyon','Paket güvenliği'].map(function (s) {
+              return '<span class="pr-tag">' + s + '</span>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+
+        /* ── Documents ── */
+        '<div class="pr-section">' +
+          '<div class="pr-section__title">Belgelerim</div>' +
+          '<div class="pr-docs">' +
+            _prDoc('📄', 'CV',                 'Yüklendi', true)  +
+            _prDoc('🪪', 'Ehliyet',             'Yüklendi', true)  +
+            _prDoc('📋', 'SRC Belgesi',         'Yüklendi', true)  +
+            _prDoc('🧠', 'Psikoteknik',         'Bekliyor',  false) +
+            _prDoc('⚖️', 'Adli Sicil Kaydı',   'Bekliyor',  false) +
+          '</div>' +
+        '</div>' +
+
+        /* ── Featured CV ── */
+        '<div class="pr-cv-card">' +
+          '<div class="pr-cv-card__icon">📄</div>' +
+          '<div class="pr-cv-card__body">' +
+            '<div class="pr-cv-card__title">Öne Çıkan CV</div>' +
+            '<div class="pr-cv-card__sub">Bu CV işverenlere başvurularda otomatik gösterilir.</div>' +
+          '</div>' +
+          '<button class="pr-cv-card__btn" onclick="KuryeScreens._prViewCV()">Görüntüle</button>' +
+        '</div>' +
+
+        /* ── Settings menu ── */
+        '<div class="pr-section pr-section--menu">' +
+          _prMenuItem('Profil Bilgileri',    'user',     '/ayarlar') +
+          _prMenuItem('Kimlik & Belgeler',   'doc',      '/ayarlar') +
+          _prMenuItem('Puanlamalarım',       'star',     '/ayarlar') +
+          _prMenuItem('Favori İlanlarım',    'heart',    '/favoriler') +
+          _prMenuItem('Bildirimler',         'bell',     '/bildirimler') +
+          _prMenuItem('Ayarlar',             'settings', '/ayarlar') +
+          _prMenuItem('Yardım & Destek',     'help',     '/yardim') +
+          '<div class="pr-menu-item pr-menu-item--danger" onclick="signOut()">' +
+            '<div class="pr-menu-item__icon">' + ICON.logout + '</div>' +
+            '<div class="pr-menu-item__label">Çıkış Yap</div>' +
+          '</div>' +
+        '</div>' +
+
+        /* ── Premium upgrade banner ── */
+        '<div class="pr-upgrade">' +
+          '<div class="pr-upgrade__glow"></div>' +
+          '<div class="pr-upgrade__body">' +
+            '<div class="pr-upgrade__title">Profilini Öne Çıkar ✨</div>' +
+            '<div class="pr-upgrade__perks">' +
+              '<div class="pr-upgrade__perk">🔝 Üst sıralarda görün</div>' +
+              '<div class="pr-upgrade__perk">🏅 Özel rozet kazan</div>' +
+              '<div class="pr-upgrade__perk">📩 Daha fazla işveren sana ulaşsın</div>' +
+            '</div>' +
+            '<button class="pr-upgrade__cta" onclick="KuryeScreens._prPremium()">Premium\'a Geç</button>' +
+          '</div>' +
+        '</div>' +
+
+        '<div style="height:100px"></div>' +
+
       '</div>'
     );
   }
 
-  function _menuItem(label, icon, route) {
-    return '<div class="profile-menu-item" onclick="Router.go(\'' + route + '\')" style="padding:14px 16px">' +
-      '<div class="profile-menu-item__icon">' + ICON[icon] + '</div>' +
-      '<div class="profile-menu-item__label">' + label + '</div>' +
-      '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
+  function _prInitials(name) {
+    var parts = (name || '').trim().split(' ');
+    return (parts[0] ? parts[0][0] : '') + (parts[1] ? parts[1][0] : '');
+  }
+
+  function _prMetric(val, label, color) {
+    return '<div class="pr-metric">' +
+      '<div class="pr-metric__val" style="color:' + color + '">' + val + '</div>' +
+      '<div class="pr-metric__label">' + label + '</div>' +
     '</div>';
   }
+
+  function _prVerif(label, ok) {
+    return '<div class="pr-verif' + (ok ? ' pr-verif--ok' : '') + '">' +
+      '<div class="pr-verif__icon">' + (ok ? '✓' : '?') + '</div>' +
+      '<div class="pr-verif__label">' + label + '</div>' +
+    '</div>';
+  }
+
+  function _prExp(emoji, company, role, dur, range, color, current) {
+    return '<div class="pr-exp">' +
+      '<div class="pr-exp__dot" style="background:' + color + '">' + emoji + '</div>' +
+      '<div class="pr-exp__body">' +
+        '<div class="pr-exp__company">' + company + (current ? '<span class="pr-exp__now">Devam ediyor</span>' : '') + '</div>' +
+        '<div class="pr-exp__role">' + role + '</div>' +
+        '<div class="pr-exp__meta">' + dur + ' &bull; ' + range + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function _prDoc(icon, label, status, ok) {
+    return '<div class="pr-doc">' +
+      '<div class="pr-doc__icon">' + icon + '</div>' +
+      '<div class="pr-doc__label">' + label + '</div>' +
+      '<div class="pr-doc__status' + (ok ? ' pr-doc__status--ok' : ' pr-doc__status--pending') + '">' + status + '</div>' +
+      '<button class="pr-doc__share" onclick="KuryeScreens._prShareDoc(\'' + label + '\')">' +
+        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>' +
+      '</button>' +
+    '</div>';
+  }
+
+  function _prMenuItem(label, icon, route) {
+    return '<div class="pr-menu-item" onclick="Router.go(\'' + route + '\')">' +
+      '<div class="pr-menu-item__icon">' + ICON[icon] + '</div>' +
+      '<div class="pr-menu-item__label">' + label + '</div>' +
+      '<div class="pr-menu-item__chevron">' + ICON.chevron + '</div>' +
+    '</div>';
+  }
+
+  function _menuItem(label, icon, route) {
+    return _prMenuItem(label, icon, route);
+  }
+
+  function _prEditAreas()       { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Bölge Düzenle', 'Faz 2\'de geliyor'); }
+  function _prViewCV()          { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📄 CV', 'CV önizleme — Faz 2\'de geliyor'); }
+  function _prShareDoc(label)   { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📤 Paylaş', label + ' paylaşıldı'); }
+  function _prPremium()         { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('✨ Premium', 'Premium abonelik — Faz 2\'de geliyor'); }
 
   return {
     panel       : panel,
@@ -1275,6 +1460,10 @@ window.KuryeScreens = (function () {
     _chatMore        : _chatMore,
     _chatAttach      : _chatAttach,
     _chatEmoji       : _chatEmoji,
+    _prEditAreas     : _prEditAreas,
+    _prViewCV        : _prViewCV,
+    _prShareDoc      : _prShareDoc,
+    _prPremium       : _prPremium,
     _basFilter       : _basFilter,
     _mapFilter       : _mapFilter,
     _mapCat          : _mapCat,
