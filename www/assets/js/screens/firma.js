@@ -54,10 +54,10 @@ window.FirmaScreens = (function () {
       heroCtaLabel: 'Profilimi Gör',
       heroCtaRoute: '/firma/profil',
       stats: [
-        { num: '8',   label: 'Açık İlan',            icon: 'list',      color: 'green',  route: '/firma/ilanlarim',  action: 'Yönet'    },
-        { num: '14',  label: 'Yeni Başvuru',          icon: 'check',     color: 'blue',   route: '/firma/basvurular', action: 'İncele'   },
-        { num: '3',   label: 'Aktif Aday',            icon: 'users',     color: 'orange', route: '/firma/basvurular', action: 'Detaylar' },
-        { num: '245', label: 'Profil Görüntülenme',   icon: 'eye',       color: 'purple', route: '/firma/profil',     action: 'Detaylar' }
+        { id: 'fps-ilan',    num: '—', label: 'Açık İlan',          icon: 'list',  color: 'green',  route: '/firma/ilanlarim',  action: 'Yönet'    },
+        { id: 'fps-bas',     num: '—', label: 'Yeni Başvuru',        icon: 'check', color: 'blue',   route: '/firma/basvurular', action: 'İncele'   },
+        { id: 'fps-mesaj',   num: '—', label: 'Okunmamış Mesaj',     icon: 'msg',   color: 'orange', route: '/firma/mesajlar',   action: 'Detaylar' },
+        { id: 'fps-goruntu', num: '—', label: 'Profil Görüntülenme', icon: 'eye',   color: 'purple', route: '/firma/profil',     action: 'Detaylar' }
       ],
       upgradeBanner: true,
       contentHtml: (
@@ -88,6 +88,23 @@ window.FirmaScreens = (function () {
         '</div>'
       )
     }));
+
+    _loadFirmaPanelStats();
+  }
+
+  async function _loadFirmaPanelStats() {
+    if (!window.SB || !SB.isOn()) return;
+    try {
+      var results = await Promise.allSettled([SB.myListings(), SB.myConvs()]);
+      var ilanlar = results[0].status === 'fulfilled' ? results[0].value : [];
+      var convs   = results[1].status === 'fulfilled' ? results[1].value : [];
+      var acikIlanlar = ilanlar.filter(function(il){ return (il.durum || '') === 'acik'; }).length;
+      var unread = convs.reduce(function(s,c){ return s + (c.unread || 0); }, 0);
+      var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+      set('fps-ilan',  acikIlanlar);
+      set('fps-bas',   ilanlar.length);
+      set('fps-mesaj', unread || convs.length);
+    } catch(e) {}
   }
 
   /* ── Firma dashboard helpers ─────────────────────────────── */
@@ -159,6 +176,8 @@ window.FirmaScreens = (function () {
   }
 
   /* ── 3. İLANLARIM ──────────────────────────────────────── */
+  var _ilanlarimCache = [];
+
   function ilanlarim() {
     showAppBar('İlanlarım', false,
       '<button class="kb-appbar__action" onclick="Router.go(\'/firma/ilan/yeni\')">' + ICON.plus + '</button>'
@@ -173,39 +192,67 @@ window.FirmaScreens = (function () {
           '<button class="kb-tab"        onclick="FirmaScreens._ilanFilter(\'acik\',this)">Açık</button>' +
           '<button class="kb-tab"        onclick="FirmaScreens._ilanFilter(\'pasif\',this)">Pasif</button>' +
         '</div>' +
-        '<div id="firma-ilan-list">' + _renderIlanList(MOCK_ILANLAR) + '</div>' +
+        '<div id="firma-ilan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
         '<button class="btn btn--primary mt-16" onclick="Router.go(\'/firma/ilan/yeni\')">' +
           ICON.plus + 'Yeni İlan Oluştur' +
         '</button>' +
       '</div>'
     );
+
+    _loadIlanlarim();
+  }
+
+  function _ilanCard(il) {
+    var isAcik = (il.durum || il.active === true) === 'acik' || il.active === true;
+    return '<div class="kb-card" style="margin-bottom:10px">' +
+      '<div class="flex items-center justify-between mb-8">' +
+        '<div style="font-weight:700">' + (il.baslik || il.title || 'İlan') + '</div>' +
+        '<span class="kb-chip ' + (isAcik ? 'kb-chip--success' : '') + '">' + (isAcik ? 'Açık' : 'Pasif') + '</span>' +
+      '</div>' +
+      ((il.sehir || il.type) ? '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' + [(il.type || ''), (il.sehir || '')].filter(Boolean).join(' · ') + '</div>' : '') +
+      '<div style="font-size:.82rem;color:var(--c-accent);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
+      '<div class="flex" style="gap:8px;margin-top:10px">' +
+        '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/firma/basvurular\')">Başvuruları Gör</button>' +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._ilanToggle(\'' + il.id + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
+      '</div>' +
+    '</div>';
   }
 
   function _renderIlanList(list) {
-    return list.map(function (il) {
-      return '<div class="kb-card" style="margin-bottom:10px">' +
-        '<div class="flex items-center justify-between mb-8">' +
-          '<div style="font-weight:700">' + il.title + '</div>' +
-          '<span class="kb-chip ' + (il.active ? 'kb-chip--success' : '') + '">' + (il.active ? 'Açık' : 'Pasif') + '</span>' +
-        '</div>' +
-        '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' + il.type + ' · ' + il.salary + '</div>' +
-        '<div style="font-size:.82rem;color:var(--c-accent);font-weight:600">' + il.basvuru + ' başvuru</div>' +
-        '<div class="flex" style="gap:8px;margin-top:10px">' +
-          '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/firma/basvurular\')">Başvuruları Gör</button>' +
-          '<button class="btn btn--ghost btn--sm">Düzenle</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    if (!list.length) return '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">İlan yok</div><div class="kb-empty__sub">Yeni ilan oluştur.</div></div>';
+    return list.map(_ilanCard).join('');
+  }
+
+  async function _loadIlanlarim() {
+    var el = document.getElementById('firma-ilan-list');
+    if (!el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myListings() : MOCK_ILANLAR;
+      _ilanlarimCache = items;
+      if (el) el.innerHTML = _renderIlanList(items);
+    } catch(e) {
+      _ilanlarimCache = MOCK_ILANLAR;
+      if (el) el.innerHTML = _renderIlanList(MOCK_ILANLAR);
+    }
   }
 
   function _ilanFilter(type, btn) {
     document.querySelectorAll('#ilan-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
-    var filtered = type === 'tumu' ? MOCK_ILANLAR
-      : type === 'acik'  ? MOCK_ILANLAR.filter(function (x) { return x.active; })
-      : MOCK_ILANLAR.filter(function (x) { return !x.active; });
+    var all = _ilanlarimCache.length ? _ilanlarimCache : MOCK_ILANLAR;
+    var filtered = type === 'tumu' ? all
+      : type === 'acik'  ? all.filter(function (x) { return (x.durum || '') === 'acik' || x.active === true; })
+      : all.filter(function (x) { return (x.durum || '') !== 'acik' && x.active !== true; });
     var el = document.getElementById('firma-ilan-list');
     if (el) el.innerHTML = _renderIlanList(filtered);
+  }
+
+  async function _ilanToggle(id, setAcik) {
+    try {
+      await SB.updateListingStatus(id, setAcik ? 'acik' : 'kapali');
+      toast(setAcik ? 'İlan yayınlandı' : 'İlan pasife alındı');
+      _loadIlanlarim();
+    } catch(e) { toast('İşlem başarısız'); }
   }
 
   /* ── 4. YENİ İLAN OLUŞTUR ──────────────────────────────── */
@@ -253,16 +300,47 @@ window.FirmaScreens = (function () {
           '<label class="kb-label">İlan Açıklaması</label>' +
           '<textarea class="kb-input" id="il-aciklama" rows="4" placeholder="Aranan özellikler, görev tanımı..."></textarea>' +
         '</div>' +
-        '<button class="btn btn--primary" onclick="FirmaScreens._yayinla()">' +
-          'İlan Yayınla' +
-        '</button>' +
+        '<button id="il-yayinla-btn" class="btn btn--primary" onclick="FirmaScreens._yayinla()">İlan Yayınla</button>' +
+        '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
       '</div>'
     );
   }
 
-  function _yayinla() {
-    toast('İlanınız yayınlandı!');
-    setTimeout(function () { Router.go('/firma/ilanlarim'); }, 800);
+  async function _yayinla() {
+    var btn   = document.getElementById('il-yayinla-btn');
+    var hata  = document.getElementById('il-hata');
+    if (btn)  { btn.disabled = true; btn.textContent = 'Yayınlanıyor…'; }
+    if (hata) hata.style.display = 'none';
+
+    var pozEl  = document.getElementById('il-pozisyon');
+    var konEl  = document.getElementById('il-konum');
+    var acEl   = document.getElementById('il-aciklama');
+    var maasMinEl = document.getElementById('il-maas-min');
+    var maasMaxEl = document.getElementById('il-maas-max');
+
+    var baslik   = pozEl  ? pozEl.value.trim()  : '';
+    var sehir    = konEl  ? konEl.value.trim()  : '';
+    var aciklama = acEl   ? acEl.value.trim()   : '';
+    var maasMin  = maasMinEl ? maasMinEl.value : '';
+    var maasMax  = maasMaxEl ? maasMaxEl.value : '';
+
+    if (!baslik) {
+      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (hata) { hata.textContent = 'Pozisyon seçiniz.'; hata.style.display = 'block'; }
+      return;
+    }
+
+    var maasAciklama = (maasMin || maasMax) ? ((maasMin || '?') + ' – ' + (maasMax || '?') + ' ₺/ay') : '';
+    var fullAciklama = aciklama + (maasAciklama ? '\n\nMaaş: ' + maasAciklama : '');
+
+    try {
+      await SB.createListing({ baslik: baslik, sehir: sehir, aciklama: fullAciklama.trim() });
+      toast('İlanınız yayınlandı! ✓');
+      setTimeout(function () { Router.go('/firma/ilanlarim'); }, 800);
+    } catch(e) {
+      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (hata) { hata.textContent = (e && e.message) || 'Bir hata oluştu. Tekrar deneyin.'; hata.style.display = 'block'; }
+    }
   }
 
   /* ── 5. BAŞVURULAR ──────────────────────────────────────── */
@@ -380,6 +458,7 @@ window.FirmaScreens = (function () {
         '</div>' +
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0 0 0 0">' +
+          _mi('Profil Düzenle',      'user',        '/profil-duzenle') +
           _mi('Firma Bilgileri',     'briefcase',  '/ayarlar') +
           _mi('Çalışanlar',          'users',       '/ayarlar') +
           _mi('Puanlamalar',         'star',        '/ayarlar') +
@@ -413,10 +492,11 @@ window.FirmaScreens = (function () {
     mesajlar    : mesajlar,
     mesajChat   : mesajChat,
     profil      : profil,
-    _ilanFilter : _ilanFilter,
-    _basFilter  : _basFilter,
-    _yayinla    : _yayinla,
-    _degerlendir: _degerlendir
+    _ilanFilter  : _ilanFilter,
+    _ilanToggle  : _ilanToggle,
+    _basFilter   : _basFilter,
+    _yayinla     : _yayinla,
+    _degerlendir : _degerlendir
   };
 
 })();

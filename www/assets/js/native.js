@@ -119,12 +119,43 @@
     });
   }
 
+  /* ── Push Notifications ────────────────────────────────── */
+  function initPush() {
+    if (!isNative()) return;
+    var Push = plug('PushNotifications');
+    if (!Push) return;
+
+    Push.requestPermissions().then(function (result) {
+      if (result.receive === 'granted') {
+        Push.register();
+      }
+    }).catch(function () {});
+
+    Push.addListener('registration', function (token) {
+      if (window.SB && SB.savePushToken) {
+        SB.savePushToken(token.value).catch(function () {});
+      }
+    });
+
+    Push.addListener('pushNotificationReceived', function (notif) {
+      if (typeof toast === 'function') {
+        toast((notif.title || '') + (notif.body ? ' — ' + notif.body : ''));
+      }
+    });
+
+    Push.addListener('pushNotificationActionPerformed', function (action) {
+      var link = action.notification && action.notification.data && action.notification.data.link;
+      if (link && window.Router) Router.go(link);
+    });
+  }
+
   /* ── Init ───────────────────────────────────────────────── */
   function init() {
     if (!isNative()) return;
     initBackButton();
     initAppState();
     initDeepLink();
+    initPush();
     console.log('[KBNative] platform:', window.Capacitor.getPlatform());
   }
 

@@ -7,33 +7,200 @@ window.SharedScreens = (function () {
 
   /* ── Bildirimler ────────────────────────────────────────── */
   function bildirimler() {
-    showAppBar('Bildirimler', true);
+    showAppBar('Bildirimler', true,
+      '<button class="kb-appbar__action" style="font-size:.72rem;white-space:nowrap" onclick="SharedScreens._notifReadAll()">Tümü Okundu</button>'
+    );
     showBottomNav();
-
-    var items = [
-      { read: false, title: 'Yeni başvuru geldi!',           sub: 'ABC Lojistik ilanınıza başvurdu.',         time: '5 dk önce'   },
-      { read: false, title: 'Başvurunuz onaylandı!',          sub: 'XYZ Kargo başvurunuzu kabul etti.',         time: '1 saat önce' },
-      { read: true,  title: 'Yeni mesajınız var.',            sub: 'Hub Dağıtım size mesaj gönderdi.',          time: '3 saat önce' },
-      { read: true,  title: 'Profil güncelleme hatırlatması', sub: 'Profilinizi tamamlayarak daha fazla eşleşme alın.', time: 'Dün' },
-      { read: true,  title: 'Görüşme randevusu',              sub: 'Yarın saat 14:00\'te görüşmeniz var.',      time: 'Dün'         }
-    ];
 
     renderScreen(
       '<div class="kb-screen-inner">' +
-        '<div class="kb-card" style="padding:0 16px">' +
-          items.map(function (n) {
-            return '<div class="notif-item">' +
-              '<div class="notif-item__dot' + (n.read ? ' notif-item__dot--read' : '') + '"></div>' +
-              '<div class="notif-item__text">' +
-                '<div class="notif-item__title">' + n.title + '</div>' +
-                '<div class="notif-item__sub">' + n.sub + '</div>' +
-              '</div>' +
-              '<div class="notif-item__time">' + n.time + '</div>' +
-            '</div>';
-          }).join('') +
+        '<div id="notif-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+      '</div>'
+    );
+
+    _loadNotifs();
+  }
+
+  function _notifRelTime(iso) {
+    if (!iso) return '';
+    var diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60)   return 'Az önce';
+    if (diff < 3600) return Math.floor(diff / 60) + ' dk önce';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' saat önce';
+    return Math.floor(diff / 86400) + ' gün önce';
+  }
+
+  function _notifHtml(list) {
+    if (!list.length) {
+      return '<div class="kb-empty"><div class="kb-empty__icon">🔔</div><div class="kb-empty__title">Bildirim yok</div><div class="kb-empty__sub">Yeni bildirimler burada görünür.</div></div>';
+    }
+    var typeIcon = { new_application:'📋', new_message:'💬', offer:'🤝', success:'✅', warning:'⚠️', error:'❌', system:'⚙️', info:'ℹ️' };
+    return '<div class="kb-card" style="padding:0 16px">' +
+      list.map(function (n) {
+        var isRead = !!n.read_at;
+        var icon = typeIcon[n.type] || '🔔';
+        return '<div class="notif-item" style="cursor:pointer" onclick="SharedScreens._notifTap(\'' + n.id + '\',\'' + (n.link || '').replace(/'/g,"\\'") + '\')">' +
+          '<div class="notif-item__dot' + (isRead ? ' notif-item__dot--read' : '') + '"></div>' +
+          '<div style="font-size:1.1rem;margin-right:10px;flex:none">' + icon + '</div>' +
+          '<div class="notif-item__text">' +
+            '<div class="notif-item__title">' + n.title + '</div>' +
+            (n.body ? '<div class="notif-item__sub">' + n.body + '</div>' : '') +
+          '</div>' +
+          '<div class="notif-item__time">' + _notifRelTime(n.created_at) + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+
+  async function _loadNotifs() {
+    var list_el = document.getElementById('notif-list');
+    if (!list_el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myNotifications(40) : [];
+      if (list_el) list_el.innerHTML = _notifHtml(items);
+    } catch(e) {
+      if (list_el) list_el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">⚠️</div><div class="kb-empty__title">Yüklenemedi</div><div class="kb-empty__sub">Tekrar deneyin.</div></div>';
+    }
+  }
+
+  function _notifTap(id, link) {
+    if (window.SB && SB.isOn()) SB.markNotificationRead(id).catch(function(){});
+    var dot = document.querySelector('[onclick*="' + id + '"] .notif-item__dot');
+    if (dot) dot.classList.add('notif-item__dot--read');
+    if (link) setTimeout(function(){ Router.go(link); }, 120);
+  }
+
+  async function _notifReadAll() {
+    if (window.SB && SB.isOn()) {
+      try { await SB.markAllNotificationsRead(); } catch(e) {}
+    }
+    document.querySelectorAll('.notif-item__dot').forEach(function(el){ el.classList.add('notif-item__dot--read'); });
+    toast('Tümü okundu işaretlendi');
+  }
+
+  /* ── Şifre Sıfırlama (/sifre-sifirla) ─────────────────── */
+  function sifreSifirla(ctx) {
+    /* URL hash'teki token Supabase tarafından otomatik işlenir.
+       Bu ekran yeni şifre girme formu gösterir (oturum zaten açık). */
+    var $appbar = document.getElementById('kb-appbar');
+    if ($appbar) $appbar.style.display = 'none';
+    hideBottomNav();
+
+    renderScreen(
+      '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">' +
+        '<div style="width:100%;max-width:360px">' +
+          '<div style="text-align:center;margin-bottom:32px">' +
+            '<div style="font-size:2.4rem;margin-bottom:8px">🔐</div>' +
+            '<div style="font-size:1.3rem;font-weight:700;margin-bottom:6px">Yeni Şifre Belirle</div>' +
+            '<div style="font-size:.84rem;color:var(--muted)">Güçlü bir şifre seçin.</div>' +
+          '</div>' +
+
+          '<div class="kb-card" style="margin-bottom:12px">' +
+            '<div style="margin-bottom:12px">' +
+              '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Yeni Şifre</label>' +
+              '<input id="sp-pass1" class="kb-input" type="password" placeholder="En az 6 karakter">' +
+            '</div>' +
+            '<div>' +
+              '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Şifre Tekrar</label>' +
+              '<input id="sp-pass2" class="kb-input" type="password" placeholder="Aynı şifreyi girin">' +
+            '</div>' +
+          '</div>' +
+
+          '<button id="sp-btn" class="btn btn--primary" onclick="SharedScreens._doSifreSifirla()">Şifremi Güncelle</button>' +
+          '<div id="sp-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
         '</div>' +
       '</div>'
     );
+  }
+
+  async function _doSifreSifirla() {
+    var btn   = document.getElementById('sp-btn');
+    var errEl = document.getElementById('sp-error');
+    var p1    = (document.getElementById('sp-pass1') || {}).value || '';
+    var p2    = (document.getElementById('sp-pass2') || {}).value || '';
+
+    if (errEl) errEl.style.display = 'none';
+
+    if (p1.length < 6) {
+      if (errEl) { errEl.textContent = 'Şifre en az 6 karakter olmalı.'; errEl.style.display = 'block'; }
+      return;
+    }
+    if (p1 !== p2) {
+      if (errEl) { errEl.textContent = 'Şifreler eşleşmiyor.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Güncelleniyor…'; }
+
+    try {
+      var r = await SB.updatePassword(p1);
+      if (r && r.error) throw r.error;
+      toast('Şifren güncellendi! Giriş yapabilirsin.');
+      setTimeout(function(){ Router.go('/login'); }, 1200);
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Şifremi Güncelle'; }
+      if (errEl) { errEl.textContent = (e && e.message) || 'Bir hata oluştu. Bağlantı linki geçersiz olabilir.'; errEl.style.display = 'block'; }
+    }
+  }
+
+  /* ── Email Doğrulama (/verify-email) ──────────────────── */
+  function verifyEmail(ctx) {
+    var $appbar = document.getElementById('kb-appbar');
+    if ($appbar) $appbar.style.display = 'none';
+    hideBottomNav();
+
+    renderScreen(
+      '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">' +
+        '<div style="width:100%;max-width:360px;text-align:center">' +
+          '<div style="font-size:2.8rem;margin-bottom:16px">📬</div>' +
+          '<div id="ve-title" style="font-size:1.3rem;font-weight:700;margin-bottom:8px">Email Doğrulanıyor…</div>' +
+          '<div id="ve-sub" style="font-size:.84rem;color:var(--muted);line-height:1.6">Lütfen bekleyin.</div>' +
+          '<div id="ve-spinner" style="margin-top:24px"><div class="kb-spinner"></div></div>' +
+          '<button id="ve-btn" class="btn btn--primary" style="display:none;margin-top:24px" onclick="Router.go(\'/login\')">Giriş Yap</button>' +
+        '</div>' +
+      '</div>'
+    );
+
+    /* Supabase onAuthStateChange SIGNED_IN olarak tetikler — sadece UI güncelle */
+    if (window.SB && SB.onAuthChange) {
+      SB.onAuthChange(function(event) {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          _veSuccess();
+        }
+      });
+    }
+
+    /* Kısa süre bekleyip kullanıcı oturumunu kontrol et */
+    setTimeout(async function() {
+      try {
+        var user = await SB.getUser();
+        if (user) { _veSuccess(); return; }
+      } catch(e) {}
+      _veFail();
+    }, 3000);
+  }
+
+  function _veSuccess() {
+    var title = document.getElementById('ve-title');
+    var sub   = document.getElementById('ve-sub');
+    var spin  = document.getElementById('ve-spinner');
+    var btn   = document.getElementById('ve-btn');
+    if (title) { title.textContent = 'Email Doğrulandı! ✓'; title.style.color = '#22C55E'; }
+    if (sub)   sub.textContent = 'Hesabın aktif. Şimdi giriş yapabilirsin.';
+    if (spin)  spin.style.display = 'none';
+    if (btn)   btn.style.display = 'block';
+    setTimeout(function(){ Router.go('/login'); }, 2500);
+  }
+
+  function _veFail() {
+    var title = document.getElementById('ve-title');
+    var sub   = document.getElementById('ve-sub');
+    var spin  = document.getElementById('ve-spinner');
+    var btn   = document.getElementById('ve-btn');
+    if (title) { title.textContent = 'Doğrulama Başarısız'; title.style.color = '#EF4444'; }
+    if (sub)   sub.innerHTML = 'Bağlantı geçersiz veya süresi dolmuş.<br>Yeni doğrulama linki ister misin?';
+    if (spin)  spin.style.display = 'none';
+    if (btn)   { btn.style.display = 'block'; btn.textContent = 'Giriş Sayfasına Dön'; }
   }
 
   /* ── Favoriler ──────────────────────────────────────────── */
@@ -99,7 +266,7 @@ window.SharedScreens = (function () {
 
         '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Hesap</div>' +
         '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
-          _settingItem('Profil Düzenle',     'user',     function(){}) +
+          _settingItem('Profil Düzenle',     'user',     function(){ Router.go('/profil-duzenle'); }) +
           _settingItem('Şifre Değiştir',     'shield',   function(){}) +
           _settingItem('Bildirim Ayarları',  'bell',     function(){}) +
         '</div>' +
@@ -207,9 +374,10 @@ window.SharedScreens = (function () {
 
   function premDashPanel(cfg) {
     var stats = (cfg.stats || []).map(function (s) {
+      var numHtml = s.id ? '<span id="' + s.id + '">' + s.num + '</span>' : s.num;
       return '<div class="prem-stat prem-stat--' + s.color + '" onclick="Router.go(\'' + s.route + '\')">' +
         '<div class="prem-stat__top">' +
-          '<div class="prem-stat__num prem-stat__num--' + s.color + '">' + s.num + '</div>' +
+          '<div class="prem-stat__num prem-stat__num--' + s.color + '">' + numHtml + '</div>' +
           '<div class="prem-stat__icon prem-stat__icon--' + s.color + '">' + ICON[s.icon] + '</div>' +
         '</div>' +
         '<div class="prem-stat__label">' + s.label + '</div>' +
@@ -434,6 +602,7 @@ window.SharedScreens = (function () {
       _activeChatState._myUserId = myUid;
       if (_activeChatState._realtimeCh) {
         try { _activeChatState._realtimeCh.unsubscribe(); } catch (e) {}
+        _activeChatState._realtimeCh = null;
       }
       _activeChatState._realtimeCh = SB.subscribeConv(convId, function (newMsg) {
         if (newMsg.sender_user === _activeChatState._myUserId) return;
@@ -446,6 +615,17 @@ window.SharedScreens = (function () {
         }
       });
       SB.markConvRead(convId).catch(function () {});
+
+      /* Başka rotaya gidilince kanalı kapat */
+      function _chatNavCleanup() {
+        window.removeEventListener('hashchange', _chatNavCleanup);
+        if (_activeChatState._realtimeCh && _activeChatState._convId === convId) {
+          try { _activeChatState._realtimeCh.unsubscribe(); } catch (e) {}
+          _activeChatState._realtimeCh = null;
+          _activeChatState._convId     = null;
+        }
+      }
+      window.addEventListener('hashchange', _chatNavCleanup, { once: true });
     }).catch(function (e) { console.warn('sharedLoadRealChat:', e); });
   }
 
@@ -594,6 +774,157 @@ window.SharedScreens = (function () {
     msgs.scrollTop = msgs.scrollHeight;
   }
 
+  /* ── Profil Düzenle ─────────────────────────────────────── */
+  function _pdEsc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function profilDuzenle() {
+    showAppBar('Profili Düzenle', true);
+    hideBottomNav();
+
+    var p    = APP.profile || {};
+    var role = APP.role || 'kurye';
+    var isKurye = role === 'kurye';
+    var accent  = isKurye ? '#6C4DFF' : role === 'firma' ? '#22C55E' : '#F97316';
+    var aracSec = ['Motosiklet','Bisiklet','Yaya','Araç'];
+
+    var avatarHtml = p.avatar_url
+      ? '<img src="' + _pdEsc(p.avatar_url) + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block">'
+      : '<div style="width:80px;height:80px;border-radius:50%;background:' + accent + ';display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#fff;font-weight:700">' + initials(p.ad || '?') + '</div>';
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+
+        /* Avatar */
+        '<div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px 16px">' +
+          '<div style="position:relative;cursor:pointer" onclick="SharedScreens._pickAvatar()">' +
+            '<div id="pd-avatar">' + avatarHtml + '</div>' +
+            '<div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:' + accent + ';display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)">' +
+              '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>' +
+            '</div>' +
+          '</div>' +
+          '<div id="pd-av-saving" style="display:none;margin-top:8px;font-size:.76rem;color:var(--muted)">Fotoğraf yükleniyor…</div>' +
+        '</div>' +
+
+        /* Form */
+        '<div class="kb-card" style="margin-bottom:16px">' +
+
+          '<div style="padding-bottom:14px">' +
+            '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">' +
+              (isKurye ? 'Ad Soyad' : role === 'firma' ? 'Firma Adı' : 'İşletme Adı') +
+            '</label>' +
+            '<input id="pd-ad" class="kb-input" value="' + _pdEsc(p.ad || '') + '" placeholder="' + (isKurye ? 'Adınız Soyadınız' : 'Kuruluş adı') + '">' +
+          '</div>' +
+
+          '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+            '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Telefon</label>' +
+            '<input id="pd-telefon" class="kb-input" type="tel" value="' + _pdEsc(p.telefon || '') + '" placeholder="05xx xxx xx xx">' +
+          '</div>' +
+
+          '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+            '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Şehir</label>' +
+            '<input id="pd-sehir" class="kb-input" value="' + _pdEsc(p.sehir || '') + '" placeholder="İstanbul">' +
+          '</div>' +
+
+          (isKurye
+            ? '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+                '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Araç Tipi</label>' +
+                '<select id="pd-arac" class="kb-input" style="appearance:auto">' +
+                  '<option value="">Seçin…</option>' +
+                  aracSec.map(function(a){ return '<option value="' + a + '"' + (p.arac === a ? ' selected' : '') + '>' + a + '</option>'; }).join('') +
+                '</select>' +
+              '</div>' +
+              '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+                '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Deneyim (yıl)</label>' +
+                '<input id="pd-deneyim" class="kb-input" type="number" min="0" max="50" value="' + (p.deneyim || 0) + '">' +
+              '</div>'
+            : '') +
+
+          '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+            '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Hakkımda / Açıklama</label>' +
+            '<textarea id="pd-aciklama" class="kb-input" rows="4" style="resize:none;height:auto" placeholder="Kendinizden kısaca bahsedin…">' + _pdEsc(p.aciklama || '') + '</textarea>' +
+          '</div>' +
+
+        '</div>' +
+
+        '<button id="pd-save-btn" class="btn btn--primary" style="background:' + accent + ';border-color:' + accent + '" onclick="SharedScreens._saveProfilDuzenle()">Kaydet</button>' +
+        '<div id="pd-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+
+      '</div>'
+    );
+  }
+
+  function _pickAvatar() {
+    if (typeof KBPickPhoto !== 'function') { toast('Kamera erişimi yok'); return; }
+    KBPickPhoto(function (dataUrl) {
+      var el = document.getElementById('pd-avatar');
+      if (el) el.innerHTML = '<img src="' + dataUrl + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block">';
+      var saving = document.getElementById('pd-av-saving');
+      if (saving) saving.style.display = 'block';
+
+      fetch(dataUrl).then(function(r){ return r.blob(); }).then(function(blob) {
+        var file = new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' });
+        return SB.uploadAvatar(file);
+      }).then(function(url) {
+        if (saving) saving.style.display = 'none';
+        if (!url) return;
+        return SB.updateMyProfile({ avatar_url: url }).then(function(updated) {
+          APP.profile = updated;
+          toast('Fotoğraf güncellendi ✓');
+        });
+      }).catch(function() {
+        if (saving) saving.style.display = 'none';
+        toast('Fotoğraf yüklenemedi');
+      });
+    }, function(){});
+  }
+
+  async function _saveProfilDuzenle() {
+    var btn   = document.getElementById('pd-save-btn');
+    var errEl = document.getElementById('pd-error');
+    if (btn)   { btn.disabled = true; btn.textContent = 'Kaydediliyor…'; }
+    if (errEl) errEl.style.display = 'none';
+
+    var role    = APP.role || 'kurye';
+    var isKurye = role === 'kurye';
+
+    var adEl   = document.getElementById('pd-ad');
+    var telEl  = document.getElementById('pd-telefon');
+    var sehirEl = document.getElementById('pd-sehir');
+    var acEl   = document.getElementById('pd-aciklama');
+
+    var fields = {
+      ad        : adEl    ? adEl.value.trim()   : '',
+      telefon   : telEl   ? telEl.value.trim()  : '',
+      sehir     : sehirEl ? sehirEl.value.trim(): '',
+      aciklama  : acEl    ? acEl.value.trim()   : ''
+    };
+
+    if (isKurye) {
+      var aracEl    = document.getElementById('pd-arac');
+      var deneyimEl = document.getElementById('pd-deneyim');
+      if (aracEl)    fields.arac    = aracEl.value;
+      if (deneyimEl) fields.deneyim = Number(deneyimEl.value) || 0;
+    }
+
+    if (!fields.ad) {
+      if (btn)   { btn.disabled = false; btn.textContent = 'Kaydet'; }
+      if (errEl) { errEl.textContent = 'İsim / kuruluş adı boş olamaz.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    try {
+      var updated = await SB.updateMyProfile(fields);
+      APP.profile = updated;
+      toast('Profil güncellendi ✓');
+      setTimeout(function(){ Router.back(); }, 700);
+    } catch(e) {
+      if (btn)   { btn.disabled = false; btn.textContent = 'Kaydet'; }
+      if (errEl) { errEl.textContent = (e && e.message) || 'Bir hata oluştu. Tekrar deneyin.'; errEl.style.display = 'block'; }
+    }
+  }
+
   return {
     bildirimler : bildirimler,
     favoriler   : favoriler,
@@ -608,7 +939,18 @@ window.SharedScreens = (function () {
     sharedMesajlar  : sharedMesajlar,
     sharedMesajChat : sharedMesajChat,
     chatSend        : chatSend,
-    chatQuick       : chatQuick
+    chatQuick       : chatQuick,
+    // Profil düzenleme
+    profilDuzenle      : profilDuzenle,
+    _pickAvatar        : _pickAvatar,
+    _saveProfilDuzenle : _saveProfilDuzenle,
+    // Bildirimler
+    _notifTap     : _notifTap,
+    _notifReadAll : _notifReadAll,
+    // Auth yardımcı ekranlar
+    sifreSifirla      : sifreSifirla,
+    _doSifreSifirla   : _doSifreSifirla,
+    verifyEmail       : verifyEmail
   };
 
 })();

@@ -384,10 +384,13 @@
     Router.define('/isletme/profil',      IsletmeScreens.profil);
 
     /* Shared */
-    Router.define('/bildirimler', SharedScreens.bildirimler);
-    Router.define('/favoriler',   SharedScreens.favoriler);
-    Router.define('/ayarlar',     SharedScreens.ayarlar);
-    Router.define('/yardim',      SharedScreens.yardim);
+    Router.define('/bildirimler',    SharedScreens.bildirimler);
+    Router.define('/favoriler',      SharedScreens.favoriler);
+    Router.define('/ayarlar',        SharedScreens.ayarlar);
+    Router.define('/yardim',         SharedScreens.yardim);
+    Router.define('/profil-duzenle', SharedScreens.profilDuzenle);
+    Router.define('/sifre-sifirla', SharedScreens.sifreSifirla);
+    Router.define('/verify-email',  SharedScreens.verifyEmail);
 
     /* Admin */
     Router.define('/admin/panel',        AdminScreens.panel);

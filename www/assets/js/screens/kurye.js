@@ -94,10 +94,10 @@ window.KuryeScreens = (function () {
 
         /* ── Stats Grid 2×2 ── */
         '<div class="prem-stats">' +
-          _statCard('23', 'Yakındaki İlanlar',    'pin',       'blue',   '/kurye/harita',     'Tümünü Gör') +
-          _statCard('5',  'Aktif Başvurularım',   'briefcase', 'orange', '/kurye/basvurular', 'Detaylar')   +
-          _statCard('2',  'Görüşmeye Çağrıldım', 'users',     'green',  '/kurye/basvurular', 'Randevular')  +
-          _statCard('8',  'Mesajlarım',           'msg',       'purple', '/kurye/mesajlar',   'Sohbetler')   +
+          _statCard('<span id="ps-ilanlar">—</span>', 'Açık İlanlar',       'pin',       'blue',   '/kurye/harita',     'Tümünü Gör') +
+          _statCard('<span id="ps-basvuru">—</span>', 'Aktif Başvurularım', 'briefcase', 'orange', '/kurye/basvurular', 'Detaylar')   +
+          _statCard('<span id="ps-gorusme">—</span>', 'Kabul Edildi',       'users',     'green',  '/kurye/basvurular', 'Randevular') +
+          _statCard('<span id="ps-mesaj">—</span>',   'Mesajlarım',         'msg',       'purple', '/kurye/mesajlar',   'Sohbetler')  +
         '</div>' +
 
         /* ── Premium Upgrade Banner ── */
@@ -121,6 +121,32 @@ window.KuryeScreens = (function () {
 
       '</div>'
     );
+
+    _loadPanelStats();
+  }
+
+  async function _loadPanelStats() {
+    if (!window.SB || !SB.isOn()) return;
+    try {
+      var results = await Promise.allSettled([
+        SB.openListings(),
+        SB.myApplications(),
+        SB.myConvs()
+      ]);
+      var ilanlar   = results[0].status === 'fulfilled' ? results[0].value : [];
+      var basvurular_list = results[1].status === 'fulfilled' ? results[1].value : [];
+      var convs     = results[2].status === 'fulfilled' ? results[2].value : [];
+
+      var pending   = basvurular_list.filter(function(b){ return b.durum === 'pending'; }).length;
+      var accepted  = basvurular_list.filter(function(b){ return b.durum === 'accepted'; }).length;
+      var unread    = convs.reduce(function(s,c){ return s + (c.unread || 0); }, 0);
+
+      var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+      set('ps-ilanlar', ilanlar.length);
+      set('ps-basvuru', pending);
+      set('ps-gorusme', accepted);
+      set('ps-mesaj',   unread || convs.length);
+    } catch(e) {}
   }
 
   /* ── Premium Dashboard helpers ─────────────────────────── */
@@ -754,44 +780,53 @@ window.KuryeScreens = (function () {
   /* ── 4. İLAN DETAY ─────────────────────────────────────── */
   function ilanDetay(ctx) {
     var id = ctx.params.id;
-    var j  = MOCK_ILANLAR.find(function (x) { return x.id === id; }) || MOCK_ILANLAR[0];
-
-    showAppBar(j.title, true);
+    showAppBar('İlan Detayı', true);
     showBottomNav();
 
+    /* Gerçek UUID ise Supabase'den yükle */
+    var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id);
+    if (isUuid && window.SB && SB.isOn()) {
+      renderScreen('<div class="kb-screen-inner" style="padding-top:32px;text-align:center"><div class="kb-spinner"></div></div>');
+      SB.listingById(id).then(function(ilan) {
+        if (!ilan) { toast('İlan bulunamadı'); Router.back(); return; }
+        _renderIlanDetay(ilan.id, ilan.baslik, ilan.sahip || 'İşletme', ilan.aciklama || '', ilan.sehir || '', ilan.arac || '');
+      }).catch(function() { toast('İlan yüklenemedi'); Router.back(); });
+      return;
+    }
+
+    var j = MOCK_ILANLAR.find(function (x) { return x.id === id; }) || MOCK_ILANLAR[0];
+    _renderIlanDetay(j.id, j.title, j.company, '', j.location, j.type);
+  }
+
+  function _renderIlanDetay(id, title, company, aciklama, konum, tip) {
+    showAppBar(title, true);
     renderScreen(
       '<div>' +
         '<div class="detail-hero">' +
-          '<div class="detail-hero__title">' + j.title + '</div>' +
-          '<div class="detail-hero__sub">' + j.company + '</div>' +
-          '<div class="detail-hero__salary">' + j.salary + '</div>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-            '<span class="kb-chip kb-chip--accent">' + j.type + '</span>' +
-            '<span class="kb-chip">' + ICON.pin + j.location + '</span>' +
+          '<div class="detail-hero__title">' + title + '</div>' +
+          '<div class="detail-hero__sub">' + company + '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+            (tip ? '<span class="kb-chip kb-chip--accent">' + tip + '</span>' : '') +
+            (konum ? '<span class="kb-chip">' + ICON.pin + konum + '</span>' : '') +
           '</div>' +
         '</div>' +
 
         '<div class="detail-section">' +
           '<div class="detail-section__title">İlan Açıklaması</div>' +
-          '<p style="font-size:.88rem;line-height:1.6;color:var(--text)">Firmamız için deneyimli ' + j.title.toLowerCase() + ' arıyoruz. Paket teslimi ve evrak dağıtımı yapabilecek, aktif ve dürüst adaylarımıza bekliyoruz.</p>' +
+          '<p style="font-size:.88rem;line-height:1.6;color:var(--text)">' +
+            (aciklama || ('Firmamız için deneyimli ' + title.toLowerCase() + ' arıyoruz. Aktif ve dürüst adayları bekliyoruz.')) +
+          '</p>' +
         '</div>' +
 
         '<div class="detail-section">' +
           '<div class="detail-section__title">Detaylar</div>' +
-          '<div class="detail-row">' + ICON.clock    + '<span>Çalışma Saatleri: 09:00 – 18:00</span></div>' +
-          '<div class="detail-row">' + ICON.briefcase + '<span>Çalışma Tipi: ' + j.type + '</span></div>' +
-          '<div class="detail-row">' + ICON.pin       + '<span>Konum: ' + j.location + '</span></div>' +
-        '</div>' +
-
-        '<div class="detail-section">' +
-          '<div class="detail-section__title">Aranan Özellikler</div>' +
-          '<div class="detail-row">• Motorlu araç ehliyeti (A sınıfı)</div>' +
-          '<div class="detail-row">• Aktif ve güvenilir olması</div>' +
-          '<div class="detail-row">• Deneyimli tercih sebebidir</div>' +
+          (konum ? '<div class="detail-row">' + ICON.pin + '<span>Konum: ' + konum + '</span></div>' : '') +
+          (tip   ? '<div class="detail-row">' + ICON.briefcase + '<span>Çalışma Tipi: ' + tip + '</span></div>' : '') +
         '</div>' +
 
         '<div class="detail-cta">' +
-          '<button class="btn btn--primary" onclick="KuryeScreens._basvur(\'' + id + '\')">' +
+          '<button class="btn btn--primary" onclick="KuryeScreens._basvur(\'' + id + '\',\'' +
+            title.replace(/'/g,"\\'") + '\',\'' + company.replace(/'/g,"\\'") + '\')">' +
             'Başvur' +
           '</button>' +
         '</div>' +
@@ -799,9 +834,12 @@ window.KuryeScreens = (function () {
     );
   }
 
-  function _basvur(ilanId) {
-    var ilan = MOCK_ILANLAR_PREMIUM.find(function (j) { return j.id === ilanId; }) ||
-      { id: ilanId, title: 'İlan', company: 'İşletme', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
+  function _basvur(ilanId, titleOverride, companyOverride) {
+    var mock = MOCK_ILANLAR_PREMIUM.find(function (j) { return j.id === ilanId; }) ||
+      { id: ilanId, title: titleOverride || 'İlan', company: companyOverride || 'İşletme', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
+    var ilan = titleOverride
+      ? Object.assign({}, mock, { title: titleOverride, company: companyOverride || mock.company })
+      : mock;
 
     var old = document.getElementById('apply-overlay');
     if (old) old.remove();
@@ -912,6 +950,8 @@ window.KuryeScreens = (function () {
   }
 
   /* ── 5. BAŞVURULARIM ────────────────────────────────────── */
+  var _basvuruCache = [];
+
   function basvurular() {
     showAppBar('Başvurularım', false);
     showBottomNav();
@@ -921,42 +961,65 @@ window.KuryeScreens = (function () {
       '<div class="kb-screen-inner">' +
         '<div class="kb-tabs" id="bas-tabs">' +
           '<button class="kb-tab active" onclick="KuryeScreens._basFilter(\'tumu\',this)">Tümü</button>' +
-          '<button class="kb-tab"        onclick="KuryeScreens._basFilter(\'aktif\',this)">Aktif</button>' +
+          '<button class="kb-tab"        onclick="KuryeScreens._basFilter(\'aktif\',this)">Bekliyor</button>' +
           '<button class="kb-tab"        onclick="KuryeScreens._basFilter(\'sonuc\',this)">Sonuçlandı</button>' +
         '</div>' +
-        '<div id="bas-list">' +
-          MOCK_BASVURULAR.map(function (b) {
-            return '<div class="kb-card" style="margin-bottom:10px">' +
-              '<div class="flex items-center justify-between mb-8">' +
-                '<div style="font-weight:700">' + b.company + '</div>' +
-                _statusLabel(b.status) +
-              '</div>' +
-              '<div style="font-size:.85rem;color:var(--muted)">' + b.role + '</div>' +
-              '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Başvuru: ' + b.date + '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>' +
+        '<div id="bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
       '</div>'
     );
+
+    _loadBasvurular();
+  }
+
+  function _basLabel(durum) {
+    if (durum === 'accepted') return '<span style="background:rgba(34,197,94,.15);color:#22C55E;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">Kabul Edildi</span>';
+    if (durum === 'rejected') return '<span style="background:rgba(239,68,68,.12);color:#EF4444;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">Reddedildi</span>';
+    return '<span style="background:rgba(108,77,255,.12);color:#6C4DFF;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">İnceleniyor</span>';
+  }
+
+  function _basCard(b) {
+    return '<div class="kb-card" style="margin-bottom:10px">' +
+      '<div class="flex items-center justify-between mb-8">' +
+        '<div style="font-weight:700">' + (b.firma || b.company || 'İşletme') + '</div>' +
+        _basLabel(b.durum || b.status) +
+      '</div>' +
+      '<div style="font-size:.85rem;color:var(--muted)">' + (b.baslik || b.role || '') + '</div>' +
+      (b.ilanSehir ? '<div style="font-size:.75rem;color:var(--muted);margin-top:2px">' + b.ilanSehir + '</div>' : '') +
+      '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Başvuru: ' + (b.tarih || b.date || '') + '</div>' +
+    '</div>';
+  }
+
+  async function _loadBasvurular() {
+    var el = document.getElementById('bas-list');
+    if (!el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myApplications() : MOCK_BASVURULAR;
+      _basvuruCache = items;
+      _basRender(items);
+    } catch(e) {
+      _basvuruCache = MOCK_BASVURULAR;
+      _basRender(MOCK_BASVURULAR);
+    }
+  }
+
+  function _basRender(list) {
+    var el = document.getElementById('bas-list');
+    if (!el) return;
+    if (!list.length) {
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvuru yok</div><div class="kb-empty__sub">İlan başvuruların burada görünür.</div></div>';
+      return;
+    }
+    el.innerHTML = list.map(_basCard).join('');
   }
 
   function _basFilter(type, btn) {
     document.querySelectorAll('#bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
-    var filtered = MOCK_BASVURULAR;
-    if (type === 'aktif')  filtered = MOCK_BASVURULAR.filter(function (b) { return b.status === 'review'; });
-    if (type === 'sonuc')  filtered = MOCK_BASVURULAR.filter(function (b) { return b.status !== 'review'; });
-    var el = document.getElementById('bas-list');
-    if (el) el.innerHTML = filtered.map(function (b) {
-      return '<div class="kb-card" style="margin-bottom:10px">' +
-        '<div class="flex items-center justify-between mb-8">' +
-          '<div style="font-weight:700">' + b.company + '</div>' +
-          _statusLabel(b.status) +
-        '</div>' +
-        '<div style="font-size:.85rem;color:var(--muted)">' + b.role + '</div>' +
-        '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Başvuru: ' + b.date + '</div>' +
-      '</div>';
-    }).join('');
+    var all = _basvuruCache.length ? _basvuruCache : MOCK_BASVURULAR;
+    var filtered = all;
+    if (type === 'aktif')  filtered = all.filter(function (b) { return (b.durum || b.status) === 'pending'; });
+    if (type === 'sonuc')  filtered = all.filter(function (b) { var d = b.durum || b.status; return d === 'accepted' || d === 'rejected'; });
+    _basRender(filtered);
   }
 
   /* ── MESAJLAR MOCK DATA ─────────────────────────────────── */

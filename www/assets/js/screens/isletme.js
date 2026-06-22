@@ -47,10 +47,10 @@ window.IsletmeScreens = (function () {
       heroCtaLabel: 'Profilimi Gör',
       heroCtaRoute: '/isletme/profil',
       stats: [
-        { num: '3',  label: 'Aktif Talep',          icon: 'briefcase', color: 'orange', route: '/isletme/basvurular', action: 'Detaylar' },
-        { num: '12', label: 'Gelen Başvuru',          icon: 'check',     color: 'blue',   route: '/isletme/basvurular', action: 'İncele'   },
-        { num: '2',  label: 'Aktif Kurye',            icon: 'users',     color: 'green',  route: '/isletme/basvurular', action: 'Yönet'    },
-        { num: '67', label: 'Profil Görüntülenme',    icon: 'eye',       color: 'purple', route: '/isletme/profil',     action: 'Detaylar' }
+        { id: 'ips-ilan',  num: '—', label: 'Açık İlan',          icon: 'briefcase', color: 'orange', route: '/isletme/ilan/yeni',  action: 'Oluştur'  },
+        { id: 'ips-bas',   num: '—', label: 'Gelen Başvuru',       icon: 'check',     color: 'blue',   route: '/isletme/basvurular', action: 'İncele'   },
+        { id: 'ips-mesaj', num: '—', label: 'Okunmamış Mesaj',     icon: 'msg',       color: 'green',  route: '/isletme/mesajlar',   action: 'Oku'      },
+        { id: 'ips-puan',  num: '—', label: 'Profil Görüntülenme', icon: 'eye',       color: 'purple', route: '/isletme/profil',     action: 'Detaylar' }
       ],
       upgradeBanner: true,
       contentHtml: (
@@ -81,6 +81,23 @@ window.IsletmeScreens = (function () {
         '</div>'
       )
     }));
+
+    _loadIsletmePanelStats();
+  }
+
+  async function _loadIsletmePanelStats() {
+    if (!window.SB || !SB.isOn()) return;
+    try {
+      var results = await Promise.allSettled([SB.myListings(), SB.myConvs()]);
+      var ilanlar = results[0].status === 'fulfilled' ? results[0].value : [];
+      var convs   = results[1].status === 'fulfilled' ? results[1].value : [];
+      var acikIlanlar = ilanlar.filter(function(il){ return (il.durum || '') === 'acik'; }).length;
+      var unread = convs.reduce(function(s,c){ return s + (c.unread || 0); }, 0);
+      var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+      set('ips-ilan',  acikIlanlar);
+      set('ips-bas',   ilanlar.length);
+      set('ips-mesaj', unread || convs.length);
+    } catch(e) {}
   }
 
   /* ── İşletme dashboard helpers ──────────────────────────── */
@@ -191,22 +208,46 @@ window.IsletmeScreens = (function () {
         '</div>' +
         '<div class="kb-form-group">' +
           '<label class="kb-label">Konum</label>' +
-          '<input class="kb-input" type="text" placeholder="Kadıköy, İstanbul">' +
+          '<input class="kb-input" id="il-konum" type="text" placeholder="Kadıköy, İstanbul">' +
         '</div>' +
         '<div class="kb-form-group">' +
           '<label class="kb-label">Açıklama (Opsiyonel)</label>' +
-          '<textarea class="kb-input" rows="3" placeholder="Ek bilgi..."></textarea>' +
+          '<textarea class="kb-input" id="il-aciklama" rows="3" placeholder="Ek bilgi..."></textarea>' +
         '</div>' +
-        '<button class="btn btn--primary" style="background:var(--c-isletme)" onclick="IsletmeScreens._yayinla()">' +
-          'İlan Yayınla' +
-        '</button>' +
+        '<button id="il-yayinla-btn" class="btn btn--primary" style="background:var(--c-isletme)" onclick="IsletmeScreens._yayinla()">İlan Yayınla</button>' +
+        '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
       '</div>'
     );
   }
 
-  function _yayinla() {
-    toast('İlanınız yayınlandı!');
-    setTimeout(function () { Router.go('/isletme/basvurular'); }, 800);
+  async function _yayinla() {
+    var btn   = document.getElementById('il-yayinla-btn');
+    var hata  = document.getElementById('il-hata');
+    if (btn)  { btn.disabled = true; btn.textContent = 'Yayınlanıyor…'; }
+    if (hata) hata.style.display = 'none';
+
+    var pozEl  = document.getElementById('il-poz');
+    var konEl  = document.getElementById('il-konum');
+    var acEl   = document.getElementById('il-aciklama');
+
+    var baslik   = pozEl ? pozEl.value.trim() : '';
+    var sehir    = konEl ? konEl.value.trim() : '';
+    var aciklama = acEl  ? acEl.value.trim()  : '';
+
+    if (!baslik) {
+      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (hata) { hata.textContent = 'Pozisyon seçiniz.'; hata.style.display = 'block'; }
+      return;
+    }
+
+    try {
+      await SB.createListing({ baslik: baslik, sehir: sehir, aciklama: aciklama });
+      toast('İlanınız yayınlandı! ✓');
+      setTimeout(function () { Router.go('/isletme/basvurular'); }, 800);
+    } catch(e) {
+      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (hata) { hata.textContent = (e && e.message) || 'Bir hata oluştu. Tekrar deneyin.'; hata.style.display = 'block'; }
+    }
   }
 
   /* ── 4. BAŞVURULAR ──────────────────────────────────────── */
@@ -311,6 +352,7 @@ window.IsletmeScreens = (function () {
         '</div>' +
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0">' +
+          _mi('Profil Düzenle',    'user',       '/profil-duzenle') +
           _mi('İşletme Bilgileri', 'briefcase', '/ayarlar') +
           _mi('Puanlamalar',       'star',       '/ayarlar') +
           _mi('Bildirimler',       'bell',       '/bildirimler') +
