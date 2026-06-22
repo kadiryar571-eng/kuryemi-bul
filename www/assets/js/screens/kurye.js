@@ -415,31 +415,294 @@ window.KuryeScreens = (function () {
   function _mapFilter(type) { /* legacy compat */ }
 
   /* ── 3. İLANLAR ────────────────────────────────────────── */
+  var MOCK_ILANLAR_PREMIUM = [
+    {
+      id: '1', emoji: '🛵', title: 'Moto Kurye', company: 'ABC Lojistik',
+      salary: '28.000 – 35.000 ₺', location: 'Kadıköy, İstanbul', dist: '0.4 km', time: '15 dk önce',
+      tier: 'premium', cat: 'motorlu', match: 92,
+      tags: ['Tam Zamanlı', 'Acil Alım', 'Sigortalı'], avatarBg: '#6C4DFF', saved: false
+    },
+    {
+      id: '2', emoji: '🚗', title: 'Araçlı Kurye', company: 'Hub Dağıtım',
+      salary: '25.000 – 32.000 ₺', location: 'Beşiktaş, İstanbul', dist: '1.2 km', time: '1 saat önce',
+      tier: 'profesyonel', cat: 'aracli', match: 85,
+      tags: ['Tam Zamanlı', 'Araç Sağlanır', 'Hafta Sonu Uygun'], avatarBg: '#22C55E', saved: true
+    },
+    {
+      id: '3', emoji: '⚡', title: 'Premium Moto Kurye', company: 'Hızlı Kargo',
+      salary: '35.000 – 42.000 ₺', location: 'Levent, İstanbul', dist: '1.8 km', time: '3 saat önce',
+      tier: 'premium', cat: 'motorlu', match: 78,
+      tags: ['Premium', 'Tam Zamanlı', 'Yüksek Maaş'], avatarBg: '#F59E0B', saved: false
+    },
+    {
+      id: '4', emoji: '🚶', title: 'Yaya Kurye', company: 'Lezzet Dükkânı',
+      salary: '13.000 – 18.000 ₺', location: 'Kadıköy, İstanbul', dist: '2.3 km', time: 'Dün',
+      tier: 'standart', cat: 'yaya', match: 71,
+      tags: ['Part Time', 'Öğrenciye Uygun'], avatarBg: '#F97316', saved: false
+    },
+    {
+      id: '5', emoji: '🛵', title: 'Motorlu Kurye', company: 'Bağcılar Kurye',
+      salary: '30.000 – 36.000 ₺', location: 'Bağcılar, İstanbul', dist: '4.1 km', time: '2 gün önce',
+      tier: 'profesyonel', cat: 'motorlu', match: 68,
+      tags: ['Tam Zamanlı', 'Sigortalı'], avatarBg: '#4A90E2', saved: false
+    },
+    {
+      id: '6', emoji: '🚶', title: 'Yaya Dağıtım Görevlisi', company: 'Restoran Zinciri AŞ',
+      salary: '14.500 – 19.000 ₺', location: 'Üsküdar, İstanbul', dist: '3.5 km', time: '3 gün önce',
+      tier: 'standart', cat: 'yaya', match: 60,
+      tags: ['Part Time', 'Akşam Vardiyası', 'Öğrenciye Uygun'], avatarBg: '#A855F7', saved: false
+    }
+  ];
+
+  var _ilanState = { cat: 'tumu', sort: 'match', savedIds: { '2': true } };
+
+  function _tierBadge(tier) {
+    var map = {
+      premium:      '<span class="il-tier il-tier--premium">⭐ Premium</span>',
+      profesyonel:  '<span class="il-tier il-tier--pro">🔵 Profesyonel</span>',
+      standart:     '<span class="il-tier il-tier--std">Standart</span>'
+    };
+    return map[tier] || map.standart;
+  }
+
+  function _ilCard(j) {
+    var saved = !!_ilanState.savedIds[j.id];
+    return '<div class="il-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + j.id + '\')">' +
+
+      /* ── Row 1: logo + tier badge + save ── */
+      '<div class="il-card__head">' +
+        '<div class="il-card__avatar" style="background:' + j.avatarBg + '">' + j.emoji + '</div>' +
+        '<div class="il-card__tier-wrap">' + _tierBadge(j.tier) + '</div>' +
+        '<button class="il-card__save' + (saved ? ' il-card__save--saved' : '') + '" ' +
+          'onclick="event.stopPropagation();KuryeScreens._ilToggleSave(this,\'' + j.id + '\')">' +
+          '<svg viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+        '</button>' +
+      '</div>' +
+
+      /* ── Row 2: title + match ring ── */
+      '<div class="il-card__mid">' +
+        '<div class="il-card__info">' +
+          '<div class="il-card__title">' + j.title + '</div>' +
+          '<div class="il-card__company">' + j.company + '</div>' +
+          '<div class="il-card__salary">' + j.salary + '</div>' +
+          '<div class="il-card__meta">' +
+            '📍 ' + j.location + ' &bull; ' + j.dist + ' &bull; 🕐 ' + j.time +
+          '</div>' +
+        '</div>' +
+        '<div class="il-card__score">' +
+          '<svg viewBox="0 0 40 40" class="il-card__ring">' +
+            '<circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>' +
+            '<circle cx="20" cy="20" r="17" fill="none" stroke="' + j.avatarBg + '" stroke-width="3"' +
+              ' stroke-dasharray="' + Math.round(106.8 * j.match / 100) + ' 106.8"' +
+              ' stroke-linecap="round" transform="rotate(-90 20 20)"/>' +
+          '</svg>' +
+          '<div class="il-card__pct"><span>' + j.match + '</span><small>%</small></div>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── Row 3: tags ── */
+      '<div class="il-card__tags">' +
+        j.tags.map(function (t) {
+          var cls = t === 'Acil Alım' ? ' il-tag--red' : t === 'Premium' ? ' il-tag--gold' : '';
+          return '<span class="il-tag' + cls + '">' + t + '</span>';
+        }).join('') +
+      '</div>' +
+
+      /* ── CTA ── */
+      '<button class="il-card__cta" onclick="event.stopPropagation();KuryeScreens._basvur(\'' + j.id + '\')">' +
+        (j.tier === 'premium' ? 'Hızlı Başvur ⚡' : 'Başvur') +
+      '</button>' +
+
+    '</div>';
+  }
+
+  function _ilRender() {
+    var cat  = _ilanState.cat;
+    var sort = _ilanState.sort;
+    var data = cat === 'tumu'      ? MOCK_ILANLAR_PREMIUM.slice()
+             : cat === 'tamzaman'  ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tags.some(function (t) { return t === 'Tam Zamanlı'; }); })
+             : cat === 'parttime'  ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tags.some(function (t) { return t === 'Part Time'; }); })
+             : cat === 'acil'      ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tags.some(function (t) { return t === 'Acil Alım'; }); })
+             : cat === 'premium'   ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tier === 'premium'; })
+             : MOCK_ILANLAR_PREMIUM.slice();
+
+    data.sort(function (a, b) {
+      if (sort === 'match')  return b.match - a.match;
+      if (sort === 'newest') return a.id > b.id ? -1 : 1;
+      if (sort === 'salary') return parseInt(b.salary) - parseInt(a.salary);
+      if (sort === 'dist')   return parseFloat(a.dist) - parseFloat(b.dist);
+      if (sort === 'premium') return (b.tier === 'premium' ? 1 : 0) - (a.tier === 'premium' ? 1 : 0);
+      return 0;
+    });
+
+    var list = document.getElementById('il-feed');
+    var counter = document.getElementById('il-counter');
+    if (counter) counter.textContent = data.length + ' ilan';
+    if (list) list.innerHTML = data.length
+      ? data.map(_ilCard).join('')
+      : '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">İlan bulunamadı</div><div class="kb-empty__sub">Filtreni değiştirmeyi dene</div></div>';
+  }
+
   function ilanlar() {
-    showAppBar('İş İlanları', false,
-      '<button class="kb-appbar__action">' + ICON.search + '</button>'
-    );
+    if (typeof showAppBar === 'function') {
+      showAppBar('', false, '');
+      var bar = document.getElementById('kb-appbar');
+      if (bar) bar.style.display = 'none';
+    }
     showBottomNav();
     setActiveNav('ilanlar');
+    _ilanState.cat  = 'tumu';
+    _ilanState.sort = 'match';
 
     renderScreen(
-      '<div class="kb-screen-inner">' +
-        '<div class="kb-tabs" id="ilan-tabs">' +
-          '<button class="kb-tab active" onclick="KuryeScreens._ilanFilter(\'tumu\',this)">Tümü</button>' +
-          '<button class="kb-tab"        onclick="KuryeScreens._ilanFilter(\'motorlu\',this)">Motorlu</button>' +
-          '<button class="kb-tab"        onclick="KuryeScreens._ilanFilter(\'yaya\',this)">Yaya</button>' +
-          '<button class="kb-tab"        onclick="KuryeScreens._ilanFilter(\'aracli\',this)">Araçlı</button>' +
+      '<div class="il-screen">' +
+
+        /* ── Hero header ── */
+        '<div class="il-hero">' +
+          '<div class="il-hero__text">' +
+            '<div class="il-hero__title">İlanlar</div>' +
+            '<div class="il-hero__sub">Sana uygun fırsatları keşfet</div>' +
+          '</div>' +
+          '<div class="il-hero__actions">' +
+            '<button class="il-hero__btn" onclick="Router.go(\'/bildirimler\')">' +
+              ICON.bell +
+              '<span class="il-hero__badge">3</span>' +
+            '</button>' +
+            '<button class="il-hero__btn" id="il-saved-btn" onclick="KuryeScreens._ilToggleSavedView()">' +
+              ICON.heart +
+            '</button>' +
+          '</div>' +
         '</div>' +
-        '<div id="ilan-list">' +
-          MOCK_ILANLAR.map(_jobCard).join('') +
+
+        /* ── Search bar ── */
+        '<div class="il-search">' +
+          '<div class="il-search__bar">' +
+            ICON.search +
+            '<input type="text" id="il-search-input" placeholder="Pozisyon, firma veya anahtar kelime ara..." autocomplete="off" oninput="KuryeScreens._ilSearch(this.value)">' +
+          '</div>' +
+          '<button class="il-search__filter" onclick="KuryeScreens._ilAdvFilter()">' +
+            ICON.filter +
+          '</button>' +
         '</div>' +
+
+        /* ── Quick category chips ── */
+        '<div class="il-cats" id="il-cats">' +
+          '<button class="il-cat il-cat--active" data-cat="tumu"     onclick="KuryeScreens._ilCat(this,\'tumu\')">Tümü</button>' +
+          '<button class="il-cat"                data-cat="tamzaman" onclick="KuryeScreens._ilCat(this,\'tamzaman\')">⏱ Tam Zamanlı</button>' +
+          '<button class="il-cat"                data-cat="parttime" onclick="KuryeScreens._ilCat(this,\'parttime\')">🕐 Part-time</button>' +
+          '<button class="il-cat il-cat--red"    data-cat="acil"     onclick="KuryeScreens._ilCat(this,\'acil\')">🔥 Acil</button>' +
+          '<button class="il-cat il-cat--gold"   data-cat="premium"  onclick="KuryeScreens._ilCat(this,\'premium\')">⭐ Premium</button>' +
+        '</div>' +
+
+        /* ── Advanced filter dropdowns ── */
+        '<div class="il-adv-filters">' +
+          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
+            '<option>Maaş</option><option>10k+</option><option>20k+</option><option>30k+</option>' +
+          '</select>' +
+          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
+            '<option>Mesafe</option><option>&lt;1 km</option><option>&lt;3 km</option><option>&lt;10 km</option>' +
+          '</select>' +
+          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
+            '<option>Araç Tipi</option><option>Moto</option><option>Araç</option><option>Yaya</option>' +
+          '</select>' +
+          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
+            '<option>Deneyim</option><option>Yok</option><option>1 yıl</option><option>3 yıl+</option>' +
+          '</select>' +
+        '</div>' +
+
+        /* ── Sort row ── */
+        '<div class="il-sort-row">' +
+          '<div class="il-sort-left">' +
+            '<span class="il-sort-label">Sırala:</span>' +
+            '<select class="il-sort-sel" id="il-sort-sel" onchange="KuryeScreens._ilSort(this.value)">' +
+              '<option value="match">Sana Uygun</option>' +
+              '<option value="newest">En Yeni</option>' +
+              '<option value="dist">En Yakın</option>' +
+              '<option value="salary">En Yüksek Maaş</option>' +
+              '<option value="premium">Premium Önce</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="il-sort-right" id="il-counter">231 ilan</div>' +
+        '</div>' +
+
+        /* ── Feed ── */
+        '<div class="il-feed" id="il-feed"></div>' +
+
+        /* ── Infinite scroll loader ── */
+        '<div class="il-loader" id="il-loader">' +
+          '<div class="il-loader__dot"></div>' +
+          '<div class="il-loader__dot"></div>' +
+          '<div class="il-loader__dot"></div>' +
+          '<span>Daha fazla ilan yükleniyor...</span>' +
+        '</div>' +
+
       '</div>'
     );
+
+    _ilRender();
   }
+
+  function _ilCat(btn, cat) {
+    document.querySelectorAll('#il-cats .il-cat').forEach(function (el) { el.classList.remove('il-cat--active'); });
+    btn.classList.add('il-cat--active');
+    _ilanState.cat = cat;
+    _ilRender();
+  }
+
+  function _ilSort(val) {
+    _ilanState.sort = val;
+    _ilRender();
+  }
+
+  function _ilSearch(q) {
+    var feed = document.getElementById('il-feed');
+    if (!feed) return;
+    var lower = q.toLowerCase();
+    var data = !lower ? MOCK_ILANLAR_PREMIUM : MOCK_ILANLAR_PREMIUM.filter(function (j) {
+      return j.title.toLowerCase().indexOf(lower) > -1 ||
+             j.company.toLowerCase().indexOf(lower) > -1 ||
+             j.location.toLowerCase().indexOf(lower) > -1;
+    });
+    feed.innerHTML = data.length ? data.map(_ilCard).join('') :
+      '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">Sonuç yok</div></div>';
+    var counter = document.getElementById('il-counter');
+    if (counter) counter.textContent = data.length + ' ilan';
+  }
+
+  function _ilToggleSave(btn, id) {
+    if (_ilanState.savedIds[id]) {
+      delete _ilanState.savedIds[id];
+    } else {
+      _ilanState.savedIds[id] = true;
+    }
+    _ilRender();
+  }
+
+  function _ilToggleSavedView() {
+    var btn = document.getElementById('il-saved-btn');
+    var showing = btn && btn.dataset.showing === '1';
+    if (btn) btn.dataset.showing = showing ? '0' : '1';
+    if (btn) btn.style.color = showing ? '' : 'var(--c-kurye)';
+    var feed = document.getElementById('il-feed');
+    if (!feed) return;
+    if (showing) {
+      _ilRender();
+    } else {
+      var saved = MOCK_ILANLAR_PREMIUM.filter(function (j) { return !!_ilanState.savedIds[j.id]; });
+      feed.innerHTML = saved.length ? saved.map(_ilCard).join('') :
+        '<div class="kb-empty"><div class="kb-empty__icon">🤍</div><div class="kb-empty__title">Kayıtlı ilan yok</div><div class="kb-empty__sub">Beğendiğin ilanları kaydet</div></div>';
+    }
+  }
+
+  function _ilAdvFilter() {
+    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Gelişmiş Filtre', 'Yakında — Faz 2\'de geliyor');
+  }
+
+  function _ilAdvChange() { /* visual only, Faz 2 */ }
 
   function _ilanFilter(cat, btn) {
     document.querySelectorAll('#ilan-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
     var filtered = cat === 'tumu' ? MOCK_ILANLAR : MOCK_ILANLAR.filter(function (j) { return j.cat === cat; });
     var list = document.getElementById('ilan-list');
     if (list) list.innerHTML = filtered.length ? filtered.map(_jobCard).join('') :
@@ -660,6 +923,13 @@ window.KuryeScreens = (function () {
     mesajChat   : mesajChat,
     profil      : profil,
     _ilanFilter      : _ilanFilter,
+    _ilCat           : _ilCat,
+    _ilSort          : _ilSort,
+    _ilSearch        : _ilSearch,
+    _ilToggleSave    : _ilToggleSave,
+    _ilToggleSavedView: _ilToggleSavedView,
+    _ilAdvFilter     : _ilAdvFilter,
+    _ilAdvChange     : _ilAdvChange,
     _basFilter       : _basFilter,
     _mapFilter       : _mapFilter,
     _mapCat          : _mapCat,
