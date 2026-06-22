@@ -1090,59 +1090,61 @@ window.KuryeScreens = (function () {
           }).join('') +
         '</div>' +
 
-        /* ── Quick actions ── */
-        '<div class="chat-quick">' +
-          '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'konum\')">' +
-            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-            'Konum Paylaş' +
-          '</button>' +
-          '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'uygun\')">' +
-            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
-            'Uygunluk Bildir' +
-          '</button>' +
-          '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'belge\')">' +
-            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
-            'Belgelerimi Gönder' +
-          '</button>' +
-        '</div>' +
+        /* ── Sticky footer: quick actions + input + smart bar ── */
+        '<div class="chat-footer">' +
 
-        /* ── Input area ── */
-        '<div class="chat-input-wrap">' +
-          '<div class="chat-input-row">' +
-            '<button class="chat-input__icon" onclick="KuryeScreens._chatAttach()">' +
-              '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+          '<div class="chat-quick">' +
+            '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'konum\')">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+              'Konum Paylaş' +
             '</button>' +
-            '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off">' +
-            '<button class="chat-input__icon" onclick="KuryeScreens._chatEmoji()">' +
-              '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
+            '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'uygun\')">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+              'Uygunluk Bildir' +
             '</button>' +
-            '<button class="chat-send" onclick="KuryeScreens._chatSend()">' + ICON.send + '</button>' +
+            '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'belge\')">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+              'Belgelerimi Gönder' +
+            '</button>' +
           '</div>' +
-        '</div>' +
 
-        /* ── Smart action bar ── */
-        '<div class="chat-smart">' +
-          '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'cv\')">' +
-            '<div class="chat-smart__icon">📄</div>' +
-            '<div class="chat-smart__label">CV Gönder</div>' +
-          '</button>' +
-          '<button class="chat-smart__btn chat-smart__btn--primary" onclick="KuryeScreens._chatQuick(\'konum\')">' +
-            '<div class="chat-smart__icon">📍</div>' +
-            '<div class="chat-smart__label">Konum Paylaş</div>' +
-          '</button>' +
-          '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'evrak\')">' +
-            '<div class="chat-smart__icon">📁</div>' +
-            '<div class="chat-smart__label">Evrak Yükle</div>' +
-          '</button>' +
-          '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'plan\')">' +
-            '<div class="chat-smart__icon">📅</div>' +
-            '<div class="chat-smart__label">Görüşme Planla</div>' +
-          '</button>' +
-          '<button class="chat-smart__btn chat-smart__btn--offer" onclick="KuryeScreens._chatQuick(\'teklif\')">' +
-            '<div class="chat-smart__icon">⭐</div>' +
-            '<div class="chat-smart__label">Teklifleri Gör</div>' +
-          '</button>' +
-        '</div>' +
+          '<div class="chat-input-wrap">' +
+            '<div class="chat-input-row">' +
+              '<button class="chat-input__icon" onclick="KuryeScreens._chatAttach()">' +
+                '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+              '</button>' +
+              '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off">' +
+              '<button class="chat-input__icon" onclick="KuryeScreens._chatEmoji()">' +
+                '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
+              '</button>' +
+              '<button class="chat-send" onclick="KuryeScreens._chatSend()">' + ICON.send + '</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="chat-smart">' +
+            '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'cv\')">' +
+              '<div class="chat-smart__icon">📄</div>' +
+              '<div class="chat-smart__label">CV Gönder</div>' +
+            '</button>' +
+            '<button class="chat-smart__btn chat-smart__btn--primary" onclick="KuryeScreens._chatQuick(\'konum\')">' +
+              '<div class="chat-smart__icon">📍</div>' +
+              '<div class="chat-smart__label">Konum Paylaş</div>' +
+            '</button>' +
+            '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'evrak\')">' +
+              '<div class="chat-smart__icon">📁</div>' +
+              '<div class="chat-smart__label">Evrak Yükle</div>' +
+            '</button>' +
+            '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'plan\')">' +
+              '<div class="chat-smart__icon">📅</div>' +
+              '<div class="chat-smart__label">Görüşme Planla</div>' +
+            '</button>' +
+            '<button class="chat-smart__btn chat-smart__btn--offer" onclick="KuryeScreens._chatQuick(\'teklif\')">' +
+              '<div class="chat-smart__icon">⭐</div>' +
+              '<div class="chat-smart__label">Teklifleri Gör</div>' +
+            '</button>' +
+          '</div>' +
+
+        '</div>' + /* /chat-footer */
 
       '</div>'
     );

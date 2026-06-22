@@ -2314,10 +2314,18 @@ a { color: inherit; text-decoration: none; }
 .chat-screen {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   background: var(--bg);
+}
+
+/* Footer (quick + input + smart) sticks to viewport bottom */
+.chat-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding-top: 4px;
 }
 
 /* ── Chat header ── */
@@ -2398,6 +2406,7 @@ a { color: inherit; text-decoration: none; }
 /* ── Messages ── */
 .chat-msgs {
   flex: 1;
+  min-height: 200px;
   overflow-y: auto;
   padding: 10px 14px;
   display: flex;
