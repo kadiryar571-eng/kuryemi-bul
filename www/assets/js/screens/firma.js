@@ -144,27 +144,18 @@ window.FirmaScreens = (function () {
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */
   function harita() {
-    showAppBar('Kurye Haritası', false);
+    var bar = document.getElementById('kb-appbar');
+    if (bar) bar.style.display = 'none';
     showBottomNav();
     setActiveNav('harita');
-
-    renderScreen(
-      '<div class="kb-screen-inner">' +
-        '<div class="kb-search">' +
-          ICON.search + '<input type="text" placeholder="Kurye ara...">' +
-        '</div>' +
-        '<div class="kb-map">' +
-          '<div class="kb-map-pin kb-map-pin--kurye" style="left:30%;top:35%"><span>🛵</span></div>' +
-          '<div class="kb-map-pin kb-map-pin--kurye" style="left:60%;top:45%"><span>🚶</span></div>' +
-          '<div class="kb-map-pin kb-map-pin--kurye" style="left:50%;top:65%"><span>🚗</span></div>' +
-          '<div style="position:relative;z-index:1;text-align:center;padding:20px">' +
-            '<div style="font-size:.8rem;color:var(--muted)">Yakınındaki kurye ve iş ilanları</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="kb-section-head"><div class="kb-section-title">Yakındaki Kuryeler</div></div>' +
-        MOCK_ADAYLAR.map(function (a) { return _adayCard(a, 'firma'); }).join('') +
-      '</div>'
-    );
+    var kbScreen = document.getElementById('kb-screen');
+    if (kbScreen) kbScreen.style.overflow = 'hidden';
+    renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
+    if (window._spmMapsReady && window.initPremiumMap) {
+      setTimeout(function() { window.initPremiumMap('firma'); }, 50);
+    } else {
+      window._spmPendingRole = 'firma';
+    }
   }
 
   /* ── 3. İLANLARIM ──────────────────────────────────────── */

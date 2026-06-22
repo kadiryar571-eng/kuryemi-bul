@@ -260,16 +260,23 @@ window.KuryeScreens = (function () {
   }
 
   function harita() {
-    if (typeof showAppBar === 'function') {
-      showAppBar('', false, '');
-      var bar = document.getElementById('kb-appbar');
-      if (bar) bar.style.display = 'none';
-    }
+    var bar = document.getElementById('kb-appbar');
+    if (bar) bar.style.display = 'none';
     showBottomNav();
     setActiveNav('harita');
+    var kbScreen = document.getElementById('kb-screen');
+    if (kbScreen) kbScreen.style.overflow = 'hidden';
+    renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
+    if (window._spmMapsReady && window.initPremiumMap) {
+      setTimeout(function() { window.initPremiumMap('kurye'); }, 50);
+    } else {
+      window._spmPendingRole = 'kurye';
+    }
+  }
 
+  function _harita_UNUSED() {
     renderScreen(
-      '<div class="map-screen">' +
+      '<div class="map-screen--unused">' +
 
         /* ── Top glass search bar ── */
         '<div class="map-topbar">' +

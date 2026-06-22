@@ -612,3 +612,329 @@ window.SharedScreens = (function () {
   };
 
 })();
+
+/* ── Premium Map Screen — shared impl ──────────────────────── */
+
+window._spmBcardSkel = function(n) {
+  var one = '<div class="spm-bcard spm-bcard--skel">' +
+    '<div class="spm-bcard__top">' +
+    '<span class="spm-skel" style="width:42px;height:42px;border-radius:14px;flex:none"></span>' +
+    '<div class="spm-bcard__info"><span class="spm-skel" style="width:70%;height:13px;display:block;margin-bottom:7px"></span><span class="spm-skel" style="width:50%;height:10px;display:block"></span></div>' +
+    '</div>' +
+    '<span class="spm-skel" style="width:100%;height:4px;display:block;border-radius:2px;margin:10px 0"></span>' +
+    '<div style="display:flex;gap:6px;margin-top:10px"><span class="spm-skel" style="flex:1;height:34px;border-radius:11px"></span><span class="spm-skel" style="flex:1;height:34px;border-radius:11px"></span></div>' +
+    '</div>';
+  var out = ''; for (var i = 0; i < n; i++) out += one; return out;
+};
+
+window._spmShell = function() {
+  return '<div class="spm-screen" id="spmRoot">' +
+    '<div id="spm-map"></div>' +
+    '<div class="spm-topbar">' +
+      '<div class="spm-search-row">' +
+        '<div class="spm-searchbox">' +
+          '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
+          '<input type="search" id="spmSearch" autocomplete="off" placeholder="Bölge, firma veya ilan ara...">' +
+        '</div>' +
+        '<button type="button" class="spm-filter-btn" id="spmFilterBtn">' +
+          '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="spm-chips-row" id="spmChipsRow">' +
+        '<button type="button" class="spm-chip is-on" data-spmlayer="ilan"><span class="spm-chip__dot" style="background:#f59e0b"></span>İş İlanları</button>' +
+        '<button type="button" class="spm-chip is-on" data-spmlayer="firma"><span class="spm-chip__dot" style="background:#a855f7"></span>Firmalar</button>' +
+        '<button type="button" class="spm-chip" data-spmlayer="acil"><span class="spm-chip__dot" style="background:#ef4444"></span>Acil Alım</button>' +
+        '<button type="button" class="spm-chip" data-spmlayer="premium"><span class="spm-chip__dot" style="background:#f59e0b;box-shadow:0 0 5px #f59e0b"></span>Premium</button>' +
+        '<button type="button" class="spm-chip" data-spmlayer="yakin"><span class="spm-chip__dot" style="background:#22d3ee"></span>Yakınımda</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="spm-fabs" id="spmFabs">' +
+      '<button type="button" class="spm-fab" id="spmLocateBtn">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>' +
+        '<span>Konum</span>' +
+      '</button>' +
+      '<button type="button" class="spm-fab" id="spmAIBtn">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
+        '<span>AI Öneri</span>' +
+      '</button>' +
+      '<button type="button" class="spm-fab" id="spmHeatBtn">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>' +
+        '<span>Isı Hrts</span>' +
+      '</button>' +
+      '<button type="button" class="spm-fab" id="spmLayersBtn">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>' +
+        '<span>Katman</span>' +
+      '</button>' +
+    '</div>' +
+    '<div class="spm-ai-card" id="spmAiCard">' +
+      '<div class="spm-ai-card__head">' +
+        '<div class="spm-ai-card__icon">✨</div>' +
+        '<div><div class="spm-ai-card__title">AI Fırsat Analizi</div><div class="spm-ai-card__sub">Sana en uygun bölgeler</div></div>' +
+        '<button type="button" class="spm-ai-card__close" id="spmAiClose">✕</button>' +
+      '</div>' +
+      '<div class="spm-ai-card__body">Profiline göre en yoğun iş ilanı bölgeleri.</div>' +
+      '<div class="spm-ai-zones">' +
+        '<button type="button" class="spm-ai-zone" data-zone="kadikoy">Kadıköy</button>' +
+        '<button type="button" class="spm-ai-zone" data-zone="besiktas">Beşiktaş</button>' +
+        '<button type="button" class="spm-ai-zone" data-zone="sisli">Şişli</button>' +
+        '<button type="button" class="spm-ai-zone" data-zone="atasehir">Ataşehir</button>' +
+        '<button type="button" class="spm-ai-zone" data-zone="umraniye">Ümraniye</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="spm-heat-legend" id="spmHeatLegend">' +
+      '<span>Az</span><div class="spm-heat-bar"></div><span>Yoğun</span>' +
+    '</div>' +
+    '<div class="spm-sheet" id="spmSheet">' +
+      '<div class="spm-sheet__handle"></div>' +
+      '<div class="spm-sheet__count" id="spmCount"></div>' +
+      '<div class="spm-cards-scroll" id="spmCardScroll"></div>' +
+    '</div>' +
+  '</div>';
+};
+
+window.initPremiumMap = async function(role) {
+  if (typeof google === 'undefined' || !google.maps) {
+    window._spmPendingRole = role;
+    return;
+  }
+  var mapEl = document.getElementById('spm-map');
+  if (!mapEl) return;
+
+  var searchEl = document.getElementById('spmSearch');
+  var countEl  = document.getElementById('spmCount');
+  var scrollEl = document.getElementById('spmCardScroll');
+  var aiCard   = document.getElementById('spmAiCard');
+  var aiClose  = document.getElementById('spmAiClose');
+  var heatLeg  = document.getElementById('spmHeatLegend');
+  var locBtn   = document.getElementById('spmLocateBtn');
+  var aiBtn    = document.getElementById('spmAIBtn');
+  var heatBtn  = document.getElementById('spmHeatBtn');
+  var layBtn   = document.getElementById('spmLayersBtn');
+
+  var ISTANBUL = { lat: 41.015, lng: 28.979 };
+  var DARK_STYLE = [
+    { elementType: 'geometry', stylers: [{ color: '#0f0b1e' }] },
+    { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#8a7aaa' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#0f0b1e' }] },
+    { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#1e1640' }] },
+    { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#c4b5fd' }] },
+    { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#5a4a7a' }] },
+    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#0d0a1e' }] },
+    { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#1e1540' }] },
+    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#2a1f55' }] },
+    { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#7060a0' }] },
+    { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#2a1f55' }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a2b80' }] },
+    { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#4a3a95' }] },
+    { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#9080c5' }] },
+    { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#0f0b1e' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#07051a' }] },
+    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d2d6a' }] }
+  ];
+
+  var map = new google.maps.Map(mapEl, {
+    zoom: 12, center: ISTANBUL,
+    mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
+    zoomControl: true,
+    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+    styles: DARK_STYLE, gestureHandling: 'greedy', backgroundColor: '#0f0b1e'
+  });
+
+  var PIN = {
+    ilan:    { color: '#f59e0b', emoji: '💼', label: 'İlan' },
+    kurye:   { color: '#22d3ee', emoji: '🛵', label: 'Kurye' },
+    isletme: { color: '#4f8bff', emoji: '🏪', label: 'İşletme' },
+    firma:   { color: '#a855f7', emoji: '🏢', label: 'Firma' }
+  };
+
+  if (scrollEl) scrollEl.innerHTML = window._spmBcardSkel(3);
+
+  var listings = [], kur = [], isl = [], frm = [];
+  try { if (window.SB && SB.isOn()) listings = await SB.openListings(); } catch (e) {}
+  try { if (window.SB && SB.isOn()) kur = await SB.pool('kurye'); } catch (e) {}
+  try { if (window.SB && SB.isOn()) isl = await SB.pool('isletme'); } catch (e) {}
+  try { if (window.SB && SB.isOn()) frm = await SB.pool('firma'); } catch (e) {}
+
+  if (!document.getElementById('spm-map')) return;
+
+  var items = [];
+  function pushItem(type, x, lat, lng, ad, sub) {
+    if (lat == null || lng == null) return;
+    items.push({ key: type + '-' + x.id, type: type, id: x.id, lat: +lat, lng: +lng, ad: ad || '', sub: sub || '', acil: !!(x.acil || x.acil_alinacak), premium: !!x.premium, maas: x.maas || x.ucret_min || x.ucret || null });
+  }
+
+  listings.forEach(function(l) { pushItem('ilan', l, l.lat, l.lng, l.baslik, [l.sahip, l.sehir, l.bolge].filter(Boolean).join(' · ')); });
+  kur.forEach(function(k) { pushItem('kurye', k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler||[])[0]].filter(Boolean).join(' · ')); });
+  isl.forEach(function(i) { pushItem('isletme', i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(' · ')); });
+  frm.forEach(function(f) { pushItem('firma', f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(', ')); });
+
+  var activeLayers = { ilan: true, firma: true, acil: false, premium: false, yakin: false };
+  var userLat = null, userLng = null, userMarker = null;
+  var markers = {}, selectedKey = null;
+  var heatLayer = null, heatmapOn = false;
+
+  function normText(s) {
+    var o = ''; s = String(s == null ? '' : s).normalize('NFD');
+    for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c < 0x300 || c > 0x36f) o += s[i].toLowerCase(); }
+    return o;
+  }
+
+  function matchScore(key) {
+    var h = 0;
+    for (var i = 0; i < key.length; i++) h = ((h * 31) + key.charCodeAt(i)) >>> 0;
+    return 72 + (h % 22);
+  }
+
+  function distKm(a, b, c, d) {
+    var R = 6371, dLat = (c-a)*Math.PI/180, dLng = (d-b)*Math.PI/180;
+    var x = Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+  }
+
+  function isVisible(it, q) {
+    if (q && normText(it.ad + ' ' + it.sub).indexOf(q) === -1) return false;
+    if (activeLayers.yakin && userLat !== null && distKm(userLat, userLng, it.lat, it.lng) > 5) return false;
+    if (activeLayers.premium && it.premium) return true;
+    if (activeLayers.acil && it.type === 'ilan' && it.acil) return true;
+    if (activeLayers.ilan && it.type === 'ilan' && !it.acil) return true;
+    if (activeLayers.firma && (it.type === 'firma' || it.type === 'isletme' || it.type === 'kurye')) return true;
+    return false;
+  }
+
+  function getVisible() {
+    var q = normText(searchEl && searchEl.value || '');
+    return items.filter(function(it) { return isVisible(it, q); });
+  }
+
+  function pinIcon(it, sel) {
+    var cfg = PIN[it.type], s = sel ? 56 : 44, r = sel ? 17 : 13, c = s / 2;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '">' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + (r+9) + '" fill="' + cfg.color + '" fill-opacity="0.15"/>' +
+      (sel ? '<circle cx="' + c + '" cy="' + c + '" r="' + (r+16) + '" fill="' + cfg.color + '" fill-opacity="0.07"/>' : '') +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="' + cfg.color + '" fill-opacity="' + (sel ? '1' : '0.88') + '"/>' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="' + (sel ? '2.5' : '2') + '"/>' +
+      '<text x="' + c + '" y="' + c + '" font-size="' + (sel ? 14 : 11) + '" text-anchor="middle" dominant-baseline="central">' + cfg.emoji + '</text>' +
+      '</svg>';
+    return { url: 'data:image/svg+xml,' + encodeURIComponent(svg), scaledSize: new google.maps.Size(s, s), anchor: new google.maps.Point(c, c) };
+  }
+
+  function renderMarkers(list) {
+    Object.keys(markers).forEach(function(k) { if (markers[k]) markers[k].setMap(null); });
+    markers = {};
+    list.forEach(function(it) {
+      var m = new google.maps.Marker({ position: { lat: it.lat, lng: it.lng }, map: map, title: it.ad, icon: pinIcon(it, it.key === selectedKey), zIndex: it.key === selectedKey ? 999 : 1 });
+      m._it = it;
+      m.addListener('click', function() { select(it.key); });
+      markers[it.key] = m;
+    });
+  }
+
+  function select(key) {
+    selectedKey = key;
+    Object.keys(markers).forEach(function(k) { var m = markers[k]; if (m && m._it) { m.setIcon(pinIcon(m._it, k === key)); m.setZIndex(k === key ? 999 : 1); } });
+    if (key && markers[key]) map.panTo(markers[key].getPosition());
+    if (scrollEl) {
+      var card = scrollEl.querySelector('[data-spmkey="' + key + '"]');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      scrollEl.querySelectorAll('.spm-bcard').forEach(function(c) { c.classList.toggle('is-selected', c.getAttribute('data-spmkey') === key); });
+    }
+  }
+
+  function bcard(it) {
+    var cfg = PIN[it.type], score = matchScore(it.key);
+    var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + ' km' : null;
+    var r = window.APP && APP.role || role;
+    var actionHtml = '';
+    if (it.type === 'ilan' && r === 'kurye') {
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + it.id + '\')">Hızlı Başvur</button>';
+    } else if (it.type === 'kurye' && r === 'firma') {
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/firma/aday/' + it.id + '\')">Profili Gör</button>';
+    } else if (it.type === 'kurye' && r === 'isletme') {
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isletme/aday/' + it.id + '\')">Profili Gör</button>';
+    }
+    var maasHtml = it.maas ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + it.maas + ' ₺</div>' : '';
+    var distHtml = dist ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
+    return '<div class="spm-bcard" data-spmkey="' + it.key + '" tabindex="0">' +
+      '<div class="spm-bcard__top">' +
+        '<div class="spm-bcard__logo" style="border-color:' + cfg.color + '33">' + cfg.emoji + '</div>' +
+        '<div class="spm-bcard__info"><div class="spm-bcard__title">' + (it.ad || '') + '</div><div class="spm-bcard__sub">' + (it.sub || '') + '</div></div>' +
+        '<span class="spm-bcard__badge spm-bcard__badge--' + it.type + '">' + cfg.label + '</span>' +
+      '</div>' +
+      '<div class="spm-bcard__meta">' + maasHtml + distHtml + '</div>' +
+      '<div class="spm-bcard__score"><div class="spm-bcard__score-bar"><div class="spm-bcard__score-fill" style="width:' + score + '%"></div></div><div class="spm-bcard__score-pct">%' + score + ' eşleşme</div></div>' +
+      (actionHtml ? '<div class="spm-bcard__action">' + actionHtml + '</div>' : '') +
+    '</div>';
+  }
+
+  function renderCards(list) {
+    if (!scrollEl) return;
+    if (countEl) countEl.textContent = list.length ? list.length + ' SONUÇ' : '';
+    if (!list.length) { scrollEl.innerHTML = '<div style="padding:20px 16px;color:rgba(255,255,255,.3);font-size:.82rem">Bu katmanda sonuç yok.</div>'; return; }
+    scrollEl.innerHTML = list.map(bcard).join('');
+    scrollEl.querySelectorAll('.spm-bcard').forEach(function(card) {
+      card.addEventListener('click', function(e) { if (e.target.closest('button')) return; select(card.getAttribute('data-spmkey')); });
+    });
+  }
+
+  function toggleHeatmap(list) {
+    if (heatLayer) { heatLayer.setMap(null); heatLayer = null; }
+    if (!heatmapOn || !google.maps.visualization) return;
+    var pts = list.map(function(it) { return { location: new google.maps.LatLng(it.lat, it.lng), weight: it.premium ? 3 : (it.acil ? 2 : 1) }; });
+    heatLayer = new google.maps.visualization.HeatmapLayer({ data: pts, map: map, radius: 40, opacity: 0.65, gradient: ['rgba(108,77,255,0)','rgba(108,77,255,0.6)','rgba(168,85,247,0.8)','rgba(245,158,11,0.9)','rgba(239,68,68,1)'] });
+  }
+
+  function refresh() {
+    var list = getVisible();
+    if (selectedKey && !list.some(function(i) { return i.key === selectedKey; })) selectedKey = null;
+    renderMarkers(list); renderCards(list); toggleHeatmap(list);
+  }
+
+  document.querySelectorAll('[data-spmlayer]').forEach(function(chip) {
+    var t = chip.getAttribute('data-spmlayer');
+    chip.classList.toggle('is-on', !!activeLayers[t]);
+    chip.addEventListener('click', function() { activeLayers[t] = !activeLayers[t]; chip.classList.toggle('is-on', activeLayers[t]); refresh(); });
+  });
+
+  if (searchEl) searchEl.addEventListener('input', function() { refresh(); });
+
+  if (locBtn) locBtn.addEventListener('click', function() {
+    if (!navigator.geolocation) return;
+    locBtn.classList.add('is-loading');
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      locBtn.classList.remove('is-loading'); locBtn.classList.add('is-active');
+      userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+      if (userMarker) userMarker.setMap(null);
+      userMarker = new google.maps.Marker({ position: { lat: userLat, lng: userLng }, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 }, zIndex: 2000, title: 'Konumunuz' });
+      map.panTo({ lat: userLat, lng: userLng }); map.setZoom(14);
+      if (activeLayers.yakin) refresh();
+    }, function() { locBtn.classList.remove('is-loading'); }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+  });
+
+  if (aiBtn && aiCard) aiBtn.addEventListener('click', function() { var on = aiCard.classList.toggle('is-visible'); aiBtn.classList.toggle('is-active', on); });
+  if (aiClose && aiCard) aiClose.addEventListener('click', function() { aiCard.classList.remove('is-visible'); if (aiBtn) aiBtn.classList.remove('is-active'); });
+
+  var AI_ZONES = { kadikoy:{lat:40.990,lng:29.030}, besiktas:{lat:41.043,lng:29.005}, sisli:{lat:41.061,lng:28.987}, atasehir:{lat:40.996,lng:29.118}, umraniye:{lat:41.016,lng:29.110} };
+  document.querySelectorAll('[data-zone]').forEach(function(z) {
+    z.addEventListener('click', function() { var p = AI_ZONES[z.getAttribute('data-zone')]; if (p) { map.panTo(p); map.setZoom(13); } });
+  });
+
+  if (heatBtn) heatBtn.addEventListener('click', function() { heatmapOn = !heatmapOn; heatBtn.classList.toggle('is-active', heatmapOn); if (heatLeg) heatLeg.classList.toggle('is-visible', heatmapOn); toggleHeatmap(getVisible()); });
+
+  if (layBtn) layBtn.addEventListener('click', function() {
+    var cr = document.getElementById('spmChipsRow');
+    if (!cr) return;
+    var hidden = cr.style.display === 'none';
+    cr.style.display = hidden ? '' : 'none';
+    layBtn.classList.toggle('is-active', hidden);
+  });
+
+  refresh();
+
+  if (items.length) {
+    var bounds = new google.maps.LatLngBounds();
+    items.forEach(function(i) { bounds.extend({ lat: i.lat, lng: i.lng }); });
+    if (items.length < 80) { try { map.fitBounds(bounds); } catch(e) { map.setCenter(ISTANBUL); map.setZoom(12); } }
+    else { map.setCenter(ISTANBUL); map.setZoom(12); }
+  }
+};
