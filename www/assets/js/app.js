@@ -85,17 +85,20 @@
     $appbar.className = 'kb-appbar kb-appbar--dash';
     $appbar.style.display = '';
     $appbar.innerHTML =
+      '<button class="dash-icon-btn" onclick="toggleDrawer()">' +
+        ICON.menu +
+      '</button>' +
       '<div class="kb-appbar__greet">' +
         '<div class="kb-appbar__greet-name">Merhaba, ' + firstName + ' 👋</div>' +
-        '<div class="kb-appbar__greet-sub">Bugün yeni fırsatlara hazır mısın?</div>' +
+        '<div class="kb-appbar__greet-sub">Bugün seni bekleyen fırsatları keşfet</div>' +
       '</div>' +
       '<div class="kb-appbar__actions">' +
+        '<button class="dash-icon-btn" onclick="Router.go(\'/ayarlar\')">' +
+          ICON.settings +
+        '</button>' +
         '<button class="dash-icon-btn" onclick="Router.go(\'/bildirimler\')">' +
           ICON.bell +
           '<span class="dash-icon-btn__dot"></span>' +
-        '</button>' +
-        '<button class="dash-icon-btn" onclick="toggleDrawer()">' +
-          ICON.menu +
         '</button>' +
       '</div>';
   };

@@ -60,103 +60,99 @@ window.KuryeScreens = (function () {
     showBottomNav();
     setActiveNav('panel');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.display_name)) || 'Kurye';
+    var profile = APP.profile || {};
+    var score   = profile.score ? String(profile.score) : '4.8';
 
     renderScreen(
-      '<div class="kb-screen-inner">' +
+      '<div class="prem-dash">' +
 
-        /* ── S1: Profile Summary ── */
-        '<div class="dash-profile-card" onclick="Router.go(\'/kurye/profil\')">' +
-          '<div class="dash-profile-card__avatar">' +
-            '<div class="kb-avatar kb-avatar--lg">' + initials(name) + '</div>' +
-            '<div class="dash-profile-card__verified">✓</div>' +
-          '</div>' +
-          '<div class="dash-profile-card__info">' +
-            '<div class="dash-profile-card__name">' + name + '</div>' +
-            '<div class="dash-profile-card__role">Kurye</div>' +
-            '<div class="dash-profile-card__score">' + ICON.star + '<span>4.8</span><span style="color:var(--muted);font-size:.68rem;font-weight:400">&nbsp;/ 5.0</span></div>' +
-            '<div class="kb-progress" style="margin-top:8px">' +
-              '<div class="kb-progress__track"><div class="kb-progress__fill" style="width:75%"></div></div>' +
-              '<div class="kb-progress__labels"><span>Profil tamamlama</span><span>75%</span></div>' +
+        /* ── Hero Card ── */
+        '<div class="prem-hero" onclick="Router.go(\'/kurye/profil\')">' +
+          '<div class="prem-hero__deco1"></div>' +
+          '<div class="prem-hero__deco2"></div>' +
+          '<div class="prem-hero__shine"></div>' +
+          '<div class="prem-hero__badge">' + ICON.star + ' Top Kurye</div>' +
+          '<div class="prem-hero__body">' +
+            '<div class="prem-hero__label">Profil Puanın</div>' +
+            '<div class="prem-hero__score-row">' +
+              '<span class="prem-hero__score-big">' + score + '</span>' +
+              '<span class="prem-hero__score-denom">/ 5.0</span>' +
             '</div>' +
+            '<div class="prem-hero__stars">' +
+              '<span class="prem-hero__star">★</span>' +
+              '<span class="prem-hero__star">★</span>' +
+              '<span class="prem-hero__star">★</span>' +
+              '<span class="prem-hero__star">★</span>' +
+              '<span class="prem-hero__star prem-hero__star--dim">★</span>' +
+            '</div>' +
+            '<p class="prem-hero__desc">Puanın yükseldikçe daha fazla premium fırsata erişirsin</p>' +
+            '<button class="prem-hero__cta" onclick="event.stopPropagation();Router.go(\'/kurye/profil\')">' +
+              'Profilimi Gör ' + ICON.chevron +
+            '</button>' +
           '</div>' +
         '</div>' +
 
-        /* ── S2: Quick Metrics ── */
-        '<div class="metric-grid">' +
-          _mCard('check',     '3',  'Aktif Başvuru',       'rgba(59,130,246,.12)',  '#3B82F6', '/kurye/basvurular') +
-          _mCard('briefcase', '1',  'Görüşme Bekleyen',    'rgba(245,158,11,.12)',  '#F59E0B', '/kurye/basvurular') +
-          _mCard('crown',     '12', 'Onaylanan İşler',     'rgba(34,197,94,.12)',   '#22C55E', '/kurye/basvurular') +
-          _mCard('eye',       '89', 'Profil Görüntülenme', 'rgba(168,85,247,.12)',  '#A855F7', '/kurye/profil') +
+        /* ── Stats Grid 2×2 ── */
+        '<div class="prem-stats">' +
+          _statCard('23', 'Yakındaki İlanlar',    'pin',       'blue',   '/kurye/harita',     'Tümünü Gör') +
+          _statCard('5',  'Aktif Başvurularım',   'briefcase', 'orange', '/kurye/basvurular', 'Detaylar')   +
+          _statCard('2',  'Görüşmeye Çağrıldım', 'users',     'green',  '/kurye/basvurular', 'Randevular')  +
+          _statCard('8',  'Mesajlarım',           'msg',       'purple', '/kurye/mesajlar',   'Sohbetler')   +
         '</div>' +
 
-        /* ── S3: Active Applications ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Aktif Başvurularım</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/kurye/basvurular\')">Tümünü Gör</button>' +
+        /* ── Premium Upgrade Banner ── */
+        '<div class="prem-upgrade">' +
+          '<div class="prem-upgrade__content">' +
+            '<div class="prem-upgrade__pill">' + ICON.star + ' Premium</div>' +
+            '<div class="prem-upgrade__title">Premium\'a Geç, Daha Fazla Kazan</div>' +
+            '<div class="prem-upgrade__sub">Öne çık, daha hızlı iş bul ve premium fırsatlara eriş.</div>' +
+          '</div>' +
+          '<button class="prem-upgrade__btn">Detayları Gör</button>' +
         '</div>' +
-        _appCard('🏢', 'Motorlu Kurye',  'ABC Lojistik', 'Başvuru İnceleniyor', 'review',   '2 saat önce') +
-        _appCard('🏪', 'Yaya Kurye',     'XYZ Kargo',    'Görüşme Aşamasında',  'approved', 'Dün') +
 
-        /* ── S4: Recommended Jobs ── */
-        '<div class="kb-section-head">' +
+        /* ── Suggested Jobs ── */
+        '<div class="kb-section-head" style="margin-top:4px">' +
           '<div class="kb-section-title">Sana Özel İlanlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/kurye/ilanlar\')">Tümünü Gör</button>' +
         '</div>' +
-        _jobRec('1', '🏢', 'Motorlu Kurye',  'Hub Dağıtım A.Ş.',   '28.000 - 33.000 ₺', 'Kadıköy',  'Tam Zamanlı', ['acil', 'yeni']) +
-        _jobRec('2', '🏪', 'Yaya Kurye',     'Lezzetli Restoran',   '15.000 - 20.000 ₺', 'Beşiktaş', 'Part-Time',   ['yakin']) +
-
-        /* ── S5: Recent Messages ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Son Mesajlar</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/kurye/mesajlar\')">Tümünü Gör</button>' +
-        '</div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          _miniMsg('ABC Lojistik', 'Başvurunuzu inceledik, görüşme yapmak istiyoruz.', '15:30', 2, '/kurye/mesajlar') +
-          _miniMsg('XYZ Kargo',    'Müsait olduğunuzda arayabilir misiniz?',            'Dün',   0, '/kurye/mesajlar') +
-        '</div>' +
-
-        /* ── S6: Recent Notifications ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Son Bildirimler</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/bildirimler\')">Tümünü Gör</button>' +
-        '</div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          '<div class="notif-item"><div class="notif-item__dot"></div><div class="notif-item__text"><div class="notif-item__title">Profiliniz görüntülendi</div><div class="notif-item__sub">ABC Lojistik profilinizi inceledi.</div></div><div class="notif-item__time">5 dk</div></div>' +
-          '<div class="notif-item"><div class="notif-item__dot notif-item__dot--read"></div><div class="notif-item__text"><div class="notif-item__title">Yeni ilan açıldı</div><div class="notif-item__sub">Kadıköy\'de motorlu kurye aranıyor.</div></div><div class="notif-item__time">1 sa</div></div>' +
-        '</div>' +
-
-        /* ── S7: Performance ── */
-        '<div class="kb-section-head"><div class="kb-section-title">Bu Hafta</div></div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-            '<span style="font-size:.82rem;font-weight:700">Aktivite</span>' +
-            '<span style="font-size:.75rem;color:var(--c-success);font-weight:600">+12% bu hafta</span>' +
-          '</div>' +
-          '<div class="perf-week">' +
-            _wBar(40,'Pzt') + _wBar(65,'Sal') + _wBar(30,'Çar') +
-            _wBar(80,'Per') + _wBar(55,'Cum') + _wBar(20,'Cmt') + _wBarToday(90,'Paz') +
-          '</div>' +
-          '<div style="display:flex;gap:20px;margin-top:10px">' +
-            '<div><div style="font-size:1.2rem;font-weight:800">89</div><div style="font-size:.7rem;color:var(--muted)">Görüntülenme</div></div>' +
-            '<div><div style="font-size:1.2rem;font-weight:800">3</div><div style="font-size:.7rem;color:var(--muted)">Aktif Başvuru</div></div>' +
-            '<div><div style="font-size:1.2rem;font-weight:800;color:var(--c-success)">85%</div><div style="font-size:.7rem;color:var(--muted)">Eşleşme Skoru</div></div>' +
-          '</div>' +
-        '</div>' +
-
-        /* ── S8: Profile Completion ── */
-        '<div class="kb-section-head"><div class="kb-section-title">Profil Tamamlama</div></div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
-            '<div><div style="font-size:1.6rem;font-weight:800;color:var(--c-accent)">75%</div><div style="font-size:.75rem;color:var(--muted)">Profilin tamamlandı</div></div>' +
-            '<button class="btn btn--primary btn--sm" style="width:auto;padding:8px 16px" onclick="Router.go(\'/kurye/profil\')">Tamamla</button>' +
-          '</div>' +
-          '<div class="kb-progress"><div class="kb-progress__track"><div class="kb-progress__fill" style="width:75%"></div></div></div>' +
-          '<div style="margin-top:8px;font-size:.76rem;color:var(--muted)">Eksik: Kimlik belgesi, Profil fotoğrafı</div>' +
-        '</div>' +
+        _premJobCard('1', '🏢', 'Motorlu Kurye',     'ABC Lojistik',   '28.000 – 33.000 ₺/ay', '2.4 km', '2s önce',  'rgba(61,150,255,.13)')  +
+        _premJobCard('2', '🚀', 'Araçlı Kurye',      'Hub Dağıtım',    '25.000 – 32.000 ₺/ay', '5.1 km', '5s önce',  'rgba(16,217,123,.12)')  +
+        _premJobCard('3', '⚡', 'Yaya Kurye · Part', 'Lezzet Dükkânı', '13.000 – 18.000 ₺/ay', '1.2 km', '1g önce',  'rgba(255,209,102,.12)') +
 
       '</div>'
     );
+  }
+
+  /* ── Premium Dashboard helpers ─────────────────────────── */
+  function _statCard(num, label, icon, color, route, actionLabel) {
+    return '<div class="prem-stat prem-stat--' + color + '" onclick="Router.go(\'' + route + '\')">' +
+      '<div class="prem-stat__top">' +
+        '<div class="prem-stat__num prem-stat__num--' + color + '">' + num + '</div>' +
+        '<div class="prem-stat__icon prem-stat__icon--' + color + '">' + ICON[icon] + '</div>' +
+      '</div>' +
+      '<div class="prem-stat__label">' + label + '</div>' +
+      '<div class="prem-stat__action">' + actionLabel + ICON.chevron + '</div>' +
+    '</div>';
+  }
+
+  function _premJobCard(id, emoji, title, company, salary, dist, time, avatarBg) {
+    return '<div class="prem-job" onclick="Router.go(\'/kurye/ilan/' + id + '\')">' +
+      '<div class="prem-job__row1">' +
+        '<div class="prem-job__avatar" style="background:' + avatarBg + '">' + emoji + '</div>' +
+        '<div class="prem-job__info">' +
+          '<div class="prem-job__title">' + title + '</div>' +
+          '<div class="prem-job__company">' + company + '</div>' +
+        '</div>' +
+        '<button class="prem-job__save" onclick="event.stopPropagation()">' + ICON.heart + '</button>' +
+      '</div>' +
+      '<div class="prem-job__row2">' +
+        '<div class="prem-job__salary">' + salary + '</div>' +
+        '<div class="prem-job__meta">' +
+          '<span class="prem-job__meta-item">' + ICON.pin   + dist + '</span>' +
+          '<span class="prem-job__meta-item">' + ICON.clock + time + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   /* ── Dashboard helpers ──────────────────────────────────── */
