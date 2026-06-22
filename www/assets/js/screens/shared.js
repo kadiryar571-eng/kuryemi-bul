@@ -429,7 +429,8 @@ window.SharedScreens = (function () {
       var d = new Date(c.lastMessageAt);
       time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     }
-    return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + c.id + '\')">' +
+    var searchText = ((c.otherName || '') + ' ' + (c.listingTitle || '') + ' ' + (c.lastMessage || '')).toLowerCase();
+    return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + c.id + '\')" data-search="' + searchText + '">' +
       '<div class="msg-conv__bar" style="background:' + roleBg + '"></div>' +
       '<div class="msg-conv__ava" style="background:' + roleBg + '">' +
         roleEmoji +
@@ -449,6 +450,36 @@ window.SharedScreens = (function () {
       '</div>' +
       (c.unread > 0 ? '<div class="msg-conv__unread">' + c.unread + '</div>' : '') +
     '</div>';
+  }
+
+  function _msgSearchToggle() {
+    var bar = document.getElementById('msg-search-bar');
+    if (!bar) return;
+    var inp = document.getElementById('msg-search-inp');
+    if (bar.style.display === 'none' || !bar.style.display) {
+      bar.style.display = 'flex';
+      if (inp) inp.focus();
+    } else {
+      bar.style.display = 'none';
+      if (inp) inp.value = '';
+      _msgSearchFilter('');
+    }
+  }
+
+  function _msgSearchFilter(q) {
+    var list = document.getElementById('msg-list');
+    if (!list) return;
+    var cards = list.querySelectorAll('.msg-conv');
+    var lower = (q || '').toLowerCase().trim();
+    var found = 0;
+    cards.forEach(function (el) {
+      var hay = el.getAttribute('data-search') || '';
+      var show = !lower || hay.indexOf(lower) !== -1;
+      el.style.display = show ? '' : 'none';
+      if (show) found++;
+    });
+    var empty = document.getElementById('msg-search-empty');
+    if (empty) empty.style.display = lower && found === 0 ? 'flex' : 'none';
   }
 
   function _sharedLoadConvsAsync(rolePrefix) {
@@ -560,6 +591,8 @@ window.SharedScreens = (function () {
       var myUid     = u && u.id;
       var backRoute = '/' + rolePrefix + '/mesajlar';
 
+      var otherProfileId = iAmKurye ? c.employer_id : c.kurye_id;
+
       var hdrEl = document.getElementById('chat-hdr-el');
       if (hdrEl) {
         hdrEl.innerHTML =
@@ -570,13 +603,31 @@ window.SharedScreens = (function () {
             '<div class="chat-hdr__status"><span class="chat-hdr__dot"></span>Aktif Başvuru</div>' +
           '</div>' +
           '<div class="chat-hdr__acts">' +
-            '<button class="chat-hdr__act" onclick="SharedScreens.chatQuick(\'ara\')">' +
+            '<button class="chat-hdr__act" id="chat-call-btn" title="Telefon">' +
               '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
             '</button>' +
             '<button class="chat-hdr__act" onclick="SharedScreens.chatQuick(\'more\')">' +
               '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
             '</button>' +
           '</div>';
+      }
+
+      /* Telefon butonunu async yükle — profile_contacts RLS korumalı */
+      if (otherProfileId && window.SB && SB.isOn()) {
+        SB.contactOf(otherProfileId).then(function (contact) {
+          var btn = document.getElementById('chat-call-btn');
+          if (!btn) return;
+          var phone = contact && contact.telefon;
+          if (phone) {
+            btn.onclick = function () { window.open('tel:' + phone); };
+            btn.title = phone;
+            btn.style.color = 'var(--c-success, #22C55E)';
+          } else {
+            btn.onclick = function () {
+              if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Telefon bilgisi mevcut değil');
+            };
+          }
+        }).catch(function () {});
       }
 
       var ctxEl = document.getElementById('chat-context-el');
@@ -658,9 +709,17 @@ window.SharedScreens = (function () {
             '<div class="msg-header__sub">Tüm görüşmelerin burada ✨</div>' +
           '</div>' +
           '<div class="msg-header__actions">' +
-            '<button class="msg-header__btn">' + ICON.search + '</button>' +
-            '<button class="msg-header__btn">' + ICON.filter + '</button>' +
+            '<button class="msg-header__btn" onclick="SharedScreens._msgSearchToggle()" title="Ara">' + ICON.search + '</button>' +
           '</div>' +
+        '</div>' +
+        '<div id="msg-search-bar" style="display:none;align-items:center;gap:8px;padding:0 16px 10px">' +
+          '<div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:12px;padding:8px 12px;border:1px solid var(--border)">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
+            '<input id="msg-search-inp" type="search" placeholder="İsim veya mesaj ara..." autocomplete="off" ' +
+              'style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:.88rem" ' +
+              'oninput="SharedScreens._msgSearchFilter(this.value)">' +
+          '</div>' +
+          '<button onclick="SharedScreens._msgSearchToggle()" style="color:var(--muted);font-size:.8rem;padding:4px 8px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)">İptal</button>' +
         '</div>' +
         '<div class="msg-tabs" id="msg-tabs">' +
           '<button class="msg-tab msg-tab--active" data-tab="tumu">Tümü</button>' +
@@ -668,6 +727,11 @@ window.SharedScreens = (function () {
           '<button class="msg-tab" data-tab="arsiv">🗂 Arşiv</button>' +
         '</div>' +
         '<div class="msg-list" id="msg-list">' + mockHtml + '</div>' +
+        '<div id="msg-search-empty" style="display:none;flex-direction:column;align-items:center;padding:40px 20px;gap:8px">' +
+          '<div style="font-size:2rem">🔍</div>' +
+          '<div style="color:var(--text);font-weight:700">Sonuç bulunamadı</div>' +
+          '<div style="color:var(--muted);font-size:.8rem">Farklı bir kelime deneyin</div>' +
+        '</div>' +
       '</div>'
     );
     _sharedLoadConvsAsync(rolePrefix);
@@ -956,10 +1020,12 @@ window.SharedScreens = (function () {
     // Shared premium panel
     premDashPanel   : premDashPanel,
     // Shared messaging engine
-    sharedMesajlar  : sharedMesajlar,
-    sharedMesajChat : sharedMesajChat,
-    chatSend        : chatSend,
-    chatQuick       : chatQuick,
+    sharedMesajlar   : sharedMesajlar,
+    sharedMesajChat  : sharedMesajChat,
+    chatSend         : chatSend,
+    chatQuick        : chatQuick,
+    _msgSearchToggle : _msgSearchToggle,
+    _msgSearchFilter : _msgSearchFilter,
     // Profil düzenleme
     profilDuzenle      : profilDuzenle,
     _pickAvatar        : _pickAvatar,
