@@ -741,8 +741,9 @@ window.initPremiumMap = async function(role) {
     zoom: 12, center: ISTANBUL,
     mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
     zoomControl: true,
-    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
-    styles: DARK_STYLE, gestureHandling: 'greedy', backgroundColor: '#0f0b1e'
+    zoomControlOptions: { position: google.maps.ControlPosition.LEFT_BOTTOM },
+    styles: DARK_STYLE, gestureHandling: 'greedy', backgroundColor: '#0f0b1e',
+    clickableIcons: false
   });
 
   var PIN = {

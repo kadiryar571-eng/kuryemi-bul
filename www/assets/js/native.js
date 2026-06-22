@@ -40,6 +40,8 @@
 
     App.addListener('appStateChange', function (state) {
       if (!state.isActive) return;
+      // Harita ekranı açıkken (konum izni dialogu) navigate etme
+      if (document.getElementById('spm-map')) return;
       if (window.SB && SB.getUser) {
         SB.getUser().then(function (user) {
           if (!user && location.hash !== '#/login') {
