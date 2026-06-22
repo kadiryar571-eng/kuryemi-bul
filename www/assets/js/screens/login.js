@@ -99,6 +99,9 @@ window.LoginScreens = (function () {
           '</div>' +
           '<div id="login-err" class="kb-error-msg" style="display:none;margin-bottom:10px"></div>' +
           '<button class="btn btn--primary" onclick="LoginScreens._doLogin()" id="btn-login">Giriş Yap</button>' +
+          '<div style="text-align:center;margin-top:12px">' +
+            '<button class="kb-link-btn" onclick="LoginScreens._showForgotPass()">Şifremi Unuttum?</button>' +
+          '</div>' +
           '<div class="auth-divider">veya</div>' +
           '<button class="btn btn--google" onclick="LoginScreens._googleLogin()">' +
             '<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.2 30.3 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.7 13.2 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.7 6c4.5-4.2 7-10.4 7-17.2z"/><path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.8 23.8 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.4-6.2z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.7-6c-2 1.4-4.7 2.2-7.6 2.2-6 0-11.2-4.1-13-9.6l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/></svg>' +
@@ -303,6 +306,71 @@ window.LoginScreens = (function () {
     Router.go('/' + APP.role + '/panel');
   }
 
+  /* Forgot password panel */
+  function _showForgotPass() {
+    renderScreen(
+      '<div class="login-wrap">' +
+        '<button class="kb-appbar__back" onclick="LoginScreens.showLogin()" style="margin-bottom:16px">' +
+          ICON.back + '<span style="margin-left:4px;font-weight:600">Geri</span>' +
+        '</button>' +
+        '<div class="login-logo">' +
+          '<img src="assets/logo.png" alt="" onerror="this.style.display=\'none\'">' +
+          '<span class="login-logo__brand">KuryemiBul</span>' +
+        '</div>' +
+        '<p class="login-slogan" style="margin-bottom:8px">Şifreni sıfırla</p>' +
+        '<p style="font-size:13px;color:var(--c-muted);margin-bottom:20px;text-align:center">' +
+          'Kayıtlı e-posta adresini gir. Sana şifre sıfırlama bağlantısı gönderelim.' +
+        '</p>' +
+        '<div class="kb-form-group">' +
+          '<label class="kb-label">E-posta</label>' +
+          '<input class="kb-input" type="email" id="fp-email" placeholder="ornek@email.com" autocomplete="email">' +
+        '</div>' +
+        '<div id="fp-msg" class="kb-error-msg" style="display:none;margin-bottom:10px"></div>' +
+        '<button class="btn btn--primary" id="fp-btn" onclick="LoginScreens._doForgotPass()">Sıfırlama Bağlantısı Gönder</button>' +
+      '</div>'
+    );
+  }
+
+  async function _doForgotPass() {
+    var email = (document.getElementById('fp-email') || {}).value || '';
+    var msgEl = document.getElementById('fp-msg');
+    var btn   = document.getElementById('fp-btn');
+    if (!email) {
+      _showMsg(msgEl, 'E-posta adresi zorunlu.', false);
+      return;
+    }
+    if (!window.SB || !SB.isOn()) {
+      _showMsg(msgEl, 'İnternet bağlantısı yok.', false);
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Gönderiliyor…';
+    try {
+      var r = await SB.resetPassword(email);
+      if (r && r.error) throw r.error;
+      _showMsg(msgEl, 'Bağlantı gönderildi! E-posta kutunu kontrol et.', true);
+      btn.textContent = 'Tekrar Gönder';
+      btn.disabled = false;
+    } catch (e) {
+      _showMsg(msgEl, 'Gönderilemedi. E-posta adresini kontrol et.', false);
+      btn.disabled = false;
+      btn.textContent = 'Sıfırlama Bağlantısı Gönder';
+    }
+  }
+
+  function _showMsg(el, msg, success) {
+    if (!el) { toast(msg); return; }
+    el.textContent = msg;
+    el.style.display = '';
+    if (success) {
+      el.style.color = 'var(--c-success, #22c55e)';
+      el.style.background = 'rgba(34,197,94,.08)';
+    } else {
+      el.style.color = '';
+      el.style.background = '';
+    }
+  }
+
   function _showErr(el, msg) {
     if (!el) { toast(msg); return; }
     el.textContent = msg;
@@ -310,15 +378,17 @@ window.LoginScreens = (function () {
   }
 
   return {
-    entry       : entry,
-    register    : register,
-    showLogin   : showLogin,
-    startRole   : startRole,
-    _tab        : _tab,
-    _togglePass : _togglePass,
-    _doLogin    : _doLogin,
-    _doRegister : _doRegister,
-    _googleLogin: _googleLogin
+    entry          : entry,
+    register       : register,
+    showLogin      : showLogin,
+    startRole      : startRole,
+    _tab           : _tab,
+    _togglePass    : _togglePass,
+    _doLogin       : _doLogin,
+    _doRegister    : _doRegister,
+    _googleLogin   : _googleLogin,
+    _showForgotPass: _showForgotPass,
+    _doForgotPass  : _doForgotPass
   };
 
 })();

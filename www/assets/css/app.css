@@ -788,6 +788,7 @@ a { color: inherit; text-decoration: none; }
 }
 .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .btn--google { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); font-weight: 600; }
+.kb-link-btn { background: none; border: none; color: var(--c-accent); font-size: .88rem; font-weight: 500; cursor: pointer; padding: 4px 8px; text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── Detail screens ── */
 .detail-hero { background: var(--surface); padding: 20px 16px; border-bottom: 1px solid var(--border); }
