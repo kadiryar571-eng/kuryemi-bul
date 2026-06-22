@@ -1,7 +1,5 @@
 name: Android APK Derle
 
-# Elle tetiklenir (Actions sekmesi → "Run workflow"). İçerik değişiklikleri
-# canlı siteden geldiği için APK'yı yalnız kabuk değişince yeniden derlemek yeterli.
 on:
   workflow_dispatch:
 
@@ -23,14 +21,21 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Android SDK kur
-        uses: android-actions/setup-android@v3
+      - name: Android SDK yolunu ayarla
+        run: |
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+
+      - name: Build tools / platform yükle
+        run: |
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            "build-tools;35.0.0" \
+            "platforms;android-35" \
+            "platform-tools" || true
 
       - name: Bağımlılıkları yükle
         run: npm install
 
-      # android/ klasörü repoda (deep-link manifest özelleştirmesi için).
-      # cap sync: web varlıkları + plugin'leri günceller (cap add GEREKMEZ).
       - name: Web varlıklarını + plugin'leri senkronla
         run: npx cap sync android
 
@@ -41,7 +46,7 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: APK'yı yükle (artifact)
+      - name: APK'yı artifact olarak kaydet
         uses: actions/upload-artifact@v4
         with:
           name: kuryemibul-debug-apk
