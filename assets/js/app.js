@@ -1644,14 +1644,63 @@
   async function initMapExperience() {
     var mapEl = document.getElementById("map");
     if (!mapEl || typeof google === "undefined" || !google.maps) return;
-    var listEl = document.getElementById("mxList");
-    var countEl = document.getElementById("mxCount");
+
     var searchEl = document.getElementById("mxSearch");
-    var container = document.querySelector(".mx");
+    var countEl  = document.getElementById("mxCount");
+    var scrollEl = document.getElementById("mxCardScroll");
+    var aiCard   = document.getElementById("mxAiCard");
+    var aiClose  = document.getElementById("mxAiClose");
+    var heatLeg  = document.getElementById("mxHeatLegend");
+    var locBtn   = document.getElementById("mxLocateBtn");
+    var aiBtn    = document.getElementById("mxAIBtn");
+    var heatBtn  = document.getElementById("mxHeatBtn");
+    var layBtn   = document.getElementById("mxLayersBtn");
 
-    var PIN = { ilan: { c: "#f59e0b", e: "💼" }, kurye: { c: "#22d3ee", e: "🛵" }, isletme: { c: "#4f8bff", e: "🏪" }, firma: { c: "#a855f7", e: "🏢" } };
+    var ISTANBUL = { lat: 41.015, lng: 28.979 };
 
-    if (listEl) listEl.innerHTML = mxSkeleton();
+    var DARK_STYLE = [
+      { elementType: "geometry", stylers: [{ color: "#0f0b1e" }] },
+      { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#8a7aaa" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#0f0b1e" }] },
+      { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1e1640" }] },
+      { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e90c0" }] },
+      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#c4b5fd" }] },
+      { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#5a4a7a" }] },
+      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0d0a1e" }] },
+      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#3a2a5a" }] },
+      { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#1e1540" }] },
+      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#2a1f55" }] },
+      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#7060a0" }] },
+      { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#2a1f55" }] },
+      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3a2b80" }] },
+      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#4a3a95" }] },
+      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#9080c5" }] },
+      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#0f0b1e" }] },
+      { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#6050a0" }] },
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#07051a" }] },
+      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d2d6a" }] }
+    ];
+
+    var map = new google.maps.Map(mapEl, {
+      zoom: 12, center: ISTANBUL,
+      mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
+      zoomControl: true,
+      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+      styles: DARK_STYLE,
+      gestureHandling: "greedy",
+      backgroundColor: "#0f0b1e"
+    });
+
+    var PIN = {
+      ilan:    { color: "#f59e0b", emoji: "💼", label: "İlan" },
+      kurye:   { color: "#22d3ee", emoji: "🛵", label: "Kurye" },
+      isletme: { color: "#4f8bff", emoji: "🏪", label: "İşletme" },
+      firma:   { color: "#a855f7", emoji: "🏢", label: "Firma" }
+    };
+
+    if (window.KB && KB.ready) await KB.ready();
+    if (scrollEl) scrollEl.innerHTML = mxBcardSkel(3);
 
     var map = new google.maps.Map(mapEl, {
       zoom: 6, center: { lat: 39.5, lng: 33.5 },
@@ -1659,162 +1708,286 @@
       zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER }
     });
 
-    // Konumum butonu
-    var locMarker = null;
-    var locBtn = document.createElement('button');
-    locBtn.className = 'mx-locate-btn';
-    locBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
-    locBtn.title = 'Konumumu göster';
-    locBtn.setAttribute('aria-label', 'Konumumu göster');
-    locBtn.style.margin = '0 10px 10px 0';
-    locBtn.addEventListener('click', function (e) { e.stopPropagation(); locateUser(locBtn); });
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(locBtn);
-
-    function locateUser(btn) {
-      if (!navigator.geolocation) { if (window.KB) KB.toast('Tarayıcınız konum özelliğini desteklemiyor.', 'error'); return; }
-      btn.classList.add('is-loading'); btn.classList.remove('is-active');
-      navigator.geolocation.getCurrentPosition(
-        function (pos) {
-          btn.classList.remove('is-loading'); btn.classList.add('is-active');
-          var lat = pos.coords.latitude, lng = pos.coords.longitude;
-          if (locMarker) locMarker.setMap(null);
-          locMarker = new google.maps.Marker({
-            position: { lat: lat, lng: lng }, map: map,
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
-            zIndex: 1000, title: 'Konumunuz'
-          });
-          map.panTo({ lat: lat, lng: lng }); map.setZoom(14);
-        },
-        function (err) {
-          btn.classList.remove('is-loading');
-          if (window.KB) KB.toast(err.code === 1 ? 'Konum izni reddedildi.' : 'Konum alınamadı, tekrar deneyin.', 'error');
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-      );
-    }
-
-    if (window.KB && KB.ready) await KB.ready();
-    var listings = [];
+    var listings = [], kur = [], isl = [], frm = [];
     try { if (online()) listings = await SB.openListings(); } catch (e) {}
-    var kur = await loadPool("kurye"), isl = await loadPool("isletme"), frm = await loadPool("firma");
+    kur = await loadPool("kurye");
+    isl = await loadPool("isletme");
+    frm = await loadPool("firma");
 
     var items = [];
-    function push(type, x, lat, lng, ad, sub, chips, action) {
+    function pushItem(type, x, lat, lng, ad, sub) {
       if (lat == null || lng == null) return;
-      items.push({ key: type + "-" + x.id, type: type, id: x.id, lat: +lat, lng: +lng, ad: ad || "", sub: sub || "", chips: chips || [], action: action });
-    }
-    listings.forEach(function (l) { push("ilan", l, l.lat, l.lng, l.baslik, (l.sahip ? l.sahip + " · " : "") + [l.sehir, l.bolge].filter(Boolean).join(" · "), [l.arac].filter(Boolean), { apply: { id: l.id, baslik: l.baslik } }); });
-    kur.forEach(function (k) { push("kurye", k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler || [])[0]].filter(Boolean).join(" · "), [k.arac].filter(Boolean), { view: "profil-kurye.html", offer: "kurye" }); });
-    isl.forEach(function (i) { push("isletme", i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(" · "), [], { view: "profil-isletme.html", offer: "isletme" }); });
-    frm.forEach(function (f) { push("firma", f, f.lat, f.lng, f.ad, (f.bolgeler || []).slice(0, 2).join(", "), [], { view: "profil-firma.html", offer: "firma" }); });
-
-    var activeLayers = { ilan: true, kurye: true, isletme: true, firma: true };
-    var mxSaved = window.KB && KB.loadView && KB.loadView("flt_mx");
-    if (mxSaved && mxSaved.layers) Object.keys(mxSaved.layers).forEach(function (k) { if (k in activeLayers) activeLayers[k] = !!mxSaved.layers[k]; });
-    if (mxSaved && mxSaved.q && searchEl) searchEl.value = mxSaved.q;
-    function saveMxState() { if (window.KB && KB.saveView) KB.saveView("flt_mx", { q: searchEl ? searchEl.value : "", layers: activeLayers }); }
-    var markers = {}, cardEls = {}, selectedKey = null, openIW = null;
-
-    function pinIcon(it, sel) {
-      var p = PIN[it.type];
-      return { path: google.maps.SymbolPath.CIRCLE, scale: sel ? 14 : 11, fillColor: p.c, fillOpacity: sel ? 1 : 0.88, strokeColor: '#fff', strokeWeight: sel ? 3 : 2 };
-    }
-    function actionHtml(it) {
-      if (it.action.apply) return '<button class="btn btn--primary btn--sm" data-apply="' + it.id + '" data-baslik="' + KB.esc(it.action.apply.baslik) + '">' + T("mx.apply") + '</button>';
-      return '<a class="btn btn--light btn--sm" href="' + it.action.view + '?id=' + it.id + '">' + T("mx.view") + '</a>';
-    }
-    function chipsHtml(it) { return it.chips.length ? '<div class="mx-card__chips">' + it.chips.map(function (c) { return '<span class="chip">' + KB.esc(c) + '</span>'; }).join("") + '</div>' : ""; }
-    function mxCard(it) {
-      return '<article class="mx-card" data-mxkey="' + KB.esc(it.key) + '" tabindex="0">' +
-        '<div class="mx-card__ic mx-card__ic--' + it.type + '">' + PIN[it.type].e + '</div>' +
-        '<div class="mx-card__body"><div class="mx-card__head"><span class="mx-card__title">' + KB.esc(it.ad) + '</span>' +
-        '<span class="mx-tag mx-tag--' + it.type + '">' + T("mx.type." + it.type) + '</span></div>' +
-        '<div class="mx-card__sub">' + KB.esc(it.sub) + '</div>' + chipsHtml(it) +
-        '<div class="mx-card__act">' + actionHtml(it) + '</div></div></article>';
-    }
-    function mxPopup(it) {
-      return '<div style="padding:12px 4px 4px;max-width:230px;font-family:inherit">' +
-        '<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">' +
-        '<span style="font-size:1.3rem">' + PIN[it.type].e + '</span>' +
-        '<div><div style="font-weight:700;font-size:.9rem;color:#111">' + KB.esc(it.ad) + '</div>' +
-        '<div style="font-size:.76rem;color:#666;margin-top:2px">' + KB.esc(it.sub) + '</div></div></div>' +
-        (it.chips.length ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">' + it.chips.map(function(c){ return '<span style="background:#f0f0f0;border-radius:999px;padding:2px 8px;font-size:.7rem;font-weight:600;color:#444">' + KB.esc(c) + '</span>'; }).join('') + '</div>' : '') +
-        '<div style="margin-top:8px">' + actionHtml(it) + '</div></div>';
-    }
-    function visible() {
-      var q = norm(searchEl && searchEl.value || "");
-      return items.filter(function (it) {
-        if (!activeLayers[it.type]) return false;
-        if (q && norm(it.ad + " " + it.sub).indexOf(q) === -1) return false;
-        return true;
+      items.push({
+        key: type + "-" + x.id, type: type, id: x.id,
+        lat: +lat, lng: +lng, ad: ad || "", sub: sub || "",
+        acil: !!(x.acil || x.acil_alinacak),
+        premium: !!(x.premium),
+        maas: x.maas || x.ucret_min || x.ucret || null,
+        action: type === "ilan"
+          ? { apply: { id: x.id, baslik: ad } }
+          : { view: "profil-" + type + ".html" }
       });
     }
-    function select(key, fromMap) {
-      selectedKey = key;
-      Object.keys(cardEls).forEach(function (k) { if (cardEls[k]) cardEls[k].classList.toggle("is-selected", k === key); });
-      if (key && cardEls[key] && fromMap) cardEls[key].scrollIntoView({ behavior: "smooth", block: "nearest" });
-      Object.keys(markers).forEach(function (k) { var m = markers[k]; if (m._it) m.setIcon(pinIcon(m._it, k === key)); });
-      if (key && markers[key] && !fromMap) {
-        if (openIW) openIW.close();
-        openIW = markers[key]._iw;
-        markers[key]._iw.open(map, markers[key]);
-        map.panTo(markers[key].getPosition());
+
+    listings.forEach(function(l) { pushItem("ilan", l, l.lat, l.lng, l.baslik, [l.sahip, l.sehir, l.bolge].filter(Boolean).join(" · ")); });
+    kur.forEach(function(k) { pushItem("kurye", k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler||[])[0]].filter(Boolean).join(" · ")); });
+    isl.forEach(function(i) { pushItem("isletme", i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(" · ")); });
+    frm.forEach(function(f) { pushItem("firma", f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(", ")); });
+
+    var activeLayers = { ilan: true, firma: true, acil: false, premium: false, yakin: false };
+    var saved = window.KB && KB.loadView && KB.loadView("flt_mx2");
+    if (saved && saved.layers) {
+      Object.keys(saved.layers).forEach(function(k) { if (k in activeLayers) activeLayers[k] = !!saved.layers[k]; });
+    }
+    if (saved && saved.q && searchEl) searchEl.value = saved.q;
+
+    var userLat = null, userLng = null, userMarker = null;
+    var markers = {}, selectedKey = null;
+    var heatLayer = null, heatmapOn = false;
+
+    function saveState() {
+      if (window.KB && KB.saveView) KB.saveView("flt_mx2", { q: searchEl ? searchEl.value : "", layers: activeLayers });
+    }
+
+    function matchScore(key) {
+      var h = 0;
+      for (var i = 0; i < key.length; i++) h = ((h * 31) + key.charCodeAt(i)) >>> 0;
+      return 72 + (h % 22);
+    }
+
+    function distKm(lat1, lng1, lat2, lng2) {
+      var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+      var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function isVisible(it, q) {
+      if (q && norm(it.ad + " " + it.sub).indexOf(q) === -1) return false;
+      if (activeLayers.yakin && userLat !== null) {
+        if (distKm(userLat, userLng, it.lat, it.lng) > 5) return false;
       }
+      if (activeLayers.premium && it.premium) return true;
+      if (activeLayers.acil && it.type === "ilan" && it.acil) return true;
+      if (activeLayers.ilan && it.type === "ilan" && !it.acil) return true;
+      if (activeLayers.firma && (it.type === "firma" || it.type === "isletme" || it.type === "kurye")) return true;
+      return false;
     }
-    function renderList(list) {
-      if (countEl) countEl.textContent = list.length ? T("mx.count", { n: list.length }) : "";
-      if (!list.length) { listEl.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🗺️</div><div class="kb-empty__t">' + T("mx.empty") + '</div><div class="kb-empty__d">' + T("mx.emptySub") + '</div></div>'; cardEls = {}; return; }
-      listEl.innerHTML = list.map(mxCard).join("");
-      cardEls = {};
-      list.forEach(function (it) { cardEls[it.key] = listEl.querySelector('[data-mxkey="' + it.key.replace(/"/g, '\\"') + '"]'); });
+
+    function visible() {
+      var q = norm(searchEl && searchEl.value || "");
+      return items.filter(function(it) { return isVisible(it, q); });
     }
+
+    function pinIcon(it, sel) {
+      var cfg = PIN[it.type];
+      var s = sel ? 56 : 44, r = sel ? 17 : 13, c = s / 2;
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '">' +
+        '<circle cx="' + c + '" cy="' + c + '" r="' + (r + 9) + '" fill="' + cfg.color + '" fill-opacity="0.15"/>' +
+        (sel ? '<circle cx="' + c + '" cy="' + c + '" r="' + (r + 16) + '" fill="' + cfg.color + '" fill-opacity="0.07"/>' : '') +
+        '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="' + cfg.color + '" fill-opacity="' + (sel ? '1' : '0.88') + '"/>' +
+        '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="' + (sel ? '2.5' : '2') + '"/>' +
+        '<text x="' + c + '" y="' + c + '" font-size="' + (sel ? 14 : 11) + '" text-anchor="middle" dominant-baseline="central">' + cfg.emoji + '</text>' +
+        '</svg>';
+      return {
+        url: 'data:image/svg+xml,' + encodeURIComponent(svg),
+        scaledSize: new google.maps.Size(s, s),
+        anchor: new google.maps.Point(c, c)
+      };
+    }
+
     function renderMarkers(list) {
-      Object.keys(markers).forEach(function (k) { markers[k].setMap(null); }); markers = {};
-      list.forEach(function (it) {
-        var m = new google.maps.Marker({ position: { lat: it.lat, lng: it.lng }, map: map, title: it.ad, icon: pinIcon(it, it.key === selectedKey) });
+      Object.keys(markers).forEach(function(k) { markers[k].setMap(null); });
+      markers = {};
+      list.forEach(function(it) {
+        var m = new google.maps.Marker({
+          position: { lat: it.lat, lng: it.lng },
+          map: map, title: it.ad,
+          icon: pinIcon(it, it.key === selectedKey),
+          zIndex: it.key === selectedKey ? 999 : 1
+        });
         m._it = it;
-        var iw = new google.maps.InfoWindow({ content: mxPopup(it), maxWidth: 260 });
-        m._iw = iw;
-        m.addListener('click', function () { if (openIW) openIW.close(); openIW = iw; iw.open(map, m); select(it.key, true); });
+        m.addListener("click", function() { select(it.key, true); });
         markers[it.key] = m;
       });
     }
+
+    function select(key, fromMap) {
+      selectedKey = key;
+      Object.keys(markers).forEach(function(k) {
+        var m = markers[k];
+        if (m && m._it) { m.setIcon(pinIcon(m._it, k === key)); m.setZIndex(k === key ? 999 : 1); }
+      });
+      if (key && markers[key]) map.panTo(markers[key].getPosition());
+      if (key && scrollEl) {
+        var card = scrollEl.querySelector('[data-mxkey="' + key + '"]');
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+      if (scrollEl) {
+        scrollEl.querySelectorAll(".mx-bcard").forEach(function(c) {
+          c.classList.toggle("is-selected", c.getAttribute("data-mxkey") === key);
+        });
+      }
+    }
+
+    function bcard(it) {
+      var cfg = PIN[it.type];
+      var score = matchScore(it.key);
+      var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + " km" : null;
+      var maasHtml = it.maas ? '<div class="mx-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + KB.esc(String(it.maas)) + ' ₺</div>' : '';
+      var distHtml = dist ? '<div class="mx-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
+      var actionHtml = it.action.apply
+        ? '<button class="mx-bcard__btn mx-bcard__btn--primary" data-apply="' + it.id + '" data-baslik="' + KB.esc(it.action.apply.baslik || "") + '">Hızlı Başvur</button>' +
+          '<a class="mx-bcard__btn mx-bcard__btn--ghost" href="ilan.html?id=' + it.id + '">Detay</a>'
+        : '<a class="mx-bcard__btn mx-bcard__btn--primary" href="' + it.action.view + '?id=' + it.id + '">Profili Gör</a>';
+      return '<div class="mx-bcard" data-mxkey="' + KB.esc(it.key) + '" tabindex="0">' +
+        '<div class="mx-bcard__top">' +
+          '<div class="mx-bcard__logo" style="border-color:' + cfg.color + '33">' + cfg.emoji + '</div>' +
+          '<div class="mx-bcard__info">' +
+            '<div class="mx-bcard__title">' + KB.esc(it.ad) + '</div>' +
+            '<div class="mx-bcard__sub">' + KB.esc(it.sub) + '</div>' +
+          '</div>' +
+          '<span class="mx-bcard__badge mx-bcard__badge--' + it.type + '">' + cfg.label + '</span>' +
+        '</div>' +
+        '<div class="mx-bcard__meta">' + maasHtml + distHtml + '</div>' +
+        '<div class="mx-bcard__score">' +
+          '<div class="mx-bcard__score-bar"><div class="mx-bcard__score-fill" style="width:' + score + '%"></div></div>' +
+          '<div class="mx-bcard__score-pct">%' + score + ' eşleşme</div>' +
+        '</div>' +
+        '<div class="mx-bcard__action">' + actionHtml + '</div>' +
+      '</div>';
+    }
+
+    function renderCards(list) {
+      if (!scrollEl) return;
+      if (countEl) countEl.textContent = list.length ? list.length + " SONUÇ" : "";
+      if (!list.length) {
+        scrollEl.innerHTML = '<div style="padding:20px 16px;color:rgba(255,255,255,.3);font-size:.82rem">Bu katmanda gösterilecek sonuç yok.</div>';
+        return;
+      }
+      scrollEl.innerHTML = list.map(bcard).join("");
+      scrollEl.querySelectorAll(".mx-bcard").forEach(function(card) {
+        card.addEventListener("click", function(e) {
+          if (e.target.closest("a,button")) return;
+          select(card.getAttribute("data-mxkey"), false);
+        });
+      });
+    }
+
+    function toggleHeatmap(list) {
+      if (heatLayer) { heatLayer.setMap(null); heatLayer = null; }
+      if (!heatmapOn || !window.google || !google.maps.visualization) return;
+      var pts = list.map(function(it) {
+        return { location: new google.maps.LatLng(it.lat, it.lng), weight: it.premium ? 3 : (it.acil ? 2 : 1) };
+      });
+      heatLayer = new google.maps.visualization.HeatmapLayer({
+        data: pts, map: map, radius: 40, opacity: 0.65,
+        gradient: ["rgba(108,77,255,0)", "rgba(108,77,255,0.6)", "rgba(168,85,247,0.8)", "rgba(245,158,11,0.9)", "rgba(239,68,68,1)"]
+      });
+    }
+
     function refresh() {
       var list = visible();
-      if (selectedKey && !list.some(function (i) { return i.key === selectedKey; })) selectedKey = null;
-      renderList(list); renderMarkers(list);
+      if (selectedKey && !list.some(function(i) { return i.key === selectedKey; })) selectedKey = null;
+      renderMarkers(list);
+      renderCards(list);
+      toggleHeatmap(list);
     }
-    if (listEl) listEl.addEventListener("click", function (e) {
-      if (e.target.closest("[data-apply],[data-teklif],a,button")) return;
-      var c = e.target.closest("[data-mxkey]");
-      if (c) select(c.getAttribute("data-mxkey"), false);
-    });
-    document.querySelectorAll("[data-mxlayer]").forEach(function (chip) {
+
+    // Chip toggles
+    document.querySelectorAll("[data-mxlayer]").forEach(function(chip) {
       var t = chip.getAttribute("data-mxlayer");
-      chip.classList.toggle("is-on", activeLayers[t]);
-      chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
-      chip.addEventListener("click", function () {
-        activeLayers[t] = !activeLayers[t]; chip.classList.toggle("is-on", activeLayers[t]);
-        chip.setAttribute("aria-pressed", activeLayers[t] ? "true" : "false");
-        refresh(); saveMxState();
+      chip.classList.toggle("is-on", !!activeLayers[t]);
+      chip.addEventListener("click", function() {
+        activeLayers[t] = !activeLayers[t];
+        chip.classList.toggle("is-on", activeLayers[t]);
+        refresh(); saveState();
       });
     });
-    if (searchEl) searchEl.addEventListener("input", function () { refresh(); saveMxState(); });
-    var toggleBtn = document.getElementById("mxToggle");
-    if (toggleBtn && container) toggleBtn.addEventListener("click", function () {
-      var open = container.classList.toggle("mx--listopen");
-      toggleBtn.textContent = open ? T("mx.map") : T("mx.list");
+
+    if (searchEl) searchEl.addEventListener("input", function() { refresh(); saveState(); });
+
+    // Locate FAB
+    if (locBtn) locBtn.addEventListener("click", function() {
+      if (!navigator.geolocation) { if (window.KBMotion) KBMotion.showErrorToast("Konum desteklenmiyor."); return; }
+      locBtn.classList.add("is-loading"); locBtn.classList.remove("is-active");
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          locBtn.classList.remove("is-loading"); locBtn.classList.add("is-active");
+          userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+          if (userMarker) userMarker.setMap(null);
+          userMarker = new google.maps.Marker({
+            position: { lat: userLat, lng: userLng }, map: map,
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: "#3b82f6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
+            zIndex: 2000, title: "Konumunuz"
+          });
+          map.panTo({ lat: userLat, lng: userLng }); map.setZoom(14);
+          if (activeLayers.yakin) refresh();
+        },
+        function(err) {
+          locBtn.classList.remove("is-loading");
+          if (window.KBMotion) KBMotion.showErrorToast(err.code === 1 ? "Konum izni reddedildi." : "Konum alınamadı.");
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
     });
+
+    // AI FAB
+    if (aiBtn && aiCard) {
+      aiBtn.addEventListener("click", function() {
+        var on = aiCard.classList.toggle("is-visible");
+        aiBtn.classList.toggle("is-active", on);
+      });
+    }
+    if (aiClose && aiCard) {
+      aiClose.addEventListener("click", function() {
+        aiCard.classList.remove("is-visible");
+        if (aiBtn) aiBtn.classList.remove("is-active");
+      });
+    }
+
+    var AI_ZONES = { kadikoy: { lat: 40.990, lng: 29.030 }, besiktas: { lat: 41.043, lng: 29.005 }, sisli: { lat: 41.061, lng: 28.987 }, atasehir: { lat: 40.996, lng: 29.118 }, umraniye: { lat: 41.016, lng: 29.110 } };
+    document.querySelectorAll("[data-zone]").forEach(function(z) {
+      z.addEventListener("click", function() {
+        var pos = AI_ZONES[z.getAttribute("data-zone")];
+        if (pos) { map.panTo(pos); map.setZoom(13); }
+      });
+    });
+
+    // Heatmap FAB
+    if (heatBtn) heatBtn.addEventListener("click", function() {
+      heatmapOn = !heatmapOn;
+      heatBtn.classList.toggle("is-active", heatmapOn);
+      if (heatLeg) heatLeg.classList.toggle("is-visible", heatmapOn);
+      toggleHeatmap(visible());
+    });
+
+    // Layers FAB — toggle chips row visibility
+    if (layBtn) layBtn.addEventListener("click", function() {
+      var chipsRow = document.getElementById("mxChipsRow");
+      if (!chipsRow) return;
+      var hidden = chipsRow.style.display === "none";
+      chipsRow.style.display = hidden ? "" : "none";
+      layBtn.classList.toggle("is-active", hidden);
+    });
+
     refresh();
+
     if (items.length) {
       var bounds = new google.maps.LatLngBounds();
-      items.forEach(function (i) { bounds.extend({ lat: i.lat, lng: i.lng }); });
-      map.fitBounds(bounds);
+      items.forEach(function(i) { bounds.extend({ lat: i.lat, lng: i.lng }); });
+      if (items.length < 80) { map.fitBounds(bounds); } else { map.setCenter(ISTANBUL); map.setZoom(12); }
     }
   }
-  function mxSkeleton() {
-    var one = '<div class="mx-card mx-card--skel"><span class="skel skel--ava"></span><div style="flex:1"><span class="skel skel--line" style="width:60%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div></div>';
-    var out = ""; for (var i = 0; i < 6; i++) out += one; return out;
+  function mxBcardSkel(n) {
+    var one = '<div class="mx-bcard mx-bcard--skel">' +
+      '<div class="mx-bcard__top">' +
+      '<span class="mx-skel" style="width:42px;height:42px;border-radius:14px;flex:none"></span>' +
+      '<div class="mx-bcard__info"><span class="mx-skel" style="width:70%;height:13px;margin-bottom:7px"></span><span class="mx-skel" style="width:50%;height:10px"></span></div>' +
+      '</div>' +
+      '<span class="mx-skel" style="width:100%;height:4px;border-radius:2px;margin:10px 0"></span>' +
+      '<div style="display:flex;gap:6px;margin-top:10px"><span class="mx-skel" style="flex:1;height:34px;border-radius:11px"></span><span class="mx-skel" style="flex:1;height:34px;border-radius:11px"></span></div>' +
+      '</div>';
+    var out = ""; for (var i = 0; i < n; i++) out += one; return out;
   }
 
   /* ============ İLAN DETAYI (Job Detail) ============ */

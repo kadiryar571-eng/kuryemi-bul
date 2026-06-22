@@ -1,130 +1,482 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="title.harita">Harita · Kuryemi Bul</title>
-    <meta name="description" content="İş fırsatlarını, kuryeleri, işletmeleri ve firmaları senkron liste + harita üzerinde keşfet.">
+    <meta name="description" content="İstanbul genelinde iş ilanlarını, firmaları ve fırsatları haritada keşfet.">
     <link rel="icon" href="assets/logo.png">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Kuryemi Bul">
     <meta property="og:title" content="Harita · Kuryemi Bul">
-    <meta property="og:description" content="İş fırsatlarını ve yetenekleri haritada keşfet.">
+    <meta property="og:description" content="İş fırsatlarını ve şirketleri haritada keşfet.">
     <meta property="og:url" content="https://kuryemibul.com/harita.html">
     <link rel="stylesheet" href="assets/css/bundle-core.css">
     <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
     <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
-    <link rel="stylesheet" href="assets/css/space-bg.css">
     <style>
-      /* ===== Senkron Liste + Harita deneyimi ===== */
-      .mx { position: relative; display: grid; grid-template-columns: 384px 1fr; gap: 0;
-        height: calc(100vh - 150px); min-height: 520px; border: 1px solid var(--line);
-        border-radius: 18px; overflow: hidden; background: var(--bg, #050505); box-shadow: 0 24px 60px -28px rgba(0,0,0,.7); }
-      .mx__panel { display: flex; flex-direction: column; min-height: 0; background: var(--bg, #070809); border-right: 1px solid var(--line); }
-      .mx-toolbar { padding: 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
-      .mx-search { position: relative; }
-      .mx-search input { width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px;
-        padding: 11px 14px 11px 38px; color: var(--navy, #f4f6fb); font-family: inherit; font-size: .92rem; }
-      .mx-search input:focus { outline: none; border-color: #4f8bff; box-shadow: 0 0 0 3px rgba(79,139,255,.16); }
-      .mx-search::before { content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .85rem; opacity: .7; }
-      .mx-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-      .mx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
-        border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted, #94a0b4);
-        font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .2s; }
-      .mx-chip__dot { width: 9px; height: 9px; border-radius: 50%; }
-      .mx-chip.is-on { color: var(--navy, #f4f6fb); border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.07); }
-      .mx-chip:not(.is-on) { opacity: .5; }
-      .mx-count { padding: 10px 14px 0; font-size: .8rem; color: var(--muted, #94a0b4); }
-      .mx-list { flex: 1; overflow-y: auto; padding: 10px 14px 16px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; }
-      .mx__map { position: relative; min-height: 320px; }
-      #map { position: absolute; inset: 0; width: 100%; height: 100%; background: #0a0c14; }
+      /* ===== Premium Map Discovery Screen ===== */
+      body { background: #0f0b1e; }
 
-      /* liste kartı */
-      .mx-card { display: flex; gap: 12px; padding: 13px; border-radius: 14px; border: 1px solid var(--line);
-        background: rgba(255,255,255,.025); cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
-      .mx-card:hover { border-color: rgba(79,139,255,.4); background: rgba(255,255,255,.05); }
-      .mx-card.is-selected { border-color: rgba(34,211,238,.6); background: rgba(34,211,238,.07); box-shadow: 0 0 0 1px rgba(34,211,238,.4) inset; }
-      .mx-card__ic { width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center; font-size: 1.25rem;
-        background: rgba(255,255,255,.05); border: 1px solid var(--line); }
-      .mx-card__ic--ilan { background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.4); }
-      .mx-card__ic--kurye { background: rgba(34,211,238,.14); border-color: rgba(34,211,238,.4); }
-      .mx-card__ic--isletme { background: rgba(79,139,255,.14); border-color: rgba(79,139,255,.4); }
-      .mx-card__ic--firma { background: rgba(168,85,247,.14); border-color: rgba(168,85,247,.4); }
-      .mx-card__body { min-width: 0; flex: 1; }
-      .mx-card__head { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
-      .mx-card__title { font-weight: 700; font-size: .94rem; color: var(--navy, #f4f6fb); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .mx-tag { font-size: .64rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; flex: none; text-transform: uppercase; letter-spacing: .03em; }
-      .mx-tag--ilan { background: rgba(245,158,11,.16); color: #fbbf24; }
-      .mx-tag--kurye { background: rgba(34,211,238,.16); color: #22d3ee; }
-      .mx-tag--isletme { background: rgba(79,139,255,.16); color: #93c5fd; }
-      .mx-tag--firma { background: rgba(168,85,247,.16); color: #d8b4fe; }
-      .mx-card__sub { font-size: .8rem; color: var(--muted, #94a0b4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .mx-card__chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
-      .mx-card__act { margin-top: 9px; }
-      .mx-card--skel { align-items: center; cursor: default; }
+      .mx-mapscreen {
+        position: relative;
+        height: calc(100dvh - 60px);
+        overflow: hidden;
+        background: #0f0b1e;
+      }
 
-      /* Google Maps InfoWindow özelleştirme */
-      .gm-style-iw { border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,.15) !important; }
-      .gm-style-iw-d { overflow: hidden !important; }
-      .gm-ui-hover-effect { top: 4px !important; right: 4px !important; }
+      #map {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
 
-      /* Konumum butonu */
-      .mx-locate-btn { width: 36px; height: 36px; background: #11151f; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #94a3b8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.4); padding: 0; }
-      .mx-locate-btn:hover { background: rgba(34,211,238,0.1); color: #22d3ee; border-color: rgba(34,211,238,0.3); }
-      .mx-locate-btn.is-active { color: #22d3ee; border-color: rgba(34,211,238,0.5); background: rgba(34,211,238,0.07); }
-      .mx-locate-btn.is-loading svg { animation: loc-spin 1s linear infinite; }
-      @keyframes loc-spin { to { transform: rotate(360deg); } }
-      /* Kullanıcı konumu mavi nokta */
-      .mx-user-dot { width: 16px; height: 16px; background: #3b82f6; border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 0 0 3px rgba(59,130,246,0.3); position: relative; }
-      .mx-user-pulse { position: absolute; inset: -8px; border-radius: 50%; background: rgba(59,130,246,0.18); animation: user-pulse 2s ease-out infinite; }
-      @keyframes user-pulse { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(2.2); opacity: 0; } }
+      /* ── Top search + chips overlay ── */
+      .mx-topbar {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+      }
+      .mx-topbar > * { pointer-events: auto; }
 
-      /* mobil liste/harita geçişi (bottom sheet) */
-      .mx-toggle { display: none; }
-      @media (max-width: 860px) {
-        .mx { grid-template-columns: 1fr; height: calc(100vh - 130px); }
-        .mx__panel { position: absolute; left: 0; right: 0; bottom: 0; top: 38%; z-index: 1000;
-          border-right: 0; border-top: 1px solid var(--line); border-radius: 18px 18px 0 0;
-          transform: translateY(calc(100% - 64px)); transition: transform .35s cubic-bezier(.4,0,.2,1); box-shadow: 0 -16px 40px -20px rgba(0,0,0,.8); }
-        .mx--listopen .mx__panel { transform: translateY(0); }
-        .mx__panel::before { content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 40px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.25); }
-        .mx-toolbar { padding-top: 22px; }
-        .mx-toggle { display: inline-flex; align-items: center; gap: 8px; position: absolute; z-index: 1100; right: 16px; bottom: 16px;
-          padding: 12px 20px; border-radius: 999px; border: none; background: linear-gradient(135deg,#4f8bff,#a855f7); color: #fff;
-          font-family: inherit; font-weight: 700; font-size: .9rem; box-shadow: 0 12px 30px -10px rgba(124,92,255,.8); cursor: pointer; }
+      .mx-search-row { display: flex; align-items: center; gap: 8px; }
+
+      .mx-searchbox {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(15, 11, 30, 0.9);
+        backdrop-filter: blur(24px) saturate(1.6);
+        -webkit-backdrop-filter: blur(24px) saturate(1.6);
+        border: 1px solid rgba(108, 77, 255, 0.32);
+        border-radius: 18px;
+        padding: 12px 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.65), 0 1px 0 rgba(108,77,255,0.14) inset;
+      }
+      .mx-searchbox svg { opacity: 0.45; flex: none; color: #c4b5fd; }
+      .mx-searchbox input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #f0edff;
+        font-family: inherit;
+        font-size: 0.93rem;
+        min-width: 0;
+      }
+      .mx-searchbox input::placeholder { color: rgba(240,237,255,0.3); }
+
+      .mx-filter-btn {
+        width: 48px; height: 48px; flex: none;
+        border-radius: 16px;
+        background: rgba(15, 11, 30, 0.9);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(108, 77, 255, 0.32);
+        color: rgba(240,237,255,0.5);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      }
+      .mx-filter-btn:hover {
+        background: rgba(108,77,255,0.22);
+        border-color: rgba(108,77,255,0.6);
+        color: #c4b5fd;
+      }
+
+      .mx-chips-row {
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding: 2px 0 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .mx-chips-row::-webkit-scrollbar { display: none; }
+
+      .mx-chip {
+        flex: none;
+        display: flex; align-items: center; gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(15, 11, 30, 0.88);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.38);
+        font-size: 0.8rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s;
+        white-space: nowrap; font-family: inherit;
+      }
+      .mx-chip__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+      .mx-chip.is-on {
+        background: rgba(108, 77, 255, 0.2);
+        border-color: rgba(108, 77, 255, 0.58);
+        color: #c4b5fd;
+        box-shadow: 0 0 18px rgba(108,77,255,0.22);
+      }
+      .mx-chip.is-on .mx-chip__dot { box-shadow: 0 0 6px currentColor; }
+
+      /* ── Right FABs ── */
+      .mx-fabs {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .mx-fab {
+        width: 50px; height: 50px;
+        border-radius: 16px;
+        background: rgba(15, 11, 30, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        cursor: pointer;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 3px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        color: rgba(255,255,255,0.5);
+        font-family: inherit;
+      }
+      .mx-fab svg { width: 20px; height: 20px; }
+      .mx-fab span { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
+      .mx-fab:hover, .mx-fab.is-active {
+        background: rgba(108, 77, 255, 0.28);
+        border-color: rgba(108, 77, 255, 0.62);
+        color: #c4b5fd;
+        box-shadow: 0 0 28px rgba(108,77,255,0.38);
+      }
+      .mx-fab.is-loading svg { animation: mx-spin 1s linear infinite; }
+      @keyframes mx-spin { to { transform: rotate(360deg); } }
+
+      /* ── AI Recommendation Card ── */
+      .mx-ai-card {
+        position: absolute;
+        left: 14px; right: 78px;
+        bottom: 220px;
+        z-index: 20;
+        background: rgba(10, 7, 22, 0.95);
+        backdrop-filter: blur(28px) saturate(1.6);
+        -webkit-backdrop-filter: blur(28px) saturate(1.6);
+        border: 1px solid rgba(108, 77, 255, 0.48);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 8px 48px rgba(108,77,255,0.28), 0 2px 0 rgba(108,77,255,0.18) inset;
+        display: none;
+        animation: mx-fadeup 0.28s ease;
+      }
+      .mx-ai-card.is-visible { display: block; }
+      @keyframes mx-fadeup { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+      .mx-ai-card__head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+      .mx-ai-card__icon {
+        width: 36px; height: 36px; flex: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6C4DFF, #9C5FFF);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+        box-shadow: 0 0 20px rgba(108,77,255,0.6);
+      }
+      .mx-ai-card__title { font-weight: 700; font-size: 0.88rem; color: #f0edff; }
+      .mx-ai-card__sub { font-size: 0.74rem; color: rgba(196,181,253,0.6); margin-top: 1px; }
+      .mx-ai-card__close {
+        margin-left: auto; background: none; border: none;
+        color: rgba(255,255,255,0.3); cursor: pointer; font-size: 1.1rem; padding: 2px; line-height: 1;
+      }
+      .mx-ai-card__body { font-size: 0.81rem; color: rgba(255,255,255,0.48); line-height: 1.55; margin-bottom: 12px; }
+      .mx-ai-zones { display: flex; flex-wrap: wrap; gap: 6px; }
+      .mx-ai-zone {
+        padding: 5px 12px; border-radius: 999px;
+        background: rgba(108,77,255,0.16);
+        border: 1px solid rgba(108,77,255,0.42);
+        color: #c4b5fd; font-size: 0.74rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s; font-family: inherit;
+      }
+      .mx-ai-zone:hover { background: rgba(108,77,255,0.34); box-shadow: 0 0 12px rgba(108,77,255,0.3); }
+
+      /* ── Heatmap legend ── */
+      .mx-heat-legend {
+        position: absolute;
+        bottom: 22px; left: 14px;
+        z-index: 20;
+        background: rgba(10,7,22,0.9);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 9px 14px;
+        display: none;
+        gap: 8px; align-items: center;
+        font-size: 0.72rem; color: rgba(255,255,255,0.38);
+        font-weight: 600;
+      }
+      .mx-heat-legend.is-visible { display: flex; }
+      .mx-heat-bar {
+        width: 70px; height: 5px; border-radius: 999px;
+        background: linear-gradient(90deg, rgba(108,77,255,0.3), #6C4DFF, #a855f7, #f59e0b, #ef4444);
+      }
+
+      /* ── Bottom Sheet ── */
+      .mx-sheet {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        z-index: 20;
+      }
+      .mx-sheet__handle {
+        width: 40px; height: 4px; border-radius: 999px;
+        background: rgba(255,255,255,0.15);
+        margin: 0 auto 8px;
+      }
+      .mx-sheet__count {
+        padding: 0 16px 6px;
+        font-size: 0.7rem; font-weight: 700;
+        color: rgba(255,255,255,0.3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .mx-cards-scroll {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 0 16px 16px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        scroll-snap-type: x mandatory;
+      }
+      .mx-cards-scroll::-webkit-scrollbar { display: none; }
+
+      /* Individual bottom card */
+      .mx-bcard {
+        flex: none;
+        width: 264px;
+        background: rgba(10, 7, 22, 0.93);
+        backdrop-filter: blur(28px) saturate(1.5);
+        -webkit-backdrop-filter: blur(28px) saturate(1.5);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
+        padding: 14px;
+        cursor: pointer;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        scroll-snap-align: start;
+      }
+      .mx-bcard:hover { border-color: rgba(108,77,255,0.38); }
+      .mx-bcard.is-selected {
+        border-color: rgba(108,77,255,0.65);
+        background: rgba(108,77,255,0.1);
+        box-shadow: 0 0 30px rgba(108,77,255,0.24);
+      }
+
+      .mx-bcard__top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+      .mx-bcard__logo {
+        width: 42px; height: 42px; flex: none;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.25rem;
+      }
+      .mx-bcard__info { min-width: 0; flex: 1; }
+      .mx-bcard__title { font-weight: 700; font-size: 0.87rem; color: #f0edff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mx-bcard__sub { font-size: 0.73rem; color: rgba(255,255,255,0.38); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mx-bcard__badge { flex: none; font-size: 0.62rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .mx-bcard__badge--ilan    { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+      .mx-bcard__badge--kurye   { background: rgba(34,211,238,0.18); color: #22d3ee; border: 1px solid rgba(34,211,238,0.3); }
+      .mx-bcard__badge--isletme { background: rgba(79,139,255,0.18); color: #93c5fd; border: 1px solid rgba(79,139,255,0.3); }
+      .mx-bcard__badge--firma   { background: rgba(168,85,247,0.18); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
+
+      .mx-bcard__meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; min-height: 18px; }
+      .mx-bcard__meta-item { display: flex; align-items: center; gap: 4px; font-size: 0.73rem; color: rgba(255,255,255,0.38); }
+      .mx-bcard__meta-item svg { width: 12px; height: 12px; opacity: 0.55; flex: none; }
+
+      .mx-bcard__score { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+      .mx-bcard__score-bar { flex: 1; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+      .mx-bcard__score-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #6C4DFF, #9C5FFF); box-shadow: 0 0 8px rgba(108,77,255,0.6); }
+      .mx-bcard__score-pct { font-size: 0.7rem; font-weight: 700; color: #c4b5fd; flex: none; }
+
+      .mx-bcard__action { display: flex; gap: 6px; }
+      .mx-bcard__btn {
+        flex: 1; padding: 9px 10px; border-radius: 11px;
+        font-family: inherit; font-size: 0.78rem; font-weight: 700;
+        cursor: pointer; transition: all 0.2s; text-align: center;
+        text-decoration: none; display: block; border: none;
+      }
+      .mx-bcard__btn--primary {
+        background: linear-gradient(135deg, #6C4DFF, #9C5FFF);
+        color: #fff; box-shadow: 0 4px 16px rgba(108,77,255,0.42);
+      }
+      .mx-bcard__btn--primary:hover { box-shadow: 0 6px 24px rgba(108,77,255,0.65); transform: translateY(-1px); }
+      .mx-bcard__btn--ghost {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.52);
+      }
+      .mx-bcard__btn--ghost:hover { background: rgba(255,255,255,0.1); }
+
+      /* Skeleton animation */
+      @keyframes mx-skel { 0%,100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+      .mx-bcard--skel { pointer-events: none; cursor: default; }
+      .mx-skel { border-radius: 8px; background: rgba(108,77,255,0.1); display: block; animation: mx-skel 1.5s ease-in-out infinite; }
+
+      /* User location pulse */
+      @keyframes mx-pulse { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
+
+      /* Google Maps zoom control override */
+      .gm-bundled-control { margin-bottom: 20px !important; }
+
+      /* ── Desktop ── */
+      @media (min-width: 681px) {
+        .mx-mapscreen { height: calc(100dvh - 64px); }
+        .mx-bcard { width: 280px; }
+      }
+
+      /* ── Mobile: sheet sits above fixed bottom nav ── */
+      @media (max-width: 680px) {
+        .mx-sheet {
+          bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+          padding-bottom: 0;
+        }
+        .mx-ai-card { bottom: 260px; right: 14px; }
+        .mx-fabs {
+          top: auto; bottom: 250px; transform: none;
+          right: 10px;
+        }
+        .mx-fab { width: 44px; height: 44px; }
+        .mx-fab svg { width: 18px; height: 18px; }
+        .mx-fab span { display: none; }
+        .mx-heat-legend { bottom: 110px; }
+      }
+
+      /* Capacitor / PWA safe-area for desktop-like heights */
+      @media (min-width: 681px) {
+        .mx-mapscreen { height: calc(100dvh - 64px - env(safe-area-inset-top, 0px)); }
       }
     </style>
 </head>
 <body>
     <div id="app-header"></div>
 
-    <section class="page-head">
-        <div class="container"><h1>🗺️ Fırsat & Yetenek Haritası</h1><p>Açık iş ilanlarını, kuryeleri, işletmeleri ve firmaları senkron liste + harita üzerinde keşfet.</p></div>
-    </section>
+    <main class="mx-mapscreen" id="mxRoot">
+        <div id="map"></div>
 
-    <main class="section--sm">
-        <div class="container">
-            <div class="mx" id="mxRoot">
-                <div class="mx__panel">
-                    <div class="mx-toolbar">
-                        <div class="mx-search"><input type="search" id="mxSearch" autocomplete="off" data-i18n-ph="mx.search" placeholder="Harita üzerinde ara…" aria-label="Ara"></div>
-                        <div class="mx-chips">
-                            <button type="button" class="mx-chip is-on" data-mxlayer="ilan" aria-pressed="true"><span class="mx-chip__dot" style="background:#f59e0b"></span><span data-i18n="mx.layer.ilan">İlanlar</span></button>
-                            <button type="button" class="mx-chip is-on" data-mxlayer="kurye" aria-pressed="true"><span class="mx-chip__dot" style="background:#22d3ee"></span><span data-i18n="mx.layer.kurye">Kuryeler</span></button>
-                            <button type="button" class="mx-chip is-on" data-mxlayer="isletme" aria-pressed="true"><span class="mx-chip__dot" style="background:#4f8bff"></span><span data-i18n="mx.layer.isletme">İşletmeler</span></button>
-                            <button type="button" class="mx-chip is-on" data-mxlayer="firma" aria-pressed="true"><span class="mx-chip__dot" style="background:#a855f7"></span><span data-i18n="mx.layer.firma">Firmalar</span></button>
-                        </div>
-                    </div>
-                    <p class="mx-count" id="mxCount"></p>
-                    <div class="mx-list" id="mxList"></div>
+        <!-- Top overlay: search + layer chips -->
+        <div class="mx-topbar">
+            <div class="mx-search-row">
+                <div class="mx-searchbox">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="search" id="mxSearch" autocomplete="off"
+                        placeholder="Bölge, firma veya ilan ara" aria-label="Haritada ara">
                 </div>
-                <div class="mx__map"><div id="map"></div></div>
-                <button type="button" class="mx-toggle" id="mxToggle" data-i18n="mx.list">Liste</button>
+                <button type="button" class="mx-filter-btn" id="mxFilterBtn" aria-label="Filtrele">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="6" x2="20" y2="6"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                        <line x1="11" y1="18" x2="13" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mx-chips-row" id="mxChipsRow">
+                <button type="button" class="mx-chip is-on" data-mxlayer="ilan">
+                    <span class="mx-chip__dot" style="background:#f59e0b"></span>İş İlanları
+                </button>
+                <button type="button" class="mx-chip is-on" data-mxlayer="firma">
+                    <span class="mx-chip__dot" style="background:#a855f7"></span>Firmalar
+                </button>
+                <button type="button" class="mx-chip" data-mxlayer="acil">
+                    <span class="mx-chip__dot" style="background:#ef4444"></span>Acil Alım
+                </button>
+                <button type="button" class="mx-chip" data-mxlayer="premium">
+                    <span class="mx-chip__dot" style="background:#f59e0b;box-shadow:0 0 5px #f59e0b"></span>Premium
+                </button>
+                <button type="button" class="mx-chip" data-mxlayer="yakin">
+                    <span class="mx-chip__dot" style="background:#22d3ee"></span>Yakınımda
+                </button>
             </div>
         </div>
-    </main>
 
-    <div id="app-footer"></div>
+        <!-- Right floating action buttons -->
+        <div class="mx-fabs" id="mxFabs">
+            <button type="button" class="mx-fab" id="mxLocateBtn" title="Konumum" aria-label="Konumum">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                    <circle cx="12" cy="12" r="8"/>
+                </svg>
+                <span>Konum</span>
+            </button>
+            <button type="button" class="mx-fab" id="mxAIBtn" title="AI Öneri" aria-label="AI Öneri">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span>AI Öneri</span>
+            </button>
+            <button type="button" class="mx-fab" id="mxHeatBtn" title="Isı Haritası" aria-label="Isı Haritası">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/>
+                    <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+                <span>Isı Hrts</span>
+            </button>
+            <button type="button" class="mx-fab" id="mxLayersBtn" title="Katmanlar" aria-label="Katmanlar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                </svg>
+                <span>Katman</span>
+            </button>
+        </div>
+
+        <!-- AI Recommendation Card -->
+        <div class="mx-ai-card" id="mxAiCard">
+            <div class="mx-ai-card__head">
+                <div class="mx-ai-card__icon">✨</div>
+                <div>
+                    <div class="mx-ai-card__title">AI Fırsat Analizi</div>
+                    <div class="mx-ai-card__sub">Sana en uygun fırsat bölgeleri</div>
+                </div>
+                <button type="button" class="mx-ai-card__close" id="mxAiClose" aria-label="Kapat">✕</button>
+            </div>
+            <div class="mx-ai-card__body">Profiline ve geçmiş aktivitene göre en yoğun iş ilanı bölgelerini gösteriyor.</div>
+            <div class="mx-ai-zones">
+                <button type="button" class="mx-ai-zone" data-zone="kadikoy">Kadıköy</button>
+                <button type="button" class="mx-ai-zone" data-zone="besiktas">Beşiktaş</button>
+                <button type="button" class="mx-ai-zone" data-zone="sisli">Şişli</button>
+                <button type="button" class="mx-ai-zone" data-zone="atasehir">Ataşehir</button>
+                <button type="button" class="mx-ai-zone" data-zone="umraniye">Ümraniye</button>
+            </div>
+        </div>
+
+        <!-- Heatmap intensity legend -->
+        <div class="mx-heat-legend" id="mxHeatLegend">
+            <span>Az</span>
+            <div class="mx-heat-bar"></div>
+            <span>Yoğun</span>
+        </div>
+
+        <!-- Bottom swipeable cards sheet -->
+        <div class="mx-sheet" id="mxSheet">
+            <div class="mx-sheet__handle"></div>
+            <div class="mx-sheet__count" id="mxCount"></div>
+            <div class="mx-cards-scroll" id="mxCardScroll"></div>
+        </div>
+    </main>
 
     <script src="assets/js/i18n.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -134,6 +486,6 @@
     <script src="assets/js/app.js"></script>
     <script src="assets/js/motion.js"></script>
     <script>function __mxMapReady(){ KBApp.initMapExperience(); }</script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&loading=async&callback=__mxMapReady" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&libraries=visualization&loading=async&callback=__mxMapReady" async defer></script>
 </body>
 </html>
