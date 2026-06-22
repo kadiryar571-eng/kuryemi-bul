@@ -145,7 +145,7 @@ window.IsletmeScreens = (function () {
     if (kbScreen) kbScreen.style.overflow = 'hidden';
     renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
     if (window._spmMapsReady && window.initPremiumMap) {
-      setTimeout(function() { window.initPremiumMap('isletme'); }, 50);
+      setTimeout(function() { window.initPremiumMap('isletme'); }, 200);
     } else {
       window._spmPendingRole = 'isletme';
     }

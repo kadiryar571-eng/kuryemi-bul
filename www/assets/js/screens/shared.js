@@ -698,7 +698,11 @@ window.initPremiumMap = async function(role) {
     return;
   }
   var mapEl = document.getElementById('spm-map');
-  if (!mapEl) return;
+  if (!mapEl) {
+    // renderScreen has 120ms fade delay — retry once
+    setTimeout(function() { window.initPremiumMap(role); }, 250);
+    return;
+  }
 
   var searchEl = document.getElementById('spmSearch');
   var countEl  = document.getElementById('spmCount');
