@@ -795,6 +795,7 @@
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
-    myListingStats: myListingStats
+    myListingStats: myListingStats,
+    openChannel: function (name) { return client.channel(name); }
   };
 })();

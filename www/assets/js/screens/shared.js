@@ -543,6 +543,13 @@ window.SharedScreens = (function () {
     if (m.message_type === 'system') {
       return '<div class="chat-date-sep chat-system-msg"><span>' + (m.content || '') + '</span></div>';
     }
+    if (m.message_type === 'webrtc_call') {
+      var meta = m.metadata || {};
+      var isOut = m.sender_user === myUserId;
+      var icon = meta.callType === 'video' ? '📹' : '📞';
+      var label = isOut ? (meta.callType === 'video' ? 'Görüntülü arama başlatıldı' : 'Sesli arama başlatıldı') : (meta.callType === 'video' ? 'Gelen görüntülü arama' : 'Gelen sesli arama');
+      return '<div class="chat-date-sep"><span>' + icon + ' ' + label + '</span></div>';
+    }
     if (m.message_type === 'profile_card') {
       var meta = m.metadata || {};
       var sevBadge = meta.seviye === 'premium' ? '⭐ Premium' : meta.seviye === 'profesyonel' ? '🔵 Profesyonel' : 'Standart';
@@ -603,32 +610,28 @@ window.SharedScreens = (function () {
             '<div class="chat-hdr__status"><span class="chat-hdr__dot"></span>Aktif Başvuru</div>' +
           '</div>' +
           '<div class="chat-hdr__acts">' +
-            '<button class="chat-hdr__act" id="chat-call-btn" title="Telefon">' +
+            '<button class="chat-hdr__act" id="chat-call-btn" title="Sesli Ara">' +
               '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
             '</button>' +
-            '<button class="chat-hdr__act" onclick="SharedScreens.chatQuick(\'more\')">' +
-              '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
+            '<button class="chat-hdr__act" id="chat-video-btn" title="Görüntülü Ara">' +
+              '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
             '</button>' +
           '</div>';
       }
 
-      /* Telefon butonunu async yükle — profile_contacts RLS korumalı */
-      if (otherProfileId && window.SB && SB.isOn()) {
-        SB.contactOf(otherProfileId).then(function (contact) {
-          var btn = document.getElementById('chat-call-btn');
-          if (!btn) return;
-          var phone = contact && contact.telefon;
-          if (phone) {
-            btn.onclick = function () { window.open('tel:' + phone); };
-            btn.title = phone;
-            btn.style.color = 'var(--c-success, #22C55E)';
-          } else {
-            btn.onclick = function () {
-              if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Telefon bilgisi mevcut değil');
-            };
-          }
-        }).catch(function () {});
-      }
+      /* Arama butonlarını WebRTC ile bağla */
+      var _cid   = convId;
+      var _oName = otherName;
+      setTimeout(function () {
+        var audioBtn = document.getElementById('chat-call-btn');
+        var videoBtn = document.getElementById('chat-video-btn');
+        if (audioBtn) audioBtn.onclick = function () {
+          if (window.KBCall) KBCall.startCall(_cid, _oName, 'audio');
+        };
+        if (videoBtn) videoBtn.onclick = function () {
+          if (window.KBCall) KBCall.startCall(_cid, _oName, 'video');
+        };
+      }, 150);
 
       var ctxEl = document.getElementById('chat-context-el');
       if (ctxEl) {
