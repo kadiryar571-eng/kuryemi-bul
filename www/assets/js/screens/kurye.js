@@ -224,55 +224,195 @@ window.KuryeScreens = (function () {
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */
+  var MOCK_MAP_ILANLAR = [
+    { id: '1', emoji: '🛵', title: 'Motorlu Kurye', company: 'ABC Lojistik', salary: '32.000 ₺/ay', dist: '0.4 km', time: '2 saat önce', tags: ['Tam Zamanlı', 'Sigortalı'], match: 92, avatarBg: '#6C4DFF' },
+    { id: '2', emoji: '🏢', title: 'Araçlı Kurye',  company: 'Hub Dağıtım',  salary: '28.500 ₺/ay', dist: '1.1 km', time: '5 saat önce', tags: ['Tam Zamanlı', 'Araç Sağlanır'], match: 85, avatarBg: '#22C55E' },
+    { id: '3', emoji: '⚡', title: 'Premium Kurye', company: 'Hızlı Kargo',  salary: '38.000 ₺/ay', dist: '1.8 km', time: 'Bugün',       tags: ['Premium', 'Acil'],           match: 78, avatarBg: '#F59E0B' },
+    { id: '4', emoji: '🚶', title: 'Yaya Kurye',    company: 'Lezzet Dükkânı', salary: '17.000 ₺/ay', dist: '2.3 km', time: 'Dün',      tags: ['Part Time'],                 match: 71, avatarBg: '#F97316' }
+  ];
+
+  function _mapJobCard(j) {
+    return '<div class="map-job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + j.id + '\')">' +
+      '<div class="map-job-card__avatar" style="background:' + j.avatarBg + '">' + j.emoji + '</div>' +
+      '<div class="map-job-card__body">' +
+        '<div class="map-job-card__title">' + j.title + '</div>' +
+        '<div class="map-job-card__company">' + j.company + '</div>' +
+        '<div class="map-job-card__salary">' + j.salary + '</div>' +
+        '<div class="map-job-card__meta">' +
+          '<span>📍 ' + j.dist + '</span>' +
+          '<span>🕐 ' + j.time + '</span>' +
+        '</div>' +
+        '<div class="map-job-card__tags">' +
+          j.tags.map(function (t) { return '<span class="map-job-card__tag">' + t + '</span>'; }).join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="map-job-card__score">' +
+        '<svg viewBox="0 0 36 36" class="map-job-card__ring">' +
+          '<circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2.5"/>' +
+          '<circle cx="18" cy="18" r="15.5" fill="none" stroke="' + j.avatarBg + '" stroke-width="2.5"' +
+            ' stroke-dasharray="' + Math.round(97.4 * j.match / 100) + ' 97.4"' +
+            ' stroke-linecap="round" transform="rotate(-90 18 18)"/>' +
+        '</svg>' +
+        '<div class="map-job-card__pct">' + j.match + '%</div>' +
+      '</div>' +
+      '<button class="map-job-card__cta" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + j.id + '\')">Hızlı Başvur</button>' +
+    '</div>';
+  }
+
   function harita() {
-    showAppBar('Harita', false,
-      '<button class="kb-appbar__action" onclick="Router.go(\'/bildirimler\')">' + ICON.bell + '</button>'
-    );
+    if (typeof showAppBar === 'function') {
+      showAppBar('', false, '');
+      var bar = document.getElementById('kb-appbar');
+      if (bar) bar.style.display = 'none';
+    }
     showBottomNav();
     setActiveNav('harita');
 
     renderScreen(
-      '<div class="kb-screen-inner">' +
-        '<div class="kb-search">' +
-          ICON.search +
-          '<input type="text" placeholder="İş ilanı veya firma ara...">' +
-        '</div>' +
+      '<div class="map-screen">' +
 
-        /* Filter chips */
-        '<div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px">' +
-          '<button class="kb-chip kb-chip--accent" id="f-tumü"    onclick="KuryeScreens._mapFilter(\'tumu\')">Tümü</button>' +
-          '<button class="kb-chip"                 id="f-motorlu" onclick="KuryeScreens._mapFilter(\'motorlu\')">🛵 Motorlu</button>' +
-          '<button class="kb-chip"                 id="f-yaya"    onclick="KuryeScreens._mapFilter(\'yaya\')">🚶 Yaya</button>' +
-          '<button class="kb-chip"                 id="f-aracli"  onclick="KuryeScreens._mapFilter(\'aracli\')">🚗 Araçlı</button>' +
-        '</div>' +
-
-        /* Map */
-        '<div class="kb-map" id="kb-map">' +
-          '<div class="kb-map-pin kb-map-pin--kurye"  style="left:35%;top:40%"><span>🛵</span></div>' +
-          '<div class="kb-map-pin kb-map-pin--firma"  style="left:55%;top:30%"><span>🏢</span></div>' +
-          '<div class="kb-map-pin kb-map-pin--isletme" style="left:45%;top:60%"><span>🏪</span></div>' +
-          '<div class="kb-map-pin kb-map-pin--firma"  style="left:70%;top:50%"><span>🏢</span></div>' +
-          '<div style="position:relative;z-index:1;text-align:center;padding:20px">' +
-            '<div style="font-size:.8rem;color:var(--muted)">Gerçek harita yakında</div>' +
-            '<div style="font-size:.7rem;color:var(--border);margin-top:4px">Leaflet.js entegrasyonu Faz 2\'de</div>' +
+        /* ── Top glass search bar ── */
+        '<div class="map-topbar">' +
+          '<button class="map-topbar__icon" onclick="KuryeScreens._mapToggleFilter()">' + ICON.filter + '</button>' +
+          '<div class="map-topbar__search">' +
+            ICON.search +
+            '<input type="text" placeholder="Moto kurye, restoran, firma ara..." autocomplete="off">' +
           '</div>' +
+          '<button class="map-topbar__icon" id="map-layer-btn" onclick="KuryeScreens._mapToggleLayer()" title="Katman">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>' +
+          '</button>' +
         '</div>' +
 
-        /* Near jobs */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Yakınındaki İlanlar</div>' +
+        /* ── Category filter chips ── */
+        '<div class="map-filter-chips" id="map-cat-chips">' +
+          '<button class="map-chip map-chip--active" data-filter="tumu"    onclick="KuryeScreens._mapCat(this,\'tumu\')">Tümü</button>' +
+          '<button class="map-chip"                  data-filter="ilanlar" onclick="KuryeScreens._mapCat(this,\'ilanlar\')">💼 İş İlanları</button>' +
+          '<button class="map-chip"                  data-filter="firma"   onclick="KuryeScreens._mapCat(this,\'firma\')">🏢 Kurye Firmaları</button>' +
+          '<button class="map-chip"                  data-filter="isletme" onclick="KuryeScreens._mapCat(this,\'isletme\')">🏪 İşletmeler</button>' +
+          '<button class="map-chip map-chip--gold"   data-filter="premium" onclick="KuryeScreens._mapCat(this,\'premium\')">⭐ Premium İşler</button>' +
         '</div>' +
-        MOCK_ILANLAR.slice(0, 4).map(_jobCard).join('') +
-      '</div>'
+
+        /* ── Map canvas ── */
+        '<div class="map-canvas" id="map-canvas">' +
+
+          /* Dark city grid lines */
+          '<svg class="map-grid" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">' +
+            '<rect width="400" height="300" fill="#0F1825"/>' +
+            /* roads */
+            '<line x1="0" y1="150" x2="400" y2="150" stroke="#1C2C42" stroke-width="12"/>' +
+            '<line x1="200" y1="0" x2="200" y2="300" stroke="#1C2C42" stroke-width="12"/>' +
+            '<line x1="0" y1="75" x2="400" y2="75" stroke="#1A2840" stroke-width="6"/>' +
+            '<line x1="0" y1="225" x2="400" y2="225" stroke="#1A2840" stroke-width="6"/>' +
+            '<line x1="100" y1="0" x2="100" y2="300" stroke="#1A2840" stroke-width="6"/>' +
+            '<line x1="300" y1="0" x2="300" y2="300" stroke="#1A2840" stroke-width="6"/>' +
+            '<line x1="0" y1="37" x2="400" y2="37" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="0" y1="112" x2="400" y2="112" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="0" y1="187" x2="400" y2="187" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="0" y1="262" x2="400" y2="262" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="50" y1="0" x2="50" y2="300" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="150" y1="0" x2="150" y2="300" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="250" y1="0" x2="250" y2="300" stroke="#162235" stroke-width="2"/>' +
+            '<line x1="350" y1="0" x2="350" y2="300" stroke="#162235" stroke-width="2"/>' +
+            /* blocks */
+            '<rect x="110" y="84" width="80" height="57" rx="3" fill="#162235"/>' +
+            '<rect x="212" y="84" width="80" height="57" rx="3" fill="#162235"/>' +
+            '<rect x="110" y="157" width="80" height="57" rx="3" fill="#162235"/>' +
+            '<rect x="212" y="157" width="80" height="57" rx="3" fill="#162235"/>' +
+            '<rect x="10" y="44" width="80" height="57" rx="3" fill="#162235"/>' +
+            '<rect x="312" y="157" width="78" height="57" rx="3" fill="#162235"/>' +
+          '</svg>' +
+
+          /* Cluster bubbles */
+          '<div class="map-cluster" style="left:22%;top:28%" onclick="KuryeScreens._mapCluster(12)"><span>12</span></div>' +
+          '<div class="map-cluster map-cluster--lg" style="left:62%;top:18%" onclick="KuryeScreens._mapCluster(25)"><span>25+</span></div>' +
+          '<div class="map-cluster map-cluster--sm" style="left:78%;top:62%" onclick="KuryeScreens._mapCluster(8)"><span>8</span></div>' +
+
+          /* Colored pins */
+          '<div class="map-pin map-pin--blue"   style="left:38%;top:42%" title="İş İlanı"><span>💼</span></div>' +
+          '<div class="map-pin map-pin--purple" style="left:55%;top:33%" title="Firma"><span>🏢</span></div>' +
+          '<div class="map-pin map-pin--green"  style="left:48%;top:58%" title="İşletme"><span>🏪</span></div>' +
+          '<div class="map-pin map-pin--orange" style="left:68%;top:44%" title="İlan"><span>💼</span></div>' +
+          '<div class="map-pin map-pin--gold"   style="left:30%;top:64%" title="Premium"><span>⭐</span></div>' +
+
+          /* User location pulse */
+          '<div class="map-user-loc" style="left:50%;top:50%">' +
+            '<div class="map-user-pulse"></div>' +
+            '<div class="map-user-dot"></div>' +
+          '</div>' +
+
+          /* Zoom controls */
+          '<div class="map-zoom">' +
+            '<button onclick="KuryeScreens._mapZoom(1)">+</button>' +
+            '<button onclick="KuryeScreens._mapZoom(-1)">−</button>' +
+          '</div>' +
+
+          /* GPS button */
+          '<button class="map-gps-btn" onclick="KuryeScreens._mapGPS()">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/><circle cx="12" cy="12" r="8" opacity=".3"/></svg>' +
+          '</button>' +
+
+          /* Floating bottom filter row */
+          '<div class="map-float-chips">' +
+            '<button class="map-float-chip map-float-chip--active">📍 Yakınımda</button>' +
+            '<button class="map-float-chip">🆕 Bugün eklenen</button>' +
+            '<button class="map-float-chip map-float-chip--gold">⭐ Premium</button>' +
+            '<button class="map-float-chip">⏱ Tam Zamanlı</button>' +
+            '<button class="map-float-chip map-float-chip--red">🔥 Acil</button>' +
+          '</div>' +
+
+        '</div>' + /* /map-canvas */
+
+        /* ── Swipeable job cards ── */
+        '<div class="map-cards-header">' +
+          '<span class="map-cards-title">Yakınındaki Fırsatlar</span>' +
+          '<span class="map-cards-count">4 ilan</span>' +
+        '</div>' +
+        '<div class="map-cards-scroll" id="map-cards">' +
+          MOCK_MAP_ILANLAR.map(_mapJobCard).join('') +
+        '</div>' +
+
+        /* ── AI Match FAB ── */
+        '<button class="map-ai-fab" onclick="KuryeScreens._mapAI()">' +
+          '<span class="map-ai-fab__icon">✨</span>' +
+          '<span class="map-ai-fab__label">AI Match</span>' +
+        '</button>' +
+
+      '</div>' /* /map-screen */
     );
   }
 
-  function _mapFilter(type) {
-    /* visual only for now */
-    document.querySelectorAll('.kb-map + div .kb-chip, .kb-screen-inner > div[style*="overflow-x"] .kb-chip').forEach(function (el) {
-      el.classList.remove('kb-chip--accent');
+  function _mapCat(btn, filter) {
+    document.querySelectorAll('#map-cat-chips .map-chip').forEach(function (el) {
+      el.classList.remove('map-chip--active');
     });
+    btn.classList.add('map-chip--active');
   }
+
+  function _mapToggleFilter() {
+    var el = document.getElementById('map-cat-chips');
+    if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+  }
+
+  function _mapToggleLayer() {
+    var btn = document.getElementById('map-layer-btn');
+    if (btn) btn.style.color = btn.style.color === 'var(--c-kurye)' ? '' : 'var(--c-kurye)';
+  }
+
+  function _mapCluster(n) {
+    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Küme', n + ' ilan bu alanda');
+  }
+
+  function _mapZoom(dir) { /* Leaflet.js Faz 2'de */ }
+
+  function _mapGPS() {
+    if (typeof KBMotion !== 'undefined') KBMotion.showSuccess('Konum alındı', 'İstanbul, Kadıköy', 1800);
+  }
+
+  function _mapAI() {
+    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('✨ AI Match', 'Profiline en uygun 4 ilan bulundu');
+  }
+
+  function _mapFilter(type) { /* legacy compat */ }
 
   /* ── 3. İLANLAR ────────────────────────────────────────── */
   function ilanlar() {
@@ -519,10 +659,17 @@ window.KuryeScreens = (function () {
     mesajlar    : mesajlar,
     mesajChat   : mesajChat,
     profil      : profil,
-    _ilanFilter : _ilanFilter,
-    _basFilter  : _basFilter,
-    _mapFilter  : _mapFilter,
-    _basvur     : _basvur
+    _ilanFilter      : _ilanFilter,
+    _basFilter       : _basFilter,
+    _mapFilter       : _mapFilter,
+    _mapCat          : _mapCat,
+    _mapToggleFilter : _mapToggleFilter,
+    _mapToggleLayer  : _mapToggleLayer,
+    _mapCluster      : _mapCluster,
+    _mapZoom         : _mapZoom,
+    _mapGPS          : _mapGPS,
+    _mapAI           : _mapAI,
+    _basvur          : _basvur
   };
 
 })();
