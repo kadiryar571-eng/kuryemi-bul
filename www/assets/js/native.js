@@ -120,16 +120,15 @@
   }
 
   /* ── Push Notifications ────────────────────────────────── */
+  /* Firebase (google-services.json) kurulmadan çağrılırsa native crash atar.
+     FCM entegrasyonu tamamlanınca bu bloğu tekrar aktif et. */
   function initPush() {
     if (!isNative()) return;
     var Push = plug('PushNotifications');
     if (!Push) return;
 
-    Push.requestPermissions().then(function (result) {
-      if (result.receive === 'granted') {
-        Push.register();
-      }
-    }).catch(function () {});
+    // Push.requestPermissions() çağrısı FCM olmadan crash yaratıyor — devre dışı.
+    return;
 
     Push.addListener('registration', function (token) {
       if (window.SB && SB.savePushToken) {
