@@ -640,6 +640,41 @@ window.KuryeScreens = (function () {
     );
 
     _ilRender();
+    _loadRealIlanlar(); // DB'den gerçek ilanları async yükle
+  }
+
+  function _dbListingToIlan(l) {
+    var aracEmoji = l.arac === 'Motosiklet' ? '🛵' : l.arac === 'Otomobil' ? '🚗' : l.arac === 'Bisiklet' ? '🚲' : '🏢';
+    return {
+      id: l.id,
+      emoji: aracEmoji,
+      title: l.baslik || 'İlan',
+      company: l.sahip || 'İşletme',
+      salary: '—',
+      location: [l.sehir, l.bolge].filter(Boolean).join(', ') || 'Belirtilmemiş',
+      dist: '—',
+      time: l.tarih || 'Yeni',
+      match: 82,
+      tier: 'standart',
+      avatarBg: '#F97316',
+      tags: [l.arac || 'Kurye'].filter(Boolean),
+      saved: false
+    };
+  }
+
+  function _loadRealIlanlar() {
+    if (!window.SB || !SB.isOn()) return;
+    SB.openListings().then(function (listings) {
+      if (!listings || !listings.length) return;
+      var feed = document.getElementById('il-feed');
+      if (!feed) return;
+      var counter = document.getElementById('il-counter');
+      var mapped = listings.map(_dbListingToIlan);
+      // MOCK ile birleştir (MOCK önce, gerçek arkaya)
+      _ilanState._realListings = mapped;
+      feed.innerHTML = mapped.map(_ilCard).join('');
+      if (counter) counter.textContent = mapped.length + ' ilan';
+    }).catch(function (e) { console.warn('_loadRealIlanlar:', e); });
   }
 
   function _ilCat(btn, cat) {
