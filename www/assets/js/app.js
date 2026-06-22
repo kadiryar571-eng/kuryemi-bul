@@ -399,6 +399,7 @@
 
   /* ── DOMContentLoaded ─────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
+    window.renderNav = renderNav; /* demo mode için expose */
     registerRoutes();
     boot();
   });
