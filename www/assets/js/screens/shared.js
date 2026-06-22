@@ -481,7 +481,7 @@ window.SharedScreens = (function () {
           '<button class="chat-input__icon" onclick="SharedScreens.chatQuick(\'ekle\')">' +
             '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
           '</button>' +
-          '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off">' +
+          '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off" onkeydown="if(event.key===\'Enter\'){SharedScreens.chatSend();}">' +
           '<button class="chat-input__icon" onclick="SharedScreens.chatQuick(\'emoji\')">' +
             '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
           '</button>' +
@@ -692,6 +692,17 @@ window.SharedScreens = (function () {
     }
     hideBottomNav();
 
+    /* kb-screen must not scroll itself — chat-msgs handles internal scroll */
+    function _enableChatLayout() {
+      var ks = document.getElementById('kb-screen');
+      if (ks) ks.classList.add('kb-screen--chat');
+    }
+    function _disableChatLayout() {
+      var ks = document.getElementById('kb-screen');
+      if (ks) ks.classList.remove('kb-screen--chat');
+    }
+    window.addEventListener('hashchange', _disableChatLayout, { once: true });
+
     if (isReal) {
       renderScreen(
         '<div class="chat-screen">' +
@@ -708,6 +719,7 @@ window.SharedScreens = (function () {
           _sharedChatFooterHTML() +
         '</div>'
       );
+      setTimeout(_enableChatLayout, 130);
       _sharedLoadRealChat(id, rolePrefix);
     } else {
       renderScreen(
@@ -730,7 +742,11 @@ window.SharedScreens = (function () {
           _sharedChatFooterHTML() +
         '</div>'
       );
-      setTimeout(function () { var el = document.getElementById('chat-msgs'); if (el) el.scrollTop = el.scrollHeight; }, 60);
+      setTimeout(function () {
+        _enableChatLayout();
+        var el = document.getElementById('chat-msgs');
+        if (el) el.scrollTop = el.scrollHeight;
+      }, 130);
     }
   }
 
@@ -755,23 +771,27 @@ window.SharedScreens = (function () {
 
   function chatQuick(type) {
     var map = {
-      konum:   'Konumunuz paylaşıldı 📍',
-      uygun:   'Uygunluk bilgisi gönderildi 📅',
-      belge:   'Belgeleriniz gönderildi 📄',
-      plan:    'Görüşme talebi gönderildi 📅',
-      teklif:  'Teklif detayları açılıyor...',
-      gorusme: 'Görüşme daveti gönderildi 🎯'
+      konum:   '📍 Konumumu paylaştım',
+      uygun:   '📅 Uygunluğumu bildiriyorum',
+      belge:   '📄 Belgelerimi gönderiyorum',
+      plan:    '📅 Görüşme talep ediyorum',
+      teklif:  '⭐ Teklif detayları',
+      gorusme: '🎯 Görüşmeye davet ediyorum'
     };
     var text = map[type];
     if (!text) return;
     var msgs = document.getElementById('chat-msgs');
     if (!msgs) return;
+    var now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble--out chat-bubble--new';
     bubble.innerHTML = '<div class="chat-bubble__text">' + text + '</div>' +
-      '<div class="chat-bubble__meta">Şimdi <span class="chat-tick">✓✓</span></div>';
+      '<div class="chat-bubble__meta">' + now + ' <span class="chat-tick">✓✓</span></div>';
     msgs.appendChild(bubble);
     msgs.scrollTop = msgs.scrollHeight;
+    if (_activeChatState._convId && window.SB && SB.isOn()) {
+      SB.sendConvMessage(_activeChatState._convId, text).catch(function (e) { console.warn('chatQuick send:', e); });
+    }
   }
 
   /* ── Profil Düzenle ─────────────────────────────────────── */

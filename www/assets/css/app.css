@@ -2314,14 +2314,18 @@ a { color: inherit; text-decoration: none; }
 .chat-screen {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100%;      /* fill kb-screen exactly — no overflow */
   background: var(--bg);
 }
 
-/* Footer (quick + input + smart) sticks to viewport bottom */
+/* Outer scroll disabled when chat is active */
+.kb-screen--chat {
+  overflow: hidden !important;
+}
+
+/* Footer sits at bottom of flex column — no sticky needed */
 .chat-footer {
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   z-index: 10;
   background: var(--bg);
   border-top: 1px solid rgba(255,255,255,.06);
