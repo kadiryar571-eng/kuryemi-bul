@@ -81,7 +81,7 @@
   /* Dashboard greeting bar — greeting left, bell+hamburger right */
   window.showDashboardBar = function () {
     var profile = APP.profile || {};
-    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
+    var name = profile.ad || 'Kullanıcı';
     var firstName = name.split(' ')[0];
     $appbar.className = 'kb-appbar kb-appbar--dash';
     $appbar.style.display = '';
@@ -144,7 +144,7 @@
   function _buildDrawer() {
     var role = APP.role || 'kurye';
     var profile = APP.profile || {};
-    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
+    var name = profile.ad || 'Kullanıcı';
     var roleLabels = { kurye: 'Kurye', firma: 'Firma', isletme: 'Esnaf / İşletme', admin: 'Admin' };
     var roleLabel = roleLabels[role] || role;
     var profilRoute = '/' + role + '/profil';

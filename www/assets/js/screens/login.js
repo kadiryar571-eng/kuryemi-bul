@@ -207,6 +207,10 @@ window.LoginScreens = (function () {
       _showErr(errEl, 'E-posta ve şifre zorunlu.');
       return;
     }
+    if (!window.SB || !SB.isOn()) {
+      _showErr(errEl, 'İnternet bağlantısı yok. Bağlantını kontrol et.');
+      return;
+    }
     btn.disabled = true;
     btn.textContent = 'Giriş yapılıyor…';
 
@@ -215,7 +219,18 @@ window.LoginScreens = (function () {
       if (result && result.error) throw result.error;
       await _afterLogin();
     } catch (e) {
-      _showErr(errEl, 'Giriş başarısız. Bilgileri kontrol et.');
+      var msg = 'Giriş başarısız. Bilgileri kontrol et.';
+      var errMsg = (e && e.message) || '';
+      if (errMsg.indexOf('Email not confirmed') !== -1 || errMsg.indexOf('email_not_confirmed') !== -1) {
+        msg = 'E-posta adresin onaylanmamış. Gelen kutunu kontrol et ve onay bağlantısına tıkla.';
+      } else if (errMsg.indexOf('Invalid login credentials') !== -1 || errMsg.indexOf('invalid_credentials') !== -1) {
+        msg = 'E-posta veya şifre hatalı.';
+      } else if (errMsg.indexOf('Too many requests') !== -1 || errMsg.indexOf('over_request_rate_limit') !== -1) {
+        msg = 'Çok fazla deneme yapıldı. Birkaç dakika bekle.';
+      } else if (errMsg.indexOf('User not found') !== -1) {
+        msg = 'Bu e-posta ile kayıtlı hesap bulunamadı.';
+      }
+      _showErr(errEl, msg);
       btn.disabled = false;
       btn.textContent = 'Giriş Yap';
     }
@@ -283,14 +298,9 @@ window.LoginScreens = (function () {
 
     document.body.setAttribute('data-role', APP.role);
 
-    var $bn = document.getElementById('kb-bottomnav');
-    if ($bn) {
-      /* Rebuild nav for new role — reuse buildNav via app.js closure isn't accessible,
-         so we redirect and let boot handle it */
-    }
+    if (window.renderNav) renderNav(APP.role);
+
     Router.go('/' + APP.role + '/panel');
-    /* Reload to re-run boot and rebuild nav */
-    location.reload();
   }
 
   function _showErr(el, msg) {
