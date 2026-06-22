@@ -133,7 +133,7 @@
   async function resendVerification(email) {
     return client.auth.resend({
       type: "signup", email: email,
-      options: { emailRedirectTo: location.origin + "/verify-email.html" }
+      options: { emailRedirectTo: "https://kuryemibul.com/verify-email.html" }
     });
   }
   async function signIn(email, password) {
@@ -142,7 +142,7 @@
   async function signOut() { return client.auth.signOut(); }
   // Şifre sıfırlama: e-postaya bağlantı gönderir (kullanıcı sifre-sifirla.html'e döner)
   async function resetPassword(email) {
-    return client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + "/sifre-sifirla.html" });
+    return client.auth.resetPasswordForEmail(email, { redirectTo: "https://kuryemibul.com/sifre-sifirla.html" });
   }
   // Sıfırlama oturumundayken (veya girişliyken) yeni şifre belirle
   async function updatePassword(newPass) {
