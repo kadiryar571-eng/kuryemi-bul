@@ -559,6 +559,98 @@
     return true;
   }
 
+  /* ---------- BAŞVURU + KONUŞMA PIPELINE ---------- */
+
+  // Başvuru gönder → DB trigger konuşmayı oluşturur → conv id'sini döndür
+  async function applyWithConv(listingId, mesaj) {
+    var app = await applyToListing(listingId, mesaj || '');
+    var convId = null;
+    for (var i = 0; i < 6; i++) {
+      await new Promise(function (r) { setTimeout(r, 350); });
+      var r = await client.from('conversations').select('id').eq('application_id', app.id).maybeSingle();
+      if (r.data && r.data.id) { convId = r.data.id; break; }
+    }
+    return { application: app, convId: convId };
+  }
+
+  // Kullanıcının tüm işe alım konuşmaları
+  async function myConvs() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from('conversations')
+      .select('id,last_message,last_message_at,kurye_unread,employer_unread,status,created_at,application_id,' +
+        'kurye_user,employer_user,' +
+        'listing:listing_id(baslik,sehir,bolge),' +
+        'kurye:kurye_id(ad,puan,seviye),' +
+        'employer:employer_id(ad,tur)')
+      .or('kurye_user.eq.' + u.id + ',employer_user.eq.' + u.id)
+      .order('last_message_at', { ascending: false });
+    if (r.error) { console.warn('myConvs:', r.error); return []; }
+    return (r.data || []).map(function (c) {
+      var iAmKurye = c.kurye_user === u.id;
+      return {
+        id: c.id,
+        applicationId: c.application_id,
+        listingTitle: (c.listing && c.listing.baslik) || '',
+        listingSehir: [(c.listing && c.listing.sehir), (c.listing && c.listing.bolge)].filter(Boolean).join(' · '),
+        otherName: iAmKurye ? ((c.employer && c.employer.ad) || 'İşletme') : ((c.kurye && c.kurye.ad) || 'Kurye'),
+        otherRole: iAmKurye ? 'isletme' : 'kurye',
+        lastMessage: c.last_message || '',
+        lastMessageAt: c.last_message_at,
+        unread: iAmKurye ? (c.kurye_unread || 0) : (c.employer_unread || 0),
+        status: c.status,
+        createdAt: c.created_at
+      };
+    });
+  }
+
+  // Bir konuşmanın tam detayı + mesaj geçmişi
+  async function getConvDetail(convId) {
+    var results = await Promise.all([
+      client.from('conversations')
+        .select('*,listing:listing_id(baslik,sehir,bolge),kurye:kurye_id(ad,puan,sehir,arac,seviye,deneyim),employer:employer_id(ad,tur,sehir)')
+        .eq('id', convId).maybeSingle(),
+      client.from('conv_messages')
+        .select('*').eq('conversation_id', convId).order('created_at', { ascending: true })
+    ]);
+    if (results[0].error) { console.warn('getConvDetail:', results[0].error); return null; }
+    return { conv: results[0].data, messages: results[1].data || [] };
+  }
+
+  // Konuşmaya mesaj gönder
+  async function sendConvMessage(convId, content, type, metadata) {
+    var u = await getUser(); if (!u) throw new Error('oturum yok');
+    var me = await myProfile(); if (!me) throw new Error('profil yok');
+    var r = await client.from('conv_messages').insert({
+      conversation_id: convId, sender_user: u.id, sender_role: me.role,
+      content: content, message_type: type || 'text', metadata: metadata || {}
+    }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+
+  // Konuşmanın okunmamışlarını sıfırla
+  async function markConvRead(convId) {
+    var u = await getUser(); if (!u) return;
+    var cR = await client.from('conversations').select('kurye_user,employer_user').eq('id', convId).maybeSingle();
+    if (!cR.data) return;
+    await client.from('conv_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', convId).neq('sender_user', u.id).is('read_at', null);
+    var patch = cR.data.kurye_user === u.id ? { kurye_unread: 0 } : { employer_unread: 0 };
+    await client.from('conversations').update(patch).eq('id', convId);
+  }
+
+  // Realtime: konuşmaya yeni mesaj gelince cb(message) çağrılır
+  function subscribeConv(convId, cb) {
+    var ch = client.channel('kb-conv-' + convId)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'conv_messages',
+        filter: 'conversation_id=eq.' + convId
+      }, function (payload) { try { cb(payload.new); } catch (e) {} })
+      .subscribe();
+    return ch;
+  }
+
   /* ---------- MESAJLAŞMA (yalnız eşleşenler) ---------- */
   async function myPid() {
     var u = await getUser(); if (!u) return null;
@@ -697,6 +789,8 @@
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
     listingApplications: listingApplications, updateApplication: updateApplication,
+    applyWithConv: applyWithConv, myConvs: myConvs, getConvDetail: getConvDetail,
+    sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,

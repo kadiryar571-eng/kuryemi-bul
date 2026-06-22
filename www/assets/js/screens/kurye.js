@@ -757,9 +757,116 @@ window.KuryeScreens = (function () {
     );
   }
 
-  function _basvur(id) {
-    toast('Başvurunuz gönderildi!');
-    setTimeout(function () { Router.go('/kurye/basvurular'); }, 800);
+  function _basvur(ilanId) {
+    var ilan = MOCK_ILANLAR_PREMIUM.find(function (j) { return j.id === ilanId; }) ||
+      { id: ilanId, title: 'İlan', company: 'İşletme', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
+
+    var old = document.getElementById('apply-overlay');
+    if (old) old.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'apply-overlay';
+    overlay.id = 'apply-overlay';
+    overlay.innerHTML =
+      '<div class="apply-modal">' +
+
+        '<div class="apply-modal__head">' +
+          '<div class="apply-modal__avatar" style="background:' + ilan.avatarBg + '">' + ilan.emoji + '</div>' +
+          '<div class="apply-modal__hinfo">' +
+            '<div class="apply-modal__htitle">' + ilan.title + '</div>' +
+            '<div class="apply-modal__hco">' + ilan.company + '</div>' +
+          '</div>' +
+          '<button class="apply-modal__close" onclick="document.getElementById(\'apply-overlay\').remove()">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button>' +
+        '</div>' +
+
+        (ilan.tier !== 'standart' ? '<div class="apply-modal__tier">' + _tierBadge(ilan.tier) + '</div>' : '') +
+
+        '<div class="apply-modal__body">' +
+          '<div class="apply-modal__label">Kapak mesajı <span class="apply-modal__opt">(isteğe bağlı)</span></div>' +
+          '<textarea class="apply-modal__textarea" id="apply-msg-input" rows="4" ' +
+            'placeholder="Kendinizi tanıtın, bu iş için neden uygun olduğunuzu kısaca belirtin..."></textarea>' +
+        '</div>' +
+
+        '<div class="apply-modal__checklist">' +
+          '<div class="apply-modal__check"><span class="apply-modal__check-icon">✓</span>Profilin paylaşılacak</div>' +
+          '<div class="apply-modal__check"><span class="apply-modal__check-icon">✓</span>CV\'n ekleniyor</div>' +
+          '<div class="apply-modal__check"><span class="apply-modal__check-icon">✓</span>İşveren bildirim alacak</div>' +
+        '</div>' +
+
+        '<div class="apply-modal__actions">' +
+          '<button class="apply-modal__cancel" onclick="document.getElementById(\'apply-overlay\').remove()">Vazgeç</button>' +
+          '<button class="apply-modal__submit" id="apply-submit-btn" ' +
+            'onclick="KuryeScreens._doApply(\'' + ilan.id + '\',\'' +
+              ilan.title.replace(/'/g, "\\'") + '\',\'' +
+              ilan.company.replace(/'/g, "\\'") + '\')">' +
+            (ilan.tier === 'premium' ? 'Hızlı Başvur ⚡' : 'Başvuruyu Gönder →') +
+          '</button>' +
+        '</div>' +
+
+      '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () { overlay.classList.add('apply-overlay--visible'); });
+    setTimeout(function () {
+      var ta = document.getElementById('apply-msg-input');
+      if (ta) ta.focus();
+    }, 320);
+  }
+
+  function _doApply(ilanId, ilanTitle, company) {
+    var submitBtn = document.getElementById('apply-submit-btn');
+    var msg = (document.getElementById('apply-msg-input') || {}).value || '';
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Gönderiliyor...'; }
+
+    var overlay = document.getElementById('apply-overlay');
+    if (overlay) overlay.remove();
+
+    if (window.SB && SB.isOn()) {
+      SB.applyWithConv(ilanId, msg).then(function (result) {
+        _showApplySuccess(result.convId, ilanTitle, company);
+      }).catch(function (e) {
+        console.warn('_doApply error:', e);
+        _showApplySuccess(null, ilanTitle, company);
+      });
+    } else {
+      setTimeout(function () { _showApplySuccess(null, ilanTitle, company); }, 600);
+    }
+  }
+
+  function _showApplySuccess(convId, ilanTitle, company) {
+    var old = document.getElementById('apply-success-overlay');
+    if (old) old.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'apply-overlay';
+    overlay.id = 'apply-success-overlay';
+    overlay.innerHTML =
+      '<div class="apply-modal apply-modal--success">' +
+        '<div class="apply-success__anim">' +
+          '<div class="apply-success__ring"></div>' +
+          '<div class="apply-success__check">✓</div>' +
+        '</div>' +
+        '<div class="apply-success__title">Başvurun İletildi!</div>' +
+        '<div class="apply-success__sub">' +
+          '<strong>' + company + '</strong>' +
+          (ilanTitle ? ' · ' + ilanTitle : '') +
+        '</div>' +
+        '<div class="apply-success__info">' +
+          'İşveren başvurunu inceleyecek.<br>Yanıt geldiğinde bildirim alacaksın. 🔔' +
+        '</div>' +
+        '<div class="apply-modal__actions">' +
+          (convId
+            ? '<button class="apply-modal__submit" onclick="document.getElementById(\'apply-success-overlay\').remove();Router.go(\'/kurye/mesaj/' + convId + '\')">Konuşmayı Aç →</button>'
+            : '') +
+          '<button class="apply-modal__cancel" onclick="document.getElementById(\'apply-success-overlay\').remove();Router.go(\'/kurye/basvurular\')">Başvurularıma Git</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () { overlay.classList.add('apply-overlay--visible'); });
   }
 
   /* ── 5. BAŞVURULARIM ────────────────────────────────────── */
@@ -873,7 +980,7 @@ window.KuryeScreens = (function () {
     ]
   };
 
-  var _msgState = { tab: 'tumu', activeId: null };
+  var _msgState = { tab: 'tumu', activeId: null, _convId: null, _myUserId: null, _realtimeCh: null };
 
   function _msgIndicatorColor(ind) {
     var map = { purple: 'var(--c-kurye)', green: '#22C55E', orange: '#F97316', blue: '#4A90E2' };
@@ -934,6 +1041,56 @@ window.KuryeScreens = (function () {
       : '<div class="kb-empty"><div class="kb-empty__icon">💬</div><div class="kb-empty__title">Konuşma yok</div></div>';
   }
 
+  /* ── KONUŞMA PIPELINE HELPERS ──────────────────────────── */
+
+  function _convCard(c) {
+    var roleEmoji = c.otherRole === 'isletme' ? '🏢' : c.otherRole === 'firma' ? '🏭' : '🛵';
+    var roleBg    = c.otherRole === 'isletme' ? '#F97316' : c.otherRole === 'firma' ? '#22C55E' : '#6C4DFF';
+    var time      = '';
+    if (c.lastMessageAt) {
+      var d = new Date(c.lastMessageAt);
+      time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    }
+    return '<div class="msg-conv" onclick="Router.go(\'/kurye/mesaj/' + c.id + '\')">' +
+      '<div class="msg-conv__bar" style="background:' + roleBg + '"></div>' +
+      '<div class="msg-conv__ava" style="background:' + roleBg + '">' +
+        roleEmoji +
+        '<div class="msg-conv__online" style="display:none"></div>' +
+      '</div>' +
+      '<div class="msg-conv__body">' +
+        '<div class="msg-conv__top">' +
+          '<div class="msg-conv__name">' + c.otherName + '</div>' +
+          '<div class="msg-conv__time">' + time + '</div>' +
+        '</div>' +
+        '<div class="msg-conv__job">' +
+          '<span class="msg-conv__badge--standart">Başvuru</span>' +
+          ' ' + (c.listingTitle || 'İlan') +
+        '</div>' +
+        '<div class="msg-conv__preview">' + (c.lastMessage || 'Yeni konuşma') + '</div>' +
+        '<div class="msg-conv__meta">' +
+          (c.listingSehir ? '📍 ' + c.listingSehir : '') +
+        '</div>' +
+      '</div>' +
+      (c.unread > 0
+        ? '<div class="msg-conv__unread">' + c.unread + '</div>'
+        : '') +
+    '</div>';
+  }
+
+  function _loadConvsAsync() {
+    var list = document.getElementById('msg-list');
+    if (!list || !window.SB || !SB.isOn()) return;
+    SB.myConvs().then(function (convs) {
+      if (!convs.length) return;
+      var el = document.getElementById('msg-list');
+      if (el) el.innerHTML = convs.map(_convCard).join('');
+      // Unread count
+      var total = convs.reduce(function (s, c) { return s + (c.unread || 0); }, 0);
+      var tab = document.querySelector('#msg-tabs .msg-tab[data-tab="tumu"]');
+      if (tab && total) tab.innerHTML = 'Tümü <span class="msg-tab__badge">' + total + '</span>';
+    }).catch(function (e) { console.warn('_loadConvsAsync:', e); });
+  }
+
   /* ── 6. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
     if (typeof showAppBar === 'function') {
@@ -989,6 +1146,9 @@ window.KuryeScreens = (function () {
 
       '</div>'
     );
+
+    // SB'den gerçek konuşmaları async yükle (varsa MOCK'un üzerine yazar)
+    _loadConvsAsync();
   }
 
   function _msgTab(btn, tab) {
@@ -1019,10 +1179,183 @@ window.KuryeScreens = (function () {
   }
 
   /* ── 6b. MESAJ CHAT ─────────────────────────────────────── */
+
+  function _chatFooterHTML() {
+    return '<div class="chat-footer">' +
+      '<div class="chat-quick">' +
+        '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'konum\')">' +
+          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+          'Konum Paylaş' +
+        '</button>' +
+        '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'uygun\')">' +
+          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+          'Uygunluk Bildir' +
+        '</button>' +
+        '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'belge\')">' +
+          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+          'Belgelerimi Gönder' +
+        '</button>' +
+      '</div>' +
+      '<div class="chat-input-wrap">' +
+        '<div class="chat-input-row">' +
+          '<button class="chat-input__icon" onclick="KuryeScreens._chatAttach()">' +
+            '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+          '</button>' +
+          '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off">' +
+          '<button class="chat-input__icon" onclick="KuryeScreens._chatEmoji()">' +
+            '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
+          '</button>' +
+          '<button class="chat-send" onclick="KuryeScreens._chatSend()">' + ICON.send + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="chat-smart">' +
+        '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'cv\')">' +
+          '<div class="chat-smart__icon">📄</div><div class="chat-smart__label">CV Gönder</div>' +
+        '</button>' +
+        '<button class="chat-smart__btn chat-smart__btn--primary" onclick="KuryeScreens._chatQuick(\'konum\')">' +
+          '<div class="chat-smart__icon">📍</div><div class="chat-smart__label">Konum Paylaş</div>' +
+        '</button>' +
+        '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'evrak\')">' +
+          '<div class="chat-smart__icon">📁</div><div class="chat-smart__label">Evrak Yükle</div>' +
+        '</button>' +
+        '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'plan\')">' +
+          '<div class="chat-smart__icon">📅</div><div class="chat-smart__label">Görüşme Planla</div>' +
+        '</button>' +
+        '<button class="chat-smart__btn chat-smart__btn--offer" onclick="KuryeScreens._chatQuick(\'teklif\')">' +
+          '<div class="chat-smart__icon">⭐</div><div class="chat-smart__label">Teklifleri Gör</div>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function _chatMsgBubble(m, myUserId) {
+    if (m.message_type === 'system') {
+      return '<div class="chat-date-sep chat-system-msg"><span>' + (m.content || '') + '</span></div>';
+    }
+    if (m.message_type === 'profile_card') {
+      var meta = m.metadata || {};
+      var sevBadge = meta.seviye === 'premium' ? '⭐ Premium' : meta.seviye === 'profesyonel' ? '🔵 Profesyonel' : 'Standart';
+      return '<div class="chat-bubble chat-bubble--in">' +
+        '<div class="chat-pcard">' +
+          '<div class="chat-pcard__head">' +
+            '<div class="chat-pcard__ava">🛵</div>' +
+            '<div class="chat-pcard__info">' +
+              '<div class="chat-pcard__name">' + (meta.ad || 'Aday') + '</div>' +
+              '<div class="chat-pcard__lvl">' + sevBadge + '</div>' +
+              '<div class="chat-pcard__sub">⭐ ' + (meta.puan || '0') + ' · ' + (meta.sehir || '') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="chat-pcard__stats">' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.deneyim || 0) + 'y</span><span class="chat-pcard__slbl">Deneyim</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.puan || '0') + '</span><span class="chat-pcard__slbl">Puan</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.arac || '—') + '</span><span class="chat-pcard__slbl">Araç</span></div>' +
+          '</div>' +
+          '<div class="chat-pcard__actions">' +
+            '<button class="chat-pcard__btn chat-pcard__btn--sec" onclick="KuryeScreens._chatQuick(\'gorusme\')">Görüşmeye Davet</button>' +
+            '<button class="chat-pcard__btn" onclick="Router.go(\'/profil-kurye?id=' + (meta.profile_id || '') + '\')">Profili İncele →</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+    var isOut = m.sender_user === myUserId;
+    var time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+    return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
+      '<div class="chat-bubble__text">' + (m.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</div>' +
+      '<div class="chat-bubble__meta">' + time + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
+    '</div>';
+  }
+
+  function _loadRealChat(convId) {
+    if (!window.SB || !SB.isOn()) return;
+    SB.getConvDetail(convId).then(function (detail) {
+      if (!detail || !detail.conv) return;
+      var c = detail.conv;
+      var u = window.APP && APP.user;
+      var iAmKurye = !!(u && c.kurye_user === u.id);
+      var otherName = iAmKurye ? ((c.employer && c.employer.ad) || 'İşletme') : ((c.kurye && c.kurye.ad) || 'Kurye');
+      var otherEmoji = iAmKurye ? '🏢' : '🛵';
+      var otherBg    = iAmKurye ? '#F97316' : '#6C4DFF';
+      var listingTitle = (c.listing && c.listing.baslik) || 'İlan';
+      var listingSehir = [(c.listing && c.listing.sehir), (c.listing && c.listing.bolge)].filter(Boolean).join(' · ');
+      var myUid = u && u.id;
+
+      // Başlık güncelle
+      var hdrEl = document.getElementById('chat-hdr-el');
+      if (hdrEl) {
+        hdrEl.innerHTML =
+          '<button class="chat-hdr__back" onclick="Router.back ? Router.back() : Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
+          '<div class="chat-hdr__ava" style="background:' + otherBg + '">' + otherEmoji + '</div>' +
+          '<div class="chat-hdr__info">' +
+            '<div class="chat-hdr__name">' + otherName + '</div>' +
+            '<div class="chat-hdr__status"><span class="chat-hdr__dot"></span>Aktif Başvuru</div>' +
+          '</div>' +
+          '<div class="chat-hdr__acts">' +
+            '<button class="chat-hdr__act" onclick="KuryeScreens._chatCall()">' +
+              '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
+            '</button>' +
+            '<button class="chat-hdr__act" onclick="KuryeScreens._chatMore()">' +
+              '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
+            '</button>' +
+          '</div>';
+      }
+
+      // Context banner güncelle
+      var ctxEl = document.getElementById('chat-context-el');
+      if (ctxEl) {
+        ctxEl.style.cssText = 'border-color:' + otherBg + '33';
+        ctxEl.innerHTML =
+          '<div class="chat-context__dot" style="background:' + otherBg + '"></div>' +
+          '<div class="chat-context__text">' +
+            '<span class="chat-context__role">' + listingTitle + '</span>' +
+            (listingSehir ? '<span class="chat-context__loc">' + listingSehir + '</span>' : '') +
+          '</div>' +
+          '<span class="chat-context__tag" style="color:' + otherBg + '">Başvuru</span>';
+      }
+
+      // Mesajları render et
+      var msgsEl = document.getElementById('chat-msgs');
+      if (msgsEl) {
+        msgsEl.innerHTML = '<div class="chat-date-sep"><span>Bugün</span></div>';
+        detail.messages.forEach(function (m) {
+          msgsEl.innerHTML += _chatMsgBubble(m, myUid);
+        });
+        setTimeout(function () { msgsEl.scrollTop = msgsEl.scrollHeight; }, 30);
+      }
+
+      // Realtime subscribe
+      _msgState._convId   = convId;
+      _msgState._myUserId = myUid;
+      if (_msgState._realtimeCh) {
+        try { _msgState._realtimeCh.unsubscribe(); } catch (e) {}
+      }
+      _msgState._realtimeCh = SB.subscribeConv(convId, function (newMsg) {
+        if (newMsg.sender_user === _msgState._myUserId) return; // kendi mesajımız zaten optimistik eklendi
+        var el = document.getElementById('chat-msgs');
+        if (el) {
+          var div = document.createElement('div');
+          div.innerHTML = _chatMsgBubble(newMsg, _msgState._myUserId);
+          el.appendChild(div.firstChild);
+          el.scrollTop = el.scrollHeight;
+        }
+      });
+
+      // Okundu işaretle
+      SB.markConvRead(convId).catch(function () {});
+
+    }).catch(function (e) { console.warn('_loadRealChat:', e); });
+  }
+
   function mesajChat(ctx) {
     var id = ctx.params.id;
-    var k  = MOCK_KONUSMALAR.find(function (x) { return x.id === id; }) || MOCK_KONUSMALAR[0];
-    var msgs = MOCK_CHAT[id] || MOCK_CHAT['1'];
+    // Önceki realtime aboneliği kapat
+    if (_msgState._realtimeCh) {
+      try { _msgState._realtimeCh.unsubscribe(); } catch (e) {}
+      _msgState._realtimeCh = null;
+    }
+    _msgState._convId   = null;
+    _msgState._myUserId = null;
+
+    var isReal = !!(id && id.length > 20 && id.indexOf('-') !== -1);
 
     if (typeof showAppBar === 'function') {
       showAppBar('', false, '');
@@ -1031,129 +1364,91 @@ window.KuryeScreens = (function () {
     }
     hideBottomNav();
 
-    var color = _msgIndicatorColor(k.indicator);
-
-    renderScreen(
-      '<div class="chat-screen">' +
-
-        /* ── Chat header ── */
-        '<div class="chat-hdr">' +
-          '<button class="chat-hdr__back" onclick="Router.back ? Router.back() : Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
-          '<div class="chat-hdr__ava" style="background:' + k.avatarBg + '">' +
-            k.emoji +
-            (k.online ? '<div class="chat-hdr__online"></div>' : '') +
+    if (isReal) {
+      // Gerçek konuşma: skeleton + async yükleme
+      renderScreen(
+        '<div class="chat-screen">' +
+          '<div class="chat-hdr" id="chat-hdr-el">' +
+            '<button class="chat-hdr__back" onclick="Router.back ? Router.back() : Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
+            '<div class="chat-hdr__ava" style="background:#2A3550;font-size:1.2rem">⏳</div>' +
+            '<div class="chat-hdr__info">' +
+              '<div class="chat-hdr__name">Yükleniyor...</div>' +
+              '<div class="chat-hdr__status">Lütfen bekleyin</div>' +
+            '</div>' +
+            '<div class="chat-hdr__acts"></div>' +
           '</div>' +
-          '<div class="chat-hdr__info">' +
-            '<div class="chat-hdr__name">' + k.name + '</div>' +
-            '<div class="chat-hdr__status">' +
-              (k.online
-                ? '<span class="chat-hdr__dot"></span>Çevrimiçi'
-                : 'Son görülme: ' + k.time) +
+          '<div class="chat-context" id="chat-context-el" style="min-height:36px"></div>' +
+          '<div class="chat-msgs" id="chat-msgs">' +
+            '<div class="chat-loading">' +
+              '<div class="chat-loading__dot"></div>' +
+              '<div class="chat-loading__dot"></div>' +
+              '<div class="chat-loading__dot"></div>' +
             '</div>' +
           '</div>' +
-          '<div class="chat-hdr__acts">' +
-            '<button class="chat-hdr__act" onclick="KuryeScreens._chatCall()">' +
-              '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
-            '</button>' +
-            '<button class="chat-hdr__act" onclick="KuryeScreens._chatVideo()">' +
-              '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
-            '</button>' +
-            '<button class="chat-hdr__act" onclick="KuryeScreens._chatMore()">' +
-              '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
-            '</button>' +
-          '</div>' +
-        '</div>' +
+          _chatFooterHTML() +
+        '</div>'
+      );
+      _loadRealChat(id);
+    } else {
+      // MOCK: mevcut demo konuşması
+      var k    = MOCK_KONUSMALAR.find(function (x) { return x.id === id; }) || MOCK_KONUSMALAR[0];
+      var msgs = MOCK_CHAT[id] || MOCK_CHAT['1'];
+      var color = _msgIndicatorColor(k.indicator);
 
-        /* ── Job context banner ── */
-        '<div class="chat-context" style="border-color:' + color + '33">' +
-          '<div class="chat-context__dot" style="background:' + color + '"></div>' +
-          '<div class="chat-context__text">' +
-            '<span class="chat-context__role">' + k.jobType + '</span>' +
-            '<span class="chat-context__loc">' + k.meta + '</span>' +
-          '</div>' +
-          '<span class="chat-context__tag" style="color:' + color + '">' + k.tag + '</span>' +
-        '</div>' +
-
-        /* ── Messages ── */
-        '<div class="chat-msgs" id="chat-msgs">' +
-          '<div class="chat-date-sep"><span>Bugün</span></div>' +
-          msgs.map(function (m) {
-            return '<div class="chat-bubble chat-bubble--' + m.dir + '">' +
-              '<div class="chat-bubble__text">' + m.text.replace(/\n/g, '<br>') + '</div>' +
-              '<div class="chat-bubble__meta">' +
-                m.time +
-                (m.dir === 'out'
-                  ? ' <span class="chat-tick' + (m.read ? ' chat-tick--read' : '') + '">✓✓</span>'
-                  : '') +
+      renderScreen(
+        '<div class="chat-screen">' +
+          '<div class="chat-hdr">' +
+            '<button class="chat-hdr__back" onclick="Router.back ? Router.back() : Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
+            '<div class="chat-hdr__ava" style="background:' + k.avatarBg + '">' +
+              k.emoji +
+              (k.online ? '<div class="chat-hdr__online"></div>' : '') +
+            '</div>' +
+            '<div class="chat-hdr__info">' +
+              '<div class="chat-hdr__name">' + k.name + '</div>' +
+              '<div class="chat-hdr__status">' +
+                (k.online ? '<span class="chat-hdr__dot"></span>Çevrimiçi' : 'Son görülme: ' + k.time) +
               '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>' +
-
-        /* ── Sticky footer: quick actions + input + smart bar ── */
-        '<div class="chat-footer">' +
-
-          '<div class="chat-quick">' +
-            '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'konum\')">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-              'Konum Paylaş' +
-            '</button>' +
-            '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'uygun\')">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
-              'Uygunluk Bildir' +
-            '</button>' +
-            '<button class="chat-quick__btn" onclick="KuryeScreens._chatQuick(\'belge\')">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
-              'Belgelerimi Gönder' +
-            '</button>' +
-          '</div>' +
-
-          '<div class="chat-input-wrap">' +
-            '<div class="chat-input-row">' +
-              '<button class="chat-input__icon" onclick="KuryeScreens._chatAttach()">' +
-                '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+            '</div>' +
+            '<div class="chat-hdr__acts">' +
+              '<button class="chat-hdr__act" onclick="KuryeScreens._chatCall()">' +
+                '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
               '</button>' +
-              '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off">' +
-              '<button class="chat-input__icon" onclick="KuryeScreens._chatEmoji()">' +
-                '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
+              '<button class="chat-hdr__act" onclick="KuryeScreens._chatVideo()">' +
+                '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
               '</button>' +
-              '<button class="chat-send" onclick="KuryeScreens._chatSend()">' + ICON.send + '</button>' +
+              '<button class="chat-hdr__act" onclick="KuryeScreens._chatMore()">' +
+                '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
+              '</button>' +
             '</div>' +
           '</div>' +
-
-          '<div class="chat-smart">' +
-            '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'cv\')">' +
-              '<div class="chat-smart__icon">📄</div>' +
-              '<div class="chat-smart__label">CV Gönder</div>' +
-            '</button>' +
-            '<button class="chat-smart__btn chat-smart__btn--primary" onclick="KuryeScreens._chatQuick(\'konum\')">' +
-              '<div class="chat-smart__icon">📍</div>' +
-              '<div class="chat-smart__label">Konum Paylaş</div>' +
-            '</button>' +
-            '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'evrak\')">' +
-              '<div class="chat-smart__icon">📁</div>' +
-              '<div class="chat-smart__label">Evrak Yükle</div>' +
-            '</button>' +
-            '<button class="chat-smart__btn" onclick="KuryeScreens._chatQuick(\'plan\')">' +
-              '<div class="chat-smart__icon">📅</div>' +
-              '<div class="chat-smart__label">Görüşme Planla</div>' +
-            '</button>' +
-            '<button class="chat-smart__btn chat-smart__btn--offer" onclick="KuryeScreens._chatQuick(\'teklif\')">' +
-              '<div class="chat-smart__icon">⭐</div>' +
-              '<div class="chat-smart__label">Teklifleri Gör</div>' +
-            '</button>' +
+          '<div class="chat-context" style="border-color:' + color + '33">' +
+            '<div class="chat-context__dot" style="background:' + color + '"></div>' +
+            '<div class="chat-context__text">' +
+              '<span class="chat-context__role">' + k.jobType + '</span>' +
+              '<span class="chat-context__loc">' + k.meta + '</span>' +
+            '</div>' +
+            '<span class="chat-context__tag" style="color:' + color + '">' + k.tag + '</span>' +
           '</div>' +
-
-        '</div>' + /* /chat-footer */
-
-      '</div>'
-    );
-
-    /* scroll to bottom */
-    setTimeout(function () {
-      var msgs = document.getElementById('chat-msgs');
-      if (msgs) msgs.scrollTop = msgs.scrollHeight;
-    }, 60);
+          '<div class="chat-msgs" id="chat-msgs">' +
+            '<div class="chat-date-sep"><span>Bugün</span></div>' +
+            msgs.map(function (m) {
+              return '<div class="chat-bubble chat-bubble--' + m.dir + '">' +
+                '<div class="chat-bubble__text">' + m.text.replace(/\n/g, '<br>') + '</div>' +
+                '<div class="chat-bubble__meta">' +
+                  m.time +
+                  (m.dir === 'out' ? ' <span class="chat-tick' + (m.read ? ' chat-tick--read' : '') + '">✓✓</span>' : '') +
+                '</div>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+          _chatFooterHTML() +
+        '</div>'
+      );
+      setTimeout(function () {
+        var el = document.getElementById('chat-msgs');
+        if (el) el.scrollTop = el.scrollHeight;
+      }, 60);
+    }
   }
 
   function _chatSend() {
@@ -1161,14 +1456,24 @@ window.KuryeScreens = (function () {
     if (!input || !input.value.trim()) return;
     var text = input.value.trim();
     input.value = '';
-    var msgs = document.getElementById('chat-msgs');
-    if (!msgs) return;
+    var msgsEl = document.getElementById('chat-msgs');
+    if (!msgsEl) return;
+
+    // Optimistik UI güncelleme
+    var now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble--out chat-bubble--new';
-    bubble.innerHTML = '<div class="chat-bubble__text">' + text + '</div>' +
-      '<div class="chat-bubble__meta">Şimdi <span class="chat-tick">✓✓</span></div>';
-    msgs.appendChild(bubble);
-    msgs.scrollTop = msgs.scrollHeight;
+    bubble.innerHTML = '<div class="chat-bubble__text">' + text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+      '<div class="chat-bubble__meta">' + now + ' <span class="chat-tick">✓✓</span></div>';
+    msgsEl.appendChild(bubble);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+
+    // Gerçek konuşmaysa Supabase'e gönder
+    if (_msgState._convId && window.SB && SB.isOn()) {
+      SB.sendConvMessage(_msgState._convId, text).catch(function (e) {
+        console.warn('sendConvMessage failed:', e);
+      });
+    }
   }
 
   function _chatQuick(type) {
@@ -1473,7 +1778,10 @@ window.KuryeScreens = (function () {
     _mapZoom         : _mapZoom,
     _mapGPS          : _mapGPS,
     _mapAI           : _mapAI,
-    _basvur          : _basvur
+    _basvur          : _basvur,
+    _doApply         : _doApply,
+    _showApplySuccess: _showApplySuccess,
+    _chatMsgBubble   : _chatMsgBubble
   };
 
 })();

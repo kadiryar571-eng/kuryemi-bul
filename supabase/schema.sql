@@ -483,6 +483,223 @@ grant execute on function public.list_pending_kyc() to authenticated;
 
 -- Bitti. Tablolar: ...+ public.admins. Admin yapmak için: insert into admins(user_id) values('<uid>');
 
+-- ---------- 13) NOTIFICATIONS ----------
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  type text not null default 'info' check (type in ('info','success','warning','error','new_application','new_message','offer','system')),
+  title text not null,
+  body text default '',
+  link text default '',
+  data jsonb default '{}',
+  read_at timestamptz,
+  created_at timestamptz default now()
+);
+create index if not exists notif_user_idx on public.notifications(user_id);
+create index if not exists notif_unread_idx on public.notifications(user_id, read_at) where read_at is null;
+alter table public.notifications enable row level security;
+drop policy if exists notif_select_own on public.notifications;
+create policy notif_select_own on public.notifications for select using (user_id = auth.uid());
+drop policy if exists notif_update_own on public.notifications;
+create policy notif_update_own on public.notifications for update using (user_id = auth.uid());
+drop policy if exists notif_delete_own on public.notifications;
+create policy notif_delete_own on public.notifications for delete using (user_id = auth.uid());
+
+-- ---------- 14) CONVERSATIONS ----------
+-- İşe alım pipeline'ı: her başvuru otomatik bir konuşma başlatır.
+create table if not exists public.conversations (
+  id uuid primary key default gen_random_uuid(),
+  application_id uuid unique references public.applications(id) on delete cascade,
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  kurye_id uuid not null references public.profiles(id) on delete cascade,
+  employer_id uuid not null references public.profiles(id) on delete cascade,
+  kurye_user uuid not null references auth.users(id) on delete cascade,
+  employer_user uuid not null references auth.users(id) on delete cascade,
+  last_message text default '',
+  last_message_at timestamptz default now(),
+  kurye_unread int not null default 0,
+  employer_unread int not null default 0,
+  status text not null default 'active' check (status in ('active','archived','closed')),
+  created_at timestamptz default now()
+);
+create index if not exists conv_kurye_user_idx on public.conversations(kurye_user);
+create index if not exists conv_employer_user_idx on public.conversations(employer_user);
+create index if not exists conv_last_msg_idx on public.conversations(last_message_at desc);
+alter table public.conversations enable row level security;
+drop policy if exists conv_select_party on public.conversations;
+create policy conv_select_party on public.conversations for select using (
+  kurye_user = auth.uid() or employer_user = auth.uid()
+);
+drop policy if exists conv_update_party on public.conversations;
+create policy conv_update_party on public.conversations for update using (
+  kurye_user = auth.uid() or employer_user = auth.uid()
+);
+
+-- ---------- 15) CONV_MESSAGES ----------
+create table if not exists public.conv_messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null references public.conversations(id) on delete cascade,
+  sender_user uuid references auth.users(id) on delete set null,
+  sender_role text not null default 'system',
+  content text not null,
+  message_type text not null default 'text' check (message_type in ('text','system','profile_card','action','document')),
+  metadata jsonb default '{}',
+  read_at timestamptz,
+  created_at timestamptz default now()
+);
+create index if not exists conv_msg_conv_idx on public.conv_messages(conversation_id, created_at);
+alter table public.conv_messages enable row level security;
+drop policy if exists conv_msg_select_party on public.conv_messages;
+create policy conv_msg_select_party on public.conv_messages for select using (
+  exists (
+    select 1 from public.conversations c
+    where c.id = conversation_id
+      and (c.kurye_user = auth.uid() or c.employer_user = auth.uid())
+  )
+);
+drop policy if exists conv_msg_insert_party on public.conv_messages;
+create policy conv_msg_insert_party on public.conv_messages for insert with check (
+  sender_user = auth.uid()
+  and exists (
+    select 1 from public.conversations c
+    where c.id = conversation_id
+      and (c.kurye_user = auth.uid() or c.employer_user = auth.uid())
+  )
+);
+
+-- ---------- 16) TRIGGER: Başvuru → Konuşma otomatik başlat ----------
+create or replace function public.on_new_application()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_conv_id uuid;
+  v_owner_id uuid;
+  v_owner_user uuid;
+  v_listing_title text;
+  v_kurye_ad text;
+  v_kurye_puan numeric;
+  v_kurye_sehir text;
+  v_kurye_arac text;
+  v_kurye_seviye text;
+  v_kurye_deneyim int;
+begin
+  select owner_id, owner_user, baslik
+    into v_owner_id, v_owner_user, v_listing_title
+    from public.listings where id = new.listing_id;
+  if v_owner_id is null then return new; end if;
+
+  select ad, puan, sehir, arac, seviye, deneyim
+    into v_kurye_ad, v_kurye_puan, v_kurye_sehir, v_kurye_arac, v_kurye_seviye, v_kurye_deneyim
+    from public.profiles where id = new.applicant_id;
+
+  -- Konuşma oluştur (application başına bir tane garantisi için unique constraint var)
+  insert into public.conversations (
+    application_id, listing_id,
+    kurye_id, employer_id,
+    kurye_user, employer_user,
+    last_message, employer_unread
+  ) values (
+    new.id, new.listing_id,
+    new.applicant_id, v_owner_id,
+    new.applicant_user, v_owner_user,
+    'Yeni başvuru', 1
+  ) returning id into v_conv_id;
+
+  -- Sistem mesajı
+  insert into public.conv_messages (conversation_id, sender_user, sender_role, content, message_type)
+  values (v_conv_id, null, 'system',
+    '"' || coalesce(v_listing_title, 'İlan') || '" ilanına yeni başvuru geldi.', 'system');
+
+  -- Başvuran profil kartı (işveren tarafı görecek)
+  insert into public.conv_messages (
+    conversation_id, sender_user, sender_role, content, message_type, metadata
+  ) values (
+    v_conv_id, new.applicant_user, 'kurye',
+    coalesce(v_kurye_ad, 'Aday') || ' profilini paylaştı.',
+    'profile_card',
+    jsonb_build_object(
+      'profile_id', new.applicant_id,
+      'ad', coalesce(v_kurye_ad, ''),
+      'puan', coalesce(v_kurye_puan, 0),
+      'sehir', coalesce(v_kurye_sehir, ''),
+      'arac', coalesce(v_kurye_arac, ''),
+      'seviye', coalesce(v_kurye_seviye, 'standart'),
+      'deneyim', coalesce(v_kurye_deneyim, 0)
+    )
+  );
+
+  -- Kapak mesajı varsa
+  if new.mesaj is not null and trim(new.mesaj) <> '' then
+    insert into public.conv_messages (conversation_id, sender_user, sender_role, content, message_type)
+    values (v_conv_id, new.applicant_user, 'kurye', new.mesaj, 'text');
+  end if;
+
+  -- İşveren bildirimi
+  insert into public.notifications (user_id, type, title, body, link, data)
+  values (
+    v_owner_user, 'new_application',
+    'Yeni başvuru alındı',
+    coalesce(v_kurye_ad, 'Bir aday') || ' ilanınıza başvurdu.',
+    '/conversations/' || v_conv_id,
+    jsonb_build_object('conversation_id', v_conv_id, 'listing_title', coalesce(v_listing_title, ''))
+  );
+
+  return new;
+end $$;
+
+drop trigger if exists on_application_created on public.applications;
+create trigger on_application_created
+  after insert on public.applications
+  for each row execute function public.on_new_application();
+
+-- ---------- 17) TRIGGER: Yeni mesaj → unread güncelle + bildirim ----------
+create or replace function public.on_new_conv_message()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_conv record;
+  v_notify_user uuid;
+  v_sender_ad text;
+begin
+  select * into v_conv from public.conversations where id = new.conversation_id;
+  if v_conv is null or new.sender_user is null then return new; end if;
+
+  if new.sender_user = v_conv.kurye_user then
+    v_notify_user := v_conv.employer_user;
+    update public.conversations set
+      last_message = left(new.content, 100),
+      last_message_at = now(),
+      employer_unread = employer_unread + 1
+    where id = new.conversation_id;
+  elsif new.sender_user = v_conv.employer_user then
+    v_notify_user := v_conv.kurye_user;
+    update public.conversations set
+      last_message = left(new.content, 100),
+      last_message_at = now(),
+      kurye_unread = kurye_unread + 1
+    where id = new.conversation_id;
+  else
+    return new;
+  end if;
+
+  select ad into v_sender_ad from public.profiles where user_id = new.sender_user;
+
+  if new.message_type = 'text' then
+    insert into public.notifications (user_id, type, title, body, link, data)
+    values (
+      v_notify_user, 'new_message', 'Yeni mesaj',
+      coalesce(v_sender_ad, 'Kullanıcı') || ': ' || left(new.content, 80),
+      '/conversations/' || new.conversation_id,
+      jsonb_build_object('conversation_id', new.conversation_id)
+    );
+  end if;
+
+  return new;
+end $$;
+
+drop trigger if exists on_conv_msg_created on public.conv_messages;
+create trigger on_conv_msg_created
+  after insert on public.conv_messages
+  for each row execute function public.on_new_conv_message();
+
 -- ---------- 12) DEVICE_TOKENS (native push bildirimleri) ----------
 -- Her kullanıcının cihaz başına bir satırı olur. APK push token alınca upsert eder.
 create table if not exists public.device_tokens (
