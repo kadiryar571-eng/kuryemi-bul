@@ -208,52 +208,48 @@ window.SharedScreens = (function () {
     showAppBar('Favorilerim', true);
     showBottomNav();
 
-    var role = APP.role || 'kurye';
-
-    var ilanFavs = [
-      { id: '1', title: 'Motorlu Kurye', company: 'ABC Lojistik', salary: '28.000 - 33.000 ₺' },
-      { id: '2', title: 'Yaya Kurye',    company: 'XYZ Kargo',    salary: '15.000 - 22.000 ₺' }
-    ];
-
-    var adayFavs = [
-      { id: '1', name: 'Mehmet Kaya', exp: '3 yıl motorlu kurye', score: '4.8' },
-      { id: '2', name: 'Ayşe Demir', exp: '2 yıl yaya kurye',    score: '4.7' }
-    ];
-
-    var isKurye = role === 'kurye';
-    var items   = isKurye ? ilanFavs : adayFavs;
-
     renderScreen(
       '<div class="kb-screen-inner">' +
-        (items.length === 0 ?
-          '<div class="kb-empty"><div class="kb-empty__icon">❤️</div><div class="kb-empty__title">Favori yok</div><div class="kb-empty__sub">Beğendiğin ilanları favorilere ekle.</div></div>' :
-          items.map(function (item) {
-            if (isKurye) {
-              return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + item.id + '\')">' +
-                '<div class="job-card__top">' +
-                  '<div class="job-card__avatar">🏢</div>' +
-                  '<div class="job-card__info">' +
-                    '<div class="job-card__title">' + item.title + '</div>' +
-                    '<div class="job-card__company">' + item.company + '</div>' +
-                  '</div>' +
-                  '<div class="job-card__salary">' + item.salary + '</div>' +
-                '</div>' +
-              '</div>';
-            } else {
-              return '<div class="person-card kb-card--pressable">' +
-                '<div class="kb-avatar">' + initials(item.name) + '</div>' +
-                '<div class="person-card__info">' +
-                  '<div class="person-card__name">' + item.name + '</div>' +
-                  '<div class="person-card__sub">' + item.exp + '</div>' +
-                  '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + item.score + '</span></div>' +
-                '</div>' +
-                ICON.chevron +
-              '</div>';
-            }
-          }).join('')
-        ) +
+        '<div id="favori-list"><div style="padding:40px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
       '</div>'
     );
+
+    _loadFavoriler();
+  }
+
+  async function _loadFavoriler() {
+    var el = document.getElementById('favori-list');
+    if (!el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myPool() : [];
+      if (!items || !items.length) {
+        el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">❤️</div><div class="kb-empty__title">Favori yok</div><div class="kb-empty__sub">Kurye ve işletme profillerini havuzuna ekleyerek buradan hızlıca erişebilirsin.</div></div>';
+        return;
+      }
+      el.innerHTML = '<div class="kb-card" style="padding:0 16px">' +
+        items.map(function (p, i) {
+          var role  = p.role || 'kurye';
+          var emoji = role === 'kurye' ? '🛵' : role === 'firma' ? '🏢' : '🏪';
+          var roleLbl = role === 'kurye' ? 'Kurye' : role === 'firma' ? 'Firma' : 'İşletme';
+          var routeBase = role === 'kurye' ? '/profil-kurye' : role === 'firma' ? '/profil-firma' : '/profil-isletme';
+          var name = p.ad || 'Kullanıcı';
+          var ini  = (name[0] || '?') + (name.split(' ')[1] ? name.split(' ')[1][0] : '');
+          return (i > 0 ? '<div style="border-top:1px solid var(--border)">' : '<div>') +
+            '<div class="person-card kb-card--pressable" onclick="Router.go(\'' + routeBase + '?id=' + p.id + '\')" style="padding:12px 0">' +
+              '<div class="kb-avatar" style="flex:none;font-size:.85rem">' + ini.toUpperCase() + '</div>' +
+              '<div class="person-card__info">' +
+                '<div class="person-card__name">' + name + '</div>' +
+                '<div class="person-card__sub">' + emoji + ' ' + roleLbl + (p.sehir ? ' · ' + p.sehir : '') + '</div>' +
+                (p.puan ? '<div class="person-card__meta"><span class="kb-stars">★ ' + p.puan + '</span></div>' : '') +
+              '</div>' +
+              ICON.chevron +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    } catch (e) {
+      if (el) el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">⚠️</div><div class="kb-empty__title">Yüklenemedi</div><div class="kb-empty__sub">Tekrar deneyin.</div></div>';
+    }
   }
 
   /* ── Ayarlar ────────────────────────────────────────────── */
@@ -267,8 +263,8 @@ window.SharedScreens = (function () {
         '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Hesap</div>' +
         '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
           _settingItem('Profil Düzenle',     'user',     function(){ Router.go('/profil-duzenle'); }) +
-          _settingItem('Şifre Değiştir',     'shield',   function(){}) +
-          _settingItem('Bildirim Ayarları',  'bell',     function(){}) +
+          _settingItem('Şifre Değiştir',     'shield',   function(){ SharedScreens._sifrePanel(); }) +
+          _settingItem('Bildirim Ayarları',  'bell',     function(){ SharedScreens._bildirimPanel(); }) +
         '</div>' +
 
         '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Uygulama</div>' +
@@ -293,9 +289,9 @@ window.SharedScreens = (function () {
 
         '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Yasal</div>' +
         '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
-          _settingItem('Gizlilik Politikası', 'doc', function(){}) +
-          _settingItem('Kullanım Koşulları',  'doc', function(){}) +
-          _settingItem('KVKK',               'doc', function(){}) +
+          _settingItem('Gizlilik Politikası', 'doc', function(){ SharedScreens._yasalPanel('gizlilik'); }) +
+          _settingItem('Kullanım Koşulları',  'doc', function(){ SharedScreens._yasalPanel('sartlar'); }) +
+          _settingItem('KVKK',               'doc', function(){ SharedScreens._yasalPanel('kvkk'); }) +
         '</div>' +
 
         '<button class="btn btn--danger mt-12" onclick="signOut()">Çıkış Yap</button>' +
@@ -315,12 +311,118 @@ window.SharedScreens = (function () {
 
   function _setLang(lang) {
     localStorage.setItem('kb_lang', lang);
+    if (window.KBI18N && KBI18N.setLang) KBI18N.setLang(lang);
     toast(lang === 'tr' ? 'Dil: Türkçe' : 'Language: English');
   }
 
   function _setTheme(theme) {
     localStorage.setItem('kb_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
     toast(theme === 'dark' ? 'Koyu tema seçildi' : 'Açık tema seçildi');
+  }
+
+  /* ── Şifre Değiştir ─────────────────────────────────────── */
+  function _sifrePanel() {
+    showAppBar('Şifre Değiştir', true);
+    hideBottomNav();
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-card" style="margin-bottom:16px">' +
+          '<div class="kb-form-group">' +
+            '<label class="kb-label">Yeni Şifre</label>' +
+            '<div class="kb-input-wrap">' +
+              '<input class="kb-input" type="password" id="cp-pass1" placeholder="En az 6 karakter" autocomplete="new-password">' +
+              '<button class="kb-input-wrap__icon" onclick="(function(){var e=document.getElementById(\'cp-pass1\');e.type=e.type===\'password\'?\'text\':\'password\'})()">' + ICON.eye + '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="kb-form-group" style="margin-top:12px">' +
+            '<label class="kb-label">Şifre Tekrar</label>' +
+            '<input class="kb-input" type="password" id="cp-pass2" placeholder="Aynı şifreyi girin" autocomplete="new-password">' +
+          '</div>' +
+        '</div>' +
+        '<div id="cp-err" style="display:none;margin-bottom:12px;padding:12px 14px;background:rgba(239,68,68,.1);border-radius:10px;color:#EF4444;font-size:.84rem"></div>' +
+        '<button class="btn btn--primary" id="cp-btn" onclick="SharedScreens._doSifreDegistir()">Şifremi Güncelle</button>' +
+      '</div>'
+    );
+  }
+
+  async function _doSifreDegistir() {
+    var p1    = (document.getElementById('cp-pass1') || {}).value || '';
+    var p2    = (document.getElementById('cp-pass2') || {}).value || '';
+    var errEl = document.getElementById('cp-err');
+    var btn   = document.getElementById('cp-btn');
+    if (errEl) errEl.style.display = 'none';
+    if (p1.length < 6) {
+      if (errEl) { errEl.textContent = 'Şifre en az 6 karakter olmalı.'; errEl.style.display = 'block'; } return;
+    }
+    if (p1 !== p2) {
+      if (errEl) { errEl.textContent = 'Şifreler eşleşmiyor.'; errEl.style.display = 'block'; } return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Güncelleniyor…'; }
+    try {
+      var r = await SB.changePassword(p1);
+      if (r && r.error) throw r.error;
+      toast('Şifren başarıyla güncellendi!');
+      setTimeout(function () { Router.go('/ayarlar'); }, 900);
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Şifremi Güncelle'; }
+      if (errEl) { errEl.textContent = (e && e.message) || 'Güncelleme başarısız oldu.'; errEl.style.display = 'block'; }
+    }
+  }
+
+  /* ── Bildirim Ayarları ───────────────────────────────────── */
+  function _bildirimPanel() {
+    showAppBar('Bildirim Ayarları', true);
+    showBottomNav();
+
+    var items = [
+      { key: 'yeni_ilan',  label: 'Yeni İlanlar',             sub: 'Sana uygun ilanlar eklendiğinde bildir' },
+      { key: 'mesaj',      label: 'Mesajlar',                  sub: 'Yeni mesaj aldığında bildir' },
+      { key: 'basvuru',    label: 'Başvuru Güncellemeleri',    sub: 'Başvurunun durumu değiştiğinde bildir' },
+      { key: 'teklif',     label: 'Teklifler',                 sub: 'Yeni teklif aldığında bildir' },
+      { key: 'sistem',     label: 'Sistem Bildirimleri',       sub: 'Önemli hesap ve güvenlik bildirimleri' }
+    ];
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
+          items.map(function (item, i) {
+            var val = localStorage.getItem('kb_notif_' + item.key) !== 'false';
+            return '<div' + (i > 0 ? ' style="border-top:1px solid var(--border)"' : '') + '>' +
+              '<div class="profile-menu-item" style="padding:14px 0">' +
+                '<div style="flex:1">' +
+                  '<div style="font-weight:600;font-size:.9rem">' + item.label + '</div>' +
+                  '<div style="font-size:.78rem;color:var(--muted);margin-top:2px">' + item.sub + '</div>' +
+                '</div>' +
+                '<label class="ilan-toggle">' +
+                  '<input type="checkbox"' + (val ? ' checked' : '') + ' onchange="SharedScreens._notifPrefSave(\'' + item.key + '\',this.checked)">' +
+                  '<span class="ilan-toggle__knob"></span>' +
+                '</label>' +
+              '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+        '<p style="font-size:.78rem;color:var(--muted);text-align:center;padding:0 16px">Push bildirimleri ayrıca cihaz ayarlarınızdan yönetilebilir.</p>' +
+      '</div>'
+    );
+  }
+
+  function _notifPrefSave(key, val) {
+    localStorage.setItem('kb_notif_' + key, String(val));
+    toast(val ? 'Bildirim açıldı' : 'Bildirim kapatıldı');
+  }
+
+  /* ── Yasal Sayfalar ──────────────────────────────────────── */
+  function _yasalPanel(type) {
+    var urls = {
+      gizlilik : 'https://kuryemibul.com/gizlilik.html',
+      sartlar  : 'https://kuryemibul.com/sartlar.html',
+      kvkk     : 'https://kuryemibul.com/kvkk.html'
+    };
+    var url = urls[type];
+    if (!url) return;
+    window.open(url, '_blank');
   }
 
   /* ── Yardım & Destek ────────────────────────────────────── */
@@ -1016,7 +1118,13 @@ window.SharedScreens = (function () {
     // Auth yardımcı ekranlar
     sifreSifirla      : sifreSifirla,
     _doSifreSifirla   : _doSifreSifirla,
-    verifyEmail       : verifyEmail
+    verifyEmail       : verifyEmail,
+    // Ayarlar alt ekranlar
+    _sifrePanel       : _sifrePanel,
+    _doSifreDegistir  : _doSifreDegistir,
+    _bildirimPanel    : _bildirimPanel,
+    _notifPrefSave    : _notifPrefSave,
+    _yasalPanel       : _yasalPanel
   };
 
 })();

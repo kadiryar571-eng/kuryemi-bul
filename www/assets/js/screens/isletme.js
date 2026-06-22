@@ -558,34 +558,44 @@ window.IsletmeScreens = (function () {
   }
 
   /* ── 8. PROFİL ──────────────────────────────────────────── */
-  function profil() {
+  async function profil() {
     showAppBar('İşletme Profilim', false,
       '<button class="kb-appbar__action" onclick="Router.go(\'/ayarlar\')">' + ICON.settings + '</button>'
     );
     showBottomNav();
     setActiveNav('profil');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.business_name)) || 'İşletme';
+    var p = APP.profile || {};
+    if (window.SB && SB.isOn()) {
+      try { var fresh = await SB.myProfile(); if (fresh) { p = fresh; APP.profile = fresh; } } catch (e) {}
+    }
+
+    var name  = p.ad || 'İşletme';
+    var puan  = p.puan ? String(p.puan) : null;
+    var sehir = p.sehir || '';
+    var avatarHtml = p.avatar_url
+      ? '<img src="' + p.avatar_url + '" style="width:72px;height:72px;border-radius:50%;object-fit:cover">'
+      : '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>';
 
     renderScreen(
       '<div>' +
         '<div class="profile-hero">' +
-          '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
+          avatarHtml +
           '<div class="profile-hero__name">' + name + '</div>' +
-          '<div class="profile-hero__sub">Esnaf / İşletme</div>' +
+          '<div class="profile-hero__sub">Esnaf / İşletme' + (sehir ? ' · ' + sehir : '') + '</div>' +
           '<div class="profile-hero__badges">' +
-            '<span class="kb-chip kb-chip--warning">⭐ 4.5</span>' +
-            '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' +
+            (puan ? '<span class="kb-chip kb-chip--warning">' + ICON.star + ' ' + puan + '</span>' : '') +
+            (p.dogrulama === 'full' ? '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' : '') +
           '</div>' +
         '</div>' +
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0">' +
-          _mi('Profil Düzenle',    'user',       '/profil-duzenle') +
-          _mi('İşletme Bilgileri', 'briefcase', '/ayarlar') +
-          _mi('Puanlamalar',       'star',       '/ayarlar') +
-          _mi('Bildirimler',       'bell',       '/bildirimler') +
-          _mi('Ayarlar',           'settings',   '/ayarlar') +
-          _mi('Yardım & Destek',   'help',       '/yardim') +
+          _mi('Profil Düzenle',    'user',      '/profil-duzenle') +
+          _mi('İlanlarım',        'briefcase', '/isletme/ilanlarim') +
+          _mi('Başvurular',       'users',     '/isletme/basvurular') +
+          _mi('Bildirimler',      'bell',      '/bildirimler') +
+          _mi('Ayarlar',          'settings',  '/ayarlar') +
+          _mi('Yardım & Destek',  'help',      '/yardim') +
           '<div class="profile-menu-item profile-menu-item--danger" onclick="signOut()" style="padding:14px 16px">' +
             '<div class="profile-menu-item__icon">' + ICON.logout + '</div>' +
             '<div class="profile-menu-item__label">Çıkış Yap</div>' +
