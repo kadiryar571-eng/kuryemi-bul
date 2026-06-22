@@ -44,53 +44,30 @@ window.FirmaScreens = (function () {
     showBottomNav();
     setActiveNav('panel');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.company_name)) || 'Firma';
-
-    renderScreen(
-      '<div class="kb-screen-inner">' +
-
-        /* ── S1: Profile Summary ── */
-        '<div class="dash-profile-card" onclick="Router.go(\'/firma/profil\')">' +
-          '<div class="dash-profile-card__avatar">' +
-            '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-firma)">' + initials(name) + '</div>' +
-            '<div class="dash-profile-card__verified">✓</div>' +
-          '</div>' +
-          '<div class="dash-profile-card__info">' +
-            '<div class="dash-profile-card__name">' + name + '</div>' +
-            '<div class="dash-profile-card__role" style="background:rgba(34,197,94,.14);color:var(--c-firma)">Firma</div>' +
-            '<div class="dash-profile-card__score">' + ICON.star + '<span>4.6</span><span style="color:var(--muted);font-size:.68rem;font-weight:400">&nbsp;/ 5.0</span></div>' +
-            '<div class="kb-progress" style="margin-top:8px">' +
-              '<div class="kb-progress__track"><div class="kb-progress__fill" style="width:85%;background:linear-gradient(90deg,var(--c-firma),#4ADE80)"></div></div>' +
-              '<div class="kb-progress__labels"><span>Firma profili</span><span>85%</span></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        /* ── S2: Quick Metrics ── */
-        '<div class="metric-grid">' +
-          _fMCard('list',      '8',   'Açık İlan',           'rgba(34,197,94,.12)',  '#22C55E', '/firma/ilanlarim')  +
-          _fMCard('check',     '14',  'Yeni Başvuru',        'rgba(59,130,246,.12)', '#3B82F6', '/firma/basvurular') +
-          _fMCard('users',     '3',   'Aktif Aday',          'rgba(249,115,22,.12)', '#F97316', '/firma/basvurular') +
-          _fMCard('eye',       '245', 'Profil Görüntülenme', 'rgba(168,85,247,.12)', '#A855F7', '/firma/profil')     +
-        '</div>' +
-
-        /* ── S3: Recent Candidate Applications ── */
-        '<div class="kb-section-head">' +
+    renderScreen(SharedScreens.premDashPanel({
+      heroRoute:    '/firma/profil',
+      heroBadge:    ICON.star + ' Firma',
+      heroTitle:    'Firma Puanınız',
+      heroScoreBig: '4.6',
+      heroDenom:    '/ 5.0',
+      heroDesc:     'Puanınız arttıkça en iyi kuryeler sizinle çalışmak ister',
+      heroCtaLabel: 'Profilimi Gör',
+      heroCtaRoute: '/firma/profil',
+      stats: [
+        { num: '8',   label: 'Açık İlan',            icon: 'list',      color: 'green',  route: '/firma/ilanlarim',  action: 'Yönet'    },
+        { num: '14',  label: 'Yeni Başvuru',          icon: 'check',     color: 'blue',   route: '/firma/basvurular', action: 'İncele'   },
+        { num: '3',   label: 'Aktif Aday',            icon: 'users',     color: 'orange', route: '/firma/basvurular', action: 'Detaylar' },
+        { num: '245', label: 'Profil Görüntülenme',   icon: 'eye',       color: 'purple', route: '/firma/profil',     action: 'Detaylar' }
+      ],
+      upgradeBanner: true,
+      contentHtml: (
+        '<div class="kb-section-head" style="margin-top:4px">' +
           '<div class="kb-section-title">Son Başvurular</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
         '</div>' +
-        _fAppCard('MK', 'Mehmet Kaya',   '3.5 yıl deneyim',   'Başvuru Bekleyen', 'pending', '15:20') +
-        _fAppCard('AD', 'Ayşe Demir',    '2 yıl deneyim',     'İnceleniyor',      'review',  '13:45') +
+        _fCandCard('1', 'Mehmet Kaya', '3.5 yıl deneyim', 'Kadıköy',  '4.8') +
+        _fCandCard('2', 'Ayşe Demir',  '2 yıl deneyim',   'Beşiktaş', '4.7') +
 
-        /* ── S4: Recommended Candidates ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Önerilen Adaylar</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
-        '</div>' +
-        _fCandCard('1', 'Can Bağlar',    '1 yıl deneyim',    'Ümraniye', '4.6') +
-        _fCandCard('2', 'Selin Çelik',   '4 yıl deneyim',    'Kadıköy',  '4.9') +
-
-        /* ── S5: Recent Messages ── */
         '<div class="kb-section-head">' +
           '<div class="kb-section-title">Son Mesajlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/firma/mesajlar\')">Tümünü Gör</button>' +
@@ -100,49 +77,17 @@ window.FirmaScreens = (function () {
           _fMiniMsg('Ayşe Demir',  'Görüşme için uygun saatler...',       '13:45', 0) +
         '</div>' +
 
-        /* ── S6: Recent Notifications ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Son Bildirimler</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/bildirimler\')">Tümünü Gör</button>' +
-        '</div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          '<div class="notif-item"><div class="notif-item__dot" style="background:var(--c-firma)"></div><div class="notif-item__text"><div class="notif-item__title">Yeni başvuru geldi!</div><div class="notif-item__sub">ABC İlanınıza yeni bir aday başvurdu.</div></div><div class="notif-item__time">5 dk</div></div>' +
-          '<div class="notif-item"><div class="notif-item__dot notif-item__dot--read"></div><div class="notif-item__text"><div class="notif-item__title">İlanınız onaylandı</div><div class="notif-item__sub">Motorlu kurye ilanınız yayında.</div></div><div class="notif-item__time">2 sa</div></div>' +
-        '</div>' +
-
-        /* ── S7: Weekly Activity ── */
-        '<div class="kb-section-head"><div class="kb-section-title">Bu Hafta</div></div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-            '<span style="font-size:.82rem;font-weight:700">Başvuru Aktivitesi</span>' +
-            '<span style="font-size:.75rem;color:var(--c-firma);font-weight:600">+8% bu hafta</span>' +
-          '</div>' +
-          '<div class="perf-week">' +
-            _fBar(30,'Pzt') + _fBar(50,'Sal') + _fBar(80,'Çar') +
-            _fBar(45,'Per') + _fBar(90,'Cum') + _fBar(60,'Cmt') + _fBarToday(75,'Paz') +
-          '</div>' +
-          '<div style="display:flex;gap:20px;margin-top:10px">' +
-            '<div><div style="font-size:1.2rem;font-weight:800">58</div><div style="font-size:.7rem;color:var(--muted)">Toplam Başvuru</div></div>' +
-            '<div><div style="font-size:1.2rem;font-weight:800">8</div><div style="font-size:.7rem;color:var(--muted)">Açık İlan</div></div>' +
-            '<div><div style="font-size:1.2rem;font-weight:800;color:var(--c-firma)">92%</div><div style="font-size:.7rem;color:var(--muted)">Yanıt Oranı</div></div>' +
-          '</div>' +
-        '</div>' +
-
-        /* ── S8: Quick Actions ── */
         '<div class="kb-section-head"><div class="kb-section-title">Hızlı İşlemler</div></div>' +
         '<div class="quick-actions" style="margin-bottom:0">' +
           '<button class="quick-btn" onclick="Router.go(\'/firma/ilan/yeni\')">' +
-            '<div class="quick-btn__icon">📋</div>' +
-            '<div class="quick-btn__label">Yeni İlan Oluştur</div>' +
+            '<div class="quick-btn__icon">📋</div><div class="quick-btn__label">Yeni İlan Oluştur</div>' +
           '</button>' +
-          '<button class="quick-btn" onclick="Router.go(\'/firma/basvurular\')">' +
-            '<div class="quick-btn__icon">👥</div>' +
-            '<div class="quick-btn__label">Başvuruları Gör</div>' +
+          '<button class="quick-btn" onclick="Router.go(\'/firma/mesajlar\')">' +
+            '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
           '</button>' +
-        '</div>' +
-
-      '</div>'
-    );
+        '</div>'
+      )
+    }));
   }
 
   /* ── Firma dashboard helpers ─────────────────────────────── */
@@ -413,52 +358,12 @@ window.FirmaScreens = (function () {
 
   /* ── 7. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
-    showAppBar('Mesajlar', false);
-    showBottomNav();
-    setActiveNav('mesajlar');
-
-    renderScreen(
-      '<div class="kb-screen-inner">' +
-        '<div class="kb-search">' + ICON.search + '<input type="text" placeholder="Konuşma ara..."></div>' +
-        '<div class="kb-card" style="padding:0 16px">' +
-          MOCK_MESAJLAR.map(function (m) {
-            return '<div class="msg-item" onclick="Router.go(\'/firma/mesaj/' + m.id + '\')">' +
-              '<div class="kb-avatar" style="background:var(--c-firma)">' + initials(m.name) + '</div>' +
-              '<div class="msg-item__info">' +
-                '<div class="msg-item__name">' + m.name + '</div>' +
-                '<div class="msg-item__preview">' + m.preview + '</div>' +
-              '</div>' +
-              '<div class="msg-item__meta">' +
-                '<div class="msg-item__time">' + m.time + '</div>' +
-                (m.unread ? '<span class="kb-bottomnav__badge" style="position:static;display:inline-flex">' + m.unread + '</span>' : '') +
-              '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>' +
-      '</div>'
-    );
+    SharedScreens.sharedMesajlar('firma', MOCK_MESAJLAR);
   }
 
   /* ── 7b. CHAT ───────────────────────────────────────────── */
   function mesajChat(ctx) {
-    var id = ctx.params.id;
-    var m  = MOCK_MESAJLAR.find(function (x) { return x.id === id; }) || MOCK_MESAJLAR[0];
-    showAppBar(m.name, true);
-    hideBottomNav();
-
-    renderScreen(
-      '<div class="chat-wrap">' +
-        '<div class="chat-messages">' +
-          '<div class="chat-bubble chat-bubble--in">Merhaba, başvurumu incelemenizi rica ederim.<div class="chat-bubble__time">10:15</div></div>' +
-          '<div class="chat-bubble chat-bubble--out">Profilinizi inceledik, güzel görünüyor.<div class="chat-bubble__time">10:30</div></div>' +
-          '<div class="chat-bubble chat-bubble--in">Teşekkürler! Görüşme için hazırım.<div class="chat-bubble__time">10:32</div></div>' +
-        '</div>' +
-        '<div class="chat-input-bar">' +
-          '<textarea placeholder="Mesaj yaz..." rows="1"></textarea>' +
-          '<button class="chat-send">' + ICON.send + '</button>' +
-        '</div>' +
-      '</div>'
-    );
+    SharedScreens.sharedMesajChat(ctx, 'firma');
   }
 
   /* ── 8. PROFİL ──────────────────────────────────────────── */

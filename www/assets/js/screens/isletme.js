@@ -37,105 +37,50 @@ window.IsletmeScreens = (function () {
     showBottomNav();
     setActiveNav('panel');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.business_name)) || 'İşletme';
-
-    renderScreen(
-      '<div class="kb-screen-inner">' +
-
-        /* ── S1: Profile Summary ── */
-        '<div class="dash-profile-card" onclick="Router.go(\'/isletme/profil\')">' +
-          '<div class="dash-profile-card__avatar">' +
-            '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
-            '<div class="dash-profile-card__verified">✓</div>' +
-          '</div>' +
-          '<div class="dash-profile-card__info">' +
-            '<div class="dash-profile-card__name">' + name + '</div>' +
-            '<div class="dash-profile-card__role" style="background:rgba(249,115,22,.14);color:var(--c-isletme)">Esnaf / İşletme</div>' +
-            '<div class="dash-profile-card__score">' + ICON.star + '<span>4.7</span><span style="color:var(--muted);font-size:.68rem;font-weight:400">&nbsp;/ 5.0</span></div>' +
-            '<div class="kb-progress" style="margin-top:8px">' +
-              '<div class="kb-progress__track"><div class="kb-progress__fill" style="width:70%;background:linear-gradient(90deg,var(--c-isletme),#FCD34D)"></div></div>' +
-              '<div class="kb-progress__labels"><span>İşletme profili</span><span>70%</span></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        /* ── S2: Quick Metrics ── */
-        '<div class="metric-grid">' +
-          _iMCard('briefcase', '3',  'Aktif Talep',         'rgba(249,115,22,.12)', '#F97316', '/isletme/basvurular') +
-          _iMCard('check',     '12', 'Gelen Başvuru',       'rgba(59,130,246,.12)', '#3B82F6', '/isletme/basvurular') +
-          _iMCard('users',     '2',  'Aktif Kurye',         'rgba(34,197,94,.12)',  '#22C55E', '/isletme/basvurular') +
-          _iMCard('eye',       '67', 'Profil Görüntülenme', 'rgba(168,85,247,.12)', '#A855F7', '/isletme/profil')     +
-        '</div>' +
-
-        /* ── S3: Active Requests ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Aktif Taleplerim</div>' +
+    renderScreen(SharedScreens.premDashPanel({
+      heroRoute:    '/isletme/profil',
+      heroBadge:    ICON.star + ' İşletme',
+      heroTitle:    'İşletme Puanınız',
+      heroScoreBig: '4.7',
+      heroDenom:    '/ 5.0',
+      heroDesc:     'Puanınız arttıkça daha nitelikli kuryeler başvurur',
+      heroCtaLabel: 'Profilimi Gör',
+      heroCtaRoute: '/isletme/profil',
+      stats: [
+        { num: '3',  label: 'Aktif Talep',          icon: 'briefcase', color: 'orange', route: '/isletme/basvurular', action: 'Detaylar' },
+        { num: '12', label: 'Gelen Başvuru',          icon: 'check',     color: 'blue',   route: '/isletme/basvurular', action: 'İncele'   },
+        { num: '2',  label: 'Aktif Kurye',            icon: 'users',     color: 'green',  route: '/isletme/basvurular', action: 'Yönet'    },
+        { num: '67', label: 'Profil Görüntülenme',    icon: 'eye',       color: 'purple', route: '/isletme/profil',     action: 'Detaylar' }
+      ],
+      upgradeBanner: true,
+      contentHtml: (
+        '<div class="kb-section-head" style="margin-top:4px">' +
+          '<div class="kb-section-title">Son Başvurular</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/isletme/basvurular\')">Tümünü Gör</button>' +
         '</div>' +
-        _iAppCard('🛵', 'Yaya Kurye Talebi',   'Hafta içi 09:00-18:00', 'Başvuru Bekleyen', 'pending', '1 saat önce') +
-        _iAppCard('🚗', 'Araçlı Kurye Talebi', 'Cumartesi 10:00-22:00', 'İnceleniyor',      'review',  'Dün') +
+        _iCandCard('1', 'Ayşe Demir', '1.5 yıl yaya kurye', 'Kadıköy',  '4.7') +
+        _iCandCard('2', 'Can Bağlar', '1 yıl deneyim',       'Beşiktaş', '4.5') +
 
-        /* ── S4: Recommended Candidates ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Önerilen Kuryeler</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/isletme/harita\')">Haritada Gör</button>' +
-        '</div>' +
-        _iCandCard('1', 'Ayşe Demir',   '1.5 yıl yaya kurye', 'Kadıköy',  '4.7') +
-        _iCandCard('2', 'Can Bağlar',   '1 yıl deneyim',       'Beşiktaş', '4.5') +
-
-        /* ── S5: Recent Messages ── */
         '<div class="kb-section-head">' +
           '<div class="kb-section-title">Son Mesajlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/isletme/mesajlar\')">Tümünü Gör</button>' +
         '</div>' +
         '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          _iMiniMsg('Ayşe Demir', 'Merhaba, ilanınızı gördüm, müsaitim...', '14:30', 1) +
-          _iMiniMsg('Can Bağlar', 'Yarın saat kaçta başlayacağım?',          'Dün',   0) +
+          _iMiniMsg('Ayşe Demir', 'Merhaba, ilanınızı gördüm...', '14:30', 1) +
+          _iMiniMsg('Can Bağlar', 'Yarın başlayabilirim.',         'Dün',   0) +
         '</div>' +
 
-        /* ── S6: Recent Notifications ── */
-        '<div class="kb-section-head">' +
-          '<div class="kb-section-title">Son Bildirimler</div>' +
-          '<button class="kb-section-link" onclick="Router.go(\'/bildirimler\')">Tümünü Gör</button>' +
-        '</div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          '<div class="notif-item"><div class="notif-item__dot" style="background:var(--c-isletme)"></div><div class="notif-item__text"><div class="notif-item__title">Yeni başvuru!</div><div class="notif-item__sub">Ayşe Demir talebi kabul etti.</div></div><div class="notif-item__time">5 dk</div></div>' +
-          '<div class="notif-item"><div class="notif-item__dot notif-item__dot--read"></div><div class="notif-item__text"><div class="notif-item__title">İlanınız yayında</div><div class="notif-item__sub">Yaya kurye talebiniz onaylandı.</div></div><div class="notif-item__time">2 sa</div></div>' +
-        '</div>' +
-
-        /* ── S7: Weekly Activity ── */
-        '<div class="kb-section-head"><div class="kb-section-title">Bu Hafta</div></div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);margin-bottom:12px">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-            '<span style="font-size:.82rem;font-weight:700">Talep Aktivitesi</span>' +
-            '<span style="font-size:.75rem;color:var(--c-isletme);font-weight:600">+5% bu hafta</span>' +
-          '</div>' +
-          '<div class="perf-week">' +
-            _iBar(20,'Pzt') + _iBar(40,'Sal') + _iBar(60,'Çar') +
-            _iBar(35,'Per') + _iBar(70,'Cum') + _iBar(50,'Cmt') + _iBarToday(80,'Paz') +
-          '</div>' +
-          '<div style="display:flex;gap:20px;margin-top:10px">' +
-            '<div><div style="font-size:1.2rem;font-weight:800">12</div><div style="font-size:.7rem;color:var(--muted)">Gelen Başvuru</div></div>' +
-            '<div><div style="font-size:1.2rem;font-weight:800">3</div><div style="font-size:.7rem;color:var(--muted)">Aktif Talep</div></div>' +
-            '<div><div style="font-size:1.2rem;font-weight:800;color:var(--c-isletme)">2</div><div style="font-size:.7rem;color:var(--muted)">Çalışan Kurye</div></div>' +
-          '</div>' +
-        '</div>' +
-
-        /* ── S8: Quick Actions ── */
         '<div class="kb-section-head"><div class="kb-section-title">Hızlı İşlemler</div></div>' +
         '<div class="quick-actions" style="margin-bottom:0">' +
           '<button class="quick-btn" onclick="Router.go(\'/isletme/ilan/yeni\')">' +
-            '<div class="quick-btn__icon">📋</div>' +
-            '<div class="quick-btn__label">İlan Oluştur</div>' +
+            '<div class="quick-btn__icon">📋</div><div class="quick-btn__label">İlan Oluştur</div>' +
           '</button>' +
-          '<button class="quick-btn" onclick="Router.go(\'/isletme/basvurular\')">' +
-            '<div class="quick-btn__icon">👥</div>' +
-            '<div class="quick-btn__label">Başvuruları Gör</div>' +
+          '<button class="quick-btn" onclick="Router.go(\'/isletme/mesajlar\')">' +
+            '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
           '</button>' +
-        '</div>' +
-
-      '</div>'
-    );
+        '</div>'
+      )
+    }));
   }
 
   /* ── İşletme dashboard helpers ──────────────────────────── */
@@ -341,52 +286,12 @@ window.IsletmeScreens = (function () {
 
   /* ── 6. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
-    showAppBar('Mesajlar', false);
-    showBottomNav();
-    setActiveNav('mesajlar');
-
-    renderScreen(
-      '<div class="kb-screen-inner">' +
-        '<div class="kb-search">' + ICON.search + '<input type="text" placeholder="Konuşma ara..."></div>' +
-        '<div class="kb-card" style="padding:0 16px">' +
-          (MOCK_MESAJLAR.length ? MOCK_MESAJLAR.map(function (m) {
-            return '<div class="msg-item" onclick="Router.go(\'/isletme/mesaj/' + m.id + '\')">' +
-              '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(m.name) + '</div>' +
-              '<div class="msg-item__info">' +
-                '<div class="msg-item__name">' + m.name + '</div>' +
-                '<div class="msg-item__preview">' + m.preview + '</div>' +
-              '</div>' +
-              '<div class="msg-item__meta">' +
-                '<div class="msg-item__time">' + m.time + '</div>' +
-                (m.unread ? '<span class="kb-bottomnav__badge" style="position:static;display:inline-flex">' + m.unread + '</span>' : '') +
-              '</div>' +
-            '</div>';
-          }).join('') :
-          '<div class="kb-empty"><div class="kb-empty__icon">💬</div><div class="kb-empty__title">Henüz mesajınız yok</div></div>') +
-        '</div>' +
-      '</div>'
-    );
+    SharedScreens.sharedMesajlar('isletme', MOCK_MESAJLAR);
   }
 
   /* ── 6b. CHAT ───────────────────────────────────────────── */
   function mesajChat(ctx) {
-    var id = ctx.params.id;
-    var m  = MOCK_MESAJLAR.find(function (x) { return x.id === id; }) || MOCK_MESAJLAR[0];
-    showAppBar(m ? m.name : 'Sohbet', true);
-    hideBottomNav();
-
-    renderScreen(
-      '<div class="chat-wrap">' +
-        '<div class="chat-messages">' +
-          '<div class="chat-bubble chat-bubble--in">Merhaba, ilanınızı gördüm. Uygun muyum?<div class="chat-bubble__time">10:15</div></div>' +
-          '<div class="chat-bubble chat-bubble--out">Profiliniz çok uygun görünüyor.<div class="chat-bubble__time">10:20</div></div>' +
-        '</div>' +
-        '<div class="chat-input-bar">' +
-          '<textarea placeholder="Mesaj yaz..." rows="1"></textarea>' +
-          '<button class="chat-send" style="background:var(--c-isletme)">' + ICON.send + '</button>' +
-        '</div>' +
-      '</div>'
-    );
+    SharedScreens.sharedMesajChat(ctx, 'isletme');
   }
 
   /* ── 7. PROFİL ──────────────────────────────────────────── */
