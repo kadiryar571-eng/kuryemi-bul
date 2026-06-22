@@ -740,8 +740,7 @@ window.initPremiumMap = async function(role) {
   var map = new google.maps.Map(mapEl, {
     zoom: 12, center: ISTANBUL,
     mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
-    zoomControl: true,
-    zoomControlOptions: { position: google.maps.ControlPosition.LEFT_BOTTOM },
+    zoomControl: false,
     styles: DARK_STYLE, gestureHandling: 'greedy', backgroundColor: '#0f0b1e',
     clickableIcons: false
   });
