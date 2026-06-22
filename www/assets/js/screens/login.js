@@ -242,12 +242,23 @@ window.LoginScreens = (function () {
     btn.textContent = 'Kayıt olunuyor…';
 
     try {
-      var result = await SB.signUp(email, pass, { full_name: name, role: role });
+      var result = await SB.signUp(email, pass, name, role);
       if (result && result.error) throw result.error;
-      toast('Hoş geldin! E-postanı doğrula.');
+
+      /* Supabase email onayı zorunlu kılınmışsa session null gelir */
+      if (!result.data || !result.data.session) {
+        _showErr(errEl, 'Kayıt başarılı! E-postanı kontrol et ve gelen onay bağlantısına tıkla.');
+        errEl.style.color = 'var(--c-kurye)';
+        errEl.style.background = 'rgba(34,197,94,.08)';
+        btn.disabled = false;
+        btn.textContent = 'Kayıt Ol';
+        return;
+      }
+
+      toast('Hoş geldin!');
       await _afterLogin();
     } catch (e) {
-      _showErr(errEl, 'Kayıt başarısız. Bu e-posta kullanılıyor olabilir.');
+      _showErr(errEl, 'Kayıt başarısız. Bu e-posta zaten kullanımda olabilir.');
       btn.disabled = false;
       btn.textContent = 'Kayıt Ol';
     }

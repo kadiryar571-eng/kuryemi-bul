@@ -43,10 +43,13 @@
   /* ---------- AUTH ---------- */
   // Rol artık kayıtta seçilmez; handle_new_user trigger'ı varsayılan 'kurye' atar,
   // kullanıcı profil-duzenle.html'de rolünü seçer.
-  async function signUp(email, password, ad, telefon) {
+  async function signUp(email, password, ad, role) {
+    var redirectBase = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
+      ? 'https://kuryemibul.com'
+      : location.origin;
     return client.auth.signUp({
       email: email, password: password,
-      options: { data: { ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
+      options: { data: { ad: ad || "", role: role || "kurye" }, emailRedirectTo: redirectBase + '/verify-email.html' }
     });
   }
   // Capacitor native ortam mı?
