@@ -477,6 +477,48 @@
   async function deleteListing(id) {
     return client.from("listings").delete().eq("id", id);
   }
+  async function updateListing(id, fields) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var allowed = ['baslik', 'aciklama', 'sehir', 'bolge', 'arac'];
+    var updates = {};
+    allowed.forEach(function(k) { if (fields[k] !== undefined) updates[k] = fields[k]; });
+    var r = await client.from('listings').update(updates).eq('id', id).eq('owner_user', u.id).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ? listingFromDb(r.data) : null;
+  }
+  async function myListingsApplications() {
+    var u = await getUser();
+    if (!u) return [];
+    var listRes = await client.from('listings').select('id,baslik').eq('owner_user', u.id);
+    var listings = (listRes.data || []);
+    if (!listings.length) return [];
+    var ids = listings.map(function(l) { return l.id; });
+    var lblMap = {};
+    listings.forEach(function(l) { lblMap[l.id] = l.baslik; });
+    var r = await client.from('applications')
+      .select('*, applicant:applicant_id(id,ad,role,puan,sehir,avatar_url)')
+      .in('listing_id', ids).order('created_at', { ascending: false });
+    if (r.error) { console.warn('myListingsApplications:', r.error); return []; }
+    return (r.data || []).map(function(a) {
+      return { id: a.id, durum: a.durum, mesaj: a.mesaj,
+        tarih: (a.created_at || '').slice(0, 10),
+        listingId: a.listing_id, ilanBaslik: lblMap[a.listing_id] || '',
+        applicantId: a.applicant ? a.applicant.id : '',
+        ad: (a.applicant && a.applicant.ad) || 'Kullanıcı',
+        rol: (a.applicant && a.applicant.role) || '',
+        puan: (a.applicant && Number(a.applicant.puan)) || 0,
+        sehir: (a.applicant && a.applicant.sehir) || '',
+        avatar: (a.applicant && a.applicant.avatar_url) || '' };
+    });
+  }
+  async function setYayinda(val) {
+    var u = await getUser();
+    if (!u) throw new Error('oturum yok');
+    var r = await client.from('profiles').update({ yayinda: !!val }).eq('user_id', u.id);
+    if (r.error) throw r.error;
+    return true;
+  }
   async function applyToListing(listingId, mesaj) {
     var u = await getUser();
     if (!u) throw new Error("oturum yok");
@@ -786,8 +828,9 @@
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
     createListing: createListing, myListings: myListings, openListings: openListings, listingById: listingById,
-    updateListingStatus: updateListingStatus, deleteListing: deleteListing,
+    updateListingStatus: updateListingStatus, deleteListing: deleteListing, updateListing: updateListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
+    myListingsApplications: myListingsApplications, setYayinda: setYayinda,
     listingApplications: listingApplications, updateApplication: updateApplication,
     applyWithConv: applyWithConv, myConvs: myConvs, getConvDetail: getConvDetail,
     sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,

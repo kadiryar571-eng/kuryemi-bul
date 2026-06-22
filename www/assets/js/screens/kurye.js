@@ -80,6 +80,18 @@ window.KuryeScreens = (function () {
           _statCard('<span id="ps-mesaj">—</span>',   'Mesajlarım',         'msg',       'purple', '/kurye/mesajlar',   'Sohbetler')  +
         '</div>' +
 
+        /* ── İş Arıyorum Toggle ── */
+        '<div class="kb-card ilan-status-card" style="margin-bottom:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+          '<div>' +
+            '<div style="font-weight:700;margin-bottom:2px">İş Arıyorum</div>' +
+            '<div id="is-ari-status" style="font-size:.78rem;color:var(--muted)">Profil durumu yükleniyor...</div>' +
+          '</div>' +
+          '<label class="ilan-toggle">' +
+            '<input type="checkbox" id="is-ariyorum-toggle" onchange="KuryeScreens._toggleIsAriyorum(this.checked)">' +
+            '<span class="ilan-toggle__knob"></span>' +
+          '</label>' +
+        '</div>' +
+
         /* ── Premium Upgrade Banner ── */
         '<div class="prem-upgrade">' +
           '<div class="prem-upgrade__content">' +
@@ -111,11 +123,13 @@ window.KuryeScreens = (function () {
       var results = await Promise.allSettled([
         SB.openListings(),
         SB.myApplications(),
-        SB.myConvs()
+        SB.myConvs(),
+        SB.myProfile()
       ]);
       var ilanlar   = results[0].status === 'fulfilled' ? results[0].value : [];
       var basvurular_list = results[1].status === 'fulfilled' ? results[1].value : [];
       var convs     = results[2].status === 'fulfilled' ? results[2].value : [];
+      var profile   = results[3].status === 'fulfilled' ? results[3].value : null;
 
       var pending   = basvurular_list.filter(function(b){ return b.durum === 'pending'; }).length;
       var accepted  = basvurular_list.filter(function(b){ return b.durum === 'accepted'; }).length;
@@ -126,7 +140,26 @@ window.KuryeScreens = (function () {
       set('ps-basvuru', pending);
       set('ps-gorusme', accepted);
       set('ps-mesaj',   unread || convs.length);
+
+      var yayinda = !!(profile && profile.yayinda);
+      var toggle = document.getElementById('is-ariyorum-toggle');
+      var statusEl = document.getElementById('is-ari-status');
+      if (toggle) toggle.checked = yayinda;
+      if (statusEl) statusEl.textContent = yayinda ? 'Profilin havuzda görünüyor ✓' : 'Profil havuzda görünmüyor';
     } catch(e) {}
+  }
+
+  async function _toggleIsAriyorum(checked) {
+    var statusEl = document.getElementById('is-ari-status');
+    if (statusEl) statusEl.textContent = 'Güncelleniyor...';
+    try {
+      await SB.setYayinda(checked);
+      if (statusEl) statusEl.textContent = checked ? 'Profilin havuzda görünüyor ✓' : 'Profil havuzda görünmüyor';
+      toast(checked ? 'İş arıyorum olarak işaretlendi' : 'İş aramıyor olarak işaretlendi');
+    } catch(e) {
+      if (statusEl) statusEl.textContent = 'Güncellenemedi';
+      toast('Güncellenemedi');
+    }
   }
 
   /* ── Premium Dashboard helpers ─────────────────────────── */
@@ -497,22 +530,42 @@ window.KuryeScreens = (function () {
     _loadRealIlanlar(); // DB'den gerçek ilanları async yükle
   }
 
+  function _metaDecode(aciklama) {
+    if (!aciklama || aciklama.slice(0, 5) !== 'META:') return { meta: {}, desc: aciklama || '' };
+    var sep = aciklama.indexOf('\n|||\n');
+    if (sep < 0) return { meta: {}, desc: aciklama };
+    try { return { meta: JSON.parse(aciklama.slice(5, sep)), desc: aciklama.slice(sep + 5) }; }
+    catch(e) { return { meta: {}, desc: aciklama }; }
+  }
+
   function _dbListingToIlan(l) {
-    var aracEmoji = l.arac === 'Motosiklet' ? '🛵' : l.arac === 'Otomobil' ? '🚗' : l.arac === 'Bisiklet' ? '🚲' : '🏢';
+    var aracMap = { moto: '🛵', aracli: '🚗', yaya: '🚶' };
+    var aracEmoji = aracMap[l.arac] || (l.arac === 'Motosiklet' ? '🛵' : l.arac === 'Otomobil' ? '🚗' : '🏢');
+    var parsed = _metaDecode(l.aciklama || '');
+    var m = parsed.meta;
+    var maas = m.maas || '';
+    var tags = [l.arac || 'Kurye'];
+    if (m.calisma === 'part-time') tags.push('Part-time');
+    else if (m.calisma === 'gunluk') tags.push('Günlük');
+    var tier = m.premium ? 'premium' : 'standart';
+    if (m.acil) tags.unshift('🔥 Acil');
     return {
       id: l.id,
       emoji: aracEmoji,
       title: l.baslik || 'İlan',
       company: l.sahip || 'İşletme',
-      salary: '—',
+      salary: maas ? maas.replace('-', ' – ') + ' ₺/ay' : '—',
       location: [l.sehir, l.bolge].filter(Boolean).join(', ') || 'Belirtilmemiş',
       dist: '—',
       time: l.tarih || 'Yeni',
       match: 82,
-      tier: 'standart',
-      avatarBg: '#F97316',
-      tags: [l.arac || 'Kurye'].filter(Boolean),
-      saved: false
+      tier: tier,
+      avatarBg: m.premium ? '#6C4DFF' : '#F97316',
+      tags: tags,
+      saved: false,
+      _meta: m,
+      _desc: parsed.desc,
+      _raw: l
     };
   }
 
@@ -611,7 +664,8 @@ window.KuryeScreens = (function () {
       renderScreen('<div class="kb-screen-inner" style="padding-top:32px;text-align:center"><div class="kb-spinner"></div></div>');
       SB.listingById(id).then(function(ilan) {
         if (!ilan) { toast('İlan bulunamadı'); Router.back(); return; }
-        _renderIlanDetay(ilan.id, ilan.baslik, ilan.sahip || 'İşletme', ilan.aciklama || '', ilan.sehir || '', ilan.arac || '');
+        var mapped = _dbListingToIlan(ilan);
+        _renderIlanDetay(ilan.id, ilan.baslik, ilan.sahip || 'İşletme', mapped._desc || '', ilan.sehir || '', ilan.arac || '', mapped._meta || {});
       }).catch(function() { toast('İlan yüklenemedi'); Router.back(); });
       return;
     }
@@ -620,30 +674,47 @@ window.KuryeScreens = (function () {
     Router.back();
   }
 
-  function _renderIlanDetay(id, title, company, aciklama, konum, tip) {
+  function _renderIlanDetay(id, title, company, aciklama, konum, tip, meta) {
+    meta = meta || {};
     showAppBar(title, true);
+    var calismaMap = { 'tam-zamanli': 'Tam Zamanlı', 'part-time': 'Part-time', 'gunluk': 'Günlük / Geçici' };
+    var calismaLbl = calismaMap[meta.calisma] || '';
+    var maas = meta.maas ? meta.maas.replace('-', ' – ') + ' ₺/ay' : '';
     renderScreen(
       '<div>' +
         '<div class="detail-hero">' +
           '<div class="detail-hero__title">' + title + '</div>' +
           '<div class="detail-hero__sub">' + company + '</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
-            (tip ? '<span class="kb-chip kb-chip--accent">' + tip + '</span>' : '') +
-            (konum ? '<span class="kb-chip">' + ICON.pin + konum + '</span>' : '') +
+            (meta.acil    ? '<span class="kb-chip kb-chip--warning">🔥 Acil Alım</span>' : '') +
+            (meta.premium ? '<span class="kb-chip kb-chip--accent">⭐ Premium</span>' : '') +
+            (tip    ? '<span class="kb-chip kb-chip--accent">' + tip + '</span>' : '') +
+            (konum  ? '<span class="kb-chip">' + ICON.pin + konum + '</span>' : '') +
           '</div>' +
         '</div>' +
+
+        (maas || calismaLbl ? (
+          '<div class="detail-section">' +
+            '<div class="detail-section__title">Ücret & Çalışma</div>' +
+            (maas ? '<div class="detail-row" style="color:var(--c-accent);font-weight:700;font-size:1rem">💰 ' + maas + '</div>' : '') +
+            (calismaLbl ? '<div class="detail-row">' + ICON.clock + calismaLbl + '</div>' : '') +
+          '</div>'
+        ) : '') +
 
         '<div class="detail-section">' +
           '<div class="detail-section__title">İlan Açıklaması</div>' +
           '<p style="font-size:.88rem;line-height:1.6;color:var(--text)">' +
-            (aciklama || ('Firmamız için deneyimli ' + title.toLowerCase() + ' arıyoruz. Aktif ve dürüst adayları bekliyoruz.')) +
+            (aciklama || ('Firmamız için deneyimli ' + title.toLowerCase() + ' arıyoruz.')) +
           '</p>' +
         '</div>' +
 
         '<div class="detail-section">' +
           '<div class="detail-section__title">Detaylar</div>' +
           (konum ? '<div class="detail-row">' + ICON.pin + '<span>Konum: ' + konum + '</span></div>' : '') +
-          (tip   ? '<div class="detail-row">' + ICON.briefcase + '<span>Çalışma Tipi: ' + tip + '</span></div>' : '') +
+          (tip   ? '<div class="detail-row">' + ICON.briefcase + '<span>Pozisyon: ' + tip + '</span></div>' : '') +
+          (meta.belgeler ? '<div class="detail-row">' + ICON.doc + '<span>Belgeler: ' + meta.belgeler + '</span></div>' : '') +
+          (meta.adres    ? '<div class="detail-row">' + ICON.pin + '<span>Görüşme: ' + meta.adres + '</span></div>' : '') +
+          (meta.baslangic ? '<div class="detail-row">' + ICON.clock + '<span>Başlangıç: ' + meta.baslangic + '</span></div>' : '') +
         '</div>' +
 
         '<div class="detail-cta">' +
@@ -1117,9 +1188,10 @@ window.KuryeScreens = (function () {
     _mapZoom         : _mapZoom,
     _mapGPS          : _mapGPS,
     _mapAI           : _mapAI,
-    _basvur          : _basvur,
-    _doApply         : _doApply,
-    _showApplySuccess: _showApplySuccess
+    _basvur           : _basvur,
+    _doApply          : _doApply,
+    _showApplySuccess : _showApplySuccess,
+    _toggleIsAriyorum : _toggleIsAriyorum
   };
 
 })();

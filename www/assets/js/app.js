@@ -365,18 +365,21 @@
     /* Firma */
     Router.define('/firma/panel',       FirmaScreens.panel);
     Router.define('/firma/harita',      FirmaScreens.harita);
-    Router.define('/firma/ilanlarim',   FirmaScreens.ilanlarim);
-    Router.define('/firma/ilan/yeni',   FirmaScreens.ilanYeni);
-    Router.define('/firma/basvurular',  FirmaScreens.basvurular);
+    Router.define('/firma/ilanlarim',         FirmaScreens.ilanlarim);
+    Router.define('/firma/ilan/yeni',         FirmaScreens.ilanYeni);
+    Router.define('/firma/ilan/:id/duzenle',  FirmaScreens.ilanDuzenle);
+    Router.define('/firma/basvurular',        FirmaScreens.basvurular);
     Router.define('/firma/aday/:id',    FirmaScreens.adayDetay);
     Router.define('/firma/mesajlar',    FirmaScreens.mesajlar);
     Router.define('/firma/mesaj/:id',   FirmaScreens.mesajChat);
     Router.define('/firma/profil',      FirmaScreens.profil);
 
     /* İşletme */
-    Router.define('/isletme/panel',       IsletmeScreens.panel);
-    Router.define('/isletme/harita',      IsletmeScreens.harita);
-    Router.define('/isletme/ilan/yeni',   IsletmeScreens.ilanYeni);
+    Router.define('/isletme/panel',             IsletmeScreens.panel);
+    Router.define('/isletme/harita',            IsletmeScreens.harita);
+    Router.define('/isletme/ilanlarim',         IsletmeScreens.ilanlarim);
+    Router.define('/isletme/ilan/yeni',         IsletmeScreens.ilanYeni);
+    Router.define('/isletme/ilan/:id/duzenle',  IsletmeScreens.ilanDuzenle);
     Router.define('/isletme/basvurular',  IsletmeScreens.basvurular);
     Router.define('/isletme/aday/:id',    IsletmeScreens.adayDetay);
     Router.define('/isletme/mesajlar',    IsletmeScreens.mesajlar);
