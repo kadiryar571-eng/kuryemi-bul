@@ -1,7 +1,7 @@
 -- ============================================================
 -- Kuryemi Bul — Migration 12: Bildirim omurgası (in-app + e-posta)
 -- notifications tablosu + olay trigger'ları. Her önemli olay → bir notifications
--- satırı (in-app merkez) + push_to_profile içinden Brevo e-postası.
+-- satırı (in-app merkez) + push_to_profile içinden Resend e-postası.
 -- ÖN KOŞUL: migration-11 (notify_via_email, email_wrap) ÖNCE çalıştırılmalı.
 -- KULLANIM: Supabase → SQL Editor → Run. İdempotent.
 -- ============================================================

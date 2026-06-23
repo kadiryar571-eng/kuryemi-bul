@@ -81,7 +81,7 @@ Her veri türü için amaç seç:
 - AB/ABD sunucuları (AWS us-east-1)
 - Bu bir "veri işleyici (processor)" — üçüncü taraf değil
 
-**Brevo (Transactional Email):**
+**Resend (Transactional Email):**
 - Sadece e-posta adresi iletilir (bildirim göndermek için)
 - Veri depolanmaz, yalnızca iletim aracı
 
