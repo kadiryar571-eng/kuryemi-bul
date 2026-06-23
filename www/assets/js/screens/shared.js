@@ -1094,9 +1094,98 @@ window.SharedScreens = (function () {
 
         '<button id="pd-save-btn" class="btn btn--primary" style="background:' + accent + ';border-color:' + accent + '" onclick="SharedScreens._saveProfilDuzenle()">Kaydet</button>' +
         '<div id="pd-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+        '<div id="pd-kyc-section" style="margin-top:16px"></div>' +
+        '<div style="height:32px"></div>' +
 
-      '</div>'
+      '</div>',
+      _loadKycSection
     );
+  }
+
+  async function _loadKycSection() {
+    var el = document.getElementById('pd-kyc-section');
+    if (!el || !window.SB || !SB.isOn()) return;
+    try {
+      var sub = await SB.myKycSubmission();
+      if (sub) {
+        var durumCls = sub.durum === 'approved' ? 'kb-chip--success' : sub.durum === 'rejected' ? 'kb-chip--danger' : 'kb-chip--warning';
+        var durumLbl = sub.durum === 'approved' ? 'Onaylandı ✓' : sub.durum === 'rejected' ? 'Reddedildi' : 'İnceleniyor...';
+        el.innerHTML =
+          '<div class="kb-card">' +
+            '<div style="font-size:.76rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin-bottom:10px">KİMLİK DOĞRULAMA</div>' +
+            '<div style="display:flex;align-items:center;justify-content:space-between">' +
+              '<div>' +
+                '<div style="font-size:.85rem;font-weight:600">' + (sub.ad_soyad || '') + '</div>' +
+                '<div style="font-size:.74rem;color:var(--muted);margin-top:2px">' + (sub.belge_turu || '') + '</div>' +
+              '</div>' +
+              '<span class="kb-chip ' + durumCls + '">' + durumLbl + '</span>' +
+            '</div>' +
+          '</div>';
+      } else {
+        el.innerHTML =
+          '<div class="kb-card">' +
+            '<div style="font-size:.76rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">KİMLİK DOĞRULAMA</div>' +
+            '<p style="font-size:.8rem;color:var(--muted);margin:0 0 14px;line-height:1.5">Kimliğini doğrulayarak profiline güven rozeti kazan.</p>' +
+            '<div style="margin-bottom:10px">' +
+              '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Ad Soyad (kimliğindeki gibi)</label>' +
+              '<input id="kyc-adsoyad" class="kb-input" placeholder="Ad Soyad">' +
+            '</div>' +
+            '<div style="margin-bottom:10px">' +
+              '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">TC Kimlik No</label>' +
+              '<input id="kyc-tcno" class="kb-input" type="number" placeholder="11 haneli TC no">' +
+            '</div>' +
+            '<div style="margin-bottom:10px">' +
+              '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Belge Türü</label>' +
+              '<select id="kyc-belge-turu" class="kb-input" style="appearance:auto">' +
+                '<option value="">Seçin…</option>' +
+                '<option value="tc_kimlik">TC Kimlik Kartı</option>' +
+                '<option value="pasaport">Pasaport</option>' +
+                '<option value="ehliyet">Sürücü Belgesi</option>' +
+              '</select>' +
+            '</div>' +
+            '<div style="margin-bottom:14px">' +
+              '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Belge Fotoğrafı</label>' +
+              '<input id="kyc-file" type="file" accept="image/*,application/pdf" style="display:none" onchange="SharedScreens._kycFileSelected(this)">' +
+              '<button class="btn btn--outline btn--sm" style="width:100%" onclick="document.getElementById(\'kyc-file\').click()">📷 Fotoğraf / PDF Seç</button>' +
+              '<div id="kyc-file-name" style="font-size:.72rem;color:var(--muted);margin-top:5px;text-align:center"></div>' +
+            '</div>' +
+            '<button id="kyc-submit-btn" class="btn btn--primary btn--sm" style="width:100%;background:#22C55E;border-color:#22C55E" onclick="SharedScreens._submitKyc()">Belgeleri Gönder</button>' +
+            '<div id="kyc-error" style="display:none;margin-top:8px;font-size:.76rem;color:#EF4444;text-align:center"></div>' +
+          '</div>';
+      }
+    } catch (e) {}
+  }
+
+  function _kycFileSelected(input) {
+    var nameEl = document.getElementById('kyc-file-name');
+    if (nameEl && input.files && input.files[0]) nameEl.textContent = '📎 ' + input.files[0].name;
+  }
+
+  async function _submitKyc() {
+    var adSoyad   = ((document.getElementById('kyc-adsoyad') || {}).value || '').trim();
+    var tcNo      = ((document.getElementById('kyc-tcno') || {}).value || '').trim();
+    var belgeTuru = (document.getElementById('kyc-belge-turu') || {}).value || '';
+    var fileInput = document.getElementById('kyc-file');
+    var errEl = document.getElementById('kyc-error');
+    var btn   = document.getElementById('kyc-submit-btn');
+
+    if (!adSoyad) { if (errEl) { errEl.textContent = 'Ad soyad boş olamaz'; errEl.style.display = 'block'; } return; }
+    if (!belgeTuru) { if (errEl) { errEl.textContent = 'Lütfen belge türü seçin'; errEl.style.display = 'block'; } return; }
+    if (errEl) errEl.style.display = 'none';
+    if (btn)   { btn.disabled = true; btn.textContent = 'Gönderiliyor...'; }
+
+    try {
+      var belgeUrl = '';
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        belgeUrl = await SB.uploadKycDoc(fileInput.files[0]);
+      }
+      await SB.submitKyc({ ad_soyad: adSoyad, tc_no: tcNo, belge_turu: belgeTuru, belge_url: belgeUrl });
+      toast('Belgeler gönderildi, inceleniyor ✓');
+      _loadKycSection();
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Belgeleri Gönder'; }
+      if (errEl) { errEl.textContent = (e && e.message) || 'Gönderilemedi, tekrar deneyin'; errEl.style.display = 'block'; }
+    }
   }
 
   function _pickAvatar() {
@@ -1193,6 +1282,10 @@ window.SharedScreens = (function () {
     profilDuzenle      : profilDuzenle,
     _pickAvatar        : _pickAvatar,
     _saveProfilDuzenle : _saveProfilDuzenle,
+    // KYC belge doğrulama
+    _loadKycSection    : _loadKycSection,
+    _kycFileSelected   : _kycFileSelected,
+    _submitKyc         : _submitKyc,
     // Bildirimler
     _notifTap     : _notifTap,
     _notifReadAll : _notifReadAll,
