@@ -1051,6 +1051,7 @@ window.KuryeScreens = (function () {
         '<div class="pr-section pr-section--menu">' +
           _prMenuItem('Profil Düzenle',      'user',     '/profil-duzenle') +
           _prMenuItem('Başvurularım',        'briefcase','/kurye/basvurular') +
+          _prMenuItem('Tekliflerim',         'doc',      '/teklifler') +
           _prMenuItem('Favori Havuzum',      'heart',    '/favoriler') +
           _prMenuItem('Bildirimler',         'bell',     '/bildirimler') +
           _prMenuItem('Ayarlar',             'settings', '/ayarlar') +

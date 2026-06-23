@@ -524,7 +524,7 @@ window.IsletmeScreens = (function () {
         '</div>' +
         '<div id="isletme-aday-review-area" style="padding:0 16px 16px"></div>' +
       '</div>',
-      function () { if (durum === 'accepted' && a.applicantId) _checkReviewBtn(a.applicantId, name); }
+      function () { if (durum === 'accepted' && a.applicantId) _checkReviewBtn(a.applicantId, a.rol, name); }
     );
   }
 
@@ -551,16 +551,22 @@ window.IsletmeScreens = (function () {
   /* ── DEĞERLENDIRME ──────────────────────────────────────── */
   var _revPuan = 0;
 
-  async function _checkReviewBtn(profileId, name) {
+  async function _checkReviewBtn(profileId, applicantRole, name) {
     if (!window.SB || !SB.isOn() || !profileId) return;
     var el = document.getElementById('isletme-aday-review-area');
     if (!el) return;
     try {
       var existing = await SB.myReviewFor(profileId);
-      var label = existing ? '⭐ Değerlendirmeni Düzenle' : '⭐ Değerlendir';
-      var puan  = existing ? existing.puan : 0;
-      el.innerHTML = '<button class="btn btn--outline btn--sm" style="width:100%;border-color:#F59E0B;color:#F59E0B" ' +
-        'onclick="IsletmeScreens._openReviewModal(\'' + profileId + '\',\'' + name.replace(/'/g, "\\'") + '\',' + puan + ')">' + label + '</button>';
+      var reviewLabel = existing ? '⭐ Değerlendirmeni Düzenle' : '⭐ Değerlendir';
+      var reviewPuan  = existing ? existing.puan : 0;
+      var safeName = name.replace(/'/g, "\\'");
+      el.innerHTML =
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+          '<button class="btn btn--outline btn--sm" style="width:100%;border-color:#6C4DFF;color:#6C4DFF" ' +
+            'onclick="IsletmeScreens._offerModal(\'' + profileId + '\',\'' + (applicantRole || 'kurye') + '\',\'' + safeName + '\')">📨 Teklif Gönder</button>' +
+          '<button class="btn btn--outline btn--sm" style="width:100%;border-color:#F59E0B;color:#F59E0B" ' +
+            'onclick="IsletmeScreens._openReviewModal(\'' + profileId + '\',\'' + safeName + '\',' + reviewPuan + ')">' + reviewLabel + '</button>' +
+        '</div>';
     } catch (e) {}
   }
 
@@ -637,6 +643,59 @@ window.IsletmeScreens = (function () {
     }
   }
 
+  function _offerModal(profileId, role, name) {
+    var old = document.getElementById('offer-overlay');
+    if (old) old.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'offer-overlay';
+    overlay.className = 'apply-overlay';
+    overlay.innerHTML =
+      '<div class="apply-modal">' +
+        '<div class="apply-modal__head">' +
+          '<div class="apply-modal__hinfo">' +
+            '<div class="apply-modal__htitle">' + name + '</div>' +
+            '<div style="font-size:.78rem;color:var(--muted)">Teklif Gönder</div>' +
+          '</div>' +
+          '<button class="apply-modal__close" onclick="document.getElementById(\'offer-overlay\').remove()">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div class="apply-modal__body">' +
+          '<label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:6px">Teklif Mesajı <span style="color:#EF4444">*</span></label>' +
+          '<textarea class="apply-modal__textarea" id="offer-msg" rows="4" placeholder="Teklifi ve çalışma koşullarını kısaca açıklayın..."></textarea>' +
+        '</div>' +
+        '<input type="hidden" id="offer-target" value="' + profileId + '">' +
+        '<input type="hidden" id="offer-role" value="' + (role || 'kurye') + '">' +
+        '<div class="apply-modal__actions">' +
+          '<button class="apply-modal__cancel" onclick="document.getElementById(\'offer-overlay\').remove()">Vazgeç</button>' +
+          '<button class="apply-modal__submit" id="offer-submit" onclick="IsletmeScreens._sendOffer()">Teklifi Gönder →</button>' +
+        '</div>' +
+      '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('apply-overlay--visible'); });
+    setTimeout(function() { var ta = document.getElementById('offer-msg'); if (ta) ta.focus(); }, 320);
+  }
+
+  async function _sendOffer() {
+    var profileId = (document.getElementById('offer-target') || {}).value;
+    var role = (document.getElementById('offer-role') || {}).value || 'kurye';
+    var mesaj = ((document.getElementById('offer-msg') || {}).value || '').trim();
+    if (!mesaj) { toast('Lütfen teklif mesajı yazın'); return; }
+    var btn = document.getElementById('offer-submit');
+    if (btn) { btn.disabled = true; btn.textContent = 'Gönderiliyor...'; }
+    try {
+      var myRole = (APP.profile && APP.profile.role) || 'isletme';
+      await SB.sendOffer(profileId, role, myRole, mesaj);
+      var overlay = document.getElementById('offer-overlay');
+      if (overlay) overlay.remove();
+      toast('Teklif gönderildi ✓');
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Teklifi Gönder →'; }
+      toast((e && e.message) || 'Teklif gönderilemedi');
+    }
+  }
+
   /* ── 7. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
     SharedScreens.sharedMesajlar('isletme');
@@ -683,6 +742,7 @@ window.IsletmeScreens = (function () {
           _mi('Profil Düzenle',    'user',      '/profil-duzenle') +
           _mi('İlanlarım',        'briefcase', '/isletme/ilanlarim') +
           _mi('Başvurular',       'users',     '/isletme/basvurular') +
+          _mi('Tekliflerim',      'doc',       '/teklifler') +
           _mi('Bildirimler',      'bell',      '/bildirimler') +
           _mi('Ayarlar',          'settings',  '/ayarlar') +
           _mi('Yardım & Destek',  'help',      '/yardim') +
@@ -724,7 +784,9 @@ window.IsletmeScreens = (function () {
     _checkReviewBtn : _checkReviewBtn,
     _openReviewModal: _openReviewModal,
     _revStar        : _revStar,
-    _submitReview   : _submitReview
+    _submitReview   : _submitReview,
+    _offerModal     : _offerModal,
+    _sendOffer      : _sendOffer
   };
 
 })();

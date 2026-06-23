@@ -403,6 +403,7 @@
 
     /* Shared */
     Router.define('/bildirimler',    SharedScreens.bildirimler);
+    Router.define('/teklifler',      SharedScreens.teklifler);
     Router.define('/favoriler',      SharedScreens.favoriler);
     Router.define('/ayarlar',        SharedScreens.ayarlar);
     Router.define('/yardim',         SharedScreens.yardim);

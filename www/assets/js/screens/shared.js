@@ -251,6 +251,85 @@ window.SharedScreens = (function () {
     }
   }
 
+  /* ── Teklifler ──────────────────────────────────────────── */
+  function teklifler() {
+    showAppBar('Tekliflerim', true);
+    showBottomNav();
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div id="teklif-list"><div style="padding:40px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+      '</div>',
+      _loadTeklifler
+    );
+  }
+
+  async function _loadTeklifler() {
+    var el = document.getElementById('teklif-list');
+    if (!el) return;
+    try {
+      var items = (window.SB && SB.isOn()) ? await SB.myOffers() : [];
+      if (!items.length) {
+        el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📨</div><div class="kb-empty__title">Teklif yok</div><div class="kb-empty__sub">Gönderdiğin ve aldığın teklifler burada görünür.</div></div>';
+        return;
+      }
+      var gelen = items.filter(function(o) { return o.gelen; });
+      var giden = items.filter(function(o) { return !o.gelen; });
+
+      function offerCard(o) {
+        var durumCls = o.durum === 'accepted' ? 'kb-chip--success' : o.durum === 'rejected' ? 'kb-chip--danger' : 'kb-chip--warning';
+        var durumLbl = o.durum === 'accepted' ? 'Kabul Edildi' : o.durum === 'rejected' ? 'Reddedildi' : 'Bekliyor';
+        return '<div style="border-bottom:1px solid var(--border);padding:14px 0">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
+            '<span style="font-size:.85rem;font-weight:700">' + (o.gelen ? o.kimden : o.kime) + '</span>' +
+            '<span style="display:flex;align-items:center;gap:8px">' +
+              '<span style="font-size:.7rem;color:var(--muted)">' + o.tarih + '</span>' +
+              '<span class="kb-chip ' + durumCls + '" style="padding:2px 8px;font-size:.7rem">' + durumLbl + '</span>' +
+            '</span>' +
+          '</div>' +
+          (o.mesaj ? '<p style="font-size:.8rem;color:var(--text-sub);margin:0 0 8px;line-height:1.5">' + o.mesaj + '</p>' : '') +
+          (o.gelen && o.durum === 'pending' ?
+            '<div style="display:flex;gap:8px">' +
+              '<button class="btn btn--primary btn--sm" style="flex:1" onclick="SharedScreens._acceptOffer(\'' + o.id + '\',this)">Kabul Et</button>' +
+              '<button class="btn btn--ghost btn--sm" style="flex:1;color:#EF4444" onclick="SharedScreens._rejectOffer(\'' + o.id + '\',this)">Reddet</button>' +
+            '</div>'
+          : '') +
+        '</div>';
+      }
+
+      el.innerHTML =
+        '<div class="kb-card" style="padding:0 16px">' +
+          (gelen.length ? '<div style="font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.06em;padding:12px 0 4px">GELEN TEKLİFLER</div>' + gelen.map(offerCard).join('') : '') +
+          (giden.length ? '<div style="font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.06em;padding:12px 0 4px">GÖNDERİLEN TEKLİFLER</div>' + giden.map(offerCard).join('') : '') +
+        '</div>';
+    } catch (e) {
+      if (el) el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">⚠️</div><div class="kb-empty__title">Yüklenemedi</div></div>';
+    }
+  }
+
+  async function _acceptOffer(id, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    try {
+      await SB.updateOffer(id, 'accepted');
+      toast('Teklif kabul edildi ✓');
+      _loadTeklifler();
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Kabul Et'; }
+      toast('İşlem başarısız');
+    }
+  }
+
+  async function _rejectOffer(id, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    try {
+      await SB.updateOffer(id, 'rejected');
+      toast('Teklif reddedildi.');
+      _loadTeklifler();
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Reddet'; }
+      toast('İşlem başarısız');
+    }
+  }
+
   /* ── Ayarlar ────────────────────────────────────────────── */
   function ayarlar() {
     showAppBar('Ayarlar', true);
@@ -1091,9 +1170,12 @@ window.SharedScreens = (function () {
   }
 
   return {
-    bildirimler : bildirimler,
-    favoriler   : favoriler,
-    ayarlar     : ayarlar,
+    bildirimler  : bildirimler,
+    teklifler    : teklifler,
+    _acceptOffer : _acceptOffer,
+    _rejectOffer : _rejectOffer,
+    favoriler    : favoriler,
+    ayarlar      : ayarlar,
     yardim      : yardim,
     _setLang    : _setLang,
     _setTheme   : _setTheme,
