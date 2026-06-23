@@ -527,6 +527,7 @@
     if (r === "kurye") return "panel-kurye.html";
     if (r === "isletme") return "panel-isletme.html";
     if (r === "firma") return "panel-firma.html";
+    if (r === "admin") return "admin.html";
     return "giris.html";
   }
   function roleToProfile(r) {
@@ -698,6 +699,7 @@
     // Yönetim menü öğesi + sidebar admin linki: yalnız adminlere göster
     if (isOnline() && SESSION.user && window.SB && SB.amIAdmin) {
       SB.amIAdmin().then(function (ok) {
+        window._kbIsAdmin = !!ok;
         if (ok) {
           var ai = area.querySelector(".acct__admin"); if (ai) ai.hidden = false;
           var sal = document.getElementById("sidebarAdminLink"); if (sal) sal.style.display = "";

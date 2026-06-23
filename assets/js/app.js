@@ -1527,7 +1527,11 @@
     if (online()) {
       if (!KB.isAuthed()) { location.href = "giris.html"; return; }
       var myRole = KB.currentRole();
-      if (myRole && myRole !== role) { location.href = KB.roleToPanel(myRole); return; }
+      // Admin tüm panelleri görebilir; diğerleri sadece kendi panelini
+      var isAdmin = window._kbIsAdmin || false;
+      if (myRole && myRole !== role && myRole !== "admin" && !isAdmin) {
+        location.href = KB.roleToPanel(myRole); return;
+      }
     }
     var nav = document.querySelector(".dash__nav");
     if (!nav) return;
