@@ -603,6 +603,25 @@
     if (r.error) throw r.error;
     return true;
   }
+  async function adminStats() {
+    var [pR, kR] = await Promise.allSettled([
+      client.from('profiles').select('id', { count: 'exact', head: true }),
+      listPendingKyc()
+    ]);
+    return {
+      totalUsers : (pR.status === 'fulfilled' ? pR.value.count : 0) || 0,
+      pendingKyc : (kR.status === 'fulfilled' ? kR.value.length : 0) || 0
+    };
+  }
+  async function adminListUsers(role) {
+    var q = client.from('profiles')
+      .select('id,ad,role,dogrulama,yayinda,created_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (role && role !== 'tumu') q = q.eq('role', role);
+    var r = await q;
+    return r.data || [];
+  }
 
   /* ---------- BAŞVURU + KONUŞMA PIPELINE ---------- */
 
@@ -839,6 +858,7 @@
     sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
+    adminStats: adminStats, adminListUsers: adminListUsers,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
     myListingStats: myListingStats,
