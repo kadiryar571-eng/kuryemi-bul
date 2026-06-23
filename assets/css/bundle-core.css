@@ -52,32 +52,56 @@
     --heroTop: #080b14;
 }
 
-/* ===== AYDINLIK (BEYAZ) TEMA ===== */
+/* ===== AYDINLIK TEMA (Platform v2 — light first) ===== */
 [data-theme="light"] {
-    --bg: #F4F7FB;
-    --bg-2: #FFFFFF;
-    --white: #FFFFFF;
-    --surface-2: #EEF2F8;
-    --navy: #0F1B2D;
-    --navy-soft: #46566F;
-    --muted: #6B7890;
-    --line: #E2E8F2;
-    --accent: #0EA5C4;
-    --orange: #0EA5C4;
-    --orange-dark: #0B8FAA;
-    --accent-2: #2563EB;
-    --yellow: #2563EB;
-    --blue: #2563EB;
-    --on-accent: #FFFFFF;
-    --accent-grad: linear-gradient(135deg, #06B6D4 0%, #2563EB 100%);
-    --shadow: 0 12px 34px rgba(15, 27, 45, 0.08);
-    --shadow-lg: 0 24px 60px rgba(37, 99, 235, 0.16);
-    --glowA: 6, 182, 212;
-    --glowB: 37, 99, 235;
-    --heroTop: #EAF2FF;
+    --bg:         #F8FAFC;
+    --bg-2:       #F1F5F9;
+    --white:      #FFFFFF;
+    --surface-2:  #F8FAFC;
+    --navy:       #111827;
+    --navy-soft:  #374151;
+    --muted:      #6B7280;
+    --line:       #E5E7EB;
+    --accent:     #2563EB;
+    --orange:     #2563EB;
+    --orange-dark:#1D4ED8;
+    --accent-2:   #3B82F6;
+    --yellow:     #F59E0B;
+    --blue:       #2563EB;
+    --green:      #22C55E;
+    --danger:     #EF4444;
+    --gold:       #F59E0B;
+    --on-accent:  #FFFFFF;
+    --accent-grad: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    --shadow:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:   0 10px 25px -5px rgba(0,0,0,0.08), 0 4px 10px -5px rgba(0,0,0,0.04);
+    --radius:      12px;
+    --radius-sm:   8px;
+    --glowA:       37, 99, 235;
+    --glowB:       29, 78, 216;
+    --heroTop:     #EFF6FF;
 }
-[data-theme="light"] .header { background: rgba(255, 255, 255, 0.85); }
-[data-theme="light"] .leaflet-container { background: #E8EEF6; }
+[data-theme="light"] .header { background: rgba(255, 255, 255, 0.9); }
+[data-theme="light"] .leaflet-container { background: #F0F4F8; }
+[data-theme="light"] body { background: #F8FAFC; color: #111827; }
+[data-theme="light"] body::before,
+[data-theme="light"] body::after { opacity: 0 !important; }
+/* Sidebar body offset (light) */
+[data-theme="light"] body.has-sidebar { background: #F8FAFC !important; }
+/* Card & panel overrides for light */
+[data-theme="light"] .panel-box,
+[data-theme="light"] .pcard,
+[data-theme="light"] .profile__card,
+[data-theme="light"] .cat-card,
+[data-theme="light"] .trust,
+[data-theme="light"] .stats,
+[data-theme="light"] .toolbar {
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border-color: #E5E7EB;
+}
+[data-theme="light"] .kb-toast { background: #1F2937; }
+[data-theme="light"] .cookie-bar { background: #1F2937; border-color: rgba(0,0,0,0.15); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: hidden; overscroll-behavior: none; }

@@ -1,391 +1,432 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="title.panelKurye">Kurye Paneli · Kuryemi Bul</title>
-    <meta name="description" content="Kurye paneli: başvurular, gelen teklifler ve profil.">
+    <title>Dashboard · Kuryemi Bul</title>
+    <meta name="description" content="Kurye paneli: başvurular, gelen teklifler ve kariyer durumu.">
     <link rel="icon" href="assets/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Kuryemi Bul">
-    <meta property="og:title" content="Kurye Paneli · Kuryemi Bul">
-    <meta property="og:description" content="Kurye paneli: başvurular, gelen teklifler ve profil.">
-    <meta property="og:url" content="https://kuryemibul.com/panel-kurye.html">
-    <meta property="og:image" content="https://kuryemibul.com/assets/og-cover.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="assets/css/bundle-core.css">
     <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">    <style>
-      #kuryePageHead { display: none !important; pointer-events: none !important; }
-      @media (min-width: 641px) {
-        #mobDash { display: flex !important; flex-direction: column; gap: 16px; max-width: 860px; }
-      }
-    </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuNp0vAdDC-NLTNHQs3XH1uEpPWnklKVg&libraries=marker&loading=async" async defer></script>
+    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
+    <link rel="stylesheet" href="assets/css/dashboard3col.css">
 </head>
 <body>
-    <div id="app-header"></div>
+<div id="app-header"></div>
 
-    <section class="page-head" id="kuryePageHead">
-        <div class="container"><h1>🎯 Kariyer Merkezim</h1><p>Başvurularım, gelen teklifler ve kariyer ilerleme durumum.</p></div>
-    </section>
+<main class="section--sm">
+    <div class="container">
 
-    <main class="section--sm">
-        <div class="container">
+        <!-- Welcome banner -->
+        <div class="dash3__welcome" id="dashWelcome">
+            <div class="dash3__welcome-avatar" id="dashAvatar">
+                <span id="dashAvatarLetter">K</span>
+            </div>
+            <div class="dash3__welcome-body">
+                <div class="dash3__welcome-greeting">Merhaba 👋</div>
+                <div class="dash3__welcome-name" id="dashName">Kurye</div>
+                <span class="dash3__welcome-badge dash3__welcome-badge--default" id="dashBadge">Profesyonel Kurye</span>
+            </div>
+            <div class="dash3__welcome-actions">
+                <a href="profil-duzenle.html" class="btn btn--ghost btn--sm">Profil Düzenle</a>
+                <a href="ilanlar.html" class="btn btn--primary btn--sm">İşlere Bak →</a>
+            </div>
+        </div>
 
-            <!-- ===== MOBİL PREMİUM DASHBOARD (≤640px) ===== -->
-            <div class="mob-dash" id="mobDash">
+        <!-- Stat row -->
+        <div class="dash3__stats">
+            <a href="ilanlar.html" class="dstat">
+                <div class="dstat__val" id="statApps">—</div>
+                <div class="dstat__lbl">Başvuru</div>
+            </a>
+            <a href="panel-kurye.html" class="dstat">
+                <div class="dstat__val" id="statOffers">—</div>
+                <div class="dstat__lbl">Gelen Teklif</div>
+            </a>
+            <a href="mesajlar.html" class="dstat">
+                <div class="dstat__val" id="statMsgs">—</div>
+                <div class="dstat__lbl">Okunmamış Mesaj</div>
+            </a>
+            <a href="profil-duzenle.html" class="dstat">
+                <div class="dstat__val" id="statPct">—</div>
+                <div class="dstat__lbl">Profil</div>
+            </a>
+        </div>
 
-                <!-- 1. HEADER: Avatar + İsim + Seviye + Bildirimler -->
-                <div class="mob-dash__header">
-                    <div class="mob-dash__identity">
-                        <div class="mob-dash__avatar" id="mobAvatar">
-                            <span id="mobAvatarLetter">K</span>
-                        </div>
-                        <div class="mob-dash__userinfo">
-                            <div class="mob-dash__greeting">Merhaba 👋</div>
-                            <div class="mob-dash__name" id="mobUserName">Kurye</div>
-                            <div id="mobUserLevel"><span class="mob-level-chip">Profesyonel Kurye</span></div>
-                        </div>
+        <!-- 3-col grid -->
+        <div class="dash3">
+
+            <!-- ── LEFT: Activity Feed ── -->
+            <aside class="dash3__left">
+                <div class="dcard">
+                    <div class="dcard__head">
+                        <span class="dcard__title">
+                            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            Aktivite
+                        </span>
+                        <a href="bildirimler.html" class="dcard__action">Tümü →</a>
                     </div>
-                    <a href="bildirimler.html" class="mob-dash__notif-btn" aria-label="Bildirimler">
-                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        <span class="mob-dash__notif-badge" id="mobNotifBadge" style="display:none">0</span>
-                    </a>
+                    <div class="dcard__body" id="activityFeed">
+                        <div class="dash3-skel" style="margin-bottom:10px"></div>
+                        <div class="dash3-skel--sm" style="margin-bottom:8px"></div>
+                        <div class="dash3-skel--sm" style="margin-bottom:8px"></div>
+                        <div class="dash3-skel--sm"></div>
+                    </div>
                 </div>
 
-                <!-- 2. HIZLI İSTATİSTİKLER -->
-                <div class="mob-stats-row">
-                    <a href="ilanlar.html" class="mob-stat-chip">
-                        <div class="mob-stat-chip__val" id="mobStatApps">—</div>
-                        <div class="mob-stat-chip__lbl">Başvuru</div>
-                    </a>
-                    <a href="panel-kurye.html" class="mob-stat-chip">
-                        <div class="mob-stat-chip__val" id="mobStatOffers">—</div>
-                        <div class="mob-stat-chip__lbl">Teklif</div>
-                    </a>
-                    <a href="mesajlar.html" class="mob-stat-chip">
-                        <div class="mob-stat-chip__val" id="mobStatMsgs">—</div>
-                        <div class="mob-stat-chip__lbl">Mesaj</div>
-                    </a>
-                    <a href="profil-duzenle.html" class="mob-stat-chip">
-                        <div class="mob-stat-chip__val" id="mobStatPct">—</div>
-                        <div class="mob-stat-chip__lbl">Profil</div>
-                    </a>
+                <!-- Profile completion -->
+                <div class="dcard">
+                    <div class="dcard__head">
+                        <span class="dcard__title">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Profil Durumu
+                        </span>
+                        <a href="profil-duzenle.html" class="dcard__action">Düzenle</a>
+                    </div>
+                    <div class="dcard__body" id="profileProg">
+                        <div class="dash3-skel"></div>
+                    </div>
                 </div>
+            </aside>
 
-                <!-- SONRAKI ADIM KARTI -->
-                <div class="dash-next-action" id="dashNextAction" style="display:none">
-                    <div class="dash-next-action__label">Sıradaki adım</div>
-                    <div class="dash-next-action__text" id="dashNextText">Profilini tamamla ve ilk iş teklifini al.</div>
-                    <a class="dash-next-action__btn" href="profil-duzenle.html" id="dashNextBtn">Profili Düzenle →</a>
-                </div>
+            <!-- ── CENTER: Main Workspace ── -->
+            <div class="dash3__center">
 
-                <!-- 3. AKTİF BAŞVURULAR -->
-                <div class="mob-section">
-                    <div class="mob-section__head">
-                        <span class="mob-section__title">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <!-- Active applications -->
+                <div class="dcard">
+                    <div class="dcard__head">
+                        <span class="dcard__title">
+                            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                             Aktif Başvurularım
                         </span>
-                        <a href="ilanlar.html" class="mob-section__more">Tümünü Gör</a>
+                        <a href="ilanlar.html" class="dcard__action">Tümünü Gör</a>
                     </div>
-                    <div id="mobActiveMatches">
-                        <div class="mob-skel"></div>
-                        <div class="mob-skel" style="margin-top:10px"></div>
+                    <div class="dcard__body dcard__body--pad0" style="padding: 0 16px" id="activeApps">
+                        <div class="dash3-skel" style="margin:12px 0"></div>
+                        <div class="dash3-skel" style="margin-bottom:12px"></div>
                     </div>
                 </div>
 
-                <!-- 4. YENİ FIRSATLAR -->
-                <div class="mob-section">
-                    <div class="mob-section__head">
-                        <span class="mob-section__title">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            Yeni Fırsatlar
+                <!-- Recommended listings -->
+                <div class="dcard">
+                    <div class="dcard__head">
+                        <span class="dcard__title">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                            Sana Önerilen İlanlar
                         </span>
-                        <a href="ilanlar.html" class="mob-section__more">Tümünü Gör</a>
+                        <a href="ilanlar.html" class="dcard__action">Tüm İlanlar</a>
                     </div>
-                    <div id="mobOpportunities">
-                        <div class="mob-skel"></div>
-                        <div class="mob-skel" style="margin-top:10px"></div>
-                        <div class="mob-skel" style="margin-top:10px"></div>
+                    <div class="dcard__body dcard__body--pad0" style="padding: 0 16px" id="recommendedJobs">
+                        <div class="dash3-skel" style="margin:12px 0"></div>
+                        <div class="dash3-skel" style="margin-bottom:12px"></div>
+                        <div class="dash3-skel" style="margin-bottom:12px"></div>
                     </div>
                 </div>
 
-                <!-- 5. MESAJ ÖNİZLEME -->
-                <div class="mob-section">
-                    <div class="mob-section__head">
-                        <span class="mob-section__title">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+
+            <!-- ── RIGHT: Utility Panel ── -->
+            <aside class="dash3__right">
+
+                <!-- Quick actions -->
+                <div class="dcard">
+                    <div class="dcard__head">
+                        <span class="dcard__title">
+                            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            Hızlı İşlemler
+                        </span>
+                    </div>
+                    <div class="dcard__body">
+                        <div class="quick-actions">
+                            <a href="ilanlar.html" class="quick-action-btn">
+                                <span class="quick-action-btn__ic">
+                                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                                </span>
+                                İlanları Keşfet
+                            </a>
+                            <a href="harita.html" class="quick-action-btn">
+                                <span class="quick-action-btn__ic">
+                                    <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                                </span>
+                                Haritayı Aç
+                            </a>
+                            <a href="mesajlar.html" class="quick-action-btn">
+                                <span class="quick-action-btn__ic">
+                                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                </span>
+                                Mesajlar
+                            </a>
+                            <a href="profil-duzenle.html" class="quick-action-btn">
+                                <span class="quick-action-btn__ic">
+                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </span>
+                                Profil Düzenle
+                            </a>
+                            <a href="bildirimler.html" class="quick-action-btn">
+                                <span class="quick-action-btn__ic">
+                                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                </span>
+                                Bildirimler
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent conversations -->
+                <div class="dcard">
+                    <div class="dcard__head">
+                        <span class="dcard__title">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             Son Mesajlar
                         </span>
-                        <a href="mesajlar.html" class="mob-section__more">Tümünü Gör</a>
+                        <a href="mesajlar.html" class="dcard__action">Tümü →</a>
                     </div>
-                    <div id="mobMsgPreview">
-                        <div class="mob-skel"></div>
-                        <div class="mob-skel" style="margin-top:10px"></div>
+                    <div class="dcard__body" id="recentChats">
+                        <div class="dash3-skel--sm" style="margin-bottom:8px"></div>
+                        <div class="dash3-skel--sm"></div>
                     </div>
                 </div>
 
-                <!-- 6. PROFİL DURUMU -->
-                <div class="mob-section">
-                    <div class="mob-section__head">
-                        <span class="mob-section__title">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            Profil Durumum
-                        </span>
-                        <a href="profil-duzenle.html" class="mob-section__more">Düzenle</a>
-                    </div>
-                    <div id="mobProfileProg"><div class="mob-skel"></div></div>
-                </div>
+            </aside>
+        </div><!-- /.dash3 -->
 
-                <!-- 7. HIZLI İŞLEMLER -->
-                <div class="mob-quick-grid">
-                    <a href="ilanlar.html" class="mob-qa-btn">
-                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
-                        <span>İlanlar</span>
-                    </a>
-                    <a href="mesajlar.html" class="mob-qa-btn">
-                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-                        <span>Mesajlar</span>
-                    </a>
-                    <a href="harita.html" class="mob-qa-btn">
-                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/></svg></span>
-                        <span>Harita</span>
-                    </a>
-                    <a href="bildirimler.html" class="mob-qa-btn">
-                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-                        <span>Bildirimler</span>
-                    </a>
-                    <a href="profil-duzenle.html" class="mob-qa-btn">
-                        <span class="mob-qa-btn__ic"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                        <span>Profil</span>
-                    </a>
-                </div>
+    </div>
+</main>
 
-            </div><!-- /.mob-dash -->
+<div id="app-footer"></div>
 
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+<script>KBApp.initPanel("kurye");</script>
+<script>
+/* ── Dashboard data loader ── */
+(function () {
+    function el(id) { return document.getElementById(id); }
+    function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+            return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+        });
+    }
+    function timeAgo(iso) {
+        if (!iso) return "";
+        var d = new Date(iso), now = new Date(), s = Math.floor((now - d)/1000);
+        if (s < 60) return "şimdi";
+        var m = Math.floor(s/60); if (m < 60) return m + " dk";
+        var h = Math.floor(m/60); if (h < 24) return h + " sa";
+        var gun = Math.floor(h/24); if (gun < 7) return gun + " gün";
+        return d.toLocaleDateString("tr-TR", {day:"numeric", month:"short"});
+    }
+    var STATUS = {
+        pending:   {lbl:"İnceleniyor", cls:"status--pending"},
+        accepted:  {lbl:"Onaylandı",   cls:"status--accepted"},
+        rejected:  {lbl:"Reddedildi",  cls:"status--rejected"},
+        interview: {lbl:"Görüşme",     cls:"status--interview"}
+    };
+    function calcPct(p) {
+        var n = 0;
+        if (p.ad)        n += 20;
+        if (p.telefon)   n += 20;
+        if (p.sehir)     n += 20;
+        if (p.arac_turu) n += 20;
+        if (p.dogrulama === "onaylandi") n += 20;
+        return n;
+    }
 
-        </div>
-    </main>
-
-    <div id="app-footer"></div>
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>KBApp.initPanel("kurye");</script>
-    <script>
-    /* ========= MOBİL PREMİUM DASHBOARD ========= */
-    (function () {
-        function el(id) { return document.getElementById(id); }
-        function esc(s) {
-            return (window.KB && KB.esc) ? KB.esc(s)
-                : String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-                    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-                });
+    function renderWelcome(p) {
+        var firstName = (p.ad || "").split(" ")[0] || "Kurye";
+        if (el("dashName")) el("dashName").textContent = firstName;
+        if (el("dashAvatarLetter")) el("dashAvatarLetter").textContent = firstName.charAt(0).toUpperCase();
+        if (p.avatar_url && el("dashAvatar")) {
+            el("dashAvatar").innerHTML = '<img src="' + esc(p.avatar_url) + '" alt="' + esc(p.ad || "") + '">';
         }
-        function timeAgo(iso) {
-            if (!iso) return "";
-            var d = new Date(iso), now = new Date(), s = Math.floor((now - d) / 1000);
-            if (s < 60) return "şimdi";
-            var m = Math.floor(s / 60); if (m < 60) return m + " dk";
-            var h = Math.floor(m / 60); if (h < 24) return h + " sa";
-            var gun = Math.floor(h / 24); if (gun < 7) return gun + " gün";
-            return d.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
-        }
-
-        var STATUS_MAP = {
-            pending:   { lbl: "İnceleniyor", cls: "pending" },
-            accepted:  { lbl: "Onaylandı",   cls: "accepted" },
-            rejected:  { lbl: "Reddedildi",  cls: "rejected" },
-            interview: { lbl: "Görüşme",     cls: "interview" }
-        };
-
-        function calcPct(p) {
-            var n = 0;
-            if (p.ad)        n += 20;
-            if (p.telefon)   n += 20;
-            if (p.sehir)     n += 20;
-            if (p.arac_turu) n += 20;
-            if (p.dogrulama === "onaylandi") n += 20;
-            return n;
-        }
-
-        function renderActiveMatches(apps) {
-            var host = el("mobActiveMatches"); if (!host) return;
-            if (!apps.length) {
-                host.innerHTML = '<div class="mob-empty">Henüz başvuru yok. <a href="ilanlar.html" class="mob-empty__link">İlanları Gör →</a></div>';
-                return;
+        var badge = el("dashBadge");
+        if (badge) {
+            if (p.dogrulama === "onaylandi") {
+                badge.textContent = "✓ Doğrulanmış Kurye";
+                badge.className = "dash3__welcome-badge dash3__welcome-badge--verified";
+            } else if (p.dogrulama === "beklemede") {
+                badge.textContent = "⏳ Doğrulama Bekleniyor";
+                badge.className = "dash3__welcome-badge dash3__welcome-badge--pending";
+            } else {
+                badge.textContent = "Profesyonel Kurye";
+                badge.className = "dash3__welcome-badge dash3__welcome-badge--default";
             }
-            host.innerHTML = apps.slice(0, 4).map(function (a) {
-                var st  = STATUS_MAP[a.durum] || STATUS_MAP.pending;
-                var d   = a.tarih ? new Date(a.tarih).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
-                var ini = (a.firma || a.baslik || "İ").charAt(0).toUpperCase();
-                return '<div class="mob-match-row">' +
-                    '<div class="mob-match-row__av">' + esc(ini) + '</div>' +
-                    '<div class="mob-match-row__body">' +
-                        '<div class="mob-match-row__title">' + esc(a.baslik || "İş İlanı") + '</div>' +
-                        '<div class="mob-match-row__sub">' + esc(a.firma || "—") + (a.ilanSehir ? " · " + esc(a.ilanSehir) : "") + '</div>' +
-                    '</div>' +
-                    '<div class="mob-match-row__end">' +
-                        '<span class="mob-status mob-status--' + st.cls + '">' + st.lbl + '</span>' +
-                        (d ? '<div class="mob-match-row__date">' + d + '</div>' : '') +
-                    '</div>' +
-                '</div>';
-            }).join("");
         }
+    }
 
-        function renderOpportunities(listings) {
-            var host = el("mobOpportunities"); if (!host) return;
-            if (!listings.length) {
-                host.innerHTML = '<div class="mob-empty">Şu an açık ilan yok.</div>';
-                return;
-            }
-            host.innerHTML = listings.slice(0, 4).map(function (l) {
-                var meta   = [l.sehir, l.arac].filter(Boolean).map(esc).join(" · ");
-                var letter = (l.sahip || l.baslik || "İ").charAt(0).toUpperCase();
-                var date   = l.tarih ? new Date(l.tarih).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
-                return '<a href="ilan-detay.html?id=' + l.id + '" class="mob-opp-row">' +
-                    '<div class="mob-opp-row__av">' + esc(letter) + '</div>' +
-                    '<div class="mob-opp-row__body">' +
-                        '<div class="mob-opp-row__title">' + esc(l.baslik || "") + '</div>' +
-                        (meta ? '<div class="mob-opp-row__meta">' + meta + '</div>' : '') +
-                        (date ? '<div class="mob-opp-row__date">' + date + ' yayınlandı</div>' : '') +
-                    '</div>' +
-                    '<div class="mob-opp-row__arrow">›</div>' +
-                '</a>';
-            }).join("");
-        }
-
-        function renderMessages(convs) {
-            var host = el("mobMsgPreview"); if (!host) return;
-            if (!convs.length) {
-                host.innerHTML = '<div class="mob-empty">Henüz mesaj yok. <a href="mesajlar.html" class="mob-empty__link">Mesajlara Git →</a></div>';
-                return;
-            }
-            host.innerHTML = convs.slice(0, 3).map(function (c) {
-                var ini      = (c.ad || "?").charAt(0).toUpperCase();
-                var preview  = c.lastBody ? (c.lastBody.length > 40 ? c.lastBody.slice(0, 40) + "…" : c.lastBody) : "";
-                var hasUnread = c.unread > 0;
-                return '<a href="mesajlar.html?pid=' + esc(c.profileId) + '" class="mob-msg-row' + (hasUnread ? " is-unread" : "") + '">' +
-                    '<div class="mob-msg-row__av">' + (c.avatar ? '<img src="' + esc(c.avatar) + '" alt="">' : esc(ini)) + '</div>' +
-                    '<div class="mob-msg-row__body">' +
-                        '<div class="mob-msg-row__name">' + esc(c.ad || "Kullanıcı") + '</div>' +
-                        '<div class="mob-msg-row__last">' + (c.lastMine ? '<span class="mob-msg-row__mine">Sen: </span>' : "") + esc(preview) + '</div>' +
-                    '</div>' +
-                    '<div class="mob-msg-row__end">' +
-                        '<div class="mob-msg-row__time">' + timeAgo(c.lastAt) + '</div>' +
-                        (hasUnread ? '<div class="mob-msg-row__dot">' + (c.unread > 9 ? "9+" : c.unread) + '</div>' : '') +
-                    '</div>' +
-                '</a>';
-            }).join("");
-        }
-
-        function renderProfileProg(p, pct) {
-            var host = el("mobProfileProg"); if (!host) return;
-            var missing = [];
-            if (!p.ad)        missing.push("İsim ekle");
-            if (!p.telefon)   missing.push("Telefon ekle");
-            if (!p.sehir)     missing.push("Şehir seç");
-            if (!p.arac_turu) missing.push("Araç tipi seç");
-            if (p.dogrulama !== "onaylandi") missing.push("Kimlik doğrula");
-            var tip     = missing[0] ? 'Sonraki: <b>' + esc(missing[0]) + '</b>' : 'Profil tamamlandı! 🎉';
-            var kycLbl  = p.dogrulama === "onaylandi" ? "Onaylı" : (p.dogrulama === "beklemede" ? "İnceleniyor" : "Tamamlanmadı");
-            var kycCls  = p.dogrulama === "onaylandi" ? " mob-kyc--ok" : (p.dogrulama === "beklemede" ? " mob-kyc--pending" : "");
-            var kycIc   = p.dogrulama === "onaylandi" ? "✓" : (p.dogrulama === "beklemede" ? "⏳" : "○");
-            host.innerHTML =
-                '<div class="mob-prog__row">' +
-                    '<span class="mob-prog__pct">' + pct + '%</span>' +
-                    '<span class="mob-prog__lbl">Profil Tamamlandı</span>' +
+    function renderProfileProg(p) {
+        var host = el("profileProg"); if (!host) return;
+        var pct = calcPct(p);
+        if (el("statPct")) el("statPct").textContent = pct + "%";
+        var missing = [];
+        if (!p.ad)        missing.push("İsim ekle");
+        if (!p.telefon)   missing.push("Telefon ekle");
+        if (!p.sehir)     missing.push("Şehir seç");
+        if (!p.arac_turu) missing.push("Araç tipi seç");
+        if (p.dogrulama !== "onaylandi") missing.push("Kimlik doğrula");
+        var tip = missing[0] ? 'Sonraki: <b>' + esc(missing[0]) + '</b>' : 'Profil tamamlandı! 🎉';
+        host.innerHTML =
+            '<div class="profile-complete">' +
+                '<div style="display:flex;align-items:baseline;gap:6px">' +
+                    '<span class="profile-complete__pct">' + pct + '%</span>' +
+                    '<span class="profile-complete__lbl">Tamamlandı</span>' +
                 '</div>' +
-                '<div class="mob-prog__track"><div class="mob-prog__fill" style="width:' + pct + '%"></div></div>' +
-                '<div class="mob-prog__tip">' + tip + '</div>' +
-                '<div class="mob-kyc' + kycCls + '">' +
-                    '<span class="mob-kyc__ic">' + kycIc + '</span> Kimlik Doğrulama: <b>' + esc(kycLbl) + '</b>' +
-                '</div>';
+                '<div class="profile-complete__bar-track">' +
+                    '<div class="profile-complete__bar-fill" style="width:' + pct + '%"></div>' +
+                '</div>' +
+                '<div class="profile-complete__tip">' + tip + '</div>' +
+            '</div>';
+    }
+
+    function renderApps(apps) {
+        var host = el("activeApps"); if (!host) return;
+        if (!apps.length) {
+            host.innerHTML = '<div class="feed-empty">Henüz başvuru yok. <a href="ilanlar.html" style="color:#2563EB;font-weight:600">İlanları İncele →</a></div>';
+            return;
         }
+        host.innerHTML = apps.slice(0, 5).map(function(a) {
+            var st  = STATUS[a.durum] || STATUS.pending;
+            var ini = (a.firma || a.baslik || "İ").charAt(0).toUpperCase();
+            var d   = a.tarih ? new Date(a.tarih).toLocaleDateString("tr-TR", {day:"numeric", month:"short"}) : "";
+            return '<div class="listing-row">' +
+                '<div class="listing-row__av">' + esc(ini) + '</div>' +
+                '<div class="listing-row__body">' +
+                    '<div class="listing-row__title">' + esc(a.baslik || "İş İlanı") + '</div>' +
+                    '<div class="listing-row__meta">' + esc(a.firma || "—") + (a.ilanSehir ? " · " + esc(a.ilanSehir) : "") + '</div>' +
+                '</div>' +
+                '<div class="listing-row__end">' +
+                    '<span class="listing-row__status ' + st.cls + '">' + st.lbl + '</span>' +
+                    (d ? '<div class="listing-row__date">' + d + '</div>' : '') +
+                '</div>' +
+            '</div>';
+        }).join("");
+    }
 
-        async function initMobDash() {
-            if (window.KB && KB.ready) await KB.ready();
-            if (!window.KB || !KB.isAuthed || !KB.isAuthed()) return;
-
-            var sess = KB.session && KB.session();
-            var p    = sess && sess.profile;
-            if (!p) return;
-
-            /* --- HEADER --- */
-            var firstName = (p.ad || "").split(" ")[0] || "Kurye";
-            if (el("mobUserName"))     el("mobUserName").textContent = firstName;
-            if (el("mobAvatarLetter")) el("mobAvatarLetter").textContent = firstName.charAt(0).toUpperCase();
-            if (p.avatar_url && el("mobAvatar")) {
-                el("mobAvatar").innerHTML = '<img src="' + esc(p.avatar_url) + '" alt="' + esc(p.ad || "") + '" style="width:100%;height:100%;object-fit:cover;border-radius:16px">';
-            }
-            var lvlText = "Profesyonel Kurye";
-            var lvlCls  = "";
-            if (p.dogrulama === "onaylandi")  { lvlText = "✓ Doğrulanmış Kurye"; lvlCls = " mob-level-chip--verified"; }
-            else if (p.dogrulama === "beklemede") { lvlText = "⏳ Doğrulama Bekleniyor"; }
-            if (el("mobUserLevel")) el("mobUserLevel").innerHTML = '<span class="mob-level-chip' + lvlCls + '">' + lvlText + '</span>';
-
-            /* --- SONRAKI ADIM --- */
-            var nextEl = el("dashNextAction");
-            if (nextEl) {
-                if (p.dogrulama !== "onaylandi") {
-                    if (el("dashNextText")) el("dashNextText").textContent = "Profilini doğrula, daha fazla teklif al.";
-                    if (el("dashNextBtn"))  { el("dashNextBtn").textContent = "Doğrulamaya Git →"; el("dashNextBtn").href = "profil-duzenle.html"; }
-                } else {
-                    if (el("dashNextText")) el("dashNextText").textContent = "Yeni iş ilanlarını keşfet ve başvur.";
-                    if (el("dashNextBtn"))  { el("dashNextBtn").textContent = "İlanları Gör →"; el("dashNextBtn").href = "ilanlar.html"; }
-                }
-                nextEl.style.display = "";
-            }
-
-            /* --- PROFİL % --- */
-            var pct = calcPct(p);
-            if (el("mobStatPct")) el("mobStatPct").textContent = pct + "%";
-            renderProfileProg(p, pct);
-
-            /* --- PARALEL VERİ YÜKLEMESİ --- */
-            var results = await Promise.allSettled([
-                window.SB ? SB.myApplications()    : Promise.resolve([]),
-                window.SB ? SB.myOffers()           : Promise.resolve([]),
-                window.SB ? SB.myConversations()    : Promise.resolve([]),
-                window.SB ? SB.unreadCount()        : Promise.resolve(0),
-                window.SB ? SB.unreadMessageCount() : Promise.resolve(0),
-                window.SB ? SB.openListings()       : Promise.resolve([])
-            ]);
-
-            var apps     = results[0].value || [];
-            var offers   = results[1].value || [];
-            var convs    = results[2].value || [];
-            var notifCnt = results[3].value || 0;
-            var msgCnt   = results[4].value || 0;
-            var listings = results[5].value || [];
-
-            /* --- İSTATİSTİKLER --- */
-            if (el("mobStatApps"))   el("mobStatApps").textContent   = apps.length;
-            if (el("mobStatOffers")) el("mobStatOffers").textContent  = offers.filter(function (o) { return o.gelen && o.durum === "pending"; }).length;
-            if (el("mobStatMsgs"))   el("mobStatMsgs").textContent    = msgCnt;
-
-            /* --- BİLDİRİM BADGE --- */
-            if (notifCnt > 0 && el("mobNotifBadge")) {
-                el("mobNotifBadge").textContent  = notifCnt > 9 ? "9+" : String(notifCnt);
-                el("mobNotifBadge").style.display = "";
-            }
-
-            /* --- BÖLÜMLER --- */
-            renderActiveMatches(apps);
-            renderOpportunities(listings);
-            renderMessages(convs);
+    function renderJobs(listings) {
+        var host = el("recommendedJobs"); if (!host) return;
+        if (!listings.length) {
+            host.innerHTML = '<div class="feed-empty">Şu an açık ilan yok.</div>';
+            return;
         }
+        host.innerHTML = listings.slice(0, 5).map(function(l) {
+            var letter = (l.sahip || l.baslik || "İ").charAt(0).toUpperCase();
+            var meta   = [l.sehir, l.arac].filter(Boolean).map(esc).join(" · ");
+            var date   = l.tarih ? new Date(l.tarih).toLocaleDateString("tr-TR", {day:"numeric", month:"short"}) : "";
+            return '<a href="ilan-detay.html?id=' + esc(l.id) + '" class="listing-row">' +
+                '<div class="listing-row__av">' + esc(letter) + '</div>' +
+                '<div class="listing-row__body">' +
+                    '<div class="listing-row__title">' + esc(l.baslik || "") + '</div>' +
+                    '<div class="listing-row__meta">' + esc(meta || "—") + '</div>' +
+                '</div>' +
+                '<div class="listing-row__end">' +
+                    '<span class="listing-row__status status--active">Açık</span>' +
+                    (date ? '<div class="listing-row__date">' + date + '</div>' : '') +
+                '</div>' +
+            '</a>';
+        }).join("");
+    }
 
-        initMobDash();
-    })();
-    </script>
+    function renderChats(convs) {
+        var host = el("recentChats"); if (!host) return;
+        if (!convs.length) {
+            host.innerHTML = '<div class="feed-empty">Henüz mesaj yok.</div>';
+            return;
+        }
+        host.innerHTML = convs.slice(0, 3).map(function(c) {
+            var ini = (c.ad || "?").charAt(0).toUpperCase();
+            var preview = c.lastBody ? (c.lastBody.length > 35 ? c.lastBody.slice(0,35) + "…" : c.lastBody) : "";
+            return '<a href="mesajlar.html?pid=' + esc(c.profileId) + '" class="mini-conv">' +
+                '<div class="mini-conv__av">' + (c.avatar ? '<img src="' + esc(c.avatar) + '" alt="">' : esc(ini)) + '</div>' +
+                '<div class="mini-conv__body">' +
+                    '<div class="mini-conv__name">' + esc(c.ad || "Kullanıcı") + '</div>' +
+                    '<div class="mini-conv__last">' + (c.lastMine ? 'Sen: ' : '') + esc(preview) + '</div>' +
+                '</div>' +
+                '<div class="mini-conv__end">' +
+                    '<div class="mini-conv__time">' + timeAgo(c.lastAt) + '</div>' +
+                    (c.unread > 0 ? '<div class="mini-conv__dot"></div>' : '') +
+                '</div>' +
+            '</a>';
+        }).join("");
+    }
+
+    function renderActivity(apps, offers) {
+        var host = el("activityFeed"); if (!host) return;
+        var items = [];
+        (apps || []).slice(0, 3).forEach(function(a) {
+            items.push({
+                ic: "📄", cls: "feed-item__ic--blue",
+                text: '<b>' + esc(a.baslik || "İlan") + '</b> başvurusu ' +
+                    (a.durum === "accepted" ? "onaylandı" : a.durum === "rejected" ? "reddedildi" : "inceleniyor"),
+                time: timeAgo(a.tarih)
+            });
+        });
+        (offers || []).filter(function(o){ return o.gelen; }).slice(0, 2).forEach(function(o) {
+            items.push({
+                ic: "💼", cls: "feed-item__ic--green",
+                text: 'Yeni teklif: <b>' + esc(o.baslik || "İş Teklifi") + '</b>',
+                time: timeAgo(o.tarih)
+            });
+        });
+        if (!items.length) {
+            host.innerHTML = '<div class="feed-empty">Henüz aktivite yok.</div>';
+            return;
+        }
+        host.innerHTML = items.map(function(it) {
+            return '<div class="feed-item">' +
+                '<div class="feed-item__ic ' + it.cls + '">' + it.ic + '</div>' +
+                '<div class="feed-item__body">' +
+                    '<div class="feed-item__text">' + it.text + '</div>' +
+                    '<div class="feed-item__time">' + it.time + '</div>' +
+                '</div>' +
+            '</div>';
+        }).join("");
+    }
+
+    async function initDash() {
+        if (window.KB && KB.ready) await KB.ready();
+        if (!window.KB || !KB.isAuthed || !KB.isAuthed()) return;
+        var sess = KB.session && KB.session();
+        var p    = sess && sess.profile;
+        if (!p) return;
+
+        renderWelcome(p);
+        renderProfileProg(p);
+
+        // Update topbar breadcrumb
+        var bc = document.getElementById("topbarPageTitle");
+        if (bc) bc.textContent = "Dashboard";
+
+        var results = await Promise.allSettled([
+            window.SB ? SB.myApplications()    : Promise.resolve([]),
+            window.SB ? SB.myOffers()           : Promise.resolve([]),
+            window.SB ? SB.myConversations()    : Promise.resolve([]),
+            window.SB ? SB.unreadMessageCount() : Promise.resolve(0),
+            window.SB ? SB.openListings()       : Promise.resolve([])
+        ]);
+
+        var apps     = results[0].value || [];
+        var offers   = results[1].value || [];
+        var convs    = results[2].value || [];
+        var msgCnt   = results[3].value || 0;
+        var listings = results[4].value || [];
+
+        if (el("statApps"))   el("statApps").textContent   = apps.length;
+        if (el("statOffers")) el("statOffers").textContent = offers.filter(function(o){ return o.gelen && o.durum === "pending"; }).length;
+        if (el("statMsgs"))   el("statMsgs").textContent   = msgCnt;
+
+        renderApps(apps);
+        renderJobs(listings);
+        renderChats(convs);
+        renderActivity(apps, offers);
+    }
+
+    initDash();
+})();
+</script>
 </body>
 </html>

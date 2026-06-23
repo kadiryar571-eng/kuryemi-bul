@@ -25,8 +25,8 @@
   var ROLES = { ziyaretci: "Ziyaretçi", kurye: "Kurye", isletme: "İşletme", firma: "Kurye Firması" };
   var THEME_KEYS = ["turuncu", "mavi", "mor", "yesil", "pembe"];
 
-  function getTheme() { return localStorage.getItem("kb_theme") === "light" ? "light" : "dark"; }
-  function setTheme(tk) { tk = (tk === "light" ? "light" : "dark"); localStorage.setItem("kb_theme", tk); document.documentElement.setAttribute("data-theme", tk); }
+  function getTheme() { return localStorage.getItem("kb_theme") === "dark" ? "dark" : "light"; }
+  function setTheme(tk) { tk = (tk === "dark" ? "dark" : "light"); localStorage.setItem("kb_theme", tk); document.documentElement.setAttribute("data-theme", tk); }
   // Erişilebilirlik: yazı boyutu + kontrast (localStorage; i18n.js'te erken uygulanır)
   function getFontScale() { var v = localStorage.getItem("kb_fontscale"); return (v === "sm" || v === "lg") ? v : "md"; }
   function setFontScale(v) { v = (v === "sm" || v === "lg") ? v : "md"; localStorage.setItem("kb_fontscale", v); document.documentElement.setAttribute("data-fontscale", v); }
@@ -47,17 +47,24 @@
 
   /* ---------- Sidebar SVG ikonları ---------- */
   var SIC = {
-    dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
-    couriers:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg>',
-    businesses:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M9 9h1m5 0h1M9 13h1m5 0h1"/></svg>',
-    firms:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M6 20V9l5-5 5 5v11"/><rect x="9" y="14" width="6" height="6"/></svg>',
-    jobs:      '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>',
-    map:       '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>',
-    pool:      '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    settings:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    admin:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    chevLeft:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
-    search:    '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
+    dashboard:    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+    couriers:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg>',
+    businesses:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M9 9h1m5 0h1M9 13h1m5 0h1"/></svg>',
+    firms:        '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M6 20V9l5-5 5 5v11"/><rect x="9" y="14" width="6" height="6"/></svg>',
+    jobs:         '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
+    map:          '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>',
+    pool:         '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    messages:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    applications: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+    profile:      '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    plus:         '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    briefcase:    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
+    settings:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    admin:        '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    chevLeft:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    search:       '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+    bell:         '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    hamburger:    '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'
   };
 
   // Auth-flow sayfaları: sidebar + klasik header yok, sayfa kendi başlığını yönetir
@@ -73,22 +80,46 @@
     var ph = roleToPanel(role);
     var panelPages = ["panel-kurye.html", "panel-isletme.html", "panel-firma.html", "admin.html"];
     var panelActive = panelPages.indexOf(curFile) !== -1 || curFile === ph.split("/").pop();
+    var isEN = lang() === "en";
+
+    // Role-adaptive CTA (same position, different label)
+    var ctaLabel, ctaHref;
+    if (role === "kurye") {
+      ctaLabel = isEN ? "Looking for Work" : "İş Arıyorum";
+      ctaHref  = "ilanlar.html";
+    } else if (role === "isletme") {
+      ctaLabel = isEN ? "Post a Need" : "İhtiyaç Oluştur";
+      ctaHref  = "ilanlar.html";
+    } else {
+      ctaLabel = isEN ? "Create Listing" : "İlan Oluştur";
+      ctaHref  = "ilanlar.html";
+    }
+
     var items = [
-      { href: ph, label: lang() === "en" ? "Dashboard" : "Dashboard", ic: SIC.dashboard, active: panelActive },
-      { href: "kuryeler.html",   label: T("nav.couriers")   || "Kuryeler",    ic: SIC.couriers },
-      { href: "isletmeler.html", label: T("nav.businesses") || "İşletmeler",  ic: SIC.businesses },
-      { href: "firmalar.html",   label: T("nav.firms")      || "Firmalar",    ic: SIC.firms },
-      { href: "ilanlar.html",    label: T("nav.ilanlar")    || "İlanlar",     ic: SIC.jobs },
-      { href: "harita.html",     label: T("nav.map")        || "Harita",      ic: SIC.map },
-      { href: "havuzum.html",    label: T("nav.pool")       || "Havuzum",     ic: SIC.pool },
-      { href: "admin.html",      label: "Admin",             ic: SIC.admin,   id: "sidebarAdminLink", hidden: true },
-      { href: "ayarlar.html", label: lang() === "en" ? "Settings" : "Ayarlar", ic: SIC.settings }
+      // Main navigation — identical structure for all roles
+      { href: ph,               label: "Dashboard",                             ic: SIC.dashboard,    active: panelActive },
+      { href: "harita.html",    label: isEN ? "Map" : "Harita",                 ic: SIC.map },
+      { href: "ilanlar.html",   label: isEN ? "Listings" : "İlanlar",           ic: SIC.jobs },
+      { href: "mesajlar.html",  label: isEN ? "Messages" : "Mesajlar",          ic: SIC.messages },
+      { href: "eslesme.html",   label: isEN ? "Applications" : "Başvurular",    ic: SIC.applications },
+      { href: "havuzum.html",   label: isEN ? "Favorites" : "Favoriler",        ic: SIC.pool },
+      { divider: true },
+      // Role CTA — label adapts, position always same
+      { href: ctaHref, label: ctaLabel, ic: SIC.plus, cls: "sidebar__item--cta" },
+      { divider: true },
+      // Bottom
+      { href: "profil-duzenle.html", label: isEN ? "Profile" : "Profil",        ic: SIC.profile },
+      { href: "ayarlar.html",        label: isEN ? "Settings" : "Ayarlar",      ic: SIC.settings },
+      { href: "admin.html",          label: "Admin", ic: SIC.admin, id: "sidebarAdminLink", hidden: true }
     ];
+
     return items.map(function (it) {
+      if (it.divider) return '<div class="sidebar__divider"></div>';
       var isActive = it.active !== undefined ? it.active : (it.href.split("/").pop() === curFile);
       var hiddenAttr = it.hidden ? ' style="display:none"' : '';
       var idAttr = it.id ? ' id="' + it.id + '"' : '';
-      return '<a href="' + it.href + '" class="sidebar__item' + (isActive ? ' is-active' : '') + '"' + idAttr + hiddenAttr + '>' +
+      var cls = 'sidebar__item' + (isActive ? ' is-active' : '') + (it.cls ? ' ' + it.cls : '');
+      return '<a href="' + it.href + '" class="' + cls + '"' + idAttr + hiddenAttr + '>' +
         '<span class="sidebar__ic">' + it.ic + '</span>' +
         '<span class="sidebar__label">' + esc(it.label) + '</span>' +
       '</a>';
@@ -208,18 +239,26 @@
       document.head.appendChild(lnk);
     }
 
+    // Light theme — platform default
+    document.documentElement.setAttribute("data-theme", "light");
+
     // Body offset
     document.body.classList.add("has-sidebar");
     var collapsed = localStorage.getItem("kb_sidebar_collapsed") === "1";
-    var sidebar = document.getElementById("kbSidebar");
     if (collapsed) { document.body.classList.add("sidebar-collapsed"); }
 
-    var otherLang = window.KBI18N ? window.KBI18N.other().toUpperCase() : "EN";
-    var themeIcon = getTheme() === "light" ? "🌙" : "☀️";
-    var searchPh = lang() === "en" ? "Search…" : "Ara…";
+    var isEN = lang() === "en";
+    var searchPh = isEN ? "Search company, listing, courier…" : "Firma, ilan, kurye ara…";
+
+    // Role-adaptive create button label
+    var roleNow = isOnline() ? (SESSION.profile && SESSION.profile.role) : getRole();
+    var createLabel = isEN ? "Create Listing" : "İlan Oluştur";
+    var createHref  = "ilanlar.html";
+    if (roleNow === "kurye") { createLabel = isEN ? "Browse Jobs" : "İş Ara"; }
+    if (roleNow === "isletme") { createLabel = isEN ? "Post Need" : "İhtiyaç Ekle"; }
 
     host.innerHTML =
-      // ── SIDEBAR — position:fixed inline: sidebar.css yüklenmeden normal akışa girmesin
+      // ── SIDEBAR
       '<aside class="sidebar' + (collapsed ? ' is-collapsed' : '') + '" id="kbSidebar" aria-label="Kenar menüsü" style="position:fixed;">' +
         '<div class="sidebar__head">' +
           '<a href="index.html" class="sidebar__brand" data-home aria-label="Kuryemi Bul Ana Sayfa">' +
@@ -233,22 +272,39 @@
         '<div class="sidebar__footer">' +
           '<button type="button" class="sidebar__collapse-btn" id="sidebarCollapseBtn" title="Daralt/Genişlet">' +
             '<span class="sidebar__collapse-ic">' + SIC.chevLeft + '</span>' +
-            '<span class="sidebar__collapse-label">Küçült</span>' +
+            '<span class="sidebar__collapse-label">' + (isEN ? "Collapse" : "Küçült") + '</span>' +
           '</button>' +
         '</div>' +
       '</aside>' +
       '<div class="sidebar-overlay" id="sidebarOverlay"></div>' +
-      // ── TOPBAR — position:fixed inline: sidebar.css yüklenmeden normal akışa girmesin
-      '<header class="topbar" style="position:fixed;">' +
-        '<button class="topbar__hamburger" id="topbarHamburger" aria-label="Menü aç/kapat">☰</button>' +
-        '<div class="topbar__search">' +
+      // ── TOPBAR
+      '<header class="topbar" id="kbTopbar" style="position:fixed;">' +
+        '<button class="topbar__hamburger" id="topbarHamburger" aria-label="Menü aç/kapat">' + SIC.hamburger + '</button>' +
+        // Global search
+        '<div class="topbar__search" role="search">' +
           SIC.search +
-          '<input class="topbar__search-input" type="search" placeholder="' + searchPh + '" aria-label="' + searchPh + '">' +
+          '<input class="topbar__search-input" type="search" placeholder="' + searchPh + '" aria-label="' + searchPh + '" id="topbarSearchInput">' +
         '</div>' +
-        '<div class="topbar__spacer"></div>' +
+        // Breadcrumb (center)
+        '<nav class="topbar__breadcrumb" id="topbarBreadcrumb" aria-label="Konum">' +
+          '<span class="bc-cur" id="topbarPageTitle">Dashboard</span>' +
+        '</nav>' +
         '<div class="topbar__actions">' +
-          '<button id="themeToggle" class="topbar__btn topbar__theme-btn" aria-label="' + T("theme.toggle") + '" title="' + T("theme.toggle") + '">' + themeIcon + '</button>' +
-          '<button id="langToggle" class="topbar__btn" aria-label="' + T("lang.aria") + '">🌐 ' + otherLang + '</button>' +
+          // Quick create
+          '<a href="' + createHref + '" class="topbar__create-btn" id="topbarCreateBtn">' +
+            SIC.plus + '<span>' + createLabel + '</span>' +
+          '</a>' +
+          // Messages icon
+          '<a href="mesajlar.html" class="topbar__icon-btn" aria-label="' + (isEN ? 'Messages' : 'Mesajlar') + '" title="' + (isEN ? 'Messages' : 'Mesajlar') + '">' +
+            SIC.messages +
+            '<span class="badge-count" id="msgBadge" style="display:none">0</span>' +
+          '</a>' +
+          // Notifications icon
+          '<a href="bildirimler.html" class="topbar__icon-btn" aria-label="' + (isEN ? 'Notifications' : 'Bildirimler') + '" title="' + (isEN ? 'Notifications' : 'Bildirimler') + '">' +
+            SIC.bell +
+            '<span class="badge-count" id="notifBadge" style="display:none">0</span>' +
+          '</a>' +
+          // Profile dropdown (populated by updateAuthArea)
           '<span id="authArea" style="display:contents"></span>' +
         '</div>' +
       '</header>';
@@ -666,8 +722,9 @@
 
   function renderCanvasBg() { /* canvas animasyonu kaldırıldı — sade dark tema */ }
 
-  /* ---------- Sayfa sınıfı (kb-page) ekleme ---------- */
-  /* Auth sayfaları animated space-bg alır; tüm uygulama sayfaları statik premium bg alır. */
+  /* ---------- Sayfa arkaplanı + tema ---------- */
+  /* Auth sayfaları: animated space-bg (dark tema).
+     Uygulama sayfaları: statik açık (#F8FAFC) arka plan (light tema). */
   var _ANIM_PAGES = ["giris.html", "verify-email.html", "sifre-sifirla.html", "onboarding.html"];
 
   function renderAmbient() {
@@ -677,7 +734,8 @@
     var useAnim = _ANIM_PAGES.indexOf(page) !== -1;
 
     if (useAnim) {
-      /* ── Animated space-bg — yalnız auth sayfalarında ── */
+      /* ── Auth: animated dark space-bg ── */
+      document.documentElement.setAttribute("data-theme", "dark");
       if (!document.getElementById("space-bg-css")) {
         var lnk = document.createElement("link");
         lnk.id = "space-bg-css"; lnk.rel = "stylesheet"; lnk.href = "assets/css/space-bg.css";
@@ -690,17 +748,15 @@
             '<div class="space-stars space-stars--s"></div>' +
             '<div class="space-stars space-stars--m"></div>' +
             '<div class="space-stars space-stars--f"></div>' +
-            '<div class="nova nova--1"></div>' +
-            '<div class="nova nova--2"></div>' +
-            '<div class="nova nova--3"></div>' +
-            '<div class="nova nova--4"></div>' +
-            '<div class="nova nova--5"></div>' +
-            '<div class="nova nova--6"></div>' +
+            '<div class="nova nova--1"></div><div class="nova nova--2"></div>' +
+            '<div class="nova nova--3"></div><div class="nova nova--4"></div>' +
+            '<div class="nova nova--5"></div><div class="nova nova--6"></div>' +
           '</div>'
         );
       }
     } else {
-      /* ── Static premium bg — tüm uygulama sayfaları ── */
+      /* ── App sayfaları: açık (light) statik arka plan ── */
+      document.documentElement.setAttribute("data-theme", "light");
       if (!document.getElementById("app-bg-css")) {
         var lnk2 = document.createElement("link");
         lnk2.id = "app-bg-css"; lnk2.rel = "stylesheet"; lnk2.href = "assets/css/app-bg.css";
