@@ -324,6 +324,13 @@
       APP.profile = profile;
       APP.role    = (profile && profile.role) || 'kurye';
 
+      if (SB.isOn()) {
+        try {
+          var isAdmin = await SB.amIAdmin();
+          if (isAdmin) APP.role = 'admin';
+        } catch (e) {}
+      }
+
       document.body.setAttribute('data-role', APP.role);
       renderNav(APP.role);
 
