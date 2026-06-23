@@ -227,6 +227,83 @@ window.AdminScreens = (function () {
     return Math.floor(diff / 1440) + ' gün önce';
   }
 
+  /* ── KYC GEÇMİŞİ ───────────────────────────────────────── */
+  function kycGecmisi() {
+    if (!_guard()) return;
+    showAppBar('Onay Geçmişi', true);
+    showBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div id="kyc-hist-tabs" class="kb-tabs">' +
+          '<button class="kb-tab active" onclick="AdminScreens._kycHistFilter(\'tumu\',this)">Tümü</button>' +
+          '<button class="kb-tab" onclick="AdminScreens._kycHistFilter(\'verified\',this)">Onaylananlar</button>' +
+          '<button class="kb-tab" onclick="AdminScreens._kycHistFilter(\'rejected\',this)">Reddedilenler</button>' +
+        '</div>' +
+        '<div id="kyc-hist-list"><div style="padding:40px;text-align:center;color:var(--muted)">Yükleniyor…</div></div>' +
+      '</div>',
+      _loadKycHistory
+    );
+  }
+
+  var _kycHistData = [];
+
+  async function _loadKycHistory() {
+    var el = document.getElementById('kyc-hist-list');
+    if (!el) return;
+    try {
+      _kycHistData = await SB.listKycHistory();
+    } catch (e) {
+      _kycHistData = [];
+    }
+    _renderKycHist(_kycHistData);
+  }
+
+  function _kycHistFilter(filter, btn) {
+    document.querySelectorAll('#kyc-hist-tabs .kb-tab').forEach(function (t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    var filtered = filter === 'tumu' ? _kycHistData : _kycHistData.filter(function (k) { return k.durum === filter; });
+    _renderKycHist(filtered);
+  }
+
+  function _renderKycHist(list) {
+    var el = document.getElementById('kyc-hist-list');
+    if (!el) return;
+    if (!list.length) {
+      el.innerHTML =
+        '<div class="kb-card" style="padding:32px;text-align:center">' +
+          '<div style="font-size:2rem;margin-bottom:8px">📭</div>' +
+          '<div style="font-weight:700">Kayıt bulunamadı</div>' +
+          '<div style="font-size:.85rem;color:var(--muted);margin-top:4px">Bu filtrede geçmiş KYC kaydı yok.</div>' +
+        '</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (k) {
+      var isVerified = k.durum === 'verified';
+      var chipClass  = isVerified ? 'kb-chip--success' : 'kb-chip--danger';
+      var chipLabel  = isVerified ? '✅ Onaylandı'    : '❌ Reddedildi';
+      var tcMasked   = k.tc_no ? k.tc_no.slice(0, 3) + '****' + k.tc_no.slice(-2) : '—';
+      var roleMap    = { kurye: 'Kurye', firma: 'Firma', isletme: 'İşletme' };
+      return '<div class="kb-card" style="margin-bottom:8px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<div class="kb-avatar" style="background:var(--c-admin)">' + initials(k.ad || '?') + '</div>' +
+            '<div>' +
+              '<div style="font-weight:700">' + (k.ad || 'İsimsiz') + '</div>' +
+              '<div style="font-size:.75rem;color:var(--muted)">' + (roleMap[k.role] || k.role) + ' · ' + _timeAgo(k.created_at) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<span class="kb-chip ' + chipClass + '" style="font-size:.72rem">' + chipLabel + '</span>' +
+        '</div>' +
+        '<div style="font-size:.8rem;color:var(--muted);line-height:1.7">' +
+          '<span><b>Ad:</b> ' + (k.ad_soyad || '—') + '</span> · ' +
+          '<span><b>TC:</b> ' + tcMasked + '</span> · ' +
+          '<span><b>Belge:</b> ' + (k.belge_turu || '—') + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
   /* ── İLAN DENETİMİ ──────────────────────────────────────── */
   function ilanlar() {
     if (!_guard()) return;
@@ -405,7 +482,7 @@ window.AdminScreens = (function () {
       '<div class="kb-screen-inner">' +
         _sect('KYC & Doğrulama', [
           { icon: 'shield', label: 'Bekleyen KYC Başvuruları', fn: "Router.go('/admin/kyc')" },
-          { icon: 'check',  label: 'Onay Geçmişi',             fn: "toast('Bu özellik yakında aktif edilecek.')" }
+          { icon: 'check',  label: 'Onay Geçmişi',             fn: "Router.go('/admin/kyc-gecmis')" }
         ]) +
         _sect('Kullanıcı Yönetimi', [
           { icon: 'users',    label: 'Tüm Kullanıcılar',  fn: "Router.go('/admin/kullanicilar')" },
@@ -467,14 +544,16 @@ window.AdminScreens = (function () {
     panel        : panel,
     kullanicilar : kullanicilar,
     kycListesi   : kycListesi,
+    kycGecmisi   : kycGecmisi,
     ilanlar      : ilanlar,
     raporlar     : raporlar,
     sikayetler   : sikayetler,
     ayarlar      : ayarlar,
-    _userFilter  : _userFilter,
-    _ilanDnFilter: _ilanDnFilter,
-    _ilanOnay    : _ilanOnay,
-    _kycReview   : _kycReview,
+    _userFilter   : _userFilter,
+    _ilanDnFilter : _ilanDnFilter,
+    _ilanOnay     : _ilanOnay,
+    _kycReview    : _kycReview,
+    _kycHistFilter: _kycHistFilter,
     _pingSupabase: _pingSupabase,
     _showVersion : _showVersion
   };

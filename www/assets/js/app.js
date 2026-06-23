@@ -422,6 +422,7 @@
     Router.define('/admin/panel',        AdminScreens.panel);
     Router.define('/admin/kullanicilar', AdminScreens.kullanicilar);
     Router.define('/admin/kyc',          AdminScreens.kycListesi);
+    Router.define('/admin/kyc-gecmis',   AdminScreens.kycGecmisi);
     Router.define('/admin/ilanlar',      AdminScreens.ilanlar);
     Router.define('/admin/raporlar',     AdminScreens.raporlar);
     Router.define('/admin/sikayetler',   AdminScreens.sikayetler);

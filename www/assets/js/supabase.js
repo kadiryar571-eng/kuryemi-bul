@@ -603,6 +603,11 @@
     if (r.error) throw r.error;
     return true;
   }
+  async function listKycHistory() {
+    var r = await client.rpc("list_kyc_history");
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
   async function adminStats() {
     var [pR, kR] = await Promise.allSettled([
       client.from('profiles').select('id', { count: 'exact', head: true }),
@@ -858,6 +863,7 @@
     sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
+    listKycHistory: listKycHistory,
     adminStats: adminStats, adminListUsers: adminListUsers,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
