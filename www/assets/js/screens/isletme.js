@@ -170,10 +170,9 @@ window.IsletmeScreens = (function () {
         '<button class="btn btn--primary mt-16" style="background:var(--c-isletme)" onclick="Router.go(\'/isletme/ilan/yeni\')">' +
           ICON.plus + ' Yeni İlan Oluştur' +
         '</button>' +
-      '</div>'
+      '</div>',
+      _loadIlanlarim
     );
-
-    _loadIlanlarim();
   }
 
   function _ilanCard(il) {
@@ -428,9 +427,9 @@ window.IsletmeScreens = (function () {
           '<button class="kb-tab"        onclick="IsletmeScreens._basFilter(\'deger\',this)">Kararlananlar</button>' +
         '</div>' +
         '<div id="isletme-bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
-      '</div>'
+      '</div>',
+      _loadAdaylar
     );
-    _loadAdaylar();
   }
 
   async function _loadAdaylar() {

@@ -53,7 +53,16 @@
         async function start() {
             if (window.KB && KB.ready) await KB.ready();
             if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli.</p>'; return; }
-            // E-posta bağlantısından gelen kurtarma oturumu var mı? (detectSessionInUrl ile otomatik)
+            // token_hash query param (yeni Supabase format) varsa önce doğrula
+            var params = new URLSearchParams(window.location.search);
+            var tokenHash = params.get('token_hash');
+            if (tokenHash) {
+                var vr = await SB.verifyEmail(tokenHash, 'recovery');
+                if (vr && vr.error) {
+                    form.innerHTML = '<p class="empty">' + t("sr.invalid") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>';
+                    return;
+                }
+            }
             var u = await SB.getUser();
             if (!u) { form.innerHTML = '<p class="empty">' + t("sr.invalid") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>'; return; }
 

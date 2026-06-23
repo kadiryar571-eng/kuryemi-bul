@@ -873,10 +873,9 @@ window.KuryeScreens = (function () {
           '<button class="kb-tab"        onclick="KuryeScreens._basFilter(\'sonuc\',this)">Sonuçlandı</button>' +
         '</div>' +
         '<div id="bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
-      '</div>'
+      '</div>',
+      _loadBasvurular
     );
-
-    _loadBasvurular();
   }
 
   function _basLabel(durum) {

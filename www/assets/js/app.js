@@ -58,12 +58,13 @@
   var $bottomnav = document.getElementById('kb-bottomnav');
 
   /* ── Helpers ──────────────────────────────────────────── */
-  window.renderScreen = function (html) {
+  window.renderScreen = function (html, cb) {
     $screen.classList.add('fading');
     setTimeout(function () {
       $screen.innerHTML = html;
       $screen.scrollTop = 0;
       $screen.classList.remove('fading');
+      if (typeof cb === 'function') cb();
     }, 120);
   };
 

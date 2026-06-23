@@ -172,10 +172,9 @@ window.FirmaScreens = (function () {
         '<button class="btn btn--primary mt-16" onclick="Router.go(\'/firma/ilan/yeni\')">' +
           ICON.plus + ' Yeni İlan Oluştur' +
         '</button>' +
-      '</div>'
+      '</div>',
+      _loadIlanlarim
     );
-
-    _loadIlanlarim();
   }
 
   function _ilanCard(il) {
@@ -438,9 +437,9 @@ window.FirmaScreens = (function () {
           '<button class="kb-tab"        onclick="FirmaScreens._basFilter(\'deger\',this)">Kararlananlar</button>' +
         '</div>' +
         '<div id="firma-bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
-      '</div>'
+      '</div>',
+      _loadAdaylar
     );
-    _loadAdaylar();
   }
 
   async function _loadAdaylar() {
