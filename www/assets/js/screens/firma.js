@@ -566,12 +566,24 @@ window.FirmaScreens = (function () {
     var el = document.getElementById('firma-aday-review-area');
     if (!el) return;
     try {
-      var existing = await SB.myReviewFor(profileId);
+      var results = await Promise.allSettled([
+        SB.myReviewFor(profileId),
+        SB.contactOf(profileId)
+      ]);
+      var existing = results[0].status === 'fulfilled' ? results[0].value : null;
+      var contact  = results[1].status === 'fulfilled' ? results[1].value : null;
       var reviewLabel = existing ? '⭐ Değerlendirmeni Düzenle' : '⭐ Değerlendir';
       var reviewPuan  = existing ? existing.puan : 0;
       var safeName = name.replace(/'/g, "\\'");
+      var contactHtml = (contact && (contact.telefon || contact.email))
+        ? '<div style="display:flex;gap:12px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)">' +
+            (contact.telefon ? '<a href="tel:' + contact.telefon + '" style="color:var(--text);display:flex;align-items:center;gap:4px">📞 ' + contact.telefon + '</a>' : '') +
+            (contact.email   ? '<a href="mailto:' + contact.email + '" style="color:var(--text);display:flex;align-items:center;gap:4px">✉️ ' + contact.email + '</a>' : '') +
+          '</div>'
+        : '';
       el.innerHTML =
         '<div style="display:flex;flex-direction:column;gap:8px">' +
+          contactHtml +
           '<button class="btn btn--outline btn--sm" style="width:100%;border-color:#6C4DFF;color:#6C4DFF" ' +
             'onclick="FirmaScreens._offerModal(\'' + profileId + '\',\'' + (applicantRole || 'kurye') + '\',\'' + safeName + '\')">📨 Teklif Gönder</button>' +
           '<button class="btn btn--outline btn--sm" style="width:100%;border-color:#F59E0B;color:#F59E0B" ' +
