@@ -667,30 +667,50 @@
   function renderCanvasBg() { /* canvas animasyonu kaldırıldı — sade dark tema */ }
 
   /* ---------- Sayfa sınıfı (kb-page) ekleme ---------- */
+  /* Auth sayfaları animated space-bg alır; tüm uygulama sayfaları statik premium bg alır. */
+  var _ANIM_PAGES = ["giris.html", "verify-email.html", "sifre-sifirla.html", "onboarding.html"];
+
   function renderAmbient() {
     document.body.classList.add("kb-page");
-    // CSS yükle
-    if (!document.getElementById("space-bg-css")) {
-      var lnk = document.createElement("link");
-      lnk.id = "space-bg-css"; lnk.rel = "stylesheet"; lnk.href = "assets/css/space-bg.css";
-      document.head.appendChild(lnk);
-    }
-    // HTML yapısını enjekte et
-    if (!document.getElementById("space-bg")) {
-      document.body.insertAdjacentHTML("afterbegin",
-        '<div class="space-bg" id="space-bg" aria-hidden="true">' +
-          '<div class="space-nebula"></div>' +
-          '<div class="space-stars space-stars--s"></div>' +
-          '<div class="space-stars space-stars--m"></div>' +
-          '<div class="space-stars space-stars--f"></div>' +
-          '<div class="nova nova--1"></div>' +
-          '<div class="nova nova--2"></div>' +
-          '<div class="nova nova--3"></div>' +
-          '<div class="nova nova--4"></div>' +
-          '<div class="nova nova--5"></div>' +
-          '<div class="nova nova--6"></div>' +
-        '</div>'
-      );
+
+    var page = location.pathname.split("/").pop() || "";
+    var useAnim = _ANIM_PAGES.indexOf(page) !== -1;
+
+    if (useAnim) {
+      /* ── Animated space-bg — yalnız auth sayfalarında ── */
+      if (!document.getElementById("space-bg-css")) {
+        var lnk = document.createElement("link");
+        lnk.id = "space-bg-css"; lnk.rel = "stylesheet"; lnk.href = "assets/css/space-bg.css";
+        document.head.appendChild(lnk);
+      }
+      if (!document.getElementById("space-bg")) {
+        document.body.insertAdjacentHTML("afterbegin",
+          '<div class="space-bg" id="space-bg" aria-hidden="true">' +
+            '<div class="space-nebula"></div>' +
+            '<div class="space-stars space-stars--s"></div>' +
+            '<div class="space-stars space-stars--m"></div>' +
+            '<div class="space-stars space-stars--f"></div>' +
+            '<div class="nova nova--1"></div>' +
+            '<div class="nova nova--2"></div>' +
+            '<div class="nova nova--3"></div>' +
+            '<div class="nova nova--4"></div>' +
+            '<div class="nova nova--5"></div>' +
+            '<div class="nova nova--6"></div>' +
+          '</div>'
+        );
+      }
+    } else {
+      /* ── Static premium bg — tüm uygulama sayfaları ── */
+      if (!document.getElementById("app-bg-css")) {
+        var lnk2 = document.createElement("link");
+        lnk2.id = "app-bg-css"; lnk2.rel = "stylesheet"; lnk2.href = "assets/css/app-bg.css";
+        document.head.appendChild(lnk2);
+      }
+      if (!document.getElementById("app-bg")) {
+        document.body.insertAdjacentHTML("afterbegin",
+          '<div class="app-bg" id="app-bg" aria-hidden="true"></div>'
+        );
+      }
     }
   }
 

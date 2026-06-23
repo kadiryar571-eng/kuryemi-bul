@@ -1,0 +1,45 @@
+/* ============================================================
+   Kuryemi Bul — app-bg.css
+   Uygulama sayfaları için statik premium dark arkaplan.
+   Animated space-bg YALNIZCA landing + auth sayfalarında çalışır.
+   Bu dosya: panel, profil, mesajlar, ilanlar vb. sayfalar içindir.
+   GPU yükü yok — performans optimizasyonu.
+   ============================================================ */
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  /* 1) Static dark premium gradient */
+  background: linear-gradient(
+    180deg,
+    #070B14 0%,
+    #0B1020 45%,
+    #111827 100%
+  );
+}
+
+/* 2) Soft purple radial glow — brand rengi #6C4DFF */
+.app-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 45% at 50% -5%,  rgba(108, 77, 255, 0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 30% at 95% 95%,  rgba(108, 77, 255, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 35% 25% at 5%  85%,  rgba(108, 77, 255, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* 3) Very subtle noise texture — düşük opacity, GPU composite */
+.app-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+}
