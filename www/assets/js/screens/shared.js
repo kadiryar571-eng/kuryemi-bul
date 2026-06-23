@@ -74,6 +74,7 @@ window.SharedScreens = (function () {
       try { await SB.markAllNotificationsRead(); } catch(e) {}
     }
     document.querySelectorAll('.notif-item__dot').forEach(function(el){ el.classList.add('notif-item__dot--read'); });
+    if (window.updateNavBadge) updateNavBadge('mesajlar', 0);
     toast('Tümü okundu işaretlendi');
   }
 

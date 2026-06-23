@@ -1076,10 +1076,42 @@ window.KuryeScreens = (function () {
             '</div>' +
           '</div>' : '') +
 
+        '<div id="pr-reviews-section" style="padding:0 16px"></div>' +
+
         '<div style="height:100px"></div>' +
 
-      '</div>'
+      '</div>',
+      function () { _loadProfileReviews(p.id); }
     );
+  }
+
+  async function _loadProfileReviews(profileId) {
+    var el = document.getElementById('pr-reviews-section');
+    if (!el || !profileId || !window.SB || !SB.isOn()) return;
+    try {
+      var reviews = await SB.reviewsFor(profileId);
+      if (!reviews.length) return;
+      el.innerHTML =
+        '<div class="pr-section" style="margin-top:0">' +
+          '<div class="pr-section__hd">' +
+            '<div class="pr-section__title">Değerlendirmeler (' + reviews.length + ')</div>' +
+          '</div>' +
+          reviews.map(function(r) {
+            var stars = '';
+            for (var i = 1; i <= 5; i++) {
+              stars += '<svg viewBox="0 0 24 24" width="13" height="13" fill="' + (i <= r.puan ? '#F59E0B' : 'none') + '" stroke="#F59E0B" stroke-width="1.5" style="margin-right:1px"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+            }
+            return '<div style="border-bottom:1px solid rgba(255,255,255,.07);padding:12px 0;last-child{border:0}">' +
+              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">' +
+                '<span style="font-size:.82rem;font-weight:700;color:var(--text)">' + (r.ad || 'Kullanıcı') + '</span>' +
+                '<span style="display:flex;align-items:center">' + stars + '</span>' +
+              '</div>' +
+              (r.yorum ? '<p style="font-size:.78rem;color:var(--muted);margin:0;line-height:1.5">' + r.yorum + '</p>' : '') +
+              '<span style="font-size:.7rem;color:var(--muted);opacity:.6">' + (r.tarih || '') + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+    } catch (e) {}
   }
 
   /* ── Çalışma Alanları Düzenle ───────────────────────────── */

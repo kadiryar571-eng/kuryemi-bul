@@ -522,7 +522,9 @@ window.IsletmeScreens = (function () {
             '<button class="btn btn--ghost btn--sm" onclick="IsletmeScreens._reddet(\'' + id + '\')" style="flex:1;color:#EF4444">Reddet</button>'
           ) : '') +
         '</div>' +
-      '</div>'
+        '<div id="isletme-aday-review-area" style="padding:0 16px 16px"></div>' +
+      '</div>',
+      function () { if (durum === 'accepted' && a.applicantId) _checkReviewBtn(a.applicantId, name); }
     );
   }
 
@@ -544,6 +546,95 @@ window.IsletmeScreens = (function () {
       toast('Başvuru reddedildi.');
       Router.back();
     } catch(e) { toast('İşlem başarısız'); }
+  }
+
+  /* ── DEĞERLENDIRME ──────────────────────────────────────── */
+  var _revPuan = 0;
+
+  async function _checkReviewBtn(profileId, name) {
+    if (!window.SB || !SB.isOn() || !profileId) return;
+    var el = document.getElementById('isletme-aday-review-area');
+    if (!el) return;
+    try {
+      var existing = await SB.myReviewFor(profileId);
+      var label = existing ? '⭐ Değerlendirmeni Düzenle' : '⭐ Değerlendir';
+      var puan  = existing ? existing.puan : 0;
+      el.innerHTML = '<button class="btn btn--outline btn--sm" style="width:100%;border-color:#F59E0B;color:#F59E0B" ' +
+        'onclick="IsletmeScreens._openReviewModal(\'' + profileId + '\',\'' + name.replace(/'/g, "\\'") + '\',' + puan + ')">' + label + '</button>';
+    } catch (e) {}
+  }
+
+  function _openReviewModal(profileId, name, currentPuan) {
+    var old = document.getElementById('rev-overlay');
+    if (old) old.remove();
+    _revPuan = currentPuan || 0;
+    var starsHtml = [1,2,3,4,5].map(function(n) {
+      return '<button data-val="' + n + '" onclick="IsletmeScreens._revStar(' + n + ')" ' +
+        'style="background:none;border:none;cursor:pointer;padding:4px">' +
+        '<svg viewBox="0 0 24 24" width="36" height="36" fill="' + (n <= _revPuan ? '#F59E0B' : 'none') + '" stroke="#F59E0B" stroke-width="1.5">' +
+        '<polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>' +
+        '</button>';
+    }).join('');
+    var overlay = document.createElement('div');
+    overlay.id = 'rev-overlay';
+    overlay.className = 'apply-overlay';
+    overlay.innerHTML =
+      '<div class="apply-modal">' +
+        '<div class="apply-modal__head">' +
+          '<div class="apply-modal__hinfo">' +
+            '<div class="apply-modal__htitle">' + name + '</div>' +
+            '<div style="font-size:.78rem;color:var(--muted)">Değerlendirme</div>' +
+          '</div>' +
+          '<button class="apply-modal__close" onclick="document.getElementById(\'rev-overlay\').remove()">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div style="text-align:center;padding:20px 0 8px">' +
+          '<div id="rev-stars" style="display:flex;justify-content:center;gap:4px;margin-bottom:8px">' + starsHtml + '</div>' +
+          '<p id="rev-label" style="font-size:.78rem;color:var(--muted);margin:0">' + (_revPuan ? _revPuan + ' yıldız seçildi' : 'Puan vermek için yıldıza tıkla') + '</p>' +
+        '</div>' +
+        '<div class="apply-modal__body">' +
+          '<textarea class="apply-modal__textarea" id="rev-yorum" rows="3" placeholder="Yorum (isteğe bağlı)..."></textarea>' +
+        '</div>' +
+        '<input type="hidden" id="rev-target" value="' + profileId + '">' +
+        '<div class="apply-modal__actions">' +
+          '<button class="apply-modal__cancel" onclick="document.getElementById(\'rev-overlay\').remove()">Vazgeç</button>' +
+          '<button class="apply-modal__submit" id="rev-submit" ' + (_revPuan ? '' : 'disabled ') + 'onclick="IsletmeScreens._submitReview()">Kaydet</button>' +
+        '</div>' +
+      '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('apply-overlay--visible'); });
+  }
+
+  function _revStar(val) {
+    _revPuan = val;
+    var i = 0;
+    document.querySelectorAll('#rev-stars button svg').forEach(function(svg) {
+      i++;
+      svg.setAttribute('fill', i <= val ? '#F59E0B' : 'none');
+    });
+    var lbl = document.getElementById('rev-label');
+    if (lbl) lbl.textContent = val + ' yıldız seçildi';
+    var btn = document.getElementById('rev-submit');
+    if (btn) btn.disabled = false;
+  }
+
+  async function _submitReview() {
+    var profileId = (document.getElementById('rev-target') || {}).value;
+    if (!profileId || !_revPuan) { toast('Lütfen puan verin'); return; }
+    var yorum = (document.getElementById('rev-yorum') || {}).value || '';
+    var btn = document.getElementById('rev-submit');
+    if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+    try {
+      await SB.addReview(profileId, _revPuan, yorum);
+      var overlay = document.getElementById('rev-overlay');
+      if (overlay) overlay.remove();
+      toast('Değerlendirme kaydedildi ✓');
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; }
+      toast((e && e.message) || 'Değerlendirme gönderilemedi');
+    }
   }
 
   /* ── 7. MESAJLAR ────────────────────────────────────────── */
@@ -628,8 +719,12 @@ window.IsletmeScreens = (function () {
     _ilanSil     : _ilanSil,
     _basFilter   : _basFilter,
     _yayinla     : _yayinla,
-    _kabul       : _kabul,
-    _reddet      : _reddet
+    _kabul          : _kabul,
+    _reddet         : _reddet,
+    _checkReviewBtn : _checkReviewBtn,
+    _openReviewModal: _openReviewModal,
+    _revStar        : _revStar,
+    _submitReview   : _submitReview
   };
 
 })();

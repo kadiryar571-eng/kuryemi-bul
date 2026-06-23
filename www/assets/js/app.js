@@ -283,16 +283,30 @@
     return items.map(function (item) {
       return '<button class="kb-bottomnav__item" data-nav="' + item.key + '" ' +
         'onclick="Router.go(\'' + item.route + '\')">' +
+        '<span class="kb-bottomnav__badge" id="nav-badge-' + item.key + '" style="display:none"></span>' +
         ICON[item.icon] +
         '<span>' + item.label + '</span>' +
         '</button>';
     }).join('');
   }
 
+  window.updateNavBadge = function (key, count) {
+    var el = document.getElementById('nav-badge-' + key);
+    if (!el) return;
+    if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.style.display = ''; }
+    else { el.style.display = 'none'; }
+  };
+
+  function _refreshNavBadges() {
+    if (!window.SB || !SB.isOn()) return;
+    SB.unreadCount().then(function (n) { updateNavBadge('mesajlar', n); }).catch(function () {});
+  }
+
   function renderNav(role) {
     var map = { kurye: NAV_KURYE, firma: NAV_FIRMA, isletme: NAV_ISLETME, admin: NAV_ADMIN };
     $bottomnav.innerHTML = buildNav(map[role] || NAV_KURYE);
     showBottomNav();
+    _refreshNavBadges();
   }
 
   /* ── Auth guard + init ───────────────────────────────── */
