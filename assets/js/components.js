@@ -897,6 +897,8 @@
     if (LANDING_PAGES.indexOf(curFile) !== -1) return;
     // Panel sayfaları kendi mob-dash__header'larını kullanır
     if (document.querySelector(".mob-dash")) return;
+    // Sidebar sayfaları kendi topbar'larını kullanır (hamburger ile sidebar açılır)
+    if (document.body.classList.contains("has-sidebar")) return;
 
     var title = "";
     var h1 = document.querySelector(".page-head h1");
