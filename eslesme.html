@@ -1,109 +1,66 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="robots" content="noindex">
-  <title>AI Yetenek Eşleştirici · Kuryemi Bul</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eşleşmelerim · KuryemiBul</title>
   <link rel="icon" href="assets/logo.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/landing.css">
-  <link rel="stylesheet" href="assets/css/platform.css">  <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
-  <div id="app"></div>
 
-  <template id="page">
-    <div class="ai-card reveal" style="border-color:rgba(168,85,247,0.35)">
-      <div class="ai-card__h">🧠 Eşleşme Motoru Aktif</div>
-      <p><b>Moda Çiçek</b> talebi için 86 kayıtlı yetenek tarandı, yetkinlik · uygunluk · güven · kariyer skoru birleştirildi. En uygun 3 aday aşağıda.</p>
-      <div class="mini">Hesaplama süresi: 0.8 sn · 12 sinyal değerlendirildi</div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Eşleşmelerim</h1>
+      <p class="page-sub">Karşılıklı kabul edilmiş teklifler ve aktif bağlantılar.</p>
     </div>
 
-    <div class="grid grid--3 reveal" style="margin-top:18px">
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🎯</span><span class="stat__l">Aday Kalitesi</span></div><div class="stat__v"><span data-count="96">0</span>%</div><div class="stat__d up">▲ son 24 saat</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">⚡</span><span class="stat__l">Ort. Eşleşme</span></div><div class="stat__v"><span data-count="8">0</span> sn</div><div class="stat__d up">▲ %14 iyileşti</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🤝</span><span class="stat__l">Bugünkü Öneri</span></div><div class="stat__v" data-count="214">0</div><div class="stat__d up">▲ akıllı motor</div></div>
+    <div id="eslesmeRoot">
+      <div class="skel-card"><span class="skel skel--line" style="width:70%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div>
+      <div class="skel-card" style="margin-top:12px"><span class="skel skel--line" style="width:65%"></span><span class="skel skel--line" style="width:35%;margin-top:8px"></span></div>
     </div>
+  </div>
 
-    <div class="ops reveal" style="margin-top:18px">
-      <div class="panel">
-        <div class="panel__h"><h3><span class="ic">🛵</span> Önerilen Yetenekler</h3><span class="right"><span class="chip chip--cy">HızlıKurye A.Ş. · Motosiklet Kuryesi · Kadıköy</span></span></div>
-        <div class="panel__b" style="padding:16px 18px">
-          <div class="match is-top">
-            <span class="match__av">🛵</span>
-            <div class="match__main"><div class="match__name">Yusuf K. <span class="vbadge vbadge--pro">✓ Profesyonel</span></div><div class="match__sub">Kadıköy · 1.240 görev · 4.9★</div></div>
-            <div class="match__scores">
-              <div class="scorepill"><b>%96</b><span>uygunluk</span></div>
-              <div class="scorepill"><b>%98</b><span>mesafe</span></div>
-              <div class="scorepill"><b>%95</b><span>güven</span></div>
-              <div class="scorepill"><b>%94</b><span>performans</span></div>
-            </div>
-            <div class="match__pct"><b>%98</b><span>genel uyum</span></div>
-          </div>
-          <div class="match">
-            <span class="match__av">🛵</span>
-            <div class="match__main"><div class="match__name">Elif D. <span class="vbadge vbadge--prem">★ Premium</span></div><div class="match__sub">Beşiktaş · 2.110 görev · 5.0★</div></div>
-            <div class="match__scores">
-              <div class="scorepill"><b>%88</b><span>uygunluk</span></div>
-              <div class="scorepill"><b>%90</b><span>mesafe</span></div>
-              <div class="scorepill"><b>%99</b><span>güven</span></div>
-              <div class="scorepill"><b>%97</b><span>performans</span></div>
-            </div>
-            <div class="match__pct"><b>%91</b><span>genel uyum</span></div>
-          </div>
-          <div class="match">
-            <span class="match__av">🛵</span>
-            <div class="match__main"><div class="match__name">Murat A. <span class="vbadge vbadge--ok">✓ Doğrulanmış</span></div><div class="match__sub">Üsküdar · 540 görev · 4.7★</div></div>
-            <div class="match__scores">
-              <div class="scorepill"><b>%80</b><span>uygunluk</span></div>
-              <div class="scorepill"><b>%82</b><span>mesafe</span></div>
-              <div class="scorepill"><b>%88</b><span>güven</span></div>
-              <div class="scorepill"><b>%85</b><span>performans</span></div>
-            </div>
-            <div class="match__pct"><b>%85</b><span>genel uyum</span></div>
-          </div>
-        </div>
-      </div>
+  <div id="app-footer"></div>
 
-      <div class="panel">
-        <div class="panel__h"><h3><span class="ic">🔍</span> Neden Bu Yetenek?</h3></div>
-        <div class="panel__b">
-          <p style="color:var(--muted);font-size:0.92rem;margin-bottom:16px">Yusuf K. neden öneriliyor?</p>
-          <div class="metricrow">
-            <div class="metric"><div class="metric__t"><span>🎯 Pozisyona uyum</span><b>%98</b></div><div class="metric__track"><i data-fill="98"></i></div></div>
-            <div class="metric"><div class="metric__t"><span>📅 Müsaitlik</span><b>%96</b></div><div class="metric__track"><i data-fill="96"></i></div></div>
-            <div class="metric"><div class="metric__t"><span>🛡️ Güven skoru</span><b>%95</b></div><div class="metric__track"><i data-fill="95"></i></div></div>
-            <div class="metric"><div class="metric__t"><span>📈 Kariyer geçmişi</span><b>%94</b></div><div class="metric__track"><i data-fill="94"></i></div></div>
-            <div class="metric"><div class="metric__t"><span>🏪 Pozisyonla uyum</span><b>%90</b></div><div class="metric__track"><i data-fill="90"></i></div></div>
-          </div>
-          <a href="profil-kurye.html?id=k1" class="btn btn--primary btn--sm" style="margin-top:20px;width:100%">Yusuf K.'yı Gör →</a>
-        </div>
-      </div>
-    </div>
-  </template>
-
+  <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data.js"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/platform.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
   <script>
-    var wrap = Platform.init({ active: 'match', title: 'AI Yetenek Eşleştirici', subtitle: 'Platform zekâsı · neden bu yetenek öneriliyor?' });
-    wrap.innerHTML = document.getElementById('page').innerHTML;
-    Platform.animate();
-    // Mobil: "Neden Bu Yetenek?" panelini expandable yap
-    (function () {
-      var panels = wrap.querySelectorAll(".ops > .panel");
-      var lastPanel = panels[panels.length - 1];
-      if (!lastPanel) return;
-      var head = lastPanel.querySelector(".panel__h");
-      if (!head) return;
-      head.addEventListener("click", function () {
-        lastPanel.classList.toggle("is-expanded");
-      });
-    })();
+    document.addEventListener('DOMContentLoaded', async function () {
+      if (!window.KB) return;
+      await KB.ready();
+      var host = document.getElementById('eslesmeRoot');
+      if (!host) return;
+      if (!window.SB || !SB.isOn() || !(KB.isAuthed && KB.isAuthed())) {
+        host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🤝</div><div class="kb-empty__t">Giriş yapmalısınız</div><a class="btn btn--primary btn--sm mt-24" href="giris.html">Giriş Yap</a></div>';
+        return;
+      }
+      try {
+        var matches = SB.myMatches ? await SB.myMatches() : [];
+        if (!matches || !matches.length) {
+          host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🤝</div><div class="kb-empty__t">Henüz eşleşme yok</div><p style="color:var(--text-2);font-size:0.85rem;margin-top:6px">Teklifler kabul edildiğinde burada görünür.</p><a class="btn btn--primary btn--sm mt-24" href="kuryeler.html">Havuzu Keşfet</a></div>';
+          return;
+        }
+        host.innerHTML = '<div class="cards-grid">' + matches.map(function(m) {
+          var page = m.role === 'kurye' ? 'profil-kurye.html' : m.role === 'isletme' ? 'profil-isletme.html' : 'profil-firma.html';
+          return '<div class="pcard"><div class="pcard__top"><div class="avatar">' + (window.KB ? KB.initials(m.ad || '?') : '?') + '</div>' +
+            '<div class="pcard__info"><div class="pcard__name">' + (m.ad || '') + '</div><div class="pcard__sub">' + (m.sehir || '') + '</div></div></div>' +
+            '<div class="pcard__foot"><a class="btn btn--primary btn--sm" href="mesajlar.html?to=' + m.id + '">Mesaj Gönder</a>' +
+            '<a class="btn btn--ghost btn--sm" href="' + page + '?id=' + m.id + '">Profil</a></div></div>';
+        }).join('') + '</div>';
+      } catch (e) {
+        host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">⚠️</div><div class="kb-empty__t">Eşleşmeler yüklenemedi</div></div>';
+      }
+    });
   </script>
 </body>
 </html>

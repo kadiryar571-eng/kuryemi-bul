@@ -1,95 +1,75 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVKK Aydınlatma Metni · Kuryemi Bul</title>
-    <meta name="description" content="Kuryemi Bul KVKK aydınlatma metni: kişisel verilerin işlenmesi, amaçları ve ilgili kişi hakları.">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KVKK Aydınlatma Metni · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .legal-body { max-width: 720px; margin: 0 auto; }
+    .legal-body h2 { font-size: 1.1rem; font-weight: 700; margin: 28px 0 10px; color: var(--text); }
+    .legal-body p, .legal-body li { font-size: 0.9rem; color: var(--text-2); line-height: 1.75; }
+    .legal-body ul { padding-left: 20px; margin: 8px 0; }
+  </style>
+</head>
 <body>
-    <div id="app-header"></div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main>
-        <article class="legal">
-            <h1>KVKK Aydınlatma Metni</h1>
-            <p class="legal__upd">Son güncelleme: 12 Haziran 2026</p>
+  <div class="app-content">
+    <div class="page-header legal-body">
+      <h1>KVKK Aydınlatma Metni</h1>
+      <p class="page-sub">Son güncelleme: Haziran 2025</p>
+    </div>
 
-            <div class="legal__note">
-                ⚠️ Bu metin genel bir şablondur. Yürürlüğe almadan önce <b>veri sorumlusu unvanı, adres ve MERSIS/VKN</b>
-                bilgilerini doldurun ve bir hukuk danışmanına gözden geçirtin.
-            </div>
+    <div class="card legal-body" style="padding:32px">
+      <h2>1. Veri Sorumlusu</h2>
+      <p>KuryemiBul platformu olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusuyuz.</p>
 
-            <p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, veri sorumlusu sıfatıyla
-            <b>[Şirket/İşletme Unvanı]</b> ("Kuryemi Bul", "Platform") tarafından kişisel verileriniz aşağıda
-            açıklanan kapsamda işlenmektedir.</p>
+      <h2>2. Hangi Veriler İşlenir?</h2>
+      <ul>
+        <li>Ad, soyad, e-posta adresi ve telefon numarası</li>
+        <li>Konum bilgileri (şehir, bölge)</li>
+        <li>Araç türü, deneyim ve beceri bilgileri</li>
+        <li>Platform içi mesajlaşma ve teklif verileri</li>
+        <li>Profil fotoğrafı (isteğe bağlı)</li>
+      </ul>
 
-            <h2>1. Veri Sorumlusu</h2>
-            <p>Veri Sorumlusu: <b>[Şirket/İşletme Unvanı]</b><br>
-            Adres: <b>[Açık Adres]</b><br>
-            E-posta: <a href="mailto:kadiryar571@gmail.com">kadiryar571@gmail.com</a><br>
-            MERSIS/VKN: <b>[Numara]</b></p>
+      <h2>3. Verilerin İşlenme Amacı</h2>
+      <ul>
+        <li>Kurye-işletme eşleştirme hizmetinin sunulması</li>
+        <li>Platform güvenliğinin sağlanması</li>
+        <li>Kullanıcı hesap yönetimi</li>
+        <li>Yasal yükümlülüklerin yerine getirilmesi</li>
+      </ul>
 
-            <h2>2. İşlenen Kişisel Veriler</h2>
-            <ul>
-                <li><b>Kimlik ve iletişim:</b> ad-soyad/firma adı, e-posta, telefon.</li>
-                <li><b>Profil verileri:</b> rol (kurye/işletme/firma), şehir, bölge, araç, deneyim, açıklama, sertifikalar, hizmetler.</li>
-                <li><b>Kimlik doğrulama (KYC):</b> ad-soyad, T.C. kimlik numarası, belge türü ve yüklenen belge görseli — yalnızca doğrulama amacıyla.</li>
-                <li><b>Konum:</b> şehir/bölge bilgisinden türetilen yaklaşık koordinatlar (haritada görünürlük için).</li>
-                <li><b>İşlem verileri:</b> teklifler, başvurular, ihale teklifleri, değerlendirmeler, bildirimler.</li>
-                <li><b>Teknik veriler:</b> oturum ve tercih çerezleri (tema, dil).</li>
-            </ul>
+      <h2>4. Verilerin Aktarımı</h2>
+      <p>Kişisel verileriniz; hizmet sağlayıcılarımız (Supabase - altyapı), yasal zorunluluklar kapsamında yetkili kamu kuruluşları ile paylaşılabilir. Üçüncü taraf reklam amaçlı veri paylaşımı yapılmaz.</p>
 
-            <h2>3. İşleme Amaçları</h2>
-            <ul>
-                <li>Üyelik oluşturma, kimlik doğrulama ve hesap güvenliği.</li>
-                <li>Kurye, işletme ve firmaların birbirini bulması; teklif, ilan ve ihale süreçlerinin yürütülmesi.</li>
-                <li>Bildirim ve e-posta iletişimi.</li>
-                <li>Hizmet kalitesinin ve güvenliğinin sağlanması, hukuki yükümlülüklerin yerine getirilmesi.</li>
-            </ul>
+      <h2>5. Haklarınız</h2>
+      <p>KVKK'nın 11. maddesi kapsamında aşağıdaki haklara sahipsiniz:</p>
+      <ul>
+        <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+        <li>Verilerinizin düzeltilmesini talep etme</li>
+        <li>Verilerinizin silinmesini talep etme</li>
+        <li>Verilerinizin aktarıldığı üçüncü kişileri öğrenme</li>
+      </ul>
+      <p>Talepleriniz için: <a href="mailto:kvkk@kuryemibul.com">kvkk@kuryemibul.com</a></p>
 
-            <h2>4. Hukuki Sebepler</h2>
-            <p>Kişisel verileriniz; sözleşmenin kurulması/ifası, hukuki yükümlülük, meşru menfaat ve gerekli
-            hallerde açık rızanız (örn. iletişim bilgilerinizin karşı tarafa açılması) hukuki sebeplerine
-            dayanılarak işlenir.</p>
+      <h2>6. İletişim</h2>
+      <p>Sorularınız için <a href="mailto:destek@kuryemibul.com">destek@kuryemibul.com</a> adresine yazabilirsiniz.</p>
+    </div>
+  </div>
 
-            <h2>5. Aktarım ve Hizmet Sağlayıcılar</h2>
-            <p>Verileriniz, hizmetin sunulması için kullanılan altyapı sağlayıcılarıyla paylaşılabilir:
-            barındırma ve veritabanı (Supabase), e-posta gönderimi (Resend), giriş doğrulama (Google),
-            harita servisi (OpenStreetMap). Bu sağlayıcıların bir kısmı yurt dışında bulunabilir; aktarım
-            KVKK md. 9 kapsamında ve gerekli güvenlik önlemleriyle yapılır.</p>
+  <div id="app-footer"></div>
 
-            <h2>6. Saklama Süresi</h2>
-            <p>Kişisel verileriniz, işleme amaçlarının gerektirdiği süre ve ilgili mevzuattaki zamanaşımı süreleri
-            boyunca saklanır; bu sürelerin sonunda silinir, yok edilir veya anonim hale getirilir. Hesabınızı
-            sildiğinizde profil, iletişim, teklif ve havuz kayıtlarınız kalıcı olarak silinir.</p>
-
-            <h2>7. İletişim Bilgilerinin Paylaşımı</h2>
-            <p>Telefon ve e-posta gibi iletişim bilgileriniz varsayılan olarak gizlidir. Bir teklifi
-            <b>kabul ettiğinizde</b>, yalnızca anlaştığınız karşı tarafla paylaşılır. Bu paylaşım, hizmetin
-            doğası gereği ve onayınızla gerçekleşir.</p>
-
-            <h2>8. İlgili Kişinin Hakları (KVKK md. 11)</h2>
-            <p>Kişisel verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini/silinmesini
-            isteme, işlemeye itiraz etme ve zararın giderilmesini talep etme haklarına sahipsiniz. Taleplerinizi
-            <a href="mailto:kadiryar571@gmail.com">kadiryar571@gmail.com</a> adresine iletebilirsiniz.</p>
-
-            <p style="margin-top:32px"><a href="gizlilik.html">Gizlilik Politikası</a> ·
-            <a href="cerez.html">Çerez Politikası</a> ·
-            <a href="sartlar.html">Kullanım Şartları</a></p>
-        </article>
-    </main>
-
-    <div id="app-footer"></div>
-
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
 </body>
 </html>

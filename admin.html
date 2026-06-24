@@ -1,386 +1,158 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Paneli · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Paneli · KuryemiBul</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .admin-link { display: block; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); text-decoration: none; color: var(--text); transition: border-color .15s, box-shadow .15s; }
+    .admin-link:hover { border-color: var(--primary); box-shadow: 0 2px 10px rgba(0,87,255,.1); }
+    .admin-link__ico { font-size: 1.6rem; margin-bottom: 10px; }
+    .admin-link__title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+    .admin-link__desc { font-size: 0.8rem; color: var(--text-2); line-height: 1.4; }
+    .admin-act { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .admin-act:last-child { border-bottom: none; }
+    .admin-act__ico { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .admin-act__title { font-size: 0.875rem; font-weight: 500; }
+    .admin-act__sub { font-size: 0.8rem; color: var(--text-2); }
+    .admin-act__time { font-size: 0.75rem; color: var(--text-3); margin-left: auto; white-space: nowrap; }
+  </style>
+</head>
 <body>
-    <div id="app-header"></div>
 
-    <!-- Mobil admin araç çubuğu -->
-    <div class="admin-mobile-bar" id="adminMobileBar">
-        <button class="admin-mobile-bar__back" onclick="history.length > 1 ? history.back() : location.href='index.html'" aria-label="Geri">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span class="admin-mobile-bar__title">Admin Paneli</span>
-        <button class="admin-mobile-bar__logout" id="adminLogoutBtn" aria-label="Çıkış Yap">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Çıkış
-        </button>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Admin Paneli</h1>
+      <p class="page-sub">Platform yönetimi ve genel bakış.</p>
     </div>
 
-    <main class="dash-content">
-        <div class="container">
+    <!-- İstatistikler -->
+    <div class="stats-row" style="margin-bottom:28px">
+      <div class="metric"><div class="metric__num" id="statKurye">—</div><div class="metric__label">Toplam Kurye</div></div>
+      <div class="metric"><div class="metric__num" id="statIsletme">—</div><div class="metric__label">Toplam İşletme</div></div>
+      <div class="metric"><div class="metric__num" id="statFirma">—</div><div class="metric__label">Toplam Firma</div></div>
+      <div class="metric"><div class="metric__num" id="statIlan">—</div><div class="metric__label">Aktif İlan</div></div>
+    </div>
 
-            <!-- Welcome Hero -->
-            <section class="dash-hero">
-                <div class="dash-hero__greeting" id="dashGreeting">Hoş geldin 👋</div>
-                <div class="dash-hero__sub">Kuryemi Bul yönetim paneline hoş geldin. Platformu buradan yönetebilirsin.</div>
-            </section>
+    <!-- Hızlı Erişim -->
+    <h2 style="font-size:1rem;font-weight:600;margin-bottom:14px">Hızlı Erişim</h2>
+    <div class="admin-grid" style="margin-bottom:32px">
+      <a href="kuryeler.html" class="admin-link"><div class="admin-link__ico">🛵</div><div class="admin-link__title">Kuryeler</div><div class="admin-link__desc">Kurye havuzunu yönet</div></a>
+      <a href="isletmeler.html" class="admin-link"><div class="admin-link__ico">🏪</div><div class="admin-link__title">İşletmeler</div><div class="admin-link__desc">İşletmeleri incele</div></a>
+      <a href="firmalar.html" class="admin-link"><div class="admin-link__ico">🏢</div><div class="admin-link__title">Firmalar</div><div class="admin-link__desc">Kurye firmalarını yönet</div></a>
+      <a href="ilanlar.html" class="admin-link"><div class="admin-link__ico">📢</div><div class="admin-link__title">İlanlar</div><div class="admin-link__desc">Aktif iş ilanları</div></a>
+      <a href="harita.html" class="admin-link"><div class="admin-link__ico">🗺️</div><div class="admin-link__title">Harita</div><div class="admin-link__desc">Kurye dağılımı</div></a>
+    </div>
 
-            <!-- Quick Access -->
-            <section class="dash-section">
-                <div class="dash-section__hd">
-                    <h2 class="dash-section__title">Hızlı Erişim</h2>
-                </div>
-                <div class="dash-quick__grid">
-                    <a href="kuryeler.html" class="dash-card" style="--card-glow:rgba(168,85,247,0.14); --card-ic-bg:rgba(168,85,247,0.13)">
-                        <div class="dash-card__ic">🛵</div>
-                        <div class="dash-card__title">Kuryeler</div>
-                        <div class="dash-card__desc">Platform kurye havuzunu görüntüle ve yönet</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="isletmeler.html" class="dash-card" style="--card-glow:rgba(79,139,255,0.14); --card-ic-bg:rgba(79,139,255,0.13)">
-                        <div class="dash-card__ic">🏢</div>
-                        <div class="dash-card__title">İşletmeler</div>
-                        <div class="dash-card__desc">Kayıtlı işletmeleri incele ve onayları yönet</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="firmalar.html" class="dash-card" style="--card-glow:rgba(34,211,238,0.14); --card-ic-bg:rgba(34,211,238,0.12)">
-                        <div class="dash-card__ic">🏭</div>
-                        <div class="dash-card__title">Firmalar</div>
-                        <div class="dash-card__desc">Kurye firmalarını ve aboneliklerini yönet</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="ilanlar.html" class="dash-card" style="--card-glow:rgba(249,115,22,0.14); --card-ic-bg:rgba(249,115,22,0.12)">
-                        <div class="dash-card__ic">📢</div>
-                        <div class="dash-card__title">İlanlar</div>
-                        <div class="dash-card__desc">Aktif iş ilanlarını görüntüle ve düzenle</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="harita.html" class="dash-card" style="--card-glow:rgba(20,184,166,0.14); --card-ic-bg:rgba(20,184,166,0.12)">
-                        <div class="dash-card__ic">🗺️</div>
-                        <div class="dash-card__title">Harita</div>
-                        <div class="dash-card__desc">Anlık kurye dağılımını harita üzerinde gör</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="havuzum.html" class="dash-card" style="--card-glow:rgba(245,158,11,0.14); --card-ic-bg:rgba(245,158,11,0.12)">
-                        <div class="dash-card__ic">⭐</div>
-                        <div class="dash-card__title">Havuzum</div>
-                        <div class="dash-card__desc">Favorilere eklenen kuryeleri takip et</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                </div>
-            </section>
+    <h2 style="font-size:1rem;font-weight:600;margin-bottom:14px">Panel Görünümleri</h2>
+    <div class="admin-grid" style="margin-bottom:32px">
+      <a href="panel-kurye.html" class="admin-link"><div class="admin-link__ico">🛵</div><div class="admin-link__title">Kurye Paneli</div><div class="admin-link__desc">Kurye dashboard'u</div></a>
+      <a href="panel-isletme.html" class="admin-link"><div class="admin-link__ico">🏪</div><div class="admin-link__title">İşletme Paneli</div><div class="admin-link__desc">İşletme dashboard'u</div></a>
+      <a href="panel-firma.html" class="admin-link"><div class="admin-link__ico">🏢</div><div class="admin-link__title">Firma Paneli</div><div class="admin-link__desc">Firma dashboard'u</div></a>
+    </div>
 
-            <!-- Panel View Switcher for admin -->
-            <section class="dash-section">
-                <div class="dash-section__hd">
-                    <h2 class="dash-section__title">Panel Görünümü</h2>
-                    <span style="font-size:0.78rem;color:#6B7280">Admin olarak herhangi bir panel görünümünü test et</span>
-                </div>
-                <div class="dash-quick__grid">
-                    <a href="panel-kurye.html" class="dash-card" style="--card-glow:rgba(37,99,235,0.14); --card-ic-bg:rgba(37,99,235,0.13)">
-                        <div class="dash-card__ic">🛵</div>
-                        <div class="dash-card__title">Kurye Paneli</div>
-                        <div class="dash-card__desc">Kurye dashboard'unu admin olarak görüntüle</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="panel-isletme.html" class="dash-card" style="--card-glow:rgba(37,99,235,0.14); --card-ic-bg:rgba(37,99,235,0.13)">
-                        <div class="dash-card__ic">🏪</div>
-                        <div class="dash-card__title">İşletme Paneli</div>
-                        <div class="dash-card__desc">İşletme dashboard'unu admin olarak görüntüle</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                    <a href="panel-firma.html" class="dash-card" style="--card-glow:rgba(37,99,235,0.14); --card-ic-bg:rgba(37,99,235,0.13)">
-                        <div class="dash-card__ic">🏢</div>
-                        <div class="dash-card__title">Firma Paneli</div>
-                        <div class="dash-card__desc">Firma dashboard'unu admin olarak görüntüle</div>
-                        <div class="dash-card__arrow">→</div>
-                    </a>
-                </div>
-            </section>
-
-            <!-- Stats -->
-            <section class="dash-section">
-                <div class="dash-section__hd">
-                    <h2 class="dash-section__title">Genel Bakış</h2>
-                    <span class="dash-filter">Bu Ay ▾</span>
-                </div>
-                <div class="dash-stats__grid">
-                    <div class="stat-card" style="--stat-ic-bg:rgba(168,85,247,0.13)">
-                        <div class="stat-card__top">
-                            <div class="stat-card__label">Toplam Kurye</div>
-                            <div class="stat-card__ic">🛵</div>
-                        </div>
-                        <div class="stat-card__num" id="statKurye">—</div>
-                        <div class="stat-card__trend trend-up" id="statKuryeTrend"></div>
-                    </div>
-                    <div class="stat-card" style="--stat-ic-bg:rgba(79,139,255,0.13)">
-                        <div class="stat-card__top">
-                            <div class="stat-card__label">Toplam İşletme</div>
-                            <div class="stat-card__ic">🏢</div>
-                        </div>
-                        <div class="stat-card__num" id="statIsletme">—</div>
-                        <div class="stat-card__trend trend-up" id="statIsletmeTrend"></div>
-                    </div>
-                    <div class="stat-card" style="--stat-ic-bg:rgba(34,211,238,0.12)">
-                        <div class="stat-card__top">
-                            <div class="stat-card__label">Toplam Firma</div>
-                            <div class="stat-card__ic">🏭</div>
-                        </div>
-                        <div class="stat-card__num" id="statFirma">—</div>
-                        <div class="stat-card__trend trend-up" id="statFirmaTrend"></div>
-                    </div>
-                    <div class="stat-card" style="--stat-ic-bg:rgba(249,115,22,0.12)">
-                        <div class="stat-card__top">
-                            <div class="stat-card__label">Aktif İlan</div>
-                            <div class="stat-card__ic">📢</div>
-                        </div>
-                        <div class="stat-card__num" id="statIlan">—</div>
-                        <div class="stat-card__trend" id="statIlanTrend"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Activity + KYC Grid -->
-            <div class="dash-bottom-grid">
-
-                <!-- Son Aktiviteler -->
-                <section class="dash-section">
-                    <div class="dash-section__hd">
-                        <h2 class="dash-section__title">Son Aktiviteler</h2>
-                    </div>
-                    <div class="dash-card-wrap">
-                        <div class="act-list" id="activityList">
-                            <div class="act-item">
-                                <div class="act-item__ava">🛵</div>
-                                <div class="act-item__body">
-                                    <div class="act-item__title">Yeni kurye kaydı</div>
-                                    <div class="act-item__desc">Bir kurye platforma yeni üye oldu</div>
-                                </div>
-                                <div class="act-item__time">Az önce</div>
-                            </div>
-                            <div class="act-item">
-                                <div class="act-item__ava">🏢</div>
-                                <div class="act-item__body">
-                                    <div class="act-item__title">İşletme kaydı</div>
-                                    <div class="act-item__desc">Yeni bir işletme profili oluşturuldu</div>
-                                </div>
-                                <div class="act-item__time">15 dk</div>
-                            </div>
-                            <div class="act-item">
-                                <div class="act-item__ava">📢</div>
-                                <div class="act-item__body">
-                                    <div class="act-item__title">İlan yayınlandı</div>
-                                    <div class="act-item__desc">Yeni bir kurye iş ilanı yayına alındı</div>
-                                </div>
-                                <div class="act-item__time">1 saat</div>
-                            </div>
-                            <div class="act-item">
-                                <div class="act-item__ava">🛡️</div>
-                                <div class="act-item__body">
-                                    <div class="act-item__title">KYC başvurusu</div>
-                                    <div class="act-item__desc">Yeni kimlik doğrulama talebi bekliyor</div>
-                                </div>
-                                <div class="act-item__time">2 saat</div>
-                            </div>
-                            <div class="act-item">
-                                <div class="act-item__ava">🏭</div>
-                                <div class="act-item__body">
-                                    <div class="act-item__title">Firma oluşturuldu</div>
-                                    <div class="act-item__desc">Yeni bir kurye firması kaydedildi</div>
-                                </div>
-                                <div class="act-item__time">Dün</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- KYC Onayları -->
-                <section class="dash-section">
-                    <div class="dash-section__hd">
-                        <h2 class="dash-section__title">🛡️ KYC Onayları</h2>
-                        <span class="dash-filter" id="adminCount"></span>
-                    </div>
-                    <div class="dash-card-wrap">
-                        <div id="adminBody">
-                            <div class="empty" style="text-align:center;padding:24px 0;color:rgba(148,163,184,0.5);font-size:.88rem">Yükleniyor…</div>
-                        </div>
-                    </div>
-                </section>
-
-            </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <!-- Son Aktiviteler -->
+      <div class="panel-box">
+        <div class="panel-box__head">Son Aktiviteler</div>
+        <div class="panel-box__body">
+          <div class="admin-act"><div class="admin-act__ico">🛵</div><div><div class="admin-act__title">Yeni kurye kaydı</div><div class="admin-act__sub">Platforma yeni kurye katıldı</div></div><span class="admin-act__time">Az önce</span></div>
+          <div class="admin-act"><div class="admin-act__ico">🏪</div><div><div class="admin-act__title">İşletme kaydı</div><div class="admin-act__sub">Yeni işletme profili oluşturuldu</div></div><span class="admin-act__time">15 dk</span></div>
+          <div class="admin-act"><div class="admin-act__ico">📢</div><div><div class="admin-act__title">İlan yayınlandı</div><div class="admin-act__sub">Yeni kurye ilanı yayına alındı</div></div><span class="admin-act__time">1 saat</span></div>
+          <div class="admin-act"><div class="admin-act__ico">🛡️</div><div><div class="admin-act__title">KYC başvurusu</div><div class="admin-act__sub">Kimlik doğrulama talebi bekliyor</div></div><span class="admin-act__time">2 saat</span></div>
         </div>
-    </main>
+      </div>
 
-    <div id="app-footer"></div>
+      <!-- KYC Onayları -->
+      <div class="panel-box">
+        <div class="panel-box__head">KYC Onayları <span class="badge" id="adminCount"></span></div>
+        <div class="panel-box__body" id="adminBody">
+          <div class="kb-empty" style="padding:24px 0"><div class="kb-empty__t">Yükleniyor…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-    (function () {
-        var body = document.getElementById("adminBody");
-        var countEl = document.getElementById("adminCount");
-        function esc(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? "" : s); }
+  <div id="app-footer"></div>
 
-        function rowHtml(k) {
-            var roller = { kurye: "Kurye", isletme: "İşletme", firma: "Kurye Firması" };
-            return '<div class="list-row" data-pid="' + k.profile_id + '">' +
-                '<div class="list-row__main">' +
-                    '<div class="list-row__title">' + esc(k.ad_soyad) + ' ' +
-                        '<span class="chip">' + esc(roller[k.role] || k.role) + '</span></div>' +
-                    '<div class="list-row__sub">Profil: ' + esc(k.ad || "—") +
-                        ' · TC: ' + esc(k.tc_no) + ' · Belge: ' + esc(k.belge_turu || "—") +
-                        ' · ' + esc((k.created_at || "").slice(0, 10)) + '</div>' +
-                '</div>' +
-                '<span class="offer-act">' +
-                    '<button class="btn btn--primary btn--sm" data-kyc="verified">Onayla</button>' +
-                    '<button class="btn btn--ghost btn--sm" data-kyc="rejected">Reddet</button>' +
-                '</span></div>';
-        }
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (async function () {
+    if (!window.KB) return;
+    await KB.ready();
+    if (!window.SB || !SB.isOn()) return;
 
-        async function start() {
-            if (window.KB && KB.ready) await KB.ready();
-            if (!(window.KB && KB.isOnline())) {
-                body.innerHTML = '<div class="empty" style="text-align:center;padding:24px 0">Supabase gerekli.</div>';
-                return;
-            }
-            if (!KB.isAuthed()) {
-                body.innerHTML = '<div class="empty" style="text-align:center;padding:24px 0">Bu sayfa için giriş yapmalısın.<br><a class="btn btn--primary btn--sm mt-24" href="giris.html">Giriş Yap</a></div>';
-                return;
-            }
-
-            // Kullanıcı adını hero'ya yaz
-            var sess = KB.session();
-            if (sess && sess.profile && sess.profile.ad) {
-                var gr = document.getElementById("dashGreeting");
-                if (gr) gr.textContent = "Hoş geldin, " + sess.profile.ad + " 👋";
-            }
-
-            var admin = false;
-            try { admin = await SB.amIAdmin(); } catch (e) {}
-            if (!admin) {
-                await new Promise(function (r) { setTimeout(r, 800); });
-                try { admin = await SB.amIAdmin(); } catch (e) {}
-            }
-            if (!admin) {
-                location.replace("index.html");
-                return;
-            }
-
-            // Stats (gerçek veriler varsa doldurulur, yoksa — kalır)
-            loadStats();
-
-            var list = [];
-            try { list = await SB.listPendingKyc(); }
-            catch (e) {
-                body.innerHTML = '<div class="empty" style="text-align:center;padding:24px 0">Liste alınamadı: ' + esc(e.message) + '</div>';
-                return;
-            }
-            if (countEl) countEl.textContent = list.length + " bekleyen";
-            body.innerHTML = list.length
-                ? list.map(rowHtml).join("")
-                : '<div class="empty" style="text-align:center;padding:24px 0">🎉 Bekleyen KYC başvurusu yok.</div>';
-        }
-
-        async function loadStats() {
-            // İsteğe bağlı: Supabase'den sayılar çekilir
-            try {
-                if (window.SB && SB.countProfiles) {
-                    var counts = await SB.countProfiles();
-                    if (counts) {
-                        if (counts.kurye != null) document.getElementById("statKurye").textContent = counts.kurye.toLocaleString("tr");
-                        if (counts.isletme != null) document.getElementById("statIsletme").textContent = counts.isletme.toLocaleString("tr");
-                        if (counts.firma != null) document.getElementById("statFirma").textContent = counts.firma.toLocaleString("tr");
-                        if (counts.ilan != null) document.getElementById("statIlan").textContent = counts.ilan.toLocaleString("tr");
-                    }
-                }
-            } catch (e) { /* sessizce yoksay */ }
-        }
-
-        body.addEventListener("click", async function (e) {
-            var btn = e.target.closest("[data-kyc]");
-            if (!btn) return;
-            var row = btn.closest(".list-row");
-            var pid = row.getAttribute("data-pid");
-            var decision = btn.getAttribute("data-kyc");
-            [].forEach.call(row.querySelectorAll("button"), function (b) { b.disabled = true; });
-            try {
-                await SB.reviewKyc(pid, decision);
-                row.outerHTML = '<div class="list-row"><div class="list-row__main"><div class="list-row__sub">' +
-                    (decision === "verified" ? "✓ Onaylandı" : "✗ Reddedildi") + '</div></div></div>';
-            } catch (err) {
-                alert(err.message || "Hata");
-                [].forEach.call(row.querySelectorAll("button"), function (b) { b.disabled = false; });
-            }
-        });
-
-        start();
-    })();
-    </script>
-    <script>
-    // Admin mobil bar — logout butonu
-    document.addEventListener("DOMContentLoaded", function () {
-        var lb = document.getElementById("adminLogoutBtn");
-        if (!lb) return;
-        lb.addEventListener("click", async function () {
-            lb.disabled = true;
-            try {
-                if (window.SB && SB.signOut) await SB.signOut();
-                else if (window.KB && KB.ready) { await KB.ready(); if (window.SB) await SB.signOut(); }
-            } catch (e) {}
-            location.href = "giris.html";
-        });
-        // Sadece mobilde göster
-        var bar = document.getElementById("adminMobileBar");
-        function checkMobile() {
-            if (bar) bar.style.display = window.innerWidth <= 1024 ? "flex" : "none";
-        }
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-    });
-    </script>
-    <style>
-    .admin-mobile-bar {
-        display: none;
-        position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-        height: 56px; align-items: center; gap: 8px;
-        padding: 0 12px;
-        background: #FFFFFF; border-bottom: 1px solid #E5E7EB;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    /* Admin kontrolü */
+    var isAdmin = await SB.amIAdmin().catch(function() { return false; });
+    if (!isAdmin) {
+      var role = KB.currentRole ? KB.currentRole() : 'kurye';
+      location.href = KB.roleToPanel ? KB.roleToPanel(role) : 'index.html';
+      return;
     }
-    .admin-mobile-bar__back {
-        width: 36px; height: 36px; border-radius: 8px;
-        border: 1px solid #E5E7EB; background: #F9FAFB;
-        display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
-        color: #374151;
+
+    /* İstatistikler */
+    function setNum(id, n) { var el = document.getElementById(id); if (el) el.textContent = n != null ? n : '—'; }
+
+    try {
+      var [kuryeler, isletmeler, firmalar] = await Promise.all([
+        SB.pool('kurye'), SB.pool('isletme'), SB.pool('firma')
+      ]);
+      setNum('statKurye', kuryeler.length);
+      setNum('statIsletme', isletmeler.length);
+      setNum('statFirma', firmalar.length);
+    } catch (e) {}
+
+    try {
+      var ilanlar = await SB.openListings();
+      setNum('statIlan', ilanlar.length);
+    } catch (e) {}
+
+    /* KYC bekleyenler */
+    try {
+      var pending = await SB.pendingKyc ? SB.pendingKyc() : Promise.resolve([]);
+      var host = document.getElementById('adminBody');
+      var cnt = document.getElementById('adminCount');
+      if (!pending || !pending.length) {
+        if (host) host.innerHTML = '<div class="kb-empty" style="padding:24px 0"><div class="kb-empty__ic">✓</div><div class="kb-empty__t">Bekleyen KYC yok</div></div>';
+        return;
+      }
+      if (cnt) cnt.textContent = pending.length;
+      if (host) host.innerHTML = pending.map(function(p) {
+        return '<div class="list-row">' +
+          '<div class="list-row__main"><div class="list-row__title">' + (p.ad || 'Bilinmiyor') + '</div>' +
+          '<div class="list-row__sub">' + (p.role || '') + ' · ' + (p.sehir || '') + '</div></div>' +
+          '<div><button class="btn btn--primary btn--sm" onclick="approveKyc(\'' + p.id + '\',this)">Onayla</button></div></div>';
+      }).join('');
+    } catch (e) {
+      var host2 = document.getElementById('adminBody');
+      if (host2) host2.innerHTML = '<div class="kb-empty" style="padding:24px 0"><div class="kb-empty__t">Yüklenemedi</div></div>';
     }
-    .admin-mobile-bar__title {
-        flex: 1; font-size: 0.9rem; font-weight: 600; color: #111827;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  })();
+
+  async function approveKyc(id, btn) {
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      await SB.approveKyc(id);
+      btn.closest('.list-row').remove();
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Onayla';
+      if (window.KBMotion) KBMotion.showErrorToast(e.message || 'Hata');
     }
-    .admin-mobile-bar__logout {
-        display: flex; align-items: center; gap: 6px;
-        padding: 7px 12px; border-radius: 8px;
-        border: 1px solid #FEE2E2; background: #FEF2F2;
-        color: #DC2626; font-size: 0.8rem; font-weight: 600;
-        cursor: pointer; white-space: nowrap; flex-shrink: 0;
-    }
-    .admin-mobile-bar__logout:disabled { opacity: 0.5; }
-    @media (max-width: 1024px) {
-        body.has-sidebar { padding-top: calc(56px + 64px) !important; }
-    }
-    </style>
+  }
+  </script>
 </body>
 </html>

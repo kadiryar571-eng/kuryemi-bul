@@ -1,201 +1,88 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="notif.title">Bildirimler · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">    <style>
-      .nlist{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-      /* Base notification card — mobile-screens.css overrides at @media */
-      .nlist{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-      .nrow{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1px solid var(--kb-border,#2a2a2a);border-radius:16px;
-        background:var(--kb-surface-2,#1c1c1c);text-decoration:none;color:inherit;transition:border-color .2s,background .2s}
-      .nrow--unread{border-left:3px solid var(--kb-blue-500,#3b82f6)}
-      .nrow__ic{width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;
-        background:var(--kb-surface-3,#242424);border:1px solid var(--kb-border,#2a2a2a);color:var(--ic-color,var(--kb-blue-400,#60a5fa))}
-      .nrow__ic svg{stroke:var(--ic-color,var(--kb-blue-400,#60a5fa))}
-      .nrow__body{flex:1;min-width:0}
-      .nrow__title{font-weight:700;font-size:.9rem;margin-bottom:2px;color:var(--kb-text-1,#f8fafc)}
-      .nrow__text{color:var(--kb-text-2,#94a3b8);font-size:.8rem;line-height:1.4;word-break:break-word}
-      .nrow__time{color:var(--kb-text-3,#64748b);font-size:.68rem;margin-top:4px}
-      .nrow__dot{width:8px;height:8px;border-radius:50%;background:var(--kb-blue-500,#3b82f6);flex:none;margin-top:4px}
-      .nbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bildirimler · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .notif-list { display: flex; flex-direction: column; gap: 0; }
+    .notif-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-ico { width: 40px; height: 40px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .notif-body { flex: 1; }
+    .notif-title { font-size: 0.9rem; font-weight: 500; color: var(--text); line-height: 1.4; }
+    .notif-time { font-size: 0.78rem; color: var(--text-3); margin-top: 3px; }
+    .notif-item--unread .notif-title { font-weight: 600; }
+    .notif-item--unread { background: #f0f4ff; border-radius: var(--radius); padding: 14px; margin: 0 -4px; }
+    .notif-empty { text-align: center; padding: 64px 0; color: var(--text-2); }
+    .notif-empty__ic { font-size: 2.5rem; margin-bottom: 12px; }
+    .notif-empty__t { font-weight: 600; margin-bottom: 6px; }
+  </style>
 </head>
 <body>
-    <div id="app-header"></div>
 
-    <section class="page-head">
-        <div class="container">
-            <div class="nbar">
-                <div><h1 data-i18n="notif.title">Bildirimler</h1><p data-i18n="notif.lead">Tekliflerin, başvuruların ve doğrulama sonuçların burada.</p></div>
-                <button type="button" id="markAllBtn" class="btn btn--light btn--sm" data-i18n="notif.markAll" hidden>Tümünü okundu yap</button>
-            </div>
-        </div>
-    </section>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main class="section--sm">
-        <div class="container container--narrow">
-            <div id="nWrap"><p class="empty" id="nLoading" data-i18n="common.loading">Yükleniyor…</p></div>
-        </div>
-    </main>
+  <div class="app-content">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h1>Bildirimler</h1>
+        <p class="page-sub">Teklif, başvuru ve mesaj güncellemeleri.</p>
+      </div>
+    </div>
 
-    <div id="app-footer"></div>
+    <div class="card" style="padding:24px">
+      <div id="notifList">
+        <div class="skel-card"><span class="skel skel--line" style="width:80%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div>
+        <div class="skel-card" style="margin-top:12px"><span class="skel skel--line" style="width:70%"></span><span class="skel skel--line" style="width:35%;margin-top:8px"></span></div>
+        <div class="skel-card" style="margin-top:12px"><span class="skel skel--line" style="width:75%"></span><span class="skel skel--line" style="width:45%;margin-top:8px"></span></div>
+      </div>
+    </div>
+  </div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-    (function () {
-        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
-        var wrap = document.getElementById("nWrap");
-        var markAllBtn = document.getElementById("markAllBtn");
+  <div id="app-footer"></div>
 
-        var IC = function(d, c) { return { svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>', color: c }; };
-        var ICONS = {
-            offer_new:            IC('<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>', '#22d3ee'),
-            offer_accepted:       IC('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', '#22c55e'),
-            offer_rejected:       IC('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', '#ef4444'),
-            application_new:      IC('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>', '#4f8bff'),
-            application_accepted: IC('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', '#22c55e'),
-            application_rejected: IC('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', '#ef4444'),
-            bid_new:              IC('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>', '#a855f7'),
-            bid_accepted:         IC('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', '#22c55e'),
-            bid_rejected:         IC('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', '#ef4444'),
-            review_new:           IC('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', '#eab308'),
-            kyc_verified:         IC('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>', '#22c55e'),
-            kyc_rejected:         IC('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', '#ef4444'),
-            info:                 IC('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', '#94a3b8')
-        };
-        var TYPE_PRIORITY = {
-            offer_new: "high", offer_accepted: "high", offer_rejected: "high",
-            application_new: "high", application_accepted: "high", application_rejected: "high",
-            bid_new: "high", bid_accepted: "high", bid_rejected: "high",
-            review_new: "medium", kyc_verified: "medium", kyc_rejected: "high", info: "low"
-        };
-
-        function timeAgo(iso) {
-            if (!iso) return "";
-            var d = new Date(iso), now = new Date(), s = Math.floor((now - d) / 1000);
-            if (s < 60) return t("time.now");
-            var m = Math.floor(s / 60); if (m < 60) return m + " " + t("time.min");
-            var h = Math.floor(m / 60); if (h < 24) return h + " " + t("time.hour");
-            var gun = Math.floor(h / 24); if (gun < 7) return gun + " " + t("time.day");
-            return d.toLocaleDateString();
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      if (!window.KB) return;
+      await KB.ready();
+      var host = document.getElementById('notifList');
+      if (!host) return;
+      if (!window.SB || !SB.isOn()) {
+        host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Bildirim bulunmuyor</div></div>';
+        return;
+      }
+      try {
+        var notifs = await SB.myNotifications ? SB.myNotifications() : Promise.resolve([]);
+        if (!notifs || !notifs.length) {
+          host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Henüz bildirim yok</div><p style="color:var(--text-2);font-size:0.85rem">Yeni teklifler ve mesajlar burada görünür.</p></div>';
+          return;
         }
-        function esc(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? "" : s); }
-
-        function rowHtml(n) {
-            var unread = !n.read_at;
-            var ic = ICONS[n.type] || ICONS.info;
-            var pri = TYPE_PRIORITY[n.type] || "low";
-            return '<a href="' + (n.link || "index.html") + '" class="nrow nrow--' + pri + (unread ? " nrow--unread" : "") + '" data-id="' + n.id + '">' +
-                '<span class="nrow__ic" style="--ic-color:' + ic.color + '">' + ic.svg + '</span>' +
-                '<span class="nrow__body"><span class="nrow__title">' + esc(n.title) + '</span>' +
-                (n.body ? '<span class="nrow__text">' + esc(n.body) + '</span>' : '') +
-                '<span class="nrow__time">' + timeAgo(n.created_at) + '</span></span>' +
-                (unread ? '<span class="nrow__dot" aria-hidden="true"></span>' : '<span class="nrow__arrow" aria-hidden="true">›</span>') +
-                '</a>';
-        }
-
-        var activeFilter = "all";
-        var FILTER_CATS = [
-            { key: "all",     label: "Tümü" },
-            { key: "offer",   label: "Teklif" },
-            { key: "apply",   label: "Başvuru" },
-            { key: "message", label: "Mesaj" },
-            { key: "system",  label: "Sistem" }
-        ];
-        var TYPE_CAT = {
-            offer_new: "offer", offer_accepted: "offer", offer_rejected: "offer",
-            application_new: "apply", application_accepted: "apply", application_rejected: "apply",
-            bid_new: "offer", bid_accepted: "offer", bid_rejected: "offer",
-            review_new: "system", kyc_verified: "system", kyc_rejected: "system", info: "system"
-        };
-
-        function renderFilterChips(list) {
-            var chips = FILTER_CATS.map(function (c) {
-                var count = c.key === "all" ? list.length : list.filter(function (n) { return TYPE_CAT[n.type] === c.key; }).length;
-                if (c.key !== "all" && count === 0) return "";
-                var active = activeFilter === c.key ? " is-active" : "";
-                return '<button class="nlist-filter-chip' + active + '" data-cat="' + c.key + '">' + c.label +
-                    (count ? ' <span style="opacity:.6;margin-left:4px;font-size:.68rem">(' + count + ')</span>' : '') +
-                    '</button>';
-            }).join("");
-            return '<div class="nlist-filters" id="nlistFilters">' + chips + '</div>';
-        }
-
-        function filteredList(list) {
-            if (activeFilter === "all") return list;
-            return list.filter(function (n) { return TYPE_CAT[n.type] === activeFilter; });
-        }
-
-        var allList = [];
-
-        function render(list) {
-            allList = list;
-            var filtered = filteredList(list);
-            if (!list.length) {
-                wrap.innerHTML = '<div class="empty">🔔<br>' + t("notif.empty") + '</div>';
-                markAllBtn.hidden = true;
-                return;
-            }
-            var html = renderFilterChips(list);
-            html += filtered.length ? '<div class="nlist">' + filtered.map(rowHtml).join("") + '</div>'
-                : '<div class="empty" style="margin-top:24px">Bu kategoride bildirim yok.</div>';
-            wrap.innerHTML = html;
-            markAllBtn.hidden = !list.some(function (n) { return !n.read_at; });
-            // Chip click
-            var filtersEl = document.getElementById("nlistFilters");
-            if (filtersEl) {
-                filtersEl.addEventListener("click", function (e) {
-                    var chip = e.target.closest("[data-cat]");
-                    if (!chip) return;
-                    activeFilter = chip.getAttribute("data-cat");
-                    render(allList);
-                });
-            }
-        }
-
-        async function start() {
-            if (window.KB && KB.ready) await KB.ready();
-            if (!(window.KB && KB.isOnline())) { wrap.innerHTML = '<p class="empty">' + t("notif.needLogin") + '</p>'; return; }
-            if (!KB.isAuthed()) {
-                wrap.innerHTML = '<p class="empty">' + t("pe.loginRequired") + '</p>' +
-                    '<a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>';
-                return;
-            }
-            var list = await SB.myNotifications(80);
-            render(list);
-
-            // Tıklanınca okundu işaretle (yönlendirme yine de gerçekleşir)
-            wrap.addEventListener("click", function (e) {
-                var a = e.target.closest(".nrow"); if (!a) return;
-                var id = a.getAttribute("data-id");
-                if (a.classList.contains("nrow--unread")) { try { SB.markNotificationRead(id); } catch (x) {} }
-            });
-
-            markAllBtn.addEventListener("click", async function () {
-                try { await SB.markAllNotificationsRead(); } catch (x) {}
-                list.forEach(function (n) { n.read_at = n.read_at || new Date().toISOString(); });
-                render(list);
-            });
-
-            // Anlık: yeni bildirim gelince listeye ekle
-            try {
-                SB.subscribeNotifications(function (n) { list.unshift(n); render(list); });
-            } catch (x) {}
-        }
-        start();
-    })();
-    </script>
+        host.innerHTML = '<div class="notif-list">' + notifs.map(function(n) {
+          var ico = n.type === 'offer' ? '✉️' : n.type === 'message' ? '💬' : n.type === 'apply' ? '📋' : '🔔';
+          var unread = !n.read_at;
+          return '<div class="notif-item' + (unread ? ' notif-item--unread' : '') + '">' +
+            '<div class="notif-ico">' + ico + '</div>' +
+            '<div class="notif-body">' +
+              '<div class="notif-title">' + (n.body || n.message || 'Yeni bildirim') + '</div>' +
+              '<div class="notif-time">' + (n.created_at ? new Date(n.created_at).toLocaleDateString('tr-TR') : '') + '</div>' +
+            '</div></div>';
+        }).join('') + '</div>';
+      } catch (e) {
+        host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Bildirimler yüklenemedi</div></div>';
+      }
+    });
+  </script>
 </body>
 </html>

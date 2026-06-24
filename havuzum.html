@@ -1,77 +1,94 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="title.havuzum">Havuzum · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Havuzum · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
 <body>
-    <div id="app-header"></div>
 
-    <section class="kb-hero">
-        <div class="container">
-            <span class="kb-hero__eyebrow">Koleksiyonum</span>
-            <h1 class="kb-hero__title">Kayıtlı <span class="grad">yeteneklerim</span></h1>
-            <p class="kb-hero__sub">Profiline yıldız verdiğin kurye, işveren ve firmalar tek premium koleksiyonda.</p>
-            <div class="kb-hero__meta"><span class="kb-hero__meta-item">Hızlı erişim</span><span class="kb-hero__meta-item">Kişisel havuz</span></div>
-        </div>
-    </section>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main class="section--sm">
-        <div class="container">
-            <div class="fav-tabs" role="tablist">
-                <button class="fav-tab is-active" role="tab" aria-selected="true" data-favtab="profiles" data-i18n="fav.tabProfiles">Kayıtlı Profiller</button>
-                <button class="fav-tab" role="tab" aria-selected="false" data-favtab="jobs" data-i18n="fav.tabJobs">Kayıtlı İlanlar</button>
-            </div>
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Havuzum</h1>
+      <p class="page-sub">Kaydettiğiniz profiller ve ilanlar.</p>
+    </div>
 
-            <section class="fav-panel is-active" id="favPanel-profiles" role="tabpanel">
-                <p class="result-count" id="myPoolCount"></p>
-                <div class="talent-grid" id="myPoolGrid"></div>
-            </section>
+    <!-- Sekmeler -->
+    <div class="tab-bar" id="havuzumTabs" style="margin-bottom:24px">
+      <button class="tab-btn is-active" data-tab="profiller">Profiller</button>
+      <button class="tab-btn" data-tab="ilanlar">İlanlar</button>
+    </div>
 
-            <section class="fav-panel" id="favPanel-jobs" role="tabpanel" hidden>
-                <div class="toolbar">
-                    <p class="result-count" id="savedJobsCount" style="margin:0"></p>
-                    <select id="savedSort" class="toolbar__sort" aria-label="Sırala">
-                        <option value="new" data-i18n="fav.sortNew">En yeni</option>
-                        <option value="company" data-i18n="fav.sortCompany">İşverene göre</option>
-                        <option value="location" data-i18n="fav.sortLocation">Konuma göre</option>
-                    </select>
-                </div>
-                <div class="talent-grid" id="savedJobsGrid"></div>
-            </section>
-        </div>
-    </main>
+    <!-- Profiller sekmesi -->
+    <div id="tabProfiller">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <span class="text-sm text-muted" id="myPoolCount"></span>
+      </div>
+      <div class="cards-grid" id="myPoolGrid">
+        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      </div>
+    </div>
 
-    <div id="app-footer"></div>
+    <!-- İlanlar sekmesi (gizli) -->
+    <div id="tabIlanlar" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <span class="text-sm text-muted" id="savedJobsCount"></span>
+        <select id="savedSort" class="input" style="width:auto;padding:7px 12px;font-size:0.875rem">
+          <option value="new">En yeni</option>
+          <option value="company">Firmaya göre</option>
+          <option value="location">Şehre göre</option>
+        </select>
+      </div>
+      <div class="cards-grid" id="savedJobsGrid">
+        <div class="skel-card" style="height:120px"></div>
+        <div class="skel-card" style="height:120px"></div>
+        <div class="skel-card" style="height:120px"></div>
+      </div>
+    </div>
+  </div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-      KBApp.renderMyPool();
-      var savedLoaded = false;
-      document.querySelectorAll("[data-favtab]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var tab = btn.getAttribute("data-favtab");
-          document.querySelectorAll("[data-favtab]").forEach(function (b) {
-            var on = b === btn; b.classList.toggle("is-active", on); b.setAttribute("aria-selected", on ? "true" : "false");
-          });
-          document.getElementById("favPanel-profiles").hidden = tab !== "profiles";
-          document.getElementById("favPanel-profiles").classList.toggle("is-active", tab === "profiles");
-          document.getElementById("favPanel-jobs").hidden = tab !== "jobs";
-          document.getElementById("favPanel-jobs").classList.toggle("is-active", tab === "jobs");
-          if (tab === "jobs" && !savedLoaded) { savedLoaded = true; KBApp.renderSavedJobs(); }
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      /* Sekme geçişi */
+      var tabs = document.querySelectorAll('#havuzumTabs .tab-btn');
+      var pnlProfiller = document.getElementById('tabProfiller');
+      var pnlIlanlar = document.getElementById('tabIlanlar');
+      var jobsLoaded = false;
+
+      tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          tabs.forEach(function (b) { b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          var tab = btn.dataset.tab;
+          pnlProfiller.style.display = tab === 'profiller' ? '' : 'none';
+          pnlIlanlar.style.display = tab === 'ilanlar' ? '' : 'none';
+          if (tab === 'ilanlar' && !jobsLoaded) {
+            jobsLoaded = true;
+            if (window.KBApp && KBApp.renderSavedJobs) KBApp.renderSavedJobs();
+          }
         });
       });
-    </script>
+
+      /* İlk yükleme: profil havuzu */
+      if (window.KBApp && KBApp.renderMyPool) KBApp.renderMyPool();
+    });
+  </script>
 </body>
 </html>

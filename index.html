@@ -3,385 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Kuryemi Bul — kuryelerin iş bulduğu, işletmelerin ve esnafların doğrulanmış kurye bulduğu profesyonel ağ. Profil oluştur, fırsatları keşfet, kariyerini büyüt.">
-  <title>Kuryemi Bul · Kuryeler İş Bulur, İşletmeler Kurye</title>
+  <title>KuryemiBul · Kuryeler İş Bulur, İşletmeler Kurye Bulur</title>
+  <meta name="description" content="Kuryeler iş bulur, işletmeler ve firmalar doğrulanmış kurye bulur. Türkiye'nin kurye platformu.">
   <link rel="icon" href="assets/logo.png">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Kuryemi Bul">
-  <meta property="og:title" content="Kuryemi Bul · Kuryeler İş Bulur, İşletmeler Kurye">
-  <meta property="og:description" content="Kuryelerin iş bulduğu, işletmelerin ve esnafların doğrulanmış kurye bulduğu profesyonel ağ.">
+  <meta property="og:title" content="KuryemiBul · Kuryeler İş Bulur, İşletmeler Kurye Bulur">
+  <meta property="og:description" content="Kuryeler iş bulur, işletmeler ve firmalar doğrulanmış kurye bulur.">
   <meta property="og:url" content="https://kuryemibul.com/">
-  <meta property="og:locale" content="tr_TR">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/landing.css">
-  <link rel="stylesheet" href="assets/css/space-bg.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    /* Landing'e özel inline stiller */
+    .hero { padding: 80px 0 64px; text-align: center; }
+    .hero h1 { font-size: clamp(1.75rem, 4vw, 3rem); font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+    .hero h1 span { color: var(--primary); }
+    .hero .sub  { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text-2); max-width: 540px; margin: 0 auto 32px; line-height: 1.6; }
+    .hero-cta   { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .hero-stats { display: flex; justify-content: center; gap: 40px; margin-top: 56px; flex-wrap: wrap; }
+    .hero-stat__num { font-size: 1.8rem; font-weight: 800; color: var(--text); }
+    .hero-stat__lbl { font-size: 0.875rem; color: var(--text-2); margin-top: 2px; }
+
+    .section       { padding: 64px 0; }
+    .section--gray { background: var(--surface); }
+    .section-title { font-size: 1.75rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .section-sub   { text-align: center; color: var(--text-2); max-width: 520px; margin: 0 auto 40px; }
+
+    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .how-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; text-align: center; }
+    .how-card__num { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+    .how-card h3   { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .how-card p    { font-size: 0.875rem; color: var(--text-2); line-height: 1.6; }
+
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .role-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; }
+    .role-item__ico  { font-size: 2rem; margin-bottom: 12px; }
+    .role-item__name { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .role-item__desc { font-size: 0.875rem; color: var(--text-2); line-height: 1.6; margin-bottom: 20px; }
+
+    .cta-section { padding: 80px 0; text-align: center; background: var(--primary); color: #fff; }
+    .cta-section h2  { font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: #fff; }
+    .cta-section p   { font-size: 1rem; opacity: .85; margin-bottom: 32px; }
+    .cta-section .btn--primary { background: #fff; color: var(--primary); }
+    .cta-section .btn--primary:hover { background: #f0f4ff; }
+    .cta-section .btn--ghost { border-color: rgba(255,255,255,.5); color: #fff; }
+    .cta-section .btn--ghost:hover { background: rgba(255,255,255,.1); }
+
+    .landing-footer { background: var(--text); color: rgba(255,255,255,.7); padding: 32px 0; font-size: 0.875rem; }
+    .landing-footer a { color: rgba(255,255,255,.7); }
+    .landing-footer a:hover { color: #fff; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-links { display: flex; gap: 20px; }
+
+    @media (max-width: 768px) {
+      .how-grid, .role-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 24px; }
+    }
+  </style>
 </head>
-<body>
+<body style="background:var(--bg)">
 
-  <!-- Uzay arka plan -->
-  <div class="space-bg" id="space-bg" aria-hidden="true">
-    <div class="space-nebula"></div>
-    <div class="space-stars space-stars--s"></div>
-    <div class="space-stars space-stars--m"></div>
-    <div class="space-stars space-stars--f"></div>
-    <div class="nova nova--1"></div>
-    <div class="nova nova--2"></div>
-    <div class="nova nova--3"></div>
-    <div class="nova nova--4"></div>
-    <div class="nova nova--5"></div>
-    <div class="nova nova--6"></div>
-  </div>
+  <!-- NAV -->
+  <nav class="public-nav">
+    <a class="nav-brand" href="index.html">KuryemiBul</a>
+    <div class="nav-links">
+      <a href="kuryeler.html">Kuryeler</a>
+      <a href="isletmeler.html">İşletmeler</a>
+      <a href="firmalar.html">Firmalar</a>
+      <a href="ilanlar.html">İlanlar</a>
+    </div>
+    <div class="nav-actions">
+      <a href="giris.html" class="btn btn--ghost btn--sm">Giriş Yap</a>
+      <a href="giris.html?mode=register" class="btn btn--primary btn--sm">Kayıt Ol</a>
+    </div>
+  </nav>
 
-  <!-- ============ NAV ============ -->
-  <header class="nav" id="nav">
-    <div class="container nav__in">
-      <a href="index.html" class="brand">
-        <span class="brand__mark"><img src="assets/logo.png" alt="" onerror="this.parentNode.textContent='🛵'"></span>
-        Kuryemi&nbsp;Bul
-      </a>
-      <div class="nav__cta">
-        <a href="giris.html" class="nav__signin" id="navSignin">Giriş Yap</a>
-        <a href="giris.html" class="btn btn--primary btn--sm" id="navCta">Kayıt Ol</a>
+  <!-- HERO -->
+  <section class="hero" style="background:var(--surface);border-bottom:1px solid var(--border)">
+    <div class="container container--md">
+      <h1>Kuryeler iş bulur,<br><span>İşletmeler kurye bulur</span></h1>
+      <p class="sub">Türkiye'nin kurye-işletme eşleştirme platformu. Kurye olarak iş başvur, işletme olarak doğrulanmış kurye bul.</p>
+      <div class="hero-cta">
+        <a href="giris.html?mode=register" class="btn btn--primary btn--xl">Hemen Başla — Ücretsiz</a>
+        <a href="ilanlar.html" class="btn btn--ghost btn--xl">İlanları Gör</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat__num">1.200+</div>
+          <div class="hero-stat__lbl">Kayıtlı Kurye</div>
+        </div>
+        <div>
+          <div class="hero-stat__num">340+</div>
+          <div class="hero-stat__lbl">İşletme</div>
+        </div>
+        <div>
+          <div class="hero-stat__num">85+</div>
+          <div class="hero-stat__lbl">Aktif İlan</div>
+        </div>
+        <div>
+          <div class="hero-stat__num">%94</div>
+          <div class="hero-stat__lbl">Memnuniyet</div>
+        </div>
       </div>
     </div>
-  </header>
+  </section>
 
-  <main>
-    <!-- ============ HERO ============ -->
-    <section class="hero">
-      <div class="container">
-        <span class="hero__badge reveal in">
-          <span class="dot"></span>
-          <span class="hero__pill">YENİ</span>
-          <b>Doğrulanmış kurye kariyer ağı</b> artık canlı
-        </span>
-        <h1 class="hero__title reveal in" data-d="1">
-          Kuryeler iş bulur,<br>işletmeler <span class="grad-text">kurye</span>
-        </h1>
-        <p class="hero__sub reveal in" data-d="2">
-          Kuryeler profesyonel profilini oluşturur ve iş bulur; işletmeler doğrulanmış kuryelere ulaşır.
-          Bir teslimat uygulaması değil — kuryeler ile işverenlerin buluştuğu profesyonel ağ.
-        </p>
-        <div class="hero__actions reveal in" data-d="3">
-          <a href="giris.html" class="btn btn--primary btn--lg" id="heroRegister">Kayıt Ol →</a>
-          <a href="giris.html" class="btn btn--ghost btn--lg">Giriş Yap</a>
-          <a href="/downloads/kuryemibul.apk" class="btn btn--ghost btn--lg" download id="heroApk">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Android APK İndir
-          </a>
-        </div>
-        <div class="hero__meta reveal in" data-d="4">
-          <span><i>●</i> Doğrulanmış kurye profilleri</span>
-          <span><i>●</i> Binlerce iş fırsatı</span>
-          <span><i>●</i> Güvenli işe alım</span>
-        </div>
-      </div>
-
-      <!-- dashboard mockup -->
-      <div class="container" id="kontrol">
-        <div class="hero__stage reveal" data-d="1">
-          <div class="floaty floaty--a">
-            <span class="floaty__ic">⚡</span>
-            <span><span class="floaty__l">Ort. eşleşme</span><span class="floaty__v">8 sn</span></span>
-          </div>
-          <div class="floaty floaty--b">
-            <span class="floaty__ic">💼</span>
-            <span><span class="floaty__l">Açık fırsat</span><span class="floaty__v" data-count="42" data-suffix="">0</span></span>
-          </div>
-          <div class="floaty floaty--c">
-            <span class="floaty__ic">⭐</span>
-            <span><span class="floaty__l">Memnuniyet</span><span class="floaty__v">4.9/5</span></span>
-          </div>
-
-          <div class="dash">
-            <div class="dash__bar">
-              <span class="tl"><i></i><i></i><i></i></span>
-              <span class="dash__title">Kuryemi Bul · Canlı Fırsat Ağı</span>
-              <span class="dash__live"><span class="dot"></span> CANLI</span>
-            </div>
-            <div class="dash__grid">
-              <div class="dash__main">
-                <div class="kpis">
-                  <div class="kpi">
-                    <div class="kpi__l"><span class="kpi__ic">🛵</span> Aktif kurye</div>
-                    <div class="kpi__v" data-count="128">0</div>
-                    <div class="kpi__d">▲ canlı ağ</div>
-                  </div>
-                  <div class="kpi">
-                    <div class="kpi__l"><span class="kpi__ic">💼</span> Açık pozisyon</div>
-                    <div class="kpi__v" data-count="64">0</div>
-                    <div class="kpi__d">▲ gerçek zamanlı</div>
-                  </div>
-                  <div class="kpi">
-                    <div class="kpi__l"><span class="kpi__ic">🏪</span> Kurye arayan işletme</div>
-                    <div class="kpi__v" data-count="37">0</div>
-                    <div class="kpi__d">▲ eşleşme bekliyor</div>
-                  </div>
-                  <div class="kpi">
-                    <div class="kpi__l"><span class="kpi__ic">🧠</span> Eşleşme/dk</div>
-                    <div class="kpi__v" data-count="19">0</div>
-                    <div class="kpi__d">▲ akıllı motor</div>
-                  </div>
-                </div>
-                <div class="minimap" id="minimap">
-                  <div class="minimap__grid"></div>
-                  <svg id="mapsvg" viewBox="0 0 600 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="routeg" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a855f7"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-              </div>
-              <div class="dash__side">
-                <div class="gauge">
-                  <div class="gauge__ring" style="--p:96"><i>96%</i></div>
-                  <div class="gauge__t"><b>Şehir kapsama</b><span>Yetenek ağı</span></div>
-                </div>
-                <div class="glass" style="padding:16px">
-                  <div class="dash__title" style="margin:0 0 6px">Canlı akış</div>
-                  <div class="feed">
-                    <div class="feed__row"><span class="feed__av">🛵</span><span class="feed__t">Yusuf K. <span class="feed__s">işe alındı</span></span><span class="feed__tag">Kadıköy</span></div>
-                    <div class="feed__row"><span class="feed__av">🏪</span><span class="feed__t">Lezzet Burger <span class="feed__s">kurye arıyor</span></span><span class="feed__tag">eşleşti</span></div>
-                    <div class="feed__row"><span class="feed__av">✅</span><span class="feed__t">Elif D. <span class="feed__s">profili doğrulandı</span></span><span class="feed__tag">4.9★</span></div>
-                    <div class="feed__row"><span class="feed__av">🏢</span><span class="feed__t">HızlıKurye <span class="feed__s">ekip büyüttü</span></span><span class="feed__tag">+6</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ LOGO STRIP ============ -->
-    <section class="section--tight">
-      <div class="container strip">
-        <p class="strip__lead">Tek ağ · üç rol · sınırsız fırsat</p>
-        <div class="strip__row">
-          <span>🛵 Kuryeler</span>
-          <span>🏪 İşletmeler</span>
-          <span>🏢 Kurye Firmaları</span>
-          <span>🧠 Akıllı Eşleşme</span>
-          <span>💼 İş Fırsatları</span>
-          <span>✅ Doğrulama</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ STAT BAND ============ -->
-    <section class="section--tight">
-      <div class="container">
-        <div class="statband reveal" id="statband">
-          <div class="statband__c"><div class="statband__v" data-count="0" id="st-kurye">—</div><div class="statband__l">Aktif Kurye</div></div>
-          <div class="statband__c"><div class="statband__v" data-count="0" id="st-isletme">—</div><div class="statband__l">Kayıtlı İşletme</div></div>
-          <div class="statband__c"><div class="statband__v" data-count="0" id="st-firma">—</div><div class="statband__l">Kurye Firması</div></div>
-          <div class="statband__c"><div class="statband__v" data-count="8" data-suffix=" sn">0</div><div class="statband__l">Ort. Eşleşme</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ FEATURE: matching ============ -->
-    <section class="section" id="ozellikler">
-      <div class="container">
-        <div class="sec-head reveal">
-          <span class="eyebrow">Akıllı Altyapı</span>
-          <h2 class="sec-title">Yetenek ile fırsat, <span class="grad-text">tek akışta</span></h2>
-        </div>
-
-        <div class="feat reveal">
-          <div class="feat__body">
-            <span class="feat__tag">🧠 Akıllı Eşleşme</span>
-            <h3 class="feat__t">Doğru kuryeyi doğru işle buluşturan motor</h3>
-            <p class="feat__d">Konum, deneyim, performans ve uygunluk verisini birleştiren akıllı eşleşme; her açık iş için en uygun kuryeyi, her kurye için en uygun fırsatı önerir.</p>
-            <ul class="feat__list">
-              <li><span class="ck">✓</span> Bölge ve uzmanlık bazlı sıralama</li>
-              <li><span class="ck">✓</span> Performans skoruna göre öncelik</li>
-              <li><span class="ck">✓</span> Doğrulanmış profillere öncelik</li>
-            </ul>
-          </div>
-          <div class="feat__media">
-            <div class="matchrow glass"><span class="matchrow__av">🏪</span><span class="matchrow__t"><b>Lezzet Burger</b><span>Kurye arıyor · Kadıköy</span></span><span class="matchrow__score">ilan</span></div>
-            <div class="matchrow glass matchrow--match"><span class="matchrow__av">🛵</span><span class="matchrow__t"><b>Yusuf K.</b><span>Kadıköy · Profesyonel</span></span><span class="matchrow__score">%98</span></div>
-            <div class="matchrow glass"><span class="matchrow__av">🛵</span><span class="matchrow__t"><b>Elif D.</b><span>Beşiktaş · Premium</span></span><span class="matchrow__score">%91</span></div>
-          </div>
-        </div>
-
-        <div class="feat feat--rev reveal">
-          <div class="feat__body">
-            <span class="feat__tag">🗺️ Fırsat Haritası</span>
-            <h3 class="feat__t">Fırsatlar ve yetenekler haritada</h3>
-            <p class="feat__d">İşletmeler bölgelerindeki doğrulanmış kuryeleri, kuryeler çevrelerindeki açık iş fırsatlarını ve kurye topluluklarını haritada görür. Bir teslimat takibi değil — fırsat keşfi.</p>
-            <ul class="feat__list">
-              <li><span class="ck">✓</span> Kurye arayan işletmeler</li>
-              <li><span class="ck">✓</span> Açık iş fırsatları</li>
-              <li><span class="ck">✓</span> Bölgesel yetenek yoğunluğu</li>
-            </ul>
-          </div>
-          <div class="feat__media">
-            <div class="minimap" style="height:100%;min-height:280px" id="minimap2">
-              <div class="minimap__grid"></div>
-              <svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice" id="mapsvg2" aria-hidden="true"></svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ BENTO ============ -->
-    <section class="section">
-      <div class="container">
-        <div class="sec-head reveal">
-          <span class="eyebrow">Platform Yetenekleri</span>
-          <h2 class="sec-title">Kariyer ve işe alımın <span class="grad-text">her aşaması</span></h2>
-          <p class="sec-lead">Kuryeler ve işverenler için premium düzeyde araçlar.</p>
-        </div>
-        <div class="bento">
-          <article class="bcard bcard--w2 bcard--h2 reveal">
-            <span class="bcard__spot"></span>
-            <div class="bcard__ic">🌐</div>
-            <div class="bcard__t">Kurye Ağı</div>
-            <p class="bcard__d">Doğrulanmış, profesyonel ve sürdürülebilir bir kurye topluluğu.</p>
-            <svg class="bcard__viz" viewBox="0 0 400 360" id="bento-net" aria-hidden="true"></svg>
-          </article>
-          <article class="bcard reveal" data-d="1">
-            <span class="bcard__spot"></span><div class="bcard__ic">📊</div><div class="bcard__t">Kariyer Analizi</div>
-            <div class="spark"><i style="animation-delay:0s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.4s"></i><i style="animation-delay:.6s"></i><i style="animation-delay:.8s"></i><i style="animation-delay:1s"></i><i style="animation-delay:1.2s"></i></div>
-          </article>
-          <article class="bcard reveal" data-d="2"><span class="bcard__spot"></span><div class="bcard__ic">🏢</div><div class="bcard__t">Ekip & İşe Alım</div><p class="bcard__d">Firmalar için yetenek.</p></article>
-          <article class="bcard reveal" data-d="1"><span class="bcard__spot"></span><div class="bcard__ic">🎯</div><div class="bcard__t">Akıllı Öneriler</div><p class="bcard__d">AI destekli kurye-iş eşleşmeleri.</p></article>
-          <article class="bcard reveal" data-d="2"><span class="bcard__spot"></span><div class="bcard__ic">🏆</div><div class="bcard__t">Performans Skoru</div><p class="bcard__d">Başarıya dayalı seviye.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ RATING TIERS ============ -->
-    <section class="section" id="seviye">
-      <div class="container">
-        <div class="sec-head reveal">
-          <span class="eyebrow">Kurye Seviye Sistemi</span>
-          <h2 class="sec-title">Başarıyla <span class="grad-text">yüksel</span></h2>
-          <p class="sec-lead">Tamamlanan işler, puanlar ve doğrulamalarla ilerleyen ödül odaklı kariyer seviyesi.</p>
-        </div>
-        <div class="tiers">
-          <article class="tier reveal" data-d="1">
-            <div class="tier__badge">🥉</div>
-            <h3 class="tier__name">Standart</h3>
-            <p class="tier__d">Ekosisteme ilk adım</p>
-            <div class="tier__bar"><i data-fill="42"></i></div>
-            <ul class="tier__feats">
-              <li><span class="ck">✓</span> Profil ve havuza erişim</li>
-              <li><span class="ck">✓</span> Teklif al ve gönder</li>
-              <li><span class="ck">✓</span> Temel performans takibi</li>
-            </ul>
-          </article>
-          <article class="tier tier--feat reveal" data-d="2">
-            <span class="tier__crown">EN POPÜLER</span>
-            <div class="tier__badge is-pro">🥈</div>
-            <h3 class="tier__name">Profesyonel</h3>
-            <p class="tier__d">Kanıtlanmış güven</p>
-            <div class="tier__bar"><i data-fill="74"></i></div>
-            <ul class="tier__feats">
-              <li><span class="ck">✓</span> Doğrulanmış rozet</li>
-              <li><span class="ck">✓</span> Eşleşmede öncelik</li>
-              <li><span class="ck">✓</span> Gelişmiş itibar profili</li>
-              <li><span class="ck">✓</span> Daha fazla iş fırsatı</li>
-            </ul>
-          </article>
-          <article class="tier reveal" data-d="3">
-            <div class="tier__badge is-prem">🥇</div>
-            <h3 class="tier__name">Premium</h3>
-            <p class="tier__d">Ağın en üst seviyesi</p>
-            <div class="tier__bar"><i data-fill="100"></i></div>
-            <ul class="tier__feats">
-              <li><span class="ck">✓</span> En yüksek eşleşme önceliği</li>
-              <li><span class="ck">✓</span> Premium itibar vitrini</li>
-              <li><span class="ck">✓</span> Öne çıkan profil yerleşimi</li>
-              <li><span class="ck">✓</span> Kurumsal iş bağlantıları</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ TRUST ============ -->
-    <section class="section">
-      <div class="container">
-        <div class="sec-head reveal">
-          <span class="eyebrow">Güven & Güvenlik</span>
-          <h2 class="sec-title">Güven üzerine <span class="grad-text">kurulu</span> bir ağ</h2>
-        </div>
-        <div class="trust-grid">
-          <article class="trustc reveal" data-d="1"><div class="trustc__ic">✅</div><h3 class="trustc__t">Doğrulanmış Kimlik (KYC)</h3><p class="trustc__d">Kimlik ve belge doğrulamasından geçmiş güvenilir profiller; sahte hesaplara karşı koruma.</p></article>
-          <article class="trustc reveal" data-d="2"><div class="trustc__ic">🔒</div><h3 class="trustc__t">Güvenli İletişim & Altyapı</h3><p class="trustc__d">İletişim bilgileri yalnızca anlaşma sonrası paylaşılır; veri koruması temel tasarım ilkesi.</p></article>
-          <article class="trustc reveal" data-d="3"><div class="trustc__ic">🏅</div><h3 class="trustc__t">Performans Takibi</h3><p class="trustc__d">Puan ve değerlendirmeyle kalite sürekli ölçülür.</p></article>
-          <article class="trustc reveal" data-d="1"><div class="trustc__ic">🛡️</div><h3 class="trustc__t">İşletme Koruması</h3><p class="trustc__d">İşletmeler yalnızca doğrulanmış ağ ile çalışır.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ CTA ============ -->
-    <section class="section">
-      <div class="container">
-        <div class="cta reveal">
-          <h2 class="cta__t">Dakikalar içinde <span class="grad-text">ağa katıl</span></h2>
-          <p class="cta__d">İster kurye, ister işletme, ister kurye firması ol — dakikalar içinde profilini oluştur ve ağa katıl.</p>
-          <div class="cta__actions">
-            <a href="giris.html" class="btn btn--primary btn--lg" id="ctaPrimary">Kayıt Ol →</a>
-            <a href="giris.html" class="btn btn--ghost btn--lg">Giriş Yap</a>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ============ FOOTER ============ -->
-  <footer class="foot">
+  <!-- NASIL ÇALIŞIR -->
+  <section class="section">
     <div class="container">
-      <div class="foot__grid">
-        <div class="foot__brand">
-          <a href="index.html" class="brand">
-            <span class="brand__mark"><img src="assets/logo.png" alt="" onerror="this.parentNode.textContent='🛵'"></span>
-            Kuryemi&nbsp;Bul
-          </a>
-          <p>Kuryelerin iş bulduğu, işletmelerin ve esnafların kurye bulduğu profesyonel ağ.</p>
+      <h2 class="section-title">Nasıl Çalışır?</h2>
+      <p class="section-sub">Üç basit adımda doğru eşleşmeyi bul.</p>
+      <div class="how-grid">
+        <div class="how-card">
+          <div class="how-card__num">1</div>
+          <h3>Hesap Oluştur</h3>
+          <p>Kurye, işletme veya kurye firması olarak kayıt ol. Profilini doldur, alanını belirle.</p>
         </div>
-        <div class="foot__col">
-          <h4>Ekosistem</h4>
-          <a href="kuryeler.html">Kurye Havuzu</a>
-          <a href="isletmeler.html">İşletme Havuzu</a>
-          <a href="firmalar.html">Firma Havuzu</a>
-          <a href="harita.html">Canlı Harita</a>
+        <div class="how-card">
+          <div class="how-card__num">2</div>
+          <h3>Keşfet & Başvur</h3>
+          <p>İlanlara başvur, teklif gönder veya kurye havuzunda filtrele. Harita üzerinden bölgesel ara.</p>
         </div>
-        <div class="foot__col">
-          <h4>Platform</h4>
-          <a href="ilanlar.html">İlanlar</a>
-          <a href="giris.html">Giriş / Katıl</a>
-          <a href="#seviye">Seviye Sistemi</a>
+        <div class="how-card">
+          <div class="how-card__num">3</div>
+          <h3>Eşleş & Çalış</h3>
+          <p>Teklifi kabul et, platform üzerinden mesajlaş ve işe başla. Tamamlayınca değerlendir.</p>
         </div>
       </div>
-      <div class="foot__bottom">
-        <span>© 2026 Kuryemi Bul. Tüm hakları saklıdır.</span>
-        <span>Türkiye'nin kurye ekosistemi platformu · <span id="kb-version-tag">Beta</span></span>
+    </div>
+  </section>
+
+  <!-- ROLLER -->
+  <section class="section section--gray" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <div class="container">
+      <h2 class="section-title">Senin için ne yapabiliriz?</h2>
+      <p class="section-sub">Her rol için özel panel ve araçlar.</p>
+      <div class="role-grid">
+        <div class="role-item">
+          <div class="role-item__ico">🛵</div>
+          <div class="role-item__name">Kuryeyim</div>
+          <p class="role-item__desc">İlanlara başvur, profilini öne çıkar, teklif al ve kariyer seviyeni yükselt.</p>
+          <a href="giris.html?mode=register" class="btn btn--primary btn--sm">Kurye olarak katıl</a>
+        </div>
+        <div class="role-item">
+          <div class="role-item__ico">🏪</div>
+          <div class="role-item__name">İşletmeyim</div>
+          <p class="role-item__desc">Kurye havuzunu tara, ilan ver, teklif gönder. Doğrulanmış kuryeyle çalış.</p>
+          <a href="giris.html?mode=register" class="btn btn--primary btn--sm">İşletme olarak katıl</a>
+        </div>
+        <div class="role-item">
+          <div class="role-item__ico">🏢</div>
+          <div class="role-item__name">Kurye Firmasıyım</div>
+          <p class="role-item__desc">Kurye kadronuzu yönetin, işletmelere toplu hizmet sunun.</p>
+          <a href="giris.html?mode=register" class="btn btn--primary btn--sm">Firma olarak katıl</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container container--sm">
+      <h2>Hemen başla, ücretsiz</h2>
+      <p>Hesap oluşturmak 2 dakika alır. Kredi kartı gerekmez.</p>
+      <div class="hero-cta">
+        <a href="giris.html?mode=register" class="btn btn--primary btn--xl">Hesap Oluştur</a>
+        <a href="giris.html" class="btn btn--ghost btn--xl">Giriş Yap</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="landing-footer">
+    <div class="container">
+      <div class="footer-row">
+        <span>© 2025 KuryemiBul</span>
+        <div class="footer-links">
+          <a href="kvkk.html">KVKK</a>
+          <a href="gizlilik.html">Gizlilik</a>
+          <a href="sartlar.html">Şartlar</a>
+          <a href="cerez.html">Çerez</a>
+        </div>
       </div>
     </div>
   </footer>
 
+  <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data.js"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/landing.js"></script>
+  <script src="assets/js/components.js"></script>
   <script>
-    fetch('/version.json?_=' + Date.now())
-      .then(function(r) { return r.json(); })
-      .then(function(v) {
-        var el = document.getElementById('kb-version-tag');
-        if (el) el.textContent = 'v' + v.version + '.' + v.build;
-      })
-      .catch(function() {});
+  /* Zaten giriş yapılmışsa panele yönlendir */
+  (async function () {
+    if (!window.SB || !SB.isOn()) return;
+    try {
+      var user = await SB.getUser();
+      if (user) {
+        var profile = await SB.myProfile();
+        var role = profile && profile.role;
+        if (role && window.KB) location.href = KB.roleToPanel(role);
+      }
+    } catch (e) {}
+  })();
   </script>
 </body>
 </html>

@@ -1,382 +1,121 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Ayarlar · Kuryemi Bul</title>
-    <meta name="description" content="Uygulama ayarları: görünüm, bildirimler, gizlilik ve hesap yönetimi.">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">    <style>
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 16px 0;
-            border-bottom: 1px solid var(--line);
-        }
-        .setting-row:last-child { border-bottom: none; }
-        .setting-label { font-weight: 700; font-size: .95rem; margin-bottom: 3px; }
-        .setting-desc { font-size: .82rem; color: var(--muted); }
-        .setting-control { flex-shrink: 0; }
-
-        /* Toggle switch */
-        .toggle-switch { position: relative; display: inline-block; width: 46px; height: 26px; cursor: pointer; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
-        .toggle-switch__track {
-            position: absolute; inset: 0; border-radius: 999px;
-            background: var(--line); transition: background .2s;
-        }
-        .toggle-switch__track::after {
-            content: ''; position: absolute; left: 3px; top: 3px;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: #fff; transition: transform .2s;
-        }
-        .toggle-switch input:checked + .toggle-switch__track { background: var(--accent); }
-        .toggle-switch input:checked + .toggle-switch__track::after { transform: translateX(20px); }
-        .toggle-switch input:disabled + .toggle-switch__track { opacity: .4; cursor: not-allowed; }
-
-        .danger-box { border: 1px solid rgba(239,68,68,0.3) !important; }
-        .danger-box h3 { color: #f87171 !important; }
-        .btn--danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-        .btn--danger:hover { background: rgba(239,68,68,0.25); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayarlar · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .settings-section { margin-bottom: 32px; }
+    .settings-section__title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 8px; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 4px; }
+    .settings-row__left { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+    .settings-row__sub { font-size: 0.8rem; color: var(--text-2); margin-top: 2px; }
+    .toggle-sw { position: relative; width: 42px; height: 24px; }
+    .toggle-sw input { opacity: 0; width: 0; height: 0; }
+    .toggle-sw__track { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: background .2s; cursor: pointer; }
+    .toggle-sw input:checked + .toggle-sw__track { background: var(--primary); }
+    .toggle-sw__track::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
+    .toggle-sw input:checked + .toggle-sw__track::after { transform: translateX(18px); }
+    .danger-zone { border: 1px solid #fee2e2; border-radius: var(--radius-lg); padding: 20px; }
+    .danger-zone h3 { color: #dc2626; font-size: 0.95rem; margin-bottom: 4px; }
+    .danger-zone p { font-size: 0.85rem; color: var(--text-2); margin-bottom: 14px; }
+  </style>
 </head>
-<body class="ayarlar-page">
-    <div id="app-header"></div>
+<body>
 
-    <section class="page-head">
-        <div class="container">
-            <h1>⚙️ Ayarlar</h1>
-            <p>Uygulama tercihlerin, bildirimler ve hesap yönetimi.</p>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Ayarlar</h1>
+      <p class="page-sub">Hesap ve bildirim tercihlerinizi yönetin.</p>
+    </div>
+
+    <!-- Profil -->
+    <div class="settings-section">
+      <div class="settings-section__title">Profil</div>
+      <a class="settings-row" href="profil-duzenle.html" style="text-decoration:none;color:inherit">
+        <div class="settings-row__left">
+          Profili Düzenle
+          <div class="settings-row__sub">Ad, konum, araç, fotoğraf</div>
         </div>
-    </section>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+    </div>
 
-    <main class="section--sm">
-        <div class="container">
-            <div class="dash" id="ayarlar-dash">
-                <nav class="dash__nav">
-                    <button data-tab="gorunum" class="is-active">🎨 Görünüm</button>
-                    <button data-tab="bildirimler">🔔 Bildirimler</button>
-                    <button data-tab="gizlilik">🔒 Gizlilik</button>
-                    <button data-tab="hesap">👤 Hesap</button>
-                </nav>
-
-                <div>
-                    <!-- ─── Görünüm ─── -->
-                    <section id="panel-gorunum" class="dash__panel is-active">
-                        <div class="panel-box">
-                            <h3>🎨 Görünüm Ayarları</h3>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Tema</div>
-                                    <div class="setting-desc">Koyu ya da açık renk teması seç</div>
-                                </div>
-                                <div class="setting-control">
-                                    <div class="a11y-seg" id="themeSegs">
-                                        <button type="button" data-theme="dark">🌙 Koyu</button>
-                                        <button type="button" data-theme="light">☀️ Açık</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Yazı Boyutu</div>
-                                    <div class="setting-desc">Ekrandaki yazıların büyüklüğünü ayarla</div>
-                                </div>
-                                <div class="setting-control">
-                                    <div class="a11y-seg" id="fontSegs">
-                                        <button type="button" data-fs="sm">A−</button>
-                                        <button type="button" data-fs="md">A</button>
-                                        <button type="button" data-fs="lg">A+</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Yüksek Kontrast</div>
-                                    <div class="setting-desc">Görme güçlüğü çekenler için daha belirgin renkler</div>
-                                </div>
-                                <div class="setting-control">
-                                    <label class="toggle-switch" aria-label="Yüksek kontrast">
-                                        <input type="checkbox" id="contrastToggle">
-                                        <span class="toggle-switch__track"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- ─── Bildirimler ─── -->
-                    <section id="panel-bildirimler" class="dash__panel">
-                        <div class="panel-box">
-                            <h3>🔔 Bildirim Ayarları</h3>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Anlık Bildirimler (Push)</div>
-                                    <div class="setting-desc" id="pushDesc">Teklif, başvuru ve mesaj bildirimlerini tarayıcıdan al</div>
-                                </div>
-                                <div class="setting-control">
-                                    <button type="button" class="btn btn--sm btn--primary" id="pushPermBtn">Yükleniyor…</button>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Yeni Teklif</div>
-                                    <div class="setting-desc">Sana yeni bir iş teklifi geldiğinde bildir</div>
-                                </div>
-                                <div class="setting-control">
-                                    <label class="toggle-switch" aria-label="Teklif bildirimi">
-                                        <input type="checkbox" id="notifOffer" checked>
-                                        <span class="toggle-switch__track"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Başvuru Sonucu</div>
-                                    <div class="setting-desc">Başvurunun kabul/red edildiğinde bildir</div>
-                                </div>
-                                <div class="setting-control">
-                                    <label class="toggle-switch" aria-label="Başvuru bildirimi">
-                                        <input type="checkbox" id="notifApplication" checked>
-                                        <span class="toggle-switch__track"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Yeni Mesaj</div>
-                                    <div class="setting-desc">Sana mesaj gönderildiğinde bildir</div>
-                                </div>
-                                <div class="setting-control">
-                                    <label class="toggle-switch" aria-label="Mesaj bildirimi">
-                                        <input type="checkbox" id="notifMessage" checked>
-                                        <span class="toggle-switch__track"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">KYC Doğrulama</div>
-                                    <div class="setting-desc">Kimlik doğrulama sonucu geldiğinde bildir</div>
-                                </div>
-                                <div class="setting-control">
-                                    <label class="toggle-switch" aria-label="KYC bildirimi">
-                                        <input type="checkbox" id="notifKyc" checked>
-                                        <span class="toggle-switch__track"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- ─── Gizlilik ─── -->
-                    <section id="panel-gizlilik" class="dash__panel">
-                        <div class="panel-box">
-                            <h3>🔒 Gizlilik Ayarları</h3>
-                            <div class="setting-row">
-                                <div>
-                                    <div class="setting-label">Profilimi Listele</div>
-                                    <div class="setting-desc">Profilin kurye / işletme havuzunda görünsün. Kapatırsan seni kimse bulamaz.</div>
-                                </div>
-                                <div class="setting-control">
-                                    <label class="toggle-switch" aria-label="Profil görünürlüğü">
-                                        <input type="checkbox" id="yayindaToggle">
-                                        <span class="toggle-switch__track"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <p class="pcard__sub mt-16">
-                                Kişisel verilerinizin işlenmesi hakkında bilgi almak için
-                                <a href="kvkk.html">KVKK bilgilendirmemizi</a> inceleyebilirsiniz.
-                            </p>
-                        </div>
-                    </section>
-
-                    <!-- ─── Hesap ─── -->
-                    <section id="panel-hesap" class="dash__panel">
-                        <div class="panel-box">
-                            <h3>👤 Hesap Bilgileri</h3>
-                            <div id="hesapBilgi">
-                                <p class="pcard__sub">Yükleniyor…</p>
-                            </div>
-                            <div class="mt-24" style="display:flex;gap:12px;flex-wrap:wrap">
-                                <a href="sifre-sifirla.html" class="btn btn--light btn--sm">🔑 Şifre Değiştir</a>
-                                <a href="profil-duzenle.html" class="btn btn--light btn--sm">✏️ Profili Düzenle</a>
-                            </div>
-                        </div>
-                        <div class="panel-box mt-16 danger-box">
-                            <h3>⚠️ Tehlikeli Bölge</h3>
-                            <p class="pcard__sub">Hesabını silersen tüm verilen kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
-                            <button type="button" class="btn btn--sm btn--danger mt-16" id="deleteAccountBtn">Hesabımı Sil</button>
-                        </div>
-                    </section>
-                </div>
-            </div>
+    <!-- Bildirimler -->
+    <div class="settings-section">
+      <div class="settings-section__title">Bildirimler</div>
+      <div class="settings-row">
+        <div class="settings-row__left">
+          E-posta Bildirimleri
+          <div class="settings-row__sub">Teklif ve eşleşme e-postaları</div>
         </div>
-    </main>
+        <label class="toggle-sw"><input type="checkbox" id="toggleEmail" checked><span class="toggle-sw__track"></span></label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row__left">
+          Push Bildirimleri
+          <div class="settings-row__sub">Anlık mesaj ve güncelleme bildirimleri</div>
+        </div>
+        <label class="toggle-sw"><input type="checkbox" id="togglePush" checked><span class="toggle-sw__track"></span></label>
+      </div>
+    </div>
 
-    <div id="app-footer"></div>
+    <!-- Gizlilik -->
+    <div class="settings-section">
+      <div class="settings-section__title">Gizlilik</div>
+      <div class="settings-row">
+        <div class="settings-row__left">
+          Profili Herkese Açık
+          <div class="settings-row__sub">Kapalıysa havuzda görünmezsiniz</div>
+        </div>
+        <label class="toggle-sw"><input type="checkbox" id="togglePublic" checked><span class="toggle-sw__track"></span></label>
+      </div>
+    </div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script>
-    (function() {
-        /* ── Tab switching ── */
-        document.querySelector('.dash__nav').addEventListener('click', function(e) {
-            var btn = e.target.closest('[data-tab]');
-            if (!btn) return;
-            document.querySelectorAll('.dash__nav button').forEach(function(b) { b.classList.toggle('is-active', b === btn); });
-            var tab = btn.dataset.tab;
-            document.querySelectorAll('.dash__panel').forEach(function(p) { p.classList.toggle('is-active', p.id === 'panel-' + tab); });
-        });
+    <!-- Güvenlik -->
+    <div class="settings-section">
+      <div class="settings-section__title">Güvenlik</div>
+      <div class="settings-row">
+        <div class="settings-row__left">
+          Şifre Değiştir
+          <div class="settings-row__sub">Hesap parolanızı güncelleyin</div>
+        </div>
+        <a href="sifre-sifirla.html" class="btn btn--ghost btn--sm">Değiştir</a>
+      </div>
+    </div>
 
-        /* ── Tema ── */
-        function syncThemeSegs() {
-            var cur = localStorage.getItem('kb_theme') === 'light' ? 'light' : 'dark';
-            document.querySelectorAll('#themeSegs [data-theme]').forEach(function(b) {
-                b.classList.toggle('is-on', b.dataset.theme === cur);
-            });
-        }
-        document.getElementById('themeSegs').addEventListener('click', function(e) {
-            var b = e.target.closest('[data-theme]');
-            if (!b) return;
-            var next = b.dataset.theme;
-            localStorage.setItem('kb_theme', next);
-            document.documentElement.setAttribute('data-theme', next);
-            syncThemeSegs();
-            var tt = document.getElementById('themeToggle');
-            if (tt) tt.textContent = next === 'light' ? '🌙' : '☀️';
-        });
-        syncThemeSegs();
+    <!-- Hesap -->
+    <div class="settings-section">
+      <div class="settings-section__title">Hesap</div>
+      <div class="danger-zone">
+        <h3>Tehlikeli Bölge</h3>
+        <p>Bu işlemler geri alınamaz. Lütfen dikkatli olun.</p>
+        <button class="btn btn--danger btn--sm" id="btnLogout">Çıkış Yap</button>
+      </div>
+    </div>
+  </div>
 
-        /* ── Yazı boyutu ── */
-        function syncFontSegs() {
-            var cur = localStorage.getItem('kb_fontscale') || 'md';
-            document.querySelectorAll('#fontSegs [data-fs]').forEach(function(b) {
-                b.classList.toggle('is-on', b.dataset.fs === cur);
-            });
-        }
-        document.getElementById('fontSegs').addEventListener('click', function(e) {
-            var b = e.target.closest('[data-fs]');
-            if (!b) return;
-            var v = b.dataset.fs;
-            localStorage.setItem('kb_fontscale', v);
-            document.documentElement.setAttribute('data-fontscale', v);
-            syncFontSegs();
-        });
-        syncFontSegs();
+  <div id="app-footer"></div>
 
-        /* ── Yüksek kontrast ── */
-        var contrastToggle = document.getElementById('contrastToggle');
-        contrastToggle.checked = localStorage.getItem('kb_contrast') === '1';
-        contrastToggle.addEventListener('change', function() {
-            var on = contrastToggle.checked;
-            localStorage.setItem('kb_contrast', on ? '1' : '0');
-            document.documentElement.classList.toggle('high-contrast', on);
-        });
-
-        /* ── Push bildirim izni ── */
-        (function() {
-            var btn = document.getElementById('pushPermBtn');
-            var desc = document.getElementById('pushDesc');
-            function update() {
-                if (!('Notification' in window)) {
-                    btn.textContent = 'Desteklenmiyor'; btn.disabled = true; return;
-                }
-                if (Notification.permission === 'granted') {
-                    btn.textContent = '✅ Açık'; btn.disabled = true;
-                    btn.className = 'btn btn--sm';
-                    desc.textContent = 'Anlık bildirimler etkin.';
-                } else if (Notification.permission === 'denied') {
-                    btn.textContent = '🚫 Engellendi'; btn.disabled = true;
-                    desc.textContent = 'Tarayıcı ayarlarından bu siteye bildirim iznini etkinleştir.';
-                    btn.className = 'btn btn--sm';
-                } else {
-                    btn.textContent = '🔔 İzin Ver'; btn.disabled = false;
-                    btn.className = 'btn btn--sm btn--primary';
-                }
-            }
-            update();
-            btn.addEventListener('click', function() {
-                if (Notification.permission !== 'default') return;
-                Notification.requestPermission().then(function(perm) {
-                    update();
-                    if (perm === 'granted' && window.KB && KB.isOnline() && window.SB && SB.savePushSubscription) {
-                        navigator.serviceWorker && navigator.serviceWorker.ready.then(function(reg) {
-                            return reg.pushManager.subscribe({
-                                userVisibleOnly: true,
-                                applicationServerKey: (function(b64) {
-                                    var pad = '='.repeat((4 - b64.length % 4) % 4);
-                                    var raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
-                                    var arr = new Uint8Array(raw.length);
-                                    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-                                    return arr;
-                                })('BFsPHwDgi84H_TC2ObvZ8ou3_HnI-XWUPkIAaz8Z74M16fiPQLHK0UAYXgkCEzG5Bvh8kJWg46O2qKZ4dDTJf1Y')
-                            });
-                        }).then(function(sub) {
-                            return SB.savePushSubscription(sub);
-                        }).then(function() {
-                            if (window.KB) KB.toast('Bildirimler etkinleştirildi!', 'success');
-                        }).catch(function() {});
-                    }
-                });
-            });
-        })();
-
-        /* ── Bildirim tercihleri (localStorage) ── */
-        ['notifOffer', 'notifApplication', 'notifMessage', 'notifKyc'].forEach(function(id) {
-            var el = document.getElementById(id);
-            var stored = localStorage.getItem('kb_' + id);
-            if (stored !== null) el.checked = stored === '1';
-            el.addEventListener('change', function() {
-                localStorage.setItem('kb_' + id, el.checked ? '1' : '0');
-            });
-        });
-
-        /* ── Oturum bağımlı: yayinda + hesap bilgisi ── */
-        KB.ready().then(function() {
-            var s = KB.session();
-            var hesapEl = document.getElementById('hesapBilgi');
-
-            if (s && s.user) {
-                var nm = (s.profile && s.profile.ad) || '';
-                var email = s.user.email || '';
-                var roleLabels = { kurye: 'Kurye', isletme: 'İşletme', firma: 'Kurye Firması' };
-                var role = (s.profile && s.profile.role) || '';
-                hesapEl.innerHTML =
-                    '<div class="setting-row"><div><div class="setting-label">Ad Soyad</div></div><div class="pcard__sub">' + KB.esc(nm) + '</div></div>' +
-                    '<div class="setting-row"><div><div class="setting-label">E-posta</div></div><div class="pcard__sub">' + KB.esc(email) + '</div></div>' +
-                    '<div class="setting-row" style="border:none"><div><div class="setting-label">Hesap Türü</div></div><div class="pcard__sub">' + KB.esc(roleLabels[role] || role) + '</div></div>';
-
-                var yt = document.getElementById('yayindaToggle');
-                if (s.profile) yt.checked = !!s.profile.yayinda;
-                yt.addEventListener('change', function() {
-                    if (!KB.isOnline() || !window.SB) {
-                        KB.toast('Çevrimiçi değilsiniz', 'error'); yt.checked = !yt.checked; return;
-                    }
-                    SB.updateProfile({ yayinda: yt.checked })
-                        .then(function() { KB.toast(yt.checked ? 'Profilin artık listede görünüyor' : 'Profilin gizlendi', 'success'); })
-                        .catch(function() { KB.toast('Kaydedilemedi', 'error'); yt.checked = !yt.checked; });
-                });
-            } else {
-                hesapEl.innerHTML = '<p class="pcard__sub">Hesap bilgilerini görmek için <a href="giris.html">giriş yap</a>.</p>';
-                document.getElementById('yayindaToggle').disabled = true;
-            }
-        });
-
-        /* ── Hesap silme ── */
-        document.getElementById('deleteAccountBtn').addEventListener('click', function() {
-            if (!confirm('Hesabını silmek istediğinden emin misin?\n\nBu işlem geri alınamaz; tüm profil, başvuru ve mesajların silinir.')) return;
-            KB.toast('Bu özellik yakında aktif olacak.', '');
-        });
-    })();
-    </script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.getElementById('btnLogout').addEventListener('click', async function () {
+      if (!confirm('Çıkış yapmak istediğinizden emin misiniz?')) return;
+      if (window.SB && SB.isOn()) await SB.signOut().catch(function(){});
+      location.href = 'giris.html';
+    });
+  </script>
 </body>
 </html>

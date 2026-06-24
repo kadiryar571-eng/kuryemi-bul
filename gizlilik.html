@@ -1,93 +1,61 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gizlilik Politikası · Kuryemi Bul</title>
-    <meta name="description" content="Kuryemi Bul gizlilik politikası: hangi verileri topluyoruz, nasıl kullanıyoruz ve nasıl koruyoruz.">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gizlilik Politikası · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .legal-body { max-width: 720px; margin: 0 auto; }
+    .legal-body h2 { font-size: 1.1rem; font-weight: 700; margin: 28px 0 10px; color: var(--text); }
+    .legal-body p, .legal-body li { font-size: 0.9rem; color: var(--text-2); line-height: 1.75; }
+    .legal-body ul { padding-left: 20px; margin: 8px 0; }
+  </style>
+</head>
 <body>
-    <div id="app-header"></div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main>
-        <article class="legal">
-            <h1>Gizlilik Politikası</h1>
-            <p class="legal__upd">Son güncelleme: 12 Haziran 2026</p>
+  <div class="app-content">
+    <div class="page-header legal-body">
+      <h1>Gizlilik Politikası</h1>
+      <p class="page-sub">Son güncelleme: Haziran 2025</p>
+    </div>
 
-            <div class="legal__note">
-                ⚠️ Bu metin genel bir şablondur. Yürürlüğe almadan önce şirket bilgilerinizi doldurun ve
-                bir hukuk danışmanına gözden geçirtin.
-            </div>
+    <div class="card legal-body" style="padding:32px">
+      <h2>1. Topladığımız Bilgiler</h2>
+      <p>KuryemiBul'a kayıt olduğunuzda ad, e-posta, şehir ve rol bilgilerinizi alırız. Platforma giriş yaptıkça teklif, mesaj ve eşleşme kayıtları oluşur.</p>
 
-            <p>Bu Gizlilik Politikası, Kuryemi Bul ("Platform") olarak kullanıcılarımızın kişisel verilerini
-            nasıl topladığımızı, kullandığımızı, koruduğumuzu ve paylaştığımızı açıklar. Platformu kullanarak
-            bu politikayı kabul etmiş olursunuz.</p>
+      <h2>2. Çerezler</h2>
+      <p>Oturum çerezleri (zorunlu) ve performans çerezleri kullanıyoruz. Üçüncü taraf izleme çerezi bulunmaz. Ayrıntılar için <a href="cerez.html">Çerez Politikası</a>'nı inceleyin.</p>
 
-            <h2>1. Topladığımız Veriler</h2>
-            <ul>
-                <li><b>Hesap verileri:</b> ad-soyad/firma adı, e-posta, telefon, şifre (şifreli saklanır).</li>
-                <li><b>Profil verileri:</b> rol, şehir, bölge, araç, deneyim, açıklama, sertifikalar, kapasite, hizmetler.</li>
-                <li><b>Kimlik doğrulama (KYC):</b> ad-soyad, T.C. kimlik no ve belge görseli; yalnızca doğrulama için, özel ve erişimi kısıtlı şekilde saklanır.</li>
-                <li><b>Konum:</b> girdiğiniz şehir/bölgeden türetilen yaklaşık koordinat.</li>
-                <li><b>Etkileşim verileri:</b> teklifler, başvurular, ihale teklifleri, değerlendirmeler, bildirimler.</li>
-                <li><b>Çerezler/yerel depolama:</b> oturum, tema ve dil tercihleri.</li>
-            </ul>
+      <h2>3. Veri Güvenliği</h2>
+      <p>Verileriniz Supabase altyapısında şifrelenmiş olarak saklanır. Telefon ve e-posta gibi iletişim bilgileri ayrı bir tabloda, satır düzeyinde güvenlik (RLS) ile korunur.</p>
 
-            <h2>2. Verileri Nasıl Kullanırız</h2>
-            <ul>
-                <li>Hesabınızı oluşturmak ve güvenliğini sağlamak.</li>
-                <li>Kurye–işletme–firma eşleşmesini ve teklif/ilan/ihale akışlarını yürütmek.</li>
-                <li>Size bildirim ve e-posta göndermek.</li>
-                <li>Hizmeti iyileştirmek, kötüye kullanımı önlemek ve yasal yükümlülükleri yerine getirmek.</li>
-            </ul>
+      <h2>4. Veri Saklama</h2>
+      <p>Hesabınızı sildiğinizde verileriniz 30 gün içinde kalıcı olarak silinir. Mesaj ve eşleşme kayıtları da bu süre içinde temizlenir.</p>
 
-            <h2>3. İletişim Bilgilerinin Korunması</h2>
-            <p>Telefon ve e-posta adresiniz havuzda herkese açık gösterilmez. Yalnızca bir teklifi karşılıklı
-            kabul ettiğinizde, anlaştığınız tarafla paylaşılır. KYC belgeleriniz yalnızca size ve yetkili
-            yöneticiye görünür.</p>
+      <h2>5. Üçüncü Taraf Hizmetler</h2>
+      <ul>
+        <li><b>Supabase</b> — veritabanı ve kimlik doğrulama</li>
+        <li><b>Google OAuth</b> — isteğe bağlı sosyal giriş</li>
+        <li><b>OpenStreetMap / Leaflet</b> — harita gösterimi</li>
+      </ul>
 
-            <h2>4. Üçüncü Taraf Hizmetler</h2>
-            <p>Hizmeti sunmak için güvenilir sağlayıcılar kullanırız:</p>
-            <ul>
-                <li><b>Supabase</b> — veritabanı, kimlik doğrulama ve dosya barındırma.</li>
-                <li><b>Resend</b> — bildirim ve doğrulama e-postaları.</li>
-                <li><b>Google</b> — "Google ile giriş" seçeneği.</li>
-                <li><b>OpenStreetMap / Nominatim</b> — harita ve adres-koordinat çevirimi.</li>
-            </ul>
-            <p>Bu sağlayıcılar kendi gizlilik politikalarına tabidir.</p>
+      <h2>6. İletişim</h2>
+      <p>Gizlilik ile ilgili sorularınız için: <a href="mailto:gizlilik@kuryemibul.com">gizlilik@kuryemibul.com</a></p>
+    </div>
+  </div>
 
-            <h2>5. Veri Güvenliği</h2>
-            <p>Verileriniz; satır düzeyinde erişim kontrolü (RLS), şifreli iletişim (HTTPS) ve erişim kısıtlamaları
-            ile korunur. Buna rağmen internet üzerinden hiçbir aktarımın %100 güvenli olmadığını hatırlatırız.</p>
+  <div id="app-footer"></div>
 
-            <h2>6. Haklarınız</h2>
-            <p>Verilerinize erişme, düzeltme ve silme haklarına sahipsiniz. Hesabınızı "Profilim → Hesap"
-            bölümünden silebilir; bu durumda profil, iletişim, teklif ve havuz verileriniz kalıcı olarak silinir.
-            Talepleriniz için: <a href="mailto:kadiryar571@gmail.com">kadiryar571@gmail.com</a>.</p>
-
-            <h2>7. Çocukların Gizliliği</h2>
-            <p>Platform 18 yaşından küçükler için tasarlanmamıştır.</p>
-
-            <h2>8. Değişiklikler</h2>
-            <p>Bu politikayı zaman zaman güncelleyebiliriz. Güncel sürüm bu sayfada yayımlanır.</p>
-
-            <p style="margin-top:32px"><a href="kvkk.html">KVKK Aydınlatma Metni</a> ·
-            <a href="cerez.html">Çerez Politikası</a> ·
-            <a href="sartlar.html">Kullanım Şartları</a></p>
-        </article>
-    </main>
-
-    <div id="app-footer"></div>
-
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
 </body>
 </html>

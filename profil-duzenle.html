@@ -1,361 +1,233 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="pe.title">Profilim · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">    <style>
-      /* Rol seçici */
-      .role-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-      .role-pick__btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:14px;
-        border:1px solid var(--ds-stroke,rgba(255,255,255,.1));background:var(--ds-panel,rgba(255,255,255,.05));
-        color:var(--ds-muted,rgba(233,238,250,.5));cursor:pointer;font-family:inherit;font-weight:600;font-size:.85rem;
-        transition:all .18s;min-height:72px}
-      .role-pick__btn .em{font-size:1.5rem;line-height:1}
-      .role-pick__btn:hover{border-color:var(--ds-cyan,#22d3ee);color:var(--ds-text,#f4f6fb)}
-      .role-pick__btn.active{border-color:var(--ds-cyan,#22d3ee);color:var(--ds-cyan,#22d3ee);
-        background:rgba(34,211,238,.08);box-shadow:0 0 0 1px var(--ds-cyan,#22d3ee) inset}
-      /* Avatar yükleyici */
-      .avatar-edit{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0}
-      .avatar-preview{width:96px;height:96px;border-radius:50%;object-fit:cover;
-        border:3px solid rgba(34,211,238,.3);background:var(--ds-panel,rgba(255,255,255,.05));
-        box-shadow:0 0 0 1px rgba(255,255,255,.06)}
-      .avatar-hint{font-size:.78rem;color:var(--ds-muted,rgba(233,238,250,.5));text-align:center}
-      /* Profil edit section card dark */
-      .profile-section{background:var(--ds-panel,rgba(255,255,255,.04)) !important;
-        border:1px solid var(--ds-stroke,rgba(255,255,255,.08)) !important;border-radius:20px !important}
-      .profile-section__title{color:var(--ds-muted,rgba(233,238,250,.5)) !important;font-size:.72rem !important;
-        text-transform:uppercase;letter-spacing:.06em}
-      /* Form fields touch size */
-      @media(max-width:680px){
-        .form-grid{display:flex;flex-direction:column;gap:10px}
-        .field input,.field select,.field textarea{min-height:50px;font-size:.92rem !important;
-          border-radius:12px !important;padding:12px 14px !important}
-        .btn--block{min-height:52px;border-radius:14px !important;font-size:.95rem !important}
-      }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profilimi Düzenle · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .edit-grid .field--full { grid-column: 1 / -1; }
+    .avatar-upload { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+    .avatar-upload__av { width: 80px; height: 80px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .avatar-upload__av img { width: 100%; height: 100%; object-fit: cover; }
+    .role-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+    .role-pill { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: 2px solid var(--border); border-radius: 24px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: border-color .15s, background .15s; background: var(--surface); }
+    .role-pill input { display: none; }
+    .role-pill.selected { border-color: var(--primary); background: #f0f4ff; color: var(--primary); }
+    @media (max-width: 600px) { .edit-grid { grid-template-columns: 1fr; } .edit-grid .field--full { grid-column: 1; } }
+  </style>
 </head>
 <body>
-    <div id="app-header"></div>
 
-    <section class="page-head">
-        <div class="container"><h1 data-i18n="pe.title">Profilim</h1><p data-i18n="pe.lead">Bilgilerini doldur; havuzda böyle görüneceksin.</p></div>
-    </section>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main class="section--sm">
-        <div class="container container--narrow">
-            <div class="form-card profile-section">
-                <div class="profile-section__title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Temel Bilgiler
-                </div>
-                <form id="peForm"><p class="pcard__sub">…</p></form>
-                <p class="form-success" id="peMsg" hidden></p>
-                <p class="mt-24" id="peView" hidden><a class="btn btn--light btn--sm" id="peViewLink" href="#" data-i18n="pe.viewPublic">Herkese açık profilimi gör →</a></p>
-            </div>
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Profilimi Düzenle</h1>
+      <p class="page-sub">Bilgilerinizi güncelleyin, havuzda daha iyi görünün.</p>
+    </div>
 
-            <div class="form-card profile-section mt-24" id="kycCard" hidden>
-                <div class="profile-section__title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                    Kimlik Doğrulama
-                </div>
-                <h3 style="margin-bottom:6px" data-i18n="kyc.title">🪪 Kimlik Doğrulama</h3>
-                <p class="pcard__sub" data-i18n="kyc.lead">Profilini doğrulat, havuzda "✓ Doğrulanmış" rozetiyle öne çık.</p>
-                <div id="kycBody" class="mt-24"></div>
-            </div>
+    <div class="card" style="max-width:680px;padding:28px">
+      <div id="editStatus"></div>
 
-            <div class="form-card profile-section mt-24" id="accCard" hidden>
-                <div class="profile-section__title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>
-                    Hesap
-                </div>
-                <h3 style="margin-bottom:16px" data-i18n="acc.title">Hesap</h3>
-                <div class="field"><label for="accPass" data-i18n="acc.changePass">Şifre Değiştir</label>
-                    <input type="password" id="accPass" minlength="6" data-i18n-ph="acc.newPass" placeholder="Yeni şifre (en az 6 karakter)"></div>
-                <button type="button" id="accPassBtn" class="btn btn--light btn--sm mt-24" data-i18n="acc.changePassBtn">Şifreyi Güncelle</button>
-                <p class="form-success" id="accMsg" hidden></p>
-
-                <hr style="border:none;border-top:1px solid var(--line);margin:26px 0">
-                <h4 style="color:var(--danger);margin-bottom:6px" data-i18n="acc.danger">Tehlikeli alan</h4>
-                <p class="pcard__sub" data-i18n="acc.deleteDesc">Profilin, iletişim bilgilerin, tekliflerin ve havuzun kalıcı olarak silinir.</p>
-                <button type="button" id="accDelBtn" class="btn btn--ghost btn--sm mt-24" data-i18n="acc.deleteData">Profil verilerimi sil</button>
-            </div>
+      <!-- Avatar -->
+      <div class="avatar-upload">
+        <div class="avatar-upload__av" id="editAv">?</div>
+        <div>
+          <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">Profil Fotoğrafı</div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:10px">JPG veya PNG, en fazla 2MB</div>
+          <label class="btn btn--ghost btn--sm" style="cursor:pointer">
+            Fotoğraf Yükle
+            <input type="file" id="avatarInput" accept="image/*" style="display:none">
+          </label>
         </div>
-    </main>
+      </div>
 
-    <div id="app-footer"></div>
+      <!-- Rol -->
+      <div class="field field--full" style="margin-bottom:20px">
+        <label>Rol</label>
+        <div class="role-row" id="roleRow">
+          <label class="role-pill" data-role="kurye"><input type="radio" name="role" value="kurye"> 🛵 Kurye</label>
+          <label class="role-pill" data-role="isletme"><input type="radio" name="role" value="isletme"> 🏪 İşletme</label>
+          <label class="role-pill" data-role="firma"><input type="radio" name="role" value="firma"> 🏢 Firma</label>
+        </div>
+      </div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-    (function () {
-        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
-        var form = document.getElementById("peForm");
-        var msg = document.getElementById("peMsg");
+      <form id="editForm">
+        <div class="edit-grid">
+          <div class="field field--required">
+            <label for="editAd">Ad Soyad / İşletme Adı</label>
+            <input type="text" id="editAd" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="editSehir">Şehir</label>
+            <input type="text" id="editSehir" placeholder="İstanbul" autocomplete="off">
+          </div>
+          <div class="field" id="aracField">
+            <label for="editArac">Araç Türü</label>
+            <select id="editArac">
+              <option value="">— Seçiniz —</option>
+              <option>Motosiklet</option>
+              <option>Bisiklet</option>
+              <option>Scooter</option>
+              <option>Araba</option>
+              <option>Yaya</option>
+              <option>Diğer</option>
+            </select>
+          </div>
+          <div class="field" id="deneyimField">
+            <label for="editDeneyim">Deneyim (Yıl)</label>
+            <input type="number" id="editDeneyim" min="0" max="50" placeholder="0">
+          </div>
+          <div class="field" id="turField">
+            <label for="editTur">İşletme Türü</label>
+            <input type="text" id="editTur" placeholder="Restoran, Market, vb." autocomplete="off">
+          </div>
+          <div class="field" id="kapasiteField">
+            <label for="editKapasite">Kurye Kapasitesi</label>
+            <input type="number" id="editKapasite" min="0" max="9999" placeholder="0">
+          </div>
+          <div class="field field--full">
+            <label for="editAciklama">Hakkında</label>
+            <textarea id="editAciklama" rows="4" placeholder="Kendinizi veya işletmenizi kısaca tanıtın…"></textarea>
+          </div>
+        </div>
 
-        function field(id, label, val, type) {
-            return '<div class="field"><label for="' + id + '">' + label + '</label>' +
-                '<input id="' + id + '" type="' + (type || "text") + '" value="' + (val == null ? "" : String(val).replace(/"/g, "&quot;")) + '"></div>';
+        <div style="margin-top:8px">
+          <button type="submit" class="btn btn--primary" id="editSave">Kaydet</button>
+          <span id="editMsg" style="margin-left:14px;font-size:0.875rem;display:none"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (async function () {
+    if (!window.KB) return;
+    await KB.ready();
+
+    var profile = null;
+    var selectedRole = 'kurye';
+
+    function setMsg(text, isError) {
+      var el = document.getElementById('editMsg');
+      el.style.display = text ? 'inline' : 'none';
+      el.style.color = isError ? '#dc2626' : '#16a34a';
+      el.textContent = text;
+    }
+
+    function updateRoleUI(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-pill').forEach(function (p) {
+        p.classList.toggle('selected', p.getAttribute('data-role') === role);
+        var inp = p.querySelector('input');
+        if (inp) inp.checked = p.getAttribute('data-role') === role;
+      });
+      // Rol-özel alanlar
+      var isKurye = role === 'kurye';
+      var isFirma = role === 'firma';
+      var isIsletme = role === 'isletme';
+      document.getElementById('aracField').style.display = isKurye ? '' : 'none';
+      document.getElementById('deneyimField').style.display = isKurye ? '' : 'none';
+      document.getElementById('turField').style.display = isIsletme ? '' : 'none';
+      document.getElementById('kapasiteField').style.display = isFirma ? '' : 'none';
+    }
+
+    // Rol pill tıklaması
+    document.querySelectorAll('.role-pill').forEach(function (p) {
+      p.addEventListener('click', function () { updateRoleUI(p.getAttribute('data-role')); });
+    });
+
+    // Profili yükle
+    try {
+      if (window.SB && SB.isOn()) {
+        profile = await SB.myProfile();
+      }
+    } catch (e) {}
+
+    if (profile) {
+      updateRoleUI(profile.role || 'kurye');
+      document.getElementById('editAd').value = profile.ad || '';
+      document.getElementById('editSehir').value = profile.sehir || '';
+      document.getElementById('editArac').value = profile.arac || '';
+      document.getElementById('editDeneyim').value = profile.deneyim || '';
+      document.getElementById('editTur').value = profile.tur || '';
+      document.getElementById('editKapasite').value = profile.kapasite || '';
+      document.getElementById('editAciklama').value = profile.aciklama || '';
+      var av = document.getElementById('editAv');
+      if (profile.avatar_url) {
+        av.innerHTML = '<img src="' + profile.avatar_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      } else if (window.KB && KB.initials) {
+        av.textContent = KB.initials(profile.ad || '?');
+      }
+    } else {
+      updateRoleUI('kurye');
+    }
+
+    // Avatar yükleme önizlemesi
+    document.getElementById('avatarInput').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        document.getElementById('editAv').innerHTML = '<img src="' + ev.target.result + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Form submit
+    document.getElementById('editForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('editSave');
+      btn.disabled = true;
+      btn.textContent = 'Kaydediliyor…';
+      setMsg('', false);
+
+      var fields = {
+        role: selectedRole,
+        ad: document.getElementById('editAd').value.trim(),
+        sehir: document.getElementById('editSehir').value.trim(),
+        arac: document.getElementById('editArac').value,
+        deneyim: parseInt(document.getElementById('editDeneyim').value) || 0,
+        tur: document.getElementById('editTur').value.trim(),
+        kapasite: parseInt(document.getElementById('editKapasite').value) || 0,
+        aciklama: document.getElementById('editAciklama').value.trim()
+      };
+
+      // Avatar dosyası
+      var avatarFile = document.getElementById('avatarInput').files[0];
+      if (avatarFile && window.SB && SB.uploadAvatar) {
+        try { var url = await SB.uploadAvatar(avatarFile); if (url) fields.avatar_url = url; } catch (ae) {}
+      }
+
+      try {
+        if (window.SB && SB.isOn()) {
+          await SB.updateMyProfile(fields);
+          setMsg('Profil güncellendi!', false);
+        } else {
+          setMsg('Çevrimdışı modda değişiklik kaydedilemez.', true);
         }
-        function area(id, label, val) {
-            return '<div class="field field--full"><label for="' + id + '">' + label + '</label>' +
-                '<textarea id="' + id + '" rows="2">' + (val == null ? "" : String(val)) + '</textarea></div>';
-        }
-        function levelSelect(val) {
-            var opts = ["standart", "profesyonel", "premium"].map(function (s) {
-                return '<option value="' + s + '"' + (s === val ? " selected" : "") + '>' + t("level." + s) + '</option>';
-            }).join("");
-            return '<div class="field"><label for="pSeviye">' + t("pe.level") + '</label><select id="pSeviye">' + opts + '</select></div>';
-        }
-        function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
-        function csv(id) { return val(id).split(",").map(function (s) { return s.trim(); }).filter(Boolean); }
-        function intv(id) { return parseInt(val(id), 10) || 0; }
+      } catch (err) {
+        setMsg((err && err.message) || 'Bir hata oluştu.', true);
+      }
 
-        // Şehir/bölge -> koordinat (OpenStreetMap Nominatim, ücretsiz)
-        async function geocode(q) {
-            try {
-                var r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=tr&accept-language=tr&q=" + encodeURIComponent(q));
-                var j = await r.json();
-                if (j && j[0]) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
-            } catch (e) {}
-            return null;
-        }
-
-        async function start() {
-            if (window.KB && KB.ready) await KB.ready();
-            if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli (demo modu).</p>'; return; }
-            if (!KB.isAuthed()) { form.innerHTML = '<p class="empty">' + t("pe.loginRequired") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>'; return; }
-
-            // Hesap kartı (şifre değiştir + verilerimi sil)
-            var accCard = document.getElementById("accCard");
-            if (accCard) {
-                accCard.hidden = false;
-                var accMsg = document.getElementById("accMsg");
-                document.getElementById("accPassBtn").addEventListener("click", async function () {
-                    var np = document.getElementById("accPass").value;
-                    if (np.length < 6) { accMsg.hidden = false; accMsg.style.color = "#c0392b"; accMsg.textContent = t("sr.short"); return; }
-                    try {
-                        var r = await SB.changePassword(np);
-                        if (r && r.error) throw r.error;
-                        accMsg.hidden = false; accMsg.style.color = ""; accMsg.textContent = t("acc.passChanged");
-                        document.getElementById("accPass").value = "";
-                    } catch (e) { accMsg.hidden = false; accMsg.style.color = "#c0392b"; accMsg.textContent = e.message || t("auth.errGeneric"); }
-                });
-                document.getElementById("accDelBtn").addEventListener("click", async function () {
-                    if (!confirm(t("acc.deleteConfirm"))) return;
-                    try { await SB.deleteMyData(); alert(t("acc.deleted")); location.href = "index.html"; }
-                    catch (e) { alert(e.message || t("auth.errGeneric")); }
-                });
-            }
-
-            var p = (KB.session() && KB.session().profile) || await SB.myProfile();
-            var role = p.role;
-
-            // KYC kartı
-            var kycCard = document.getElementById("kycCard");
-            if (kycCard) {
-                kycCard.hidden = false;
-                var kycBody = document.getElementById("kycBody");
-                var d = p.dogrulama || "none";
-                if (d === "verified") {
-                    kycBody.innerHTML = '<p class="form-success">✓ ' + t("kyc.verified") + '</p>';
-                } else if (d === "pending") {
-                    kycBody.innerHTML = '<p class="pcard__sub">⏳ ' + t("kyc.pending") + '</p>';
-                } else {
-                    kycBody.innerHTML =
-                        (d === "rejected" ? '<p class="pcard__sub" style="color:#c0392b">' + t("kyc.rejected") + '</p>' : '') +
-                        '<div class="form-grid">' +
-                        '<div class="field"><label>' + t("kyc.adsoyad") + '</label><input id="kycAd"></div>' +
-                        '<div class="field"><label>' + t("kyc.tc") + '</label><input id="kycTc" maxlength="11" inputmode="numeric"></div>' +
-                        '<div class="field"><label>' + t("kyc.belge") + '</label><select id="kycBelge"><option value="kimlik">' + t("kyc.belgeKimlik") + '</option><option value="ehliyet">' + t("kyc.belgeEhliyet") + '</option></select></div>' +
-                        '<div class="field field--full"><label>' + t("kyc.belgeUpload") + '</label><input id="kycFile" type="file" accept="image/*,application/pdf"></div>' +
-                        '</div>' +
-                        '<button type="button" class="btn btn--primary btn--sm" id="kycSubmit">' + t("kyc.submit") + '</button>' +
-                        '<p class="form-success" id="kycMsg" hidden></p>';
-                    document.getElementById("kycSubmit").addEventListener("click", async function () {
-                        var ad = val("kycAd"), tc = val("kycTc"), belge = val("kycBelge"), msg = document.getElementById("kycMsg");
-                        if (ad.length < 3) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("kyc.adReq"); return; }
-                        if (!/^[0-9]{11}$/.test(tc)) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("kyc.tcReq"); return; }
-                        var fileEl = document.getElementById("kycFile");
-                        var file = fileEl && fileEl.files && fileEl.files[0];
-                        if (file && file.size > 10 * 1024 * 1024) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("pe.photoTooBig"); return; }
-                        try {
-                            var belgeUrl = "";
-                            if (file) { msg.hidden = false; msg.style.color = ""; msg.textContent = t("pe.photoUploading"); belgeUrl = await SB.uploadKycDoc(file); }
-                            await SB.submitKyc({ ad_soyad: ad, tc_no: tc, belge_turu: belge, belge_url: belgeUrl });
-                            msg.hidden = false; msg.style.color = ""; msg.textContent = t("kyc.submitted");
-                            setTimeout(function () { location.reload(); }, 1300);
-                        } catch (e) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = e.message || t("auth.errGeneric"); }
-                    });
-                }
-            }
-            // Kullanıcı rolünü burada seçer (Google/e-posta tüm yeni kullanıcılar için onboarding).
-            var curRole = role || "kurye";
-
-            function roleSegHtml() {
-                var roles = [["kurye", "🛵", t("role.kurye")], ["isletme", "🏪", t("role.isletme")], ["firma", "🏢", t("role.firma")]];
-                var btns = roles.map(function (r) {
-                    return '<button type="button" data-role="' + r[0] + '" class="role-pick__btn' + (r[0] === curRole ? " active" : "") + '">' +
-                        '<span class="em">' + r[1] + '</span>' + r[2] + '</button>';
-                }).join("");
-                return '<div class="field field--full"><label>' + t("auth.role") + '</label>' +
-                    '<div class="role-pick" id="rolePick">' + btns + '</div></div>';
-            }
-
-            function fieldsHtml() {
-                var html = '<div class="form-grid">';
-                var av = p.avatar_url ? String(p.avatar_url).replace(/"/g, "&quot;") : "";
-                html += '<div class="field field--full"><div class="avatar-edit">' +
-                    '<img id="pAvatarImg" class="avatar-preview" alt="" src="' + av + '" onerror="this.removeAttribute(\'src\')">' +
-                    '<label class="btn btn--light btn--sm" id="pAvatarLabel">' + t("pe.uploadPhoto") +
-                    '<input type="file" id="pAvatarFile" accept="image/*" hidden></label>' +
-                    '<button type="button" id="pAvatarNative" class="btn btn--light btn--sm" style="display:none">📷 Fotoğraf Çek</button>' +
-                    '<span class="avatar-hint" id="pAvatarHint"></span>' +
-                    '</div></div>';
-                html += roleSegHtml();
-                html += field("pAd", t("pe.name"), p.ad);
-                html += field("pSehir", t("pe.city"), p.sehir);
-                html += field("pTel", t("pe.phone"), p.telefon);
-
-                if (curRole === "kurye") {
-                    html += field("pArac", t("pe.vehicle"), p.arac);
-                    html += field("pDeneyim", t("pe.exp"), p.deneyim, "number");
-                    html += levelSelect(p.seviye);
-                    html += field("pTamam", t("pe.completed"), p.tamamlanan, "number");
-                    html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
-                    html += field("pCert", t("pe.certs"), (p.sertifikalar || []).join(", "));
-                } else if (curRole === "isletme") {
-                    html += field("pTur", t("pe.type"), p.tur);
-                    html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
-                    html += field("pAcik", t("pe.openListing"), p.acikIlan, "number");
-                    html += field("pIhtiyac", t("pe.need"), p.ihtiyac);
-                } else {
-                    html += field("pBolge", t("pe.regions"), (p.bolgeler || []).join(", "));
-                    html += field("pKapasite", t("pe.capacity"), p.kapasite, "number");
-                    html += field("pHizmet", t("pe.services"), (p.hizmetler || []).join(", "));
-                }
-                html += '</div>';
-                html += area("pAbout", t("pe.about"), p.aciklama);
-                html += '<button type="submit" class="btn btn--primary btn--lg btn--block">' + t("pe.save") + '</button>';
-                return html;
-            }
-
-            function renderForm() {
-                form.innerHTML = fieldsHtml();
-                // Avatar yükleme
-                var avFile = document.getElementById("pAvatarFile");
-                if (avFile) avFile.addEventListener("change", async function () {
-                    var file = avFile.files && avFile.files[0];
-                    if (!file) return;
-                    var hint = document.getElementById("pAvatarHint");
-                    var img = document.getElementById("pAvatarImg");
-                    if (file.size > 5 * 1024 * 1024) { if (hint) hint.textContent = t("pe.photoTooBig"); return; }
-                    if (hint) hint.textContent = t("pe.photoUploading");
-                    try {
-                        var url = await SB.uploadAvatar(file);
-                        p.avatar_url = url;
-                        if (img) img.src = url;
-                        if (hint) hint.textContent = t("pe.photoUploaded");
-                    } catch (e) { if (hint) hint.textContent = e.message || t("auth.errGeneric"); }
-                });
-                // Native kamera (yalnız body.kb-native)
-                var avNative = document.getElementById("pAvatarNative");
-                if (avNative && document.body.classList.contains('kb-native') && window.KBNative) {
-                    avNative.style.display = '';
-                    var avLabel = document.getElementById("pAvatarLabel");
-                    if (avLabel) avLabel.style.display = 'none';
-                    avNative.addEventListener('click', function () {
-                        var hint = document.getElementById("pAvatarHint");
-                        var img  = document.getElementById("pAvatarImg");
-                        KBNative.pickPhoto(function (dataUrl) {
-                            try {
-                                var arr  = dataUrl.split(',');
-                                var mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
-                                var bstr = atob(arr[1]);
-                                var n    = bstr.length;
-                                var u8   = new Uint8Array(n);
-                                while (n--) u8[n] = bstr.charCodeAt(n);
-                                var file = new File([u8], 'avatar.jpg', { type: mime });
-                                if (img) img.src = dataUrl;
-                                if (hint) hint.textContent = t("pe.photoUploading");
-                                SB.uploadAvatar(file).then(function (url) {
-                                    p.avatar_url = url;
-                                    if (hint) hint.textContent = t("pe.photoUploaded");
-                                }).catch(function (e) {
-                                    if (hint) hint.textContent = e.message || t("auth.errGeneric");
-                                });
-                            } catch (convErr) {
-                                if (hint) hint.textContent = t("auth.errGeneric");
-                            }
-                        }, function (err) {
-                            if (err && String(err).indexOf('cancel') === -1) {
-                                var hint = document.getElementById("pAvatarHint");
-                                if (hint) hint.textContent = t("auth.errGeneric");
-                            }
-                        });
-                    });
-                }
-
-                var rp = document.getElementById("rolePick");
-                if (rp) rp.querySelectorAll("button").forEach(function (b) {
-                    b.addEventListener("click", function () {
-                        // Rol değişiminde ortak alanların girilmiş değerlerini koru
-                        p.ad = val("pAd") || p.ad;
-                        p.sehir = val("pSehir") || p.sehir;
-                        p.telefon = val("pTel") || p.telefon;
-                        p.aciklama = val("pAbout") || p.aciklama;
-                        curRole = b.getAttribute("data-role");
-                        renderForm();
-                    });
-                });
-            }
-            renderForm();
-
-            form.addEventListener("submit", async function (e) {
-                e.preventDefault();
-                var telRaw = val("pTel");
-                if (telRaw && !/^0?5\d{9}$/.test(telRaw.replace(/\D/g, ""))) {
-                    msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = t("auth.invalidPhone"); return;
-                }
-                var f = { role: curRole, ad: val("pAd"), sehir: val("pSehir"), telefon: telRaw, aciklama: val("pAbout"), avatar_url: p.avatar_url || "" };
-                if (curRole === "kurye") {
-                    f.arac = val("pArac"); f.deneyim = intv("pDeneyim"); f.seviye = val("pSeviye");
-                    f.tamamlanan = intv("pTamam"); f.bolgeler = csv("pBolge"); f.sertifikalar = csv("pCert");
-                } else if (curRole === "isletme") {
-                    f.tur = val("pTur"); f.bolgeler = csv("pBolge"); f.acik_ilan = intv("pAcik"); f.ihtiyac = val("pIhtiyac");
-                } else {
-                    f.bolgeler = csv("pBolge"); f.kapasite = intv("pKapasite"); f.hizmetler = csv("pHizmet");
-                }
-                try {
-                    // Konum: şehir (+ ilk bölge) -> koordinat; haritada görünmek için
-                    if (f.sehir) {
-                        var q = ((f.bolgeler && f.bolgeler[0]) ? f.bolgeler[0] + ", " : "") + f.sehir + ", Türkiye";
-                        var loc = await geocode(q);
-                        if (loc) {
-                            f.lat = loc.lat + (Math.random() - 0.5) * 0.04; // küçük kayma: üst üste binmesin
-                            f.lng = loc.lng + (Math.random() - 0.5) * 0.04;
-                        }
-                    }
-                    var saved = await SB.updateMyProfile(f);
-                    msg.hidden = false; msg.textContent = t("pe.saved");
-                    var pg = KB.roleToPanel(curRole).replace("panel-", "profil-");
-                    var link = document.getElementById("peViewLink");
-                    link.href = pg + "?id=" + saved.id;
-                    document.getElementById("peView").hidden = false;
-                } catch (err) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = err.message || "Hata"; }
-            });
-        }
-        start();
-    })();
-    </script>
+      btn.disabled = false;
+      btn.textContent = 'Kaydet';
+    });
+  })();
+  </script>
 </body>
 </html>

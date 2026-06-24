@@ -1,36 +1,56 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İlan Detayı · Kuryemi Bul</title>
-    <meta name="description" content="Kurye iş ilanı detayı — işveren, konum, açıklama ve tek tıkla başvuru.">
-    <link rel="icon" href="assets/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Kuryemi Bul">
-    <meta property="og:title" content="İlan Detayı · Kuryemi Bul">
-    <meta property="og:url" content="https://kuryemibul.com/ilan.html">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İlan Detayı · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
 <body>
-    <div id="app-header"></div>
 
-    <main class="section--sm">
-        <div class="container">
-            <div id="jobDetailRoot"></div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <!-- renderJobDetail() buraya yazar: .jd-back + .jd grid -->
+    <div id="jobDetailRoot">
+      <!-- skeleton: JS yüklenene kadar -->
+      <span class="skel skel--line" style="width:120px;display:block;margin-bottom:20px"></span>
+      <div class="jd">
+        <div class="jd-main">
+          <div class="jd-head">
+            <span class="skel skel--line" style="width:40%"></span>
+            <span class="skel skel--line" style="width:70%;height:28px;margin-top:14px;display:block"></span>
+            <span class="skel skel--line" style="width:55%;margin-top:12px;display:block"></span>
+          </div>
+          <div class="jd-section">
+            <span class="skel skel--line" style="width:90%"></span>
+            <span class="skel skel--line" style="width:82%;margin-top:10px;display:block"></span>
+            <span class="skel skel--line" style="width:87%;margin-top:10px;display:block"></span>
+          </div>
         </div>
-    </main>
+        <aside class="jd-side">
+          <div class="skel-card" style="height:120px"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
 
-    <div id="app-footer"></div>
+  <div id="app-footer"></div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>KBApp.renderJobDetail();</script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.KBApp && KBApp.renderJobDetail) KBApp.renderJobDetail();
+    });
+  </script>
 </body>
 </html>

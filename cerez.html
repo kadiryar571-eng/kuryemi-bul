@@ -1,65 +1,66 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çerez Politikası · Kuryemi Bul</title>
-    <meta name="description" content="Kuryemi Bul çerez politikası: hangi çerezleri ve yerel depolamayı kullanıyoruz.">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Çerez Politikası · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .legal-body { max-width: 720px; margin: 0 auto; }
+    .legal-body h2 { font-size: 1.1rem; font-weight: 700; margin: 28px 0 10px; color: var(--text); }
+    .legal-body p, .legal-body li { font-size: 0.9rem; color: var(--text-2); line-height: 1.75; }
+    .legal-body ul { padding-left: 20px; margin: 8px 0; }
+    .cookie-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 12px 0; }
+    .cookie-table th, .cookie-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .cookie-table th { font-weight: 600; background: var(--bg); color: var(--text); }
+    .cookie-table td { color: var(--text-2); }
+  </style>
+</head>
 <body>
-    <div id="app-header"></div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main>
-        <article class="legal">
-            <h1>Çerez Politikası</h1>
-            <p class="legal__upd">Son güncelleme: 12 Haziran 2026</p>
+  <div class="app-content">
+    <div class="page-header legal-body">
+      <h1>Çerez Politikası</h1>
+      <p class="page-sub">Son güncelleme: Haziran 2025</p>
+    </div>
 
-            <p>Bu politika, Kuryemi Bul'un ("Platform") çerezleri ve tarayıcı yerel depolamasını (localStorage)
-            nasıl kullandığını açıklar.</p>
+    <div class="card legal-body" style="padding:32px">
+      <h2>Çerez Nedir?</h2>
+      <p>Çerezler, tarayıcınızda saklanan küçük metin dosyalarıdır. KuryemiBul, oturumunuzu ve tercihlerinizi hatırlamak için çerez kullanır.</p>
 
-            <h2>1. Çerez Nedir?</h2>
-            <p>Çerezler, ziyaret ettiğiniz sitelerin tarayıcınıza kaydettiği küçük metin dosyalarıdır. Oturumunuzu
-            sürdürmek ve tercihlerinizi hatırlamak için kullanılır. Platform ayrıca benzer amaçlarla tarayıcı
-            yerel depolamasını kullanır.</p>
+      <h2>Kullandığımız Çerezler</h2>
+      <table class="cookie-table">
+        <thead><tr><th>Ad</th><th>Tür</th><th>Amaç</th><th>Süre</th></tr></thead>
+        <tbody>
+          <tr><td>sb-*</td><td>Zorunlu</td><td>Supabase oturum yönetimi</td><td>7 gün</td></tr>
+          <tr><td>kb_theme</td><td>İşlevsel</td><td>Tema tercihi (açık/koyu)</td><td>Kalıcı</td></tr>
+          <tr><td>kb_cookie_ok</td><td>İşlevsel</td><td>Çerez onayı kaydı</td><td>1 yıl</td></tr>
+          <tr><td>kb_sidebar_collapsed</td><td>İşlevsel</td><td>Kenar çubuğu durumu</td><td>Kalıcı</td></tr>
+        </tbody>
+      </table>
 
-            <h2>2. Kullandığımız Çerez/Depolama Türleri</h2>
-            <ul>
-                <li><b>Zorunlu (oturum):</b> Giriş yapmanız ve oturumunuzun açık kalması için gereklidir
-                (Supabase kimlik doğrulama). Bunlar olmadan hizmet çalışmaz.</li>
-                <li><b>Tercih:</b> Tema (açık/koyu), dil (TR/EN) ve çerez onayı tercihiniz yerel depolamada tutulur.</li>
-                <li><b>İşlevsel:</b> Rol seçimi ve arayüz durumu gibi deneyiminizi iyileştiren bilgiler.</li>
-            </ul>
-            <p>Platform şu an <b>reklam veya üçüncü taraf takip çerezi kullanmamaktadır.</b></p>
+      <h2>Üçüncü Taraf Çerezler</h2>
+      <p>Reklam veya izleme amaçlı üçüncü taraf çerez kullanılmaz. Google ile giriş yapıldığında Google'ın OAuth çerezleri geçici olarak oluşur.</p>
 
-            <h2>3. Üçüncü Taraf Hizmetler</h2>
-            <p>Google ile giriş, harita (OpenStreetMap) ve e-posta (Resend) gibi hizmetler kendi çerezlerini
-            kullanabilir. Bu hizmetler ilgili sağlayıcıların politikalarına tabidir.</p>
+      <h2>Çerezleri Kontrol Etme</h2>
+      <p>Tarayıcı ayarlarından çerezleri silebilir veya devre dışı bırakabilirsiniz. Ancak zorunlu çerezlerin kapatılması platformun çalışmamasına neden olabilir.</p>
 
-            <h2>4. Çerezleri Yönetme</h2>
-            <p>Tarayıcınızın ayarlarından çerezleri silebilir veya engelleyebilirsiniz. Ancak zorunlu çerezleri
-            engellerseniz giriş yapma gibi temel işlevler çalışmayabilir. Çerez onay tercihinizi temizlemek için
-            tarayıcı yerel depolamasını silmeniz yeterlidir.</p>
+      <h2>İletişim</h2>
+      <p><a href="mailto:destek@kuryemibul.com">destek@kuryemibul.com</a></p>
+    </div>
+  </div>
 
-            <h2>5. İletişim</h2>
-            <p>Sorularınız için: <a href="mailto:kadiryar571@gmail.com">kadiryar571@gmail.com</a></p>
+  <div id="app-footer"></div>
 
-            <p style="margin-top:32px"><a href="kvkk.html">KVKK Aydınlatma Metni</a> ·
-            <a href="gizlilik.html">Gizlilik Politikası</a> ·
-            <a href="sartlar.html">Kullanım Şartları</a></p>
-        </article>
-    </main>
-
-    <div id="app-footer"></div>
-
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
 </body>
 </html>

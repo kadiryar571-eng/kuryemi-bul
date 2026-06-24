@@ -1,355 +1,97 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Dashboard · Kuryemi Bul</title>
-    <meta name="description" content="Firma paneli: aktif ihtiyaçlar, havuz, başvurular ve mesajlar.">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
-    <link rel="stylesheet" href="assets/css/dashboard3col.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-<div id="app-header"></div>
 
-<main class="section--sm">
-    <div class="container">
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-        <!-- Welcome banner -->
-        <div class="dash3__welcome" id="dashWelcome">
-            <div class="dash3__welcome-avatar" id="dashAvatar">
-                <span id="dashAvatarLetter">F</span>
-            </div>
-            <div class="dash3__welcome-body">
-                <div class="dash3__welcome-greeting">Merhaba 👋</div>
-                <div class="dash3__welcome-name" id="dashName">Firma</div>
-                <span class="dash3__welcome-badge dash3__welcome-badge--default" id="dashBadge">Firma Hesabı</span>
-            </div>
-            <div class="dash3__welcome-actions">
-                <a href="profil-duzenle.html" class="btn btn--ghost btn--sm">Profil Düzenle</a>
-                <a href="ilanlar.html" class="btn btn--primary btn--sm">İlan Oluştur +</a>
-            </div>
-        </div>
-
-        <!-- Stat row -->
-        <div class="dash3__stats">
-            <a href="ilanlar.html" class="dstat">
-                <div class="dstat__val" id="statListings">—</div>
-                <div class="dstat__lbl">Aktif İlan</div>
-            </a>
-            <a href="eslesme.html" class="dstat">
-                <div class="dstat__val" id="statApps">—</div>
-                <div class="dstat__lbl">Gelen Başvuru</div>
-            </a>
-            <a href="mesajlar.html" class="dstat">
-                <div class="dstat__val" id="statMsgs">—</div>
-                <div class="dstat__lbl">Mesaj</div>
-            </a>
-            <a href="kuryeler.html" class="dstat">
-                <div class="dstat__val" id="statPool">—</div>
-                <div class="dstat__lbl">Havuz</div>
-            </a>
-        </div>
-
-        <!-- 3-col grid -->
-        <div class="dash3">
-
-            <!-- ── LEFT: Activity Feed ── -->
-            <aside class="dash3__left">
-                <div class="dcard">
-                    <div class="dcard__head">
-                        <span class="dcard__title">
-                            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                            Aktivite
-                        </span>
-                        <a href="bildirimler.html" class="dcard__action">Tümü →</a>
-                    </div>
-                    <div class="dcard__body" id="activityFeed">
-                        <div class="dash3-skel" style="margin-bottom:10px"></div>
-                        <div class="dash3-skel--sm" style="margin-bottom:8px"></div>
-                        <div class="dash3-skel--sm" style="margin-bottom:8px"></div>
-                        <div class="dash3-skel--sm"></div>
-                    </div>
-                </div>
-
-                <!-- Firma profil tamamlama -->
-                <div class="dcard">
-                    <div class="dcard__head">
-                        <span class="dcard__title">
-                            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            Firma Profili
-                        </span>
-                        <a href="profil-duzenle.html" class="dcard__action">Düzenle</a>
-                    </div>
-                    <div class="dcard__body" id="profileProg">
-                        <div class="dash3-skel"></div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- ── CENTER: Active needs + applications ── -->
-            <div class="dash3__center">
-
-                <!-- Active listings -->
-                <div class="dcard">
-                    <div class="dcard__head">
-                        <span class="dcard__title">
-                            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            Aktif İhtiyaçlar
-                        </span>
-                        <a href="ilanlar.html" class="dcard__action">Yönet</a>
-                    </div>
-                    <div class="dcard__body dcard__body--pad0" style="padding:0 16px" id="activeListings">
-                        <div class="dash3-skel" style="margin:12px 0"></div>
-                        <div class="dash3-skel" style="margin-bottom:12px"></div>
-                        <div class="dash3-skel" style="margin-bottom:12px"></div>
-                    </div>
-                </div>
-
-                <!-- Incoming applications -->
-                <div class="dcard">
-                    <div class="dcard__head">
-                        <span class="dcard__title">
-                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            Gelen Başvurular
-                        </span>
-                        <a href="eslesme.html" class="dcard__action">Tümünü Gör</a>
-                    </div>
-                    <div class="dcard__body dcard__body--pad0" style="padding:0 16px" id="incomingApps">
-                        <div class="dash3-skel" style="margin:12px 0"></div>
-                        <div class="dash3-skel" style="margin-bottom:12px"></div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ── RIGHT: Utility Panel ── -->
-            <aside class="dash3__right">
-
-                <div class="dcard">
-                    <div class="dcard__head">
-                        <span class="dcard__title">
-                            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                            Hızlı İşlemler
-                        </span>
-                    </div>
-                    <div class="dcard__body">
-                        <div class="quick-actions">
-                            <a href="ilanlar.html" class="quick-action-btn">
-                                <span class="quick-action-btn__ic">
-                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                </span>
-                                İlan Oluştur
-                            </a>
-                            <a href="kuryeler.html" class="quick-action-btn">
-                                <span class="quick-action-btn__ic">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg>
-                                </span>
-                                Kurye Havuzu
-                            </a>
-                            <a href="isletmeler.html" class="quick-action-btn">
-                                <span class="quick-action-btn__ic">
-                                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                                </span>
-                                İşletme Ara
-                            </a>
-                            <a href="harita.html" class="quick-action-btn">
-                                <span class="quick-action-btn__ic">
-                                    <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
-                                </span>
-                                Haritada Ara
-                            </a>
-                            <a href="mesajlar.html" class="quick-action-btn">
-                                <span class="quick-action-btn__ic">
-                                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                </span>
-                                Mesajlar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dcard">
-                    <div class="dcard__head">
-                        <span class="dcard__title">
-                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            Son Mesajlar
-                        </span>
-                        <a href="mesajlar.html" class="dcard__action">Tümü →</a>
-                    </div>
-                    <div class="dcard__body" id="recentChats">
-                        <div class="dash3-skel--sm" style="margin-bottom:8px"></div>
-                        <div class="dash3-skel--sm"></div>
-                    </div>
-                </div>
-
-            </aside>
-        </div><!-- /.dash3 -->
-
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <p class="page-sub">Kurye havuzunu ve tekliflerini buradan yönet.</p>
     </div>
-</main>
 
-<div id="app-footer"></div>
+    <!-- Tab nav -->
+    <nav class="dash__nav">
+      <button data-tab="ana">Genel Bakış</button>
+      <button data-tab="personel">Kurye Havuzu</button>
+      <button data-tab="teklifler">Teklifler</button>
+    </nav>
 
-<script src="assets/js/i18n.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/supabase.js"></script>
-<script src="assets/js/data.js"></script>
-<script src="assets/js/components.js"></script>
-<script src="assets/js/app.js"></script>
-<script src="assets/js/motion.js"></script>
-<script>KBApp.initPanel("firma");</script>
-<script>
-(function () {
-    function el(id) { return document.getElementById(id); }
-    function esc(s) {
-        return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
-            return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
-        });
-    }
-    function timeAgo(iso) {
-        if (!iso) return "";
-        var d = new Date(iso), now = new Date(), s = Math.floor((now - d)/1000);
-        if (s < 60) return "şimdi";
-        var m = Math.floor(s/60); if (m < 60) return m + " dk";
-        var h = Math.floor(m/60); if (h < 24) return h + " sa";
-        var gun = Math.floor(h/24); return gun < 7 ? gun + " gün" : d.toLocaleDateString("tr-TR", {day:"numeric", month:"short"});
-    }
+    <!-- Genel Bakış -->
+    <div class="dash__panel" id="panel-ana">
+      <div class="panel-box mb-16">
+        <div class="panel-box__head">
+          <h3>Metrikler</h3>
+          <a href="profil-duzenle.html" class="btn btn--ghost btn--sm">Profili Düzenle</a>
+        </div>
+        <div class="panel-box__body">
+          <div id="firmaMetrics">
+            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:60%"></span></span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-box">
+        <div class="panel-box__head"><h3>Hızlı Erişim</h3></div>
+        <div class="panel-box__body" style="display:flex;flex-wrap:wrap;gap:10px">
+          <a href="kuryeler.html" class="btn btn--primary">Kurye Havuzu</a>
+          <a href="havuzum.html" class="btn btn--secondary">Havuzum</a>
+          <a href="mesajlar.html" class="btn btn--ghost">Mesajlar</a>
+          <a href="profil-duzenle.html" class="btn btn--ghost">Profili Düzenle</a>
+        </div>
+      </div>
+    </div>
 
-    async function initDash() {
-        if (window.KB && KB.ready) await KB.ready();
-        if (!window.KB || !KB.isAuthed || !KB.isAuthed()) return;
-        var sess = KB.session && KB.session();
-        var p = sess && sess.profile;
-        if (!p) return;
+    <!-- Kurye Havuzu -->
+    <div class="dash__panel" id="panel-personel">
+      <div class="panel-box">
+        <div class="panel-box__head">
+          <h3>Mevcut Kuryeler</h3>
+          <a href="kuryeler.html" class="btn btn--primary btn--sm">Tümünü Gör</a>
+        </div>
+        <div class="panel-box__body">
+          <div id="firmaPersonel">
+            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:70%"></span></span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        // Welcome
-        var displayName = p.firma_adi || p.ad || "Firma";
-        if (el("dashName")) el("dashName").textContent = displayName;
-        if (el("dashAvatarLetter")) el("dashAvatarLetter").textContent = displayName.charAt(0).toUpperCase();
-        if (p.avatar_url && el("dashAvatar")) {
-            el("dashAvatar").innerHTML = '<img src="' + esc(p.avatar_url) + '" alt="">';
-        }
-        var badge = el("dashBadge");
-        if (badge) {
-            if (p.dogrulama === "onaylandi") { badge.textContent = "✓ Doğrulanmış Firma"; badge.className = "dash3__welcome-badge dash3__welcome-badge--verified"; }
-            else { badge.textContent = "Firma Hesabı"; badge.className = "dash3__welcome-badge dash3__welcome-badge--default"; }
-        }
+    <!-- Teklifler -->
+    <div class="dash__panel" id="panel-teklifler">
+      <div class="panel-box">
+        <div class="panel-box__head"><h3>Teklifler</h3></div>
+        <div class="panel-box__body">
+          <div id="firmaTeklif">
+            <div class="empty">Henüz teklif yok.</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        // Profile progress
-        var pct = 0;
-        if (p.ad || p.firma_adi) pct += 20;
-        if (p.telefon)   pct += 20;
-        if (p.sehir)     pct += 20;
-        if (p.hakkimda)  pct += 20;
-        if (p.dogrulama === "onaylandi") pct += 20;
-        var progHost = el("profileProg");
-        if (progHost) {
-            progHost.innerHTML = '<div class="profile-complete">' +
-                '<div style="display:flex;align-items:baseline;gap:6px">' +
-                    '<span class="profile-complete__pct">' + pct + '%</span>' +
-                    '<span class="profile-complete__lbl">Profil Tamamlığı</span>' +
-                '</div>' +
-                '<div class="profile-complete__bar-track"><div class="profile-complete__bar-fill" style="width:' + pct + '%"></div></div>' +
-            '</div>';
-        }
+  </div><!-- /.app-content -->
 
-        var bc = document.getElementById("topbarPageTitle");
-        if (bc) bc.textContent = "Dashboard";
+  <div id="app-footer"></div>
 
-        var results = await Promise.allSettled([
-            window.SB ? SB.myOffers()           : Promise.resolve([]),
-            window.SB ? SB.myConversations()    : Promise.resolve([]),
-            window.SB ? SB.unreadMessageCount() : Promise.resolve(0),
-            window.SB ? SB.myListings()         : Promise.resolve([])
-        ]);
-
-        var offers   = results[0].value || [];
-        var convs    = results[1].value || [];
-        var msgCnt   = results[2].value || 0;
-        var listings = results[3].value || [];
-
-        var activeL = listings.filter(function(l){ return l.aktif; });
-        if (el("statListings")) el("statListings").textContent = activeL.length || listings.length;
-        if (el("statApps"))     el("statApps").textContent     = offers.filter(function(o){ return o.durum === "pending"; }).length;
-        if (el("statMsgs"))     el("statMsgs").textContent     = msgCnt;
-        if (el("statPool"))     el("statPool").textContent     = "—";
-
-        // Active listings
-        var listHost = el("activeListings");
-        if (listHost) {
-            if (!activeL.length) {
-                listHost.innerHTML = '<div class="feed-empty">Henüz aktif ilan yok. <a href="ilanlar.html" style="color:#2563EB;font-weight:600">İlan Oluştur →</a></div>';
-            } else {
-                listHost.innerHTML = activeL.slice(0, 5).map(function(l) {
-                    var cnt = l.basvuru_sayisi || 0;
-                    return '<div class="listing-row">' +
-                        '<div class="listing-row__av">' + (l.baslik || "İ").charAt(0).toUpperCase() + '</div>' +
-                        '<div class="listing-row__body">' +
-                            '<div class="listing-row__title">' + esc(l.baslik || "İlan") + '</div>' +
-                            '<div class="listing-row__meta">' + esc(l.sehir || "—") + (cnt ? ' · ' + cnt + ' başvuru' : '') + '</div>' +
-                        '</div>' +
-                        '<div class="listing-row__end"><span class="listing-row__status status--active">Açık</span></div>' +
-                    '</div>';
-                }).join("");
-            }
-        }
-
-        // Incoming apps
-        var appsHost = el("incomingApps");
-        if (appsHost) {
-            var pending = offers.filter(function(o){ return o.durum === "pending"; });
-            if (!pending.length) { appsHost.innerHTML = '<div class="feed-empty">Bekleyen başvuru yok.</div>'; }
-            else appsHost.innerHTML = pending.slice(0, 5).map(function(o) {
-                var ini = (o.kurye_ad || o.baslik || "K").charAt(0).toUpperCase();
-                return '<div class="listing-row">' +
-                    '<div class="listing-row__av">' + esc(ini) + '</div>' +
-                    '<div class="listing-row__body">' +
-                        '<div class="listing-row__title">' + esc(o.kurye_ad || "Kurye") + '</div>' +
-                        '<div class="listing-row__meta">' + esc(o.baslik || "Başvuru") + '</div>' +
-                    '</div>' +
-                    '<div class="listing-row__end"><span class="listing-row__status status--pending">İnceleniyor</span></div>' +
-                '</div>';
-            }).join("");
-        }
-
-        // Recent chats
-        var chatHost = el("recentChats");
-        if (chatHost) {
-            if (!convs.length) { chatHost.innerHTML = '<div class="feed-empty">Henüz mesaj yok.</div>'; }
-            else chatHost.innerHTML = convs.slice(0, 3).map(function(c) {
-                var ini = (c.ad || "?").charAt(0).toUpperCase();
-                return '<a href="mesajlar.html?pid=' + esc(c.profileId) + '" class="mini-conv">' +
-                    '<div class="mini-conv__av">' + (c.avatar ? '<img src="' + esc(c.avatar) + '" alt="">' : esc(ini)) + '</div>' +
-                    '<div class="mini-conv__body">' +
-                        '<div class="mini-conv__name">' + esc(c.ad || "Kullanıcı") + '</div>' +
-                        '<div class="mini-conv__last">' + esc(c.lastBody ? c.lastBody.slice(0,35) : "") + '</div>' +
-                    '</div>' +
-                    '<div class="mini-conv__end"><div class="mini-conv__time">' + timeAgo(c.lastAt) + '</div>' + (c.unread > 0 ? '<div class="mini-conv__dot"></div>' : '') + '</div>' +
-                '</a>';
-            }).join("");
-        }
-
-        // Activity feed
-        var actHost = el("activityFeed");
-        if (actHost) {
-            var items = offers.slice(0, 5).map(function(o) {
-                return '<div class="feed-item">' +
-                    '<div class="feed-item__ic feed-item__ic--blue">📋</div>' +
-                    '<div class="feed-item__body">' +
-                        '<div class="feed-item__text"><b>' + esc(o.kurye_ad || "Kurye") + '</b> ' + esc(o.baslik || "ilanınıza") + ' için başvurdu</div>' +
-                        '<div class="feed-item__time">' + timeAgo(o.tarih) + '</div>' +
-                    '</div>' +
-                '</div>';
-            });
-            if (!items.length) actHost.innerHTML = '<div class="feed-empty">Henüz aktivite yok.</div>';
-            else actHost.innerHTML = items.join("");
-        }
-    }
-    initDash();
-})();
-</script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.KBApp && KBApp.initPanel) KBApp.initPanel('firma');
+    });
+  </script>
 </body>
 </html>

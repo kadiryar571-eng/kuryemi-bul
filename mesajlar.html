@@ -1,141 +1,76 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="title.mesajlar">Mesajlar · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">    <style>
-      .msg { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 210px); min-height: 480px;
-        border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--bg, #070809); box-shadow: 0 24px 60px -28px rgba(0,0,0,.7); }
-      .msg__list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }
-      .msg__list-head { padding: 16px 18px; border-bottom: 1px solid var(--line); }
-      .msg__list-head h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
-      .msg__list-head p { font-size: .8rem; color: var(--muted, #94a0b4); margin: 4px 0 0; }
-      .msg-conv-list { flex: 1; overflow-y: auto; scrollbar-width: thin; }
-      .msg-conv { width: 100%; display: flex; gap: 11px; align-items: center; padding: 13px 16px; border: none; background: none;
-        border-bottom: 1px solid var(--line); cursor: pointer; text-align: left; transition: background .18s; }
-      .msg-conv:hover { background: rgba(255,255,255,.04); }
-      .msg-conv.is-active { background: rgba(59,130,246,.1); }
-      .msg-conv__av { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; }
-      .msg-conv__av--ph { display: grid; place-items: center; background: var(--kb-grad-diag, linear-gradient(135deg,#2563eb,#60a5fa)); color: #fff; font-weight: 700; }
-      .msg-conv__body { min-width: 0; flex: 1; }
-      .msg-conv__top { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
-      .msg-conv__name { font-weight: 700; font-size: .92rem; color: var(--navy, #f4f6fb); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .msg-conv__badge { flex: none; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: .68rem; font-weight: 700; display: grid; place-items: center; }
-      .msg-conv__last { font-size: .8rem; color: var(--muted, #94a0b4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-
-      .msg__main { min-height: 0; display: flex; flex-direction: column; }
-      .msg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
-      .msg-empty .kb-empty__ic { font-size: 2.4rem; margin-bottom: 10px; }
-      .msg-empty .kb-empty__t { font-weight: 700; }
-      .msg-empty .kb-empty__d { color: var(--muted, #94a0b4); font-size: .88rem; margin-top: 6px; max-width: 34ch; }
-      .msg-thread { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-      .msg-thread__head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
-      .msg-back { display: none; background: none; border: none; color: var(--navy, #f4f6fb); font-size: 1.3rem; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
-      .msg-thread__who { display: flex; align-items: center; gap: 10px; }
-      .msg-thread__who .msg-conv__av--ph { width: 38px; height: 38px; }
-      .msg-thread__name { font-weight: 700; font-size: .95rem; }
-      .msg-thread__role { font-size: .76rem; color: var(--muted, #94a0b4); }
-      .msg-thread__scroll { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
-      .msg-thread__empty { margin: auto; color: var(--muted, #94a0b4); font-size: .9rem; }
-      .msg-bubble { max-width: 72%; align-self: flex-start; padding: 10px 14px; border-radius: 16px 16px 16px 4px;
-        background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--navy, #f4f6fb); font-size: .92rem; line-height: 1.45; position: relative; word-wrap: break-word; }
-      .msg-bubble--mine { align-self: flex-end; background: var(--kb-grad-diag, linear-gradient(135deg,#2563eb,#60a5fa)); border-color: transparent; color: #fff; border-radius: 16px 16px 4px 16px; }
-      .msg-bubble__t { display: block; font-size: .64rem; opacity: .6; margin-top: 4px; text-align: right; }
-      .msg-bubble__status { font-size: .6rem; opacity: .7; margin-left: 3px; }
-      .msg-compose { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); background: var(--bg, #070809); }
-      .msg-compose form { flex: 1; display: flex; gap: 8px; align-items: center; }
-      .msg-compose input { flex: 1; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 999px; padding: 11px 16px; color: var(--navy, #f4f6fb); font-family: inherit; font-size: .92rem; }
-      .msg-compose input:focus { outline: none; border-color: var(--kb-blue-500,#3b82f6); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
-      .msg-attach-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(255,255,255,.4); cursor: pointer; border-radius: 50%; flex-shrink: 0; }
-      .msg-attach-btn:hover { color: var(--kb-blue-400,#60a5fa); background: rgba(59,130,246,.08); }
-      .msg-send-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--kb-grad-diag, linear-gradient(135deg,#2563eb,#60a5fa)); border: none; color: #fff; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
-      .msg-send-btn:hover { opacity: .88; }
-      /* Conv list enhancements */
-      .msg__list-head-top { display: flex; align-items: center; justify-content: space-between; }
-      .msg-search { position: relative; margin-top: 10px; }
-      .msg-search__ic { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: .45; pointer-events: none; }
-      .msg-search input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 999px; color: var(--navy, #f4f6fb); font-family: inherit; font-size: .85rem; outline: none; box-sizing: border-box; }
-      .msg-search input:focus { border-color: #4f8bff; }
-      .msg-conv__time { font-size: .67rem; color: rgba(180,190,220,.5); white-space: nowrap; flex-shrink: 0; }
-      .msg-conv__bottom { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-      .msg-conv__bottom .msg-conv__last { flex: 1; margin-top: 0; }
-      .msg-conv--unread .msg-conv__name { font-weight: 800; }
-      .msg-conv--unread .msg-conv__time { color: #4f8bff; font-weight: 700; }
-      /* Thread enhancements */
-      .msg-thread__av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#4f8bff,#a855f7); display: grid; place-items: center; font-weight: 700; font-size: .8rem; color: #fff; flex-shrink: 0; }
-      .msg-thread__info { flex: 1; min-width: 0; }
-      .msg-thread__more { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(255,255,255,.5); cursor: pointer; border-radius: 50%; flex-shrink: 0; }
-      .msg-thread__more:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
-      .msg-empty-list { text-align: center; color: rgba(180,190,220,.5); font-size: .85rem; padding: 24px 16px; }
-      /* Context sheet */
-      .msg-ctx-sheet { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
-      .msg-ctx-sheet.is-open { pointer-events: all; }
-      .msg-ctx-sheet__bg { position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background .28s; }
-      .msg-ctx-sheet.is-open .msg-ctx-sheet__bg { background: rgba(0,0,0,.6); }
-      .msg-ctx-sheet__panel { position: absolute; left: 0; right: 0; bottom: 0; background: #0f1120; border: 1px solid rgba(255,255,255,.1); border-radius: 24px 24px 0 0; padding: 0 0 20px; transform: translateY(100%); transition: transform .28s cubic-bezier(.22,.61,.36,1); }
-      .msg-ctx-sheet.is-open .msg-ctx-sheet__panel { transform: translateY(0); }
-      .msg-ctx-sheet__handle { width: 36px; height: 4px; background: rgba(255,255,255,.18); border-radius: 999px; margin: 10px auto 0; }
-      .msg-ctx-sheet__who { font-size: .82rem; font-weight: 700; color: rgba(180,190,220,.55); text-align: center; padding: 12px 20px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
-      .msg-ctx-sheet__items { display: flex; flex-direction: column; }
-      .msg-ctx-sheet__item { display: flex; align-items: center; gap: 12px; padding: 15px 20px; color: #f4f6fb; font-size: .92rem; text-decoration: none; background: none; border: none; cursor: pointer; min-height: 52px; text-align: left; transition: background .12s; }
-      .msg-ctx-sheet__item:hover { background: rgba(255,255,255,.04); }
-      .msg-ctx-sheet__item--muted { color: rgba(180,190,220,.55); }
-      .msg-ctx-sheet__cancel { display: flex; align-items: center; justify-content: center; width: calc(100% - 32px); margin: 8px 16px 0; padding: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; color: #f4f6fb; font-size: .92rem; font-weight: 600; cursor: pointer; min-height: 52px; }
-      .msg-ctx-sheet__cancel:hover { background: rgba(255,255,255,.08); }
-
-      @media (max-width: 860px) {
-        .msg { grid-template-columns: 1fr; height: calc(100vh - 170px); }
-        .msg__main { display: none; }
-        .msg--threadopen .msg__list { display: none; }
-        .msg--threadopen .msg__main { display: flex; }
-        .msg-back { display: inline-block; }
-      }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mesajlar · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-    <div id="app-header"></div>
 
-    <section class="page-head">
-        <div class="container">
-            <h1 data-i18n="msg.title">Mesajlar</h1>
-            <p data-i18n="msg.lead">Eşleştiğin kişilerle buradan yazış.</p>
-        </div>
-    </section>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main class="section--sm">
-        <div class="container">
-            <div id="msgRoot">
-                <div class="msg">
-                    <aside class="msg__list">
-                        <div class="msg__list-head">
-                          <div class="msg__list-head-top"><h2 data-i18n="msg.title">Mesajlar</h2></div>
-                          <div class="msg-search">
-                            <svg class="msg-search__ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            <input id="msgSearchInput" type="search" placeholder="Konuşma ara..." autocomplete="off">
-                          </div>
-                        </div>
-                        <div class="msg-conv-list" id="msgConvList"></div>
-                    </aside>
-                    <section class="msg__main" id="msgMain"></section>
-                </div>
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Mesajlar</h1>
+      <p class="page-sub">Bağlantılarınızla özel mesajlaşın.</p>
+    </div>
+
+    <!-- renderMessages() bu 3 elementi bekliyor -->
+    <div class="msg-wrap">
+      <div class="msg" id="msgRoot">
+
+        <!-- Sol panel: arama + konuşma listesi -->
+        <div class="msg__sidebar">
+          <div class="msg__search">
+            <input type="search" id="msgSearchInput" placeholder="Konuşmalarda ara…" autocomplete="off">
+          </div>
+          <div class="msg__convlist" id="msgConvList">
+            <!-- Skeleton yükleyici -->
+            <div class="msg-conv" style="pointer-events:none">
+              <span class="skel" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"></span>
+              <div style="flex:1"><span class="skel skel--line" style="width:60%"></span><span class="skel skel--line" style="width:80%;margin-top:6px;display:block"></span></div>
             </div>
+            <div class="msg-conv" style="pointer-events:none">
+              <span class="skel" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"></span>
+              <div style="flex:1"><span class="skel skel--line" style="width:55%"></span><span class="skel skel--line" style="width:75%;margin-top:6px;display:block"></span></div>
+            </div>
+            <div class="msg-conv" style="pointer-events:none">
+              <span class="skel" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"></span>
+              <div style="flex:1"><span class="skel skel--line" style="width:65%"></span><span class="skel skel--line" style="width:50%;margin-top:6px;display:block"></span></div>
+            </div>
+          </div>
         </div>
-    </main>
 
-    <div id="app-footer"></div>
+        <!-- Sağ panel: aktif sohbet -->
+        <div class="msg__main" id="msgMain">
+          <div class="msg-empty">
+            <div class="kb-empty__ic">💬</div>
+            <div class="kb-empty__t">Bir konuşma seçin</div>
+            <div class="kb-empty__d">Soldaki listeden mesajlaşmak istediğiniz kişiyi seçin.</div>
+          </div>
+        </div>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>KBApp.renderMessages();</script>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.KBApp && KBApp.renderMessages) KBApp.renderMessages();
+    });
+  </script>
 </body>
 </html>

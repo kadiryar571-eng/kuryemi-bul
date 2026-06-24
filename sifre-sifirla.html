@@ -1,88 +1,151 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="sr.title">Yeni Şifre Belirle · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
-    <link rel="stylesheet" href="assets/css/space-bg.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Şifremi Sıfırla · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body>
-    <div id="app-header"></div>
+<body class="auth-page">
 
-    <section class="page-head">
-        <div class="container"><h1 data-i18n="sr.title">Yeni Şifre Belirle</h1><p data-i18n="sr.lead">Hesabın için yeni bir şifre oluştur.</p></div>
-    </section>
+  <header class="auth-header">
+    <a class="back-link" href="giris.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Giriş sayfasına dön
+    </a>
+    <div class="header-spacer"></div>
+    <a class="brand" href="index.html">KuryemiBul</a>
+  </header>
 
-    <main class="section--sm">
-        <div class="container container--narrow">
-            <div class="form-card">
-                <form id="srForm">
-                    <div class="field"><label for="srPass" data-i18n="sr.newPass">Yeni Şifre</label>
-                        <input type="password" id="srPass" minlength="6" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" required></div>
-                    <div class="field"><label for="srPass2" data-i18n="sr.newPass2">Yeni Şifre (tekrar)</label>
-                        <input type="password" id="srPass2" minlength="6" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" required></div>
-                    <button type="submit" class="btn btn--primary btn--lg btn--block" data-i18n="sr.save">Şifreyi Güncelle</button>
-                </form>
-                <p class="form-success" id="srMsg" hidden></p>
+  <main class="auth-body">
+    <div class="auth-box">
+
+      <!-- 1. Adım: E-posta girişi -->
+      <div id="step-request">
+        <h1 class="auth-title">Şifreni sıfırla</h1>
+        <p class="auth-sub">Kayıtlı e-posta adresini gir. Şifre sıfırlama bağlantısı gönderelim.</p>
+
+        <div id="reset-alert" style="display:none" class="alert alert--error mb-16" role="alert"></div>
+
+        <form id="reset-form" class="form-group" novalidate>
+          <div class="field">
+            <label for="reset-email">E-posta adresi</label>
+            <input type="email" id="reset-email" placeholder="ornek@mail.com" autocomplete="email" required>
+          </div>
+          <button type="submit" class="btn btn--primary btn--block btn--lg" id="reset-btn">Bağlantı Gönder</button>
+        </form>
+      </div>
+
+      <!-- 2. Adım: Başarı mesajı -->
+      <div id="step-sent" style="display:none;text-align:center">
+        <div style="font-size:3rem;margin-bottom:16px">✉️</div>
+        <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:8px">E-posta gönderildi</h1>
+        <p style="color:var(--text-2);margin-bottom:24px">
+          Şifre sıfırlama bağlantısını <strong id="sent-email"></strong> adresine gönderdik.
+          Bağlantıya tıklayarak yeni şifreni oluşturabilirsin.
+        </p>
+        <a href="giris.html" class="btn btn--primary btn--block">Giriş sayfasına dön</a>
+      </div>
+
+      <!-- 3. Adım: Yeni şifre belirleme (token ile) -->
+      <div id="step-newpw" style="display:none">
+        <h1 class="auth-title">Yeni şifre belirle</h1>
+        <p class="auth-sub">Lütfen yeni şifreni gir.</p>
+
+        <div id="newpw-alert" style="display:none" class="alert alert--error mb-16" role="alert"></div>
+
+        <form id="newpw-form" class="form-group" novalidate>
+          <div class="field">
+            <label for="new-password">Yeni şifre</label>
+            <div class="input-group">
+              <input type="password" id="new-password" placeholder="En az 6 karakter" autocomplete="new-password" required minlength="6">
+              <button type="button" class="toggle-pw" data-target="new-password" aria-label="Şifreyi göster">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
             </div>
-        </div>
-    </main>
+          </div>
+          <button type="submit" class="btn btn--primary btn--block btn--lg" id="newpw-btn">Şifremi Güncelle</button>
+        </form>
+      </div>
 
-    <div id="app-footer"></div>
+    </div>
+  </main>
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-    (function () {
-        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
-        var form = document.getElementById("srForm");
-        var msg = document.getElementById("srMsg");
-        function showErr(text) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = text; }
-        function showOk(text) { msg.hidden = false; msg.style.color = ""; msg.textContent = text; }
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-        async function start() {
-            if (window.KB && KB.ready) await KB.ready();
-            if (!(window.KB && KB.isOnline())) { form.innerHTML = '<p class="empty">Supabase gerekli.</p>'; return; }
-            // token_hash query param (yeni Supabase format) varsa önce doğrula
-            var params = new URLSearchParams(window.location.search);
-            var tokenHash = params.get('token_hash');
-            if (tokenHash) {
-                var vr = await SB.verifyEmail(tokenHash, 'recovery');
-                if (vr && vr.error) {
-                    form.innerHTML = '<p class="empty">' + t("sr.invalid") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>';
-                    return;
-                }
-            }
-            var u = await SB.getUser();
-            if (!u) { form.innerHTML = '<p class="empty">' + t("sr.invalid") + '</p><a class="btn btn--primary mt-24" href="giris.html">' + t("cta.signin") + '</a>'; return; }
+    var stepRequest = document.getElementById('step-request');
+    var stepSent    = document.getElementById('step-sent');
+    var stepNewpw   = document.getElementById('step-newpw');
 
-            form.addEventListener("submit", async function (e) {
-                e.preventDefault();
-                var p1 = document.getElementById("srPass").value;
-                var p2 = document.getElementById("srPass2").value;
-                if (p1.length < 6) { showErr(t("sr.short")); return; }
-                if (p1 !== p2) { showErr(t("sr.mismatch")); return; }
-                try {
-                    var r = await SB.updatePassword(p1);
-                    if (r && r.error) { showErr(r.error.message || t("auth.errGeneric")); return; }
-                    showOk(t("sr.saved"));
-                    await SB.signOut();
-                    setTimeout(function () { location.href = "giris.html"; }, 1600);
-                } catch (err) { showErr(err.message || t("auth.errGeneric")); }
-            });
-        }
-        start();
-    })();
-    </script>
+    /* Şifre göster/gizle */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.toggle-pw');
+      if (!btn) return;
+      var inp = document.getElementById(btn.getAttribute('data-target'));
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    });
+
+    /* Hash'te access_token varsa yeni şifre adımına geç */
+    var hash = new URLSearchParams(location.hash.slice(1));
+    if (hash.get('type') === 'recovery' && hash.get('access_token')) {
+      stepRequest.style.display = 'none';
+      stepNewpw.style.display   = '';
+    }
+
+    /* 1. Şifre sıfırlama e-postası gönder */
+    document.getElementById('reset-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var alertEl = document.getElementById('reset-alert');
+      alertEl.style.display = 'none';
+      var email = document.getElementById('reset-email').value.trim();
+      if (!email) { alertEl.textContent = 'E-posta adresi gereklidir.'; alertEl.style.display = ''; return; }
+      if (!window.SB || !SB.isOn()) { alertEl.textContent = 'Sunucuya bağlanılamadı.'; alertEl.style.display = ''; return; }
+
+      var btn = document.getElementById('reset-btn');
+      btn.classList.add('is-loading'); btn.disabled = true;
+      try {
+        await SB.resetPassword(email);
+        document.getElementById('sent-email').textContent = email;
+        stepRequest.style.display = 'none';
+        stepSent.style.display    = '';
+      } catch (err) {
+        alertEl.textContent = (err && err.message) || 'Bir hata oluştu.';
+        alertEl.style.display = '';
+        btn.classList.remove('is-loading'); btn.disabled = false;
+      }
+    });
+
+    /* 2. Yeni şifre güncelle */
+    document.getElementById('newpw-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var alertEl = document.getElementById('newpw-alert');
+      alertEl.style.display = 'none';
+      var pw = document.getElementById('new-password').value;
+      if (pw.length < 6) { alertEl.textContent = 'Şifre en az 6 karakter olmalıdır.'; alertEl.style.display = ''; return; }
+      if (!window.SB || !SB.isOn()) { alertEl.textContent = 'Sunucuya bağlanılamadı.'; alertEl.style.display = ''; return; }
+
+      var btn = document.getElementById('newpw-btn');
+      btn.classList.add('is-loading'); btn.disabled = true;
+      try {
+        await SB.updatePassword(pw);
+        KBMotion.showToast('Şifren güncellendi!', 'success');
+        setTimeout(function () { location.href = 'giris.html'; }, 1500);
+      } catch (err) {
+        alertEl.textContent = (err && err.message) || 'Şifre güncellenemedi.';
+        alertEl.style.display = '';
+        btn.classList.remove('is-loading'); btn.disabled = false;
+      }
+    });
+
+  }());
+  </script>
 </body>
 </html>

@@ -3,66 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex">
-  <title>Finans Merkezi · Kuryemi Bul</title>
+  <title>Finans Merkezi · KuryemiBul</title>
   <link rel="icon" href="assets/logo.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/landing.css"><link rel="stylesheet" href="assets/css/platform.css">
-    <link rel="stylesheet" href="assets/css/mobile-design-system.css">
-    <link rel="stylesheet" href="assets/css/mobile-screens.css">
-    <link rel="stylesheet" href="assets/css/mobile-motion.css"></head>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
 <body>
-  <div class="bg-fx" aria-hidden="true"><span class="orb orb--1"></span><span class="orb orb--2"></span><span class="orb orb--3"></span></div>
-  <div id="app"></div>
-  <template id="page">
-    <div class="grid grid--4 reveal">
-      <div class="stat"><div class="stat__top"><span class="stat__ic">💰</span><span class="stat__l">Toplam Hacim</span></div><div class="stat__v" data-prefix="₺" data-count="1.24" data-dec="2" data-suffix="M">0</div><div class="stat__d up">▲ %23</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🛵</span><span class="stat__l">Kurye Kazancı</span></div><div class="stat__v" data-prefix="₺" data-count="892" data-suffix="K">0</div><div class="stat__d up">▲ %19</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">🏢</span><span class="stat__l">Firma Geliri</span></div><div class="stat__v" data-prefix="₺" data-count="214" data-suffix="K">0</div><div class="stat__d up">▲ %15</div></div>
-      <div class="stat"><div class="stat__top"><span class="stat__ic">📈</span><span class="stat__l">Komisyon</span></div><div class="stat__v" data-prefix="₺" data-count="134" data-suffix="K">0</div><div class="stat__d up">▲ %21</div></div>
+
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Finans Merkezi</h1>
+      <p class="page-sub">Ödeme ve finansal işlem geçmişi.</p>
     </div>
 
-    <div class="grid grid--3 reveal" style="margin-top:18px">
-      <div class="panel col-2">
-        <div class="panel__h"><h3><span class="ic">📈</span> Gelir Akışı</h3><span class="right"><span class="chip chip--cy">12 ay</span><span class="chip chip--ok">▲ %23</span></span></div>
-        <div class="panel__b"><svg class="linechart" id="finChart" style="height:240px" aria-hidden="true"></svg></div>
-      </div>
-      <div class="panel">
-        <div class="panel__h"><h3><span class="ic">🍰</span> Gelir Dağılımı</h3></div>
-        <div class="panel__b" style="display:flex;flex-direction:column;align-items:center;gap:18px">
-          <div class="donut" style="--p:62;--p2:89"><i><b>₺1.2M</b><span>hacim</span></i></div>
-          <div class="legend" style="width:100%">
-            <div class="li"><span class="sw" style="background:#22d3ee"></span> Kurye kazancı <span class="v">%62</span></div>
-            <div class="li"><span class="sw" style="background:#4f8bff"></span> Firma geliri <span class="v">%27</span></div>
-            <div class="li"><span class="sw" style="background:#a855f7"></span> Komisyon <span class="v">%11</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="card" style="padding:48px;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:16px">🚧</div>
+      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:8px">Yapım Aşamasında</h2>
+      <p style="color:var(--text-2);font-size:0.9rem;max-width:380px;margin:0 auto 24px">Bu bölüm yakında hizmete açılacak.</p>
+      <a href="javascript:history.back()" class="btn btn--ghost btn--sm">Geri Dön</a>
     </div>
+  </div>
 
-    <div class="panel reveal" style="margin-top:18px">
-      <div class="panel__h"><h3><span class="ic">💳</span> Son Ödemeler</h3><span class="right"><span class="chip chip--ok">Tümü ödendi</span></span></div>
-      <div class="panel__b" style="padding:6px 8px">
-        <table class="tbl">
-          <thead><tr><th>İşlem</th><th>Taraf</th><th>Tür</th><th>Tutar</th><th>Durum</th></tr></thead>
-          <tbody>
-            <tr><td><span class="u"><span class="av">🛵</span> #PAY-8841</span></td><td>Yusuf K.</td><td>Kurye ödemesi</td><td><b>₺1.240</b></td><td><span class="chip chip--ok">● Ödendi</span></td></tr>
-            <tr><td><span class="u"><span class="av">🏢</span> #PAY-8840</span></td><td>HızlıKurye</td><td>Firma hakediş</td><td><b>₺18.600</b></td><td><span class="chip chip--ok">● Ödendi</span></td></tr>
-            <tr><td><span class="u"><span class="av">🏪</span> #INV-2231</span></td><td>Lezzet Burger</td><td>İşletme faturası</td><td><b>₺3.480</b></td><td><span class="chip chip--cy">● İşleniyor</span></td></tr>
-            <tr><td><span class="u"><span class="av">📈</span> #COM-1190</span></td><td>Platform</td><td>Komisyon</td><td><b>₺2.140</b></td><td><span class="chip chip--ok">● Tahsil</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </template>
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data.js"></script><script src="assets/js/supabase.js"></script><script src="assets/js/platform.js"></script>
-  <script>
-    var wrap = Platform.init({ active: 'finance', title: 'Finans Merkezi', subtitle: 'Platform ekonomisi · ödemeler, kazanç ve komisyon' });
-    wrap.innerHTML = document.getElementById('page').innerHTML;
-    Platform.lineChart(document.getElementById('finChart'), [52,58,64,70,82,90,104,118,130,148,166,188], { h: 240 });
-    Platform.animate();
-  </script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
 </body>
 </html>

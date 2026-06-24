@@ -1,59 +1,65 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="title.kuryeler">Kurye Havuzu · Kuryemi Bul</title>
-    <meta name="description" content="Kurye havuzunda bölge, şehir ve seviyeye göre kurye ara; profilini incele ve teklif gönder.">
-    <link rel="icon" href="assets/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Kuryemi Bul">
-    <meta property="og:title" content="Kurye Havuzu · Kuryemi Bul">
-    <meta property="og:description" content="Kurye havuzunda bölge, şehir ve seviyeye göre kurye ara; profilini incele ve teklif gönder.">
-    <meta property="og:url" content="https://kuryemibul.com/kuryeler.html">
-    <meta property="og:image" content="https://kuryemibul.com/assets/og-cover.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kurye Havuzu · KuryemiBul</title>
+  <meta name="description" content="Bölge, şehir ve seviyeye göre kurye ara.">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
 <body>
-    <div id="app-header"></div>
 
-    <section class="kb-hero">
-        <div class="container">
-            <span class="kb-hero__eyebrow">Yetenek Keşfi</span>
-            <h1 class="kb-hero__title">Doğrulanmış <span class="grad">yetenekleri</span> keşfet</h1>
-            <p class="kb-hero__sub">Deneyimli, doğrulanmış kuryeleri bul; profillerini incele ve doğrudan teklif gönder.</p>
-            <div class="kb-hero__meta"><span class="kb-hero__meta-item">Doğrulanmış profiller</span><span class="kb-hero__meta-item">Kariyer skoru</span><span class="kb-hero__meta-item">Anında teklif</span></div>
-        </div>
-    </section>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main class="section--sm">
-        <div class="container">
-            <div class="toolbar">
-                <div class="search search--suggest">
-                    <input type="search" id="fSearch" autocomplete="off" placeholder="İsim, şehir veya bölge ara…" aria-label="Ara">
-                    <div class="suggest" id="poolSuggest" role="listbox"></div>
-                </div>
-                <select id="fSelect1" aria-label="Şehir"></select>
-                <select id="fSelect2" aria-label="Seviye"></select>
-            </div>
-            <div class="active-chips" id="poolChips"></div>
-            <p class="result-count" id="resultCount"></p>
-            <div class="talent-grid" id="poolGrid"></div>
-        </div>
-    </main>
+  <div class="app-content">
+    <div class="page-header">
+      <h1>Kurye Havuzu</h1>
+      <p class="page-sub">Bölge, şehir ve seviyeye göre kurye bul.</p>
+    </div>
 
-    <div id="app-footer"></div>
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>KBApp.renderPool("kurye");</script>
+    <!-- Filtre çubuğu -->
+    <div class="filter-bar">
+      <div class="search-wrap" style="position:relative;flex:1;min-width:180px">
+        <span class="search-ico" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </span>
+        <input type="search" id="fSearch" placeholder="İsim, şehir, bölge ara…" autocomplete="off" style="padding-left:36px">
+        <div class="suggest-box" id="poolSuggest"></div>
+      </div>
+      <select id="fSelect1"><option value="">Tüm Şehirler</option></select>
+      <select id="fSelect2"><option value="">Tüm Seviyeler</option></select>
+    </div>
+
+    <!-- Aktif filtre chipleri -->
+    <div class="active-chips" id="poolChips"></div>
+
+    <!-- Sonuç sayısı -->
+    <p class="text-sm text-muted mb-16" id="resultCount"></p>
+
+    <!-- Kart grid -->
+    <div class="cards-grid" id="poolGrid">
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.KBApp && KBApp.renderPool) KBApp.renderPool('kurye');
+    });
+  </script>
 </body>
 </html>

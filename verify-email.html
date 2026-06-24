@@ -1,115 +1,89 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="verify.title">E-posta Doğrulama · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="assets/logo.png">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
-    <link rel="stylesheet" href="assets/css/space-bg.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-posta Doğrulama · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body>
-    <div id="app-header"></div>
+<body class="auth-page">
 
-    <section class="page-head">
-        <div class="container"><h1 data-i18n="verify.title">E-posta Doğrulama</h1></div>
-    </section>
+  <header class="auth-header">
+    <a class="brand" href="index.html">KuryemiBul</a>
+  </header>
 
-    <main class="section--sm">
-        <div class="container container--narrow">
-            <div class="form-card">
-                <!-- Durum: yükleniyor -->
-                <div id="vState" style="text-align:center">
-                    <p class="pcard__sub" id="vText" data-i18n="verify.checking">E-postan doğrulanıyor…</p>
-                </div>
+  <main class="auth-body">
+    <div class="auth-box" style="text-align:center">
+      <div style="font-size:3rem;margin-bottom:16px">📧</div>
+      <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:8px">E-postanı doğrula</h1>
+      <p style="color:var(--text-2);margin-bottom:24px">
+        <span id="email-text">E-posta adresine</span> bir doğrulama bağlantısı gönderdik.
+        Gelen kutunu kontrol et ve bağlantıya tıkla.
+      </p>
+      <div class="alert alert--info" style="text-align:left;margin-bottom:24px">
+        <strong>Görmüyor musun?</strong> Spam / önemsiz klasörüne bakabilirsin.
+        Birkaç dakika beklemeyi de dene.
+      </div>
+      <button class="btn btn--secondary btn--block" id="resend-btn" type="button">
+        Tekrar gönder
+      </button>
+      <p class="auth-footer mt-16">
+        <a href="giris.html">← Giriş sayfasına dön</a>
+      </p>
+    </div>
+  </main>
 
-                <!-- Durum: hata (gizli) -->
-                <form id="resendForm" hidden>
-                    <div class="field"><label for="vEmail" data-i18n="auth.email">E-posta</label>
-                        <input type="email" id="vEmail" data-i18n-ph="verify.emailPh" placeholder="ornek@eposta.com" required></div>
-                    <button type="submit" class="btn btn--primary btn--lg btn--block" data-i18n="verify.resendBtn">Yeni doğrulama linki gönder</button>
-                </form>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var email  = params.get('email');
+    if (email) {
+      var el = document.getElementById('email-text');
+      if (el) el.innerHTML = '<strong>' + email + '</strong> adresine';
+    }
 
-                <p class="form-success" id="vMsg" hidden></p>
-            </div>
-        </div>
-    </main>
+    var resendBtn = document.getElementById('resend-btn');
+    var cooldown  = false;
 
-    <div id="app-footer"></div>
+    resendBtn.addEventListener('click', async function () {
+      if (cooldown) return;
+      if (!email) { KBMotion.showToast('E-posta adresi bilinmiyor.', 'error'); return; }
+      if (!window.SB || !SB.isOn()) { KBMotion.showToast('Sunucuya bağlanılamadı.', 'error'); return; }
+      resendBtn.disabled = true; resendBtn.textContent = 'Gönderiliyor…';
+      try {
+        await SB.resendVerification(email);
+        KBMotion.showToast('Doğrulama e-postası tekrar gönderildi.', 'success');
+        cooldown = true;
+        setTimeout(function () {
+          cooldown = false; resendBtn.disabled = false; resendBtn.textContent = 'Tekrar gönder';
+        }, 60000);
+        resendBtn.textContent = '60 saniye bekle';
+      } catch (e) {
+        KBMotion.showToast((e && e.message) || 'Hata oluştu.', 'error');
+        resendBtn.disabled = false; resendBtn.textContent = 'Tekrar gönder';
+      }
+    });
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-    (function () {
-        var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
-        var stateBox = document.getElementById("vState");
-        var vText = document.getElementById("vText");
-        var resendForm = document.getElementById("resendForm");
-        var msg = document.getElementById("vMsg");
-
-        function showErr(text) { msg.hidden = false; msg.style.color = "#c0392b"; msg.textContent = text; }
-        function showOk(text) { msg.hidden = false; msg.style.color = ""; msg.textContent = text; }
-
-        function showError(reasonKey) {
-            vText.textContent = t("verify.errorTitle");
-            showErr(t(reasonKey));
-            resendForm.hidden = false;
+    /* Zaten oturum açık mı kontrol et */
+    (async function () {
+      if (!window.SB || !SB.isOn()) return;
+      try {
+        var user = await SB.getUser();
+        if (user) {
+          var profile = await SB.myProfile();
+          var role = profile && profile.role;
+          if (role) location.href = (window.KB && KB.roleToPanel ? KB.roleToPanel(role) : 'panel-' + role + '.html');
+          else location.href = 'onboarding.html';
         }
-
-        function getParam(name) {
-            var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
-            return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
-        }
-
-        async function start() {
-            if (window.KB && KB.ready) await KB.ready();
-            if (!(window.KB && KB.isOnline())) { vText.textContent = "Supabase gerekli."; return; }
-
-            // E-postadaki bağlantı: ?token_hash=...&type=signup
-            var tokenHash = getParam("token_hash");
-            var type = getParam("type") || "signup";
-
-            if (!tokenHash) { showError("verify.invalid"); return; }
-
-            try {
-                var r = await SB.verifyEmail(tokenHash, type);
-                if (r && r.error) {
-                    var m = (r.error.message || "").toLowerCase();
-                    showError(/expire|invalid|otp/.test(m) ? "verify.expired" : "verify.invalid");
-                    return;
-                }
-                // Başarılı → oturum açıldı, profili tamamlamaya yönlendir
-                vText.textContent = t("verify.success");
-                showOk(t("verify.successSub"));
-                setTimeout(function () { location.href = "profil-duzenle.html"; }, 1500);
-            } catch (err) {
-                showError("verify.expired");
-            }
-        }
-
-        resendForm.addEventListener("submit", async function (e) {
-            e.preventDefault();
-            var email = document.getElementById("vEmail").value.trim();
-            if (!email) { showErr(t("auth.resetEmailFirst")); return; }
-            var btn = resendForm.querySelector("button");
-            btn.disabled = true;
-            try {
-                var r = await SB.resendVerification(email);
-                if (r && r.error) { showErr(r.error.message || t("auth.errGeneric")); btn.disabled = false; return; }
-                showOk(t("verify.resent"));
-            } catch (err) { showErr(err.message || t("auth.errGeneric")); btn.disabled = false; }
-        });
-
-        start();
+      } catch (e) {}
     })();
-    </script>
+  }());
+  </script>
 </body>
 </html>

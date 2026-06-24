@@ -1,33 +1,41 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="title.notfound">Sayfa Bulunamadı · Kuryemi Bul</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="/assets/logo.png">
-    <link rel="stylesheet" href="/assets/css/bundle-core.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sayfa Bulunamadı · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .error-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - var(--topbar-h) - 80px); text-align: center; padding: 40px 20px; }
+    .error-page__code { font-size: 6rem; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 8px; }
+    .error-page__title { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .error-page__sub { font-size: 1rem; color: var(--text-2); margin-bottom: 32px; max-width: 400px; }
+    .error-page__actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
 <body>
-    <div id="app-header"></div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
 
-    <main>
-        <section class="nf">
-            <div>
-                <div class="nf__code">404</div>
-                <h1 data-i18n="nf.title">Sayfa bulunamadı</h1>
-                <p data-i18n="nf.text">Aradığın sayfa taşınmış ya da hiç var olmamış olabilir.</p>
-                <a class="btn btn--primary btn--lg" href="/index.html" data-i18n="nf.home">Ana Sayfaya Dön</a>
-            </div>
-        </section>
-    </main>
+  <div class="app-content">
+    <div class="error-page">
+      <div class="error-page__code">404</div>
+      <h1 class="error-page__title">Sayfa Bulunamadı</h1>
+      <p class="error-page__sub">Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.</p>
+      <div class="error-page__actions">
+        <a href="index.html" class="btn btn--primary">Ana Sayfaya Dön</a>
+        <button onclick="history.back()" class="btn btn--ghost">Geri Git</button>
+      </div>
+    </div>
+  </div>
 
-    <div id="app-footer"></div>
-
-    <script src="/assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/assets/js/supabase.js"></script>
-    <script src="/assets/js/data.js"></script>
-    <script src="/assets/js/components.js"></script>
-    <script src="/assets/js/app.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
 </body>
 </html>

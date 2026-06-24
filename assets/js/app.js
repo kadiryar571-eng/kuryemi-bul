@@ -1179,7 +1179,8 @@
         { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] }
       ]
     });
-    
+    el.__gmap = map; // konumum butonu için referans
+
     var markerConfig = {
       kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
       isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },

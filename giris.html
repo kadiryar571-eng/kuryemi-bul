@@ -1,550 +1,268 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="title.giris">Giriş / Katıl · Kuryemi Bul</title>
-    <meta name="description" content="KuryemiBul'a giriş yap veya hesap oluştur. Kuryeler iş bulur, işletmeler ve esnaflar kurye bulur.">
-    <link rel="icon" href="assets/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Kuryemi Bul">
-    <meta property="og:title" content="Giriş / Katıl · Kuryemi Bul">
-    <meta property="og:description" content="Rolünü seç, hesabını oluştur veya giriş yap.">
-    <meta property="og:url" content="https://kuryemibul.com/giris.html">
-    <meta name="twitter:card" content="summary_large_image">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css">
-    <link rel="stylesheet" href="assets/css/space-bg.css">
-    <style>
-      /* ===== Auth sayfası — sade dark tema ===== */
-      body{background:var(--bg,#0d0d0d)}
-
-      /* minimal header (logo solda — konum korunur) */
-      .auth-header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
-        padding:18px clamp(18px,5vw,48px)}
-      .auth-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.15rem;letter-spacing:-.02em}
-      .auth-brand__mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-none;background:transparent}
-      .auth-brand__mark img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-      .auth-navbtns{display:flex;gap:8px}
-      .auth-navbtns button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#cdd5e3;
-        font-family:inherit;font-weight:600;font-size:.88rem;padding:9px 18px;border-radius:999px;cursor:pointer;
-        backdrop-filter:blur(8px);transition:all .25s}
-      .auth-navbtns button:hover{color:#fff;border-color:rgba(124,140,220,.5)}
-      .auth-navbtns button.active{background:linear-gradient(135deg,#4f8bff,#a855f7);border-color:transparent;color:#fff;
-        box-shadow:0 8px 24px -8px rgba(124,92,255,.7)}
-
-      /* ortala */
-      .auth-wrap{min-height:100vh;display:grid;place-items:center;padding:112px 18px 72px}
-
-      /* kart */
-      .auth-card{width:100%;max-width:440px;position:relative;
-        background:var(--ds-panel,rgba(255,255,255,.05));
-        border:1px solid var(--ds-stroke,rgba(255,255,255,.10));border-radius:24px;padding:clamp(26px,4vw,38px);
-        box-shadow:var(--ds-shadow,0 8px 24px -6px rgba(0,0,0,0.55))}
-
-      .auth-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,4vw,2rem);font-weight:700;color:#fff;text-align:center;letter-spacing:-.03em;line-height:1.1;margin:0}
-      .auth-sub{color:#94a0b4;text-align:center;margin:9px 0 24px;font-size:.94rem;line-height:1.5}
-
-      /* sekmeler — kayan pill */
-      .auth-tabs{position:relative;display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:5px;margin-bottom:24px}
-      .auth-tabs button{flex:1;position:relative;z-index:1;border:none;background:transparent;color:#94a0b4;font-weight:700;font-size:.94rem;padding:11px;border-radius:999px;cursor:pointer;font-family:inherit;transition:color .3s}
-      .auth-tabs button.active{color:#fff}
-      .auth-tabs .auth-slider{position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 5px);border-radius:999px;
-        background:linear-gradient(135deg,#4f8bff,#a855f7);box-shadow:0 8px 24px -6px rgba(124,92,255,.7);
-        transition:transform .38s cubic-bezier(.4,0,.2,1)}
-      .auth-tabs[data-mode="register"] .auth-slider{transform:translateX(100%)}
-
-      /* form geçişi */
-      .auth-form{display:none;animation:authFade .35s ease}
-      .auth-form.active{display:block}
-      @keyframes authFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-      .auth-field{margin-bottom:15px}
-      .auth-field>label{display:block;font-size:.8rem;color:#94a0b4;margin-bottom:7px;font-weight:600}
-      .auth-inp{position:relative;display:flex;align-items:center}
-      .auth-inp .ic{position:absolute;left:13px;display:flex;color:#7c89a3;pointer-events:none}
-      .auth-inp input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;
-        padding:14px 14px 14px 42px;color:#fff;font-size:.97rem;font-family:inherit;transition:border-color .25s,box-shadow .25s,background .25s}
-      .auth-inp input::placeholder{color:#586277}
-      .auth-inp input:focus{outline:none;border-color:#4f8bff;background:rgba(79,139,255,.06);box-shadow:0 0 0 4px rgba(79,139,255,.16)}
-      .auth-inp .eye{position:absolute;right:10px;background:none;border:none;color:#7c89a3;cursor:pointer;padding:6px;display:flex;border-radius:8px;transition:color .2s}
-      .auth-inp .eye:hover{color:#cdd5e3}
-
-      /* rol segment */
-      .role-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-      .role-seg button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:13px 6px;border-radius:14px;
-        border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#94a0b4;cursor:pointer;font-family:inherit;font-weight:600;font-size:.78rem;transition:all .25s}
-      .role-seg button .em{font-size:1.35rem;line-height:1}
-      .role-seg button:hover{border-color:rgba(124,140,220,.4);color:#cdd5e3}
-      .role-seg button.active{border-color:transparent;color:#fff;
-        background:linear-gradient(135deg,rgba(79,139,255,.28),rgba(168,85,247,.28));
-        box-shadow:0 0 0 1px rgba(124,92,255,.5),0 10px 26px -12px rgba(124,92,255,.7)}
-
-      .auth-forgot{text-align:right;margin:-4px 0 12px}
-      .auth-forgot a{color:#7c89a3;font-size:.85rem;text-decoration:none;transition:color .2s}
-      .auth-forgot a:hover{color:#4f8bff}
-
-      .auth-submit{width:100%;border:none;border-radius:14px;padding:15px;font-size:1rem;font-weight:700;font-family:inherit;color:#fff;
-        background:linear-gradient(135deg,#4f8bff,#a855f7);cursor:pointer;margin-top:4px;
-        box-shadow:0 12px 32px -12px rgba(124,92,255,.75);transition:transform .2s,box-shadow .3s,filter .2s}
-      .auth-submit:hover{transform:translateY(-2px);box-shadow:0 18px 44px -12px rgba(124,92,255,.95);filter:brightness(1.05)}
-      .auth-submit:active{transform:translateY(0)}
-      .auth-submit:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
-
-      .auth-msg{margin-top:15px;padding:11px 14px;border-radius:12px;font-size:.9rem;text-align:center;line-height:1.45;
-        background:rgba(34,211,238,.08);color:#cfeeff;border:1px solid rgba(34,211,238,.2)}
-      .auth-msg.err{background:rgba(239,68,68,.1);color:#fecaca;border-color:rgba(239,68,68,.28)}
-
-      /* ayraç: "veya" */
-      .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:#5e6a80;font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-      .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.1)}
-
-      /* Google butonu */
-      .auth-google{width:100%;display:flex;align-items:center;justify-content:center;gap:11px;border-radius:14px;padding:14px;
-        font-size:.97rem;font-weight:600;font-family:inherit;color:#fff;cursor:pointer;
-        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);
-        transition:background .25s,border-color .25s,transform .15s}
-      .auth-google:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28);transform:translateY(-1px)}
-      .auth-google:active{transform:translateY(0)}
-      .auth-google:disabled{opacity:.55;cursor:default;transform:none}
-      .auth-google svg{width:20px;height:20px;flex:none}
-
-      /* alan-bazlı inline validasyon */
-      .field-err{display:none;margin-top:6px;font-size:.78rem;color:#fca5a5;line-height:1.35}
-      .auth-field.invalid .auth-inp input{border-color:rgba(239,68,68,.6);background:rgba(239,68,68,.06)}
-      .auth-field.invalid .auth-inp input:focus{box-shadow:0 0 0 4px rgba(239,68,68,.14)}
-      .auth-field.invalid .field-err{display:block}
-      .auth-field.valid .auth-inp input{border-color:rgba(52,211,153,.4)}
-
-      /* parola gücü göstergesi (yalnız kayıt) */
-      .pass-meter{display:none;margin:-6px 0 14px}
-      .pass-meter.show{display:block}
-      .pass-meter__bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
-      .pass-meter__fill{height:100%;width:0;border-radius:999px;transition:width .3s ease,background .3s ease}
-      .pass-meter__txt{margin-top:5px;font-size:.74rem;color:#94a0b4}
-      .pass-meter[data-lvl="1"] .pass-meter__fill{width:34%;background:#ef4444}
-      .pass-meter[data-lvl="2"] .pass-meter__fill{width:67%;background:#f59e0b}
-      .pass-meter[data-lvl="3"] .pass-meter__fill{width:100%;background:#34d399}
-
-      /* loading spinner + başarı durumu */
-      .auth-submit.is-loading,.auth-google.is-loading{color:transparent !important;pointer-events:none}
-      .auth-submit.is-loading::after,.auth-google.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:authSpin .7s linear infinite}
-      .auth-google{position:relative}
-      @keyframes authSpin{to{transform:rotate(360deg)}}
-      .auth-submit.is-ok{background:linear-gradient(135deg,#10b981,#34d399);box-shadow:0 12px 32px -12px rgba(16,185,129,.7)}
-
-      /* klavye erişimi: görünür odak halkası */
-      .auth-tabs button:focus-visible,.auth-navbtns button:focus-visible,.auth-submit:focus-visible,.auth-google:focus-visible,.auth-inp .eye:focus-visible,.auth-forgot a:focus-visible{outline:2px solid #6ea0ff;outline-offset:2px;border-radius:10px}
-
-      @media (max-width:480px){ .auth-navbtns button{padding:8px 13px;font-size:.82rem} }
-      @media (prefers-reduced-motion:reduce){ .auth-submit.is-loading::after,.auth-google.is-loading::after{animation-duration:1.4s} }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş / Kayıt · KuryemiBul</title>
+  <meta name="description" content="KuryemiBul'a giriş yap veya yeni hesap oluştur.">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body>
-    <!-- Uzay arka plan -->
-    <div class="space-bg" id="space-bg" aria-hidden="true">
-      <div class="space-nebula"></div>
-      <div class="space-stars space-stars--s"></div>
-      <div class="space-stars space-stars--m"></div>
-      <div class="space-stars space-stars--f"></div>
-      <div class="nova nova--1"></div>
-      <div class="nova nova--2"></div>
-      <div class="nova nova--3"></div>
-      <div class="nova nova--4"></div>
-      <div class="nova nova--5"></div>
-      <div class="nova nova--6"></div>
+<body class="auth-page">
+
+  <!-- Header -->
+  <header class="auth-header">
+    <a class="brand" href="index.html">KuryemiBul</a>
+    <div class="header-spacer"></div>
+    <div class="header-links" id="header-hint">
+      Hesabın yok mu? <a href="#" id="switch-to-register">Kayıt ol</a>
     </div>
+  </header>
 
-    <!-- minimal header: logo sol, sadece Giriş/Kayıt -->
-    <header class="auth-header">
-      <a href="index.html" class="auth-brand" aria-label="Kuryemi Bul">
-        <span class="auth-brand__mark"><img src="assets/logo.png" alt="" onerror="this.parentNode.textContent='🛵'"></span>Kuryemi&nbsp;Bul
-      </a>
-      <div class="auth-navbtns">
-        <button type="button" id="navLogin" class="active" data-go="login">Giriş Yap</button>
-        <button type="button" id="navRegister" data-go="register">Kayıt Ol</button>
+  <!-- Body -->
+  <main class="auth-body">
+    <div class="auth-box">
+
+      <!-- Sekmeler -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" type="button">Giriş Yap</button>
+        <button class="auth-tab" id="tab-register" type="button">Kayıt Ol</button>
       </div>
-    </header>
 
-    <main class="auth-wrap">
-      <div class="auth-card reveal in">
-        <h1 class="auth-title" data-i18n="giris.title">Platforma Katıl</h1>
-        <p class="auth-sub" data-i18n="giris.lead">Hesabına giriş yap ya da yeni bir hesap oluştur.</p>
+      <!-- Hata / Başarı mesajı -->
+      <div id="auth-alert" style="display:none" class="alert alert--error mb-16" role="alert"></div>
 
-        <!-- sekmeler -->
-        <div class="auth-tabs" id="authTabs" data-mode="login" role="tablist" aria-label="Giriş / Kayıt">
-          <span class="auth-slider" aria-hidden="true"></span>
-          <button type="button" class="active" data-mode="login" role="tab" aria-selected="true" data-i18n="auth.login">Giriş Yap</button>
-          <button type="button" data-mode="register" role="tab" aria-selected="false" data-i18n="auth.register">Kayıt Ol</button>
+      <!-- Google ile giriş -->
+      <button class="btn btn--social" id="google-btn" type="button">
+        <svg width="18" height="18" viewBox="0 0 48 48" fill="none"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.4 33.4 29.8 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.9 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.2-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.9 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#FBBC04" d="M24 44c5.6 0 10.5-1.9 14.4-5.1l-6.7-5.5C29.8 35.1 27 36 24 36c-5.7 0-10.6-3.6-12.3-8.7l-7 5.4C8.2 39.5 15.5 44 24 44z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.7 2.3-2.1 4.2-3.9 5.6l6.7 5.5C42.8 36 44.7 30.5 44.7 24c0-1.3-.1-2.7-.2-4z"/></svg>
+        Google ile devam et
+      </button>
+
+      <div class="auth-divider">veya</div>
+
+      <!-- GİRİŞ FORMU -->
+      <form id="login-form" class="form-group" novalidate>
+        <div class="field">
+          <label for="login-email">E-posta adresi</label>
+          <input type="email" id="login-email" name="email" placeholder="ornek@mail.com" autocomplete="email" required>
         </div>
-
-        <!-- GİRİŞ FORMU -->
-        <form id="loginForm" class="auth-form active" novalidate>
-          <div class="auth-field">
-            <label for="lEmail" data-i18n="auth.email">E-posta</label>
-            <div class="auth-inp">
-              <span class="ic" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
-              </span>
-              <input type="email" id="lEmail" placeholder="ornek@eposta.com" autocomplete="email" aria-describedby="lEmailErr" required>
-            </div>
-            <span class="field-err" id="lEmailErr" role="alert"></span>
+        <div class="field">
+          <label for="login-password">Şifre</label>
+          <div class="input-group">
+            <input type="password" id="login-password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" data-target="login-password" aria-label="Şifreyi göster">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
-          <div class="auth-field">
-            <label for="lPass" data-i18n="auth.password">Şifre</label>
-            <div class="auth-inp">
-              <span class="ic" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              </span>
-              <input type="password" id="lPass" placeholder="••••••••" autocomplete="current-password" minlength="6" aria-describedby="lPassErr" required>
-              <button type="button" class="eye" data-eye="lPass" aria-label="Şifreyi göster/gizle" aria-pressed="false"></button>
-            </div>
-            <span class="field-err" id="lPassErr" role="alert"></span>
+        </div>
+        <div style="text-align:right">
+          <a href="sifre-sifirla.html" class="text-sm" style="color:var(--text-2)">Şifremi unuttum</a>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block btn--lg" id="login-btn">Giriş Yap</button>
+      </form>
+
+      <!-- KAYIT FORMU -->
+      <form id="register-form" class="form-group" novalidate style="display:none">
+        <div class="field">
+          <label for="reg-name">Ad Soyad</label>
+          <input type="text" id="reg-name" name="ad" placeholder="Ali Yılmaz" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="reg-email">E-posta adresi</label>
+          <input type="email" id="reg-email" name="email" placeholder="ornek@mail.com" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="reg-phone">Telefon <span class="text-faint text-sm">(opsiyonel)</span></label>
+          <input type="tel" id="reg-phone" name="telefon" placeholder="05xx xxx xx xx" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="reg-password">Şifre</label>
+          <div class="input-group">
+            <input type="password" id="reg-password" name="password" placeholder="En az 6 karakter" autocomplete="new-password" required minlength="6">
+            <button type="button" class="toggle-pw" data-target="reg-password" aria-label="Şifreyi göster">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
-          <div class="auth-forgot"><a href="#" id="forgotLink" data-i18n="auth.forgot">Şifremi unuttum?</a></div>
-          <button type="submit" class="auth-submit">Giriş Yap</button>
-          <div class="auth-divider" data-i18n="auth.or">veya</div>
-          <button type="button" class="auth-google" data-google><span data-i18n="auth.googleBtn">Google ile devam et</span></button>
-        </form>
+        </div>
+        <label class="check-label text-sm">
+          <input type="checkbox" id="reg-agree" required>
+          <span><a href="kvkk.html" target="_blank">Gizlilik Politikası</a> ve <a href="sartlar.html" target="_blank">Kullanım Şartlarını</a> kabul ediyorum</span>
+        </label>
+        <button type="submit" class="btn btn--primary btn--block btn--lg" id="register-btn">Hesap Oluştur</button>
+      </form>
 
-        <!-- KAYIT FORMU -->
-        <form id="registerForm" class="auth-form" novalidate>
-          <div class="auth-field">
-            <label for="rName" data-i18n="auth.name">Ad Soyad / Firma Adı</label>
-            <div class="auth-inp">
-              <span class="ic" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-              </span>
-              <input type="text" id="rName" data-i18n-ph="auth.namePh" placeholder="Örn. Ahmet Yılmaz" autocomplete="name" aria-describedby="rNameErr" required>
-            </div>
-            <span class="field-err" id="rNameErr" role="alert"></span>
-          </div>
-          <div class="auth-field">
-            <label for="rEmail" data-i18n="auth.email">E-posta</label>
-            <div class="auth-inp">
-              <span class="ic" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
-              </span>
-              <input type="email" id="rEmail" placeholder="ornek@eposta.com" autocomplete="email" aria-describedby="rEmailErr" required>
-            </div>
-            <span class="field-err" id="rEmailErr" role="alert"></span>
-          </div>
-          <div class="auth-field">
-            <label for="rPass" data-i18n="auth.password">Şifre</label>
-            <div class="auth-inp">
-              <span class="ic" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              </span>
-              <input type="password" id="rPass" data-i18n-ph="auth.passPh" placeholder="En az 6 karakter" autocomplete="new-password" minlength="6" aria-describedby="rPassErr" required>
-              <button type="button" class="eye" data-eye="rPass" aria-label="Şifreyi göster/gizle" aria-pressed="false"></button>
-            </div>
-            <div class="pass-meter" id="rPassMeter" aria-hidden="true"><div class="pass-meter__bar"><div class="pass-meter__fill"></div></div><div class="pass-meter__txt" id="rPassMeterTxt"></div></div>
-            <span class="field-err" id="rPassErr" role="alert"></span>
-          </div>
-          <button type="submit" class="auth-submit" data-i18n="auth.registerBtn">Hesap Oluştur</button>
-          <div class="auth-divider" data-i18n="auth.or">veya</div>
-          <button type="button" class="auth-google" data-google><span data-i18n="auth.googleBtn">Google ile devam et</span></button>
-        </form>
+      <p class="auth-footer" id="auth-footer-text">
+        Henüz hesabın yok mu? <a href="#" id="footer-switch">Kayıt ol →</a>
+      </p>
 
-        <p class="auth-msg" id="authMsg" hidden></p>
-      </div>
-    </main>
+    </div>
+  </main>
 
-    <div id="app-footer"></div>
+  <!-- Scripts -->
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function () {
+    'use strict';
 
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>
-    (function () {
-      var t = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
+    /* ─── Tab geçişi ─────────────────────────────────────────── */
+    var loginForm    = document.getElementById('login-form');
+    var registerForm = document.getElementById('register-form');
+    var tabLogin     = document.getElementById('tab-login');
+    var tabReg       = document.getElementById('tab-register');
+    var headerHint   = document.getElementById('header-hint');
+    var footerText   = document.getElementById('auth-footer-text');
 
-      /* ---- takımyıldız arka planı (devre dışı — sade dark tema) ---- */
-      (function net() {
-        return;
-        var ctx = c.getContext("2d"), w, h, pts, raf;
-        function size() { w = c.width = innerWidth; h = c.height = innerHeight; build(); }
-        function build() {
-          var n = Math.min(70, Math.floor(w * h / 22000));
-          pts = [];
-          for (var i = 0; i < n; i++) pts.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25 });
+    function showLogin() {
+      loginForm.style.display    = '';
+      registerForm.style.display = 'none';
+      tabLogin.classList.add('active');
+      tabReg.classList.remove('active');
+      headerHint.innerHTML = 'Hesabın yok mu? <a href="#" id="switch-to-register">Kayıt ol</a>';
+      footerText.innerHTML = 'Henüz hesabın yok mu? <a href="#" id="footer-switch">Kayıt ol →</a>';
+      bindSwitchLinks();
+      clearAlert();
+    }
+    function showRegister() {
+      loginForm.style.display    = 'none';
+      registerForm.style.display = '';
+      tabLogin.classList.remove('active');
+      tabReg.classList.add('active');
+      headerHint.innerHTML = 'Zaten hesabın var mı? <a href="#" id="switch-to-login">Giriş yap</a>';
+      footerText.innerHTML = 'Zaten hesabın var mı? <a href="#" id="footer-switch">Giriş yap →</a>';
+      bindSwitchLinks();
+      clearAlert();
+    }
+    function bindSwitchLinks() {
+      var toReg   = document.getElementById('switch-to-register');
+      var toLogin = document.getElementById('switch-to-login');
+      var fSwitch = document.getElementById('footer-switch');
+      if (toReg)   toReg.addEventListener('click',   function (e) { e.preventDefault(); showRegister(); });
+      if (toLogin) toLogin.addEventListener('click',  function (e) { e.preventDefault(); showLogin(); });
+      if (fSwitch) fSwitch.addEventListener('click',  function (e) { e.preventDefault(); loginForm.style.display !== 'none' ? showRegister() : showLogin(); });
+    }
+    tabLogin.addEventListener('click', showLogin);
+    tabReg.addEventListener('click', showRegister);
+    bindSwitchLinks();
+
+    /* URL'de ?mode=register varsa kayıt sekmesini aç */
+    if (new URLSearchParams(location.search).get('mode') === 'register') showRegister();
+
+    /* ─── Şifre göster/gizle ─────────────────────────────────── */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.toggle-pw');
+      if (!btn) return;
+      var inp = document.getElementById(btn.getAttribute('data-target'));
+      if (!inp) return;
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    });
+
+    /* ─── Alert ──────────────────────────────────────────────── */
+    var alertEl = document.getElementById('auth-alert');
+    function showAlert(msg, type) {
+      alertEl.textContent = msg;
+      alertEl.className = 'alert alert--' + (type || 'error') + ' mb-16';
+      alertEl.style.display = '';
+    }
+    function clearAlert() { alertEl.style.display = 'none'; alertEl.textContent = ''; }
+
+    /* ─── Giriş sonrası yönlendirme ─────────────────────────── */
+    function afterAuth(profile) {
+      var role = profile && profile.role;
+      if (!role) { location.href = 'onboarding.html'; return; }
+      if (window.KB && KB.roleToPanel) { location.href = KB.roleToPanel(role); }
+      else { location.href = 'panel-' + role + '.html'; }
+    }
+
+    /* ─── Supabase hazır mı bekle ────────────────────────────── */
+    async function waitSB() {
+      if (window.SB && SB.isOn()) return true;
+      return false;
+    }
+
+    /* ─── Google OAuth ───────────────────────────────────────── */
+    document.getElementById('google-btn').addEventListener('click', async function () {
+      if (!await waitSB()) { showAlert('Bağlantı yok — lütfen sayfayı yenile.'); return; }
+      var btn = this;
+      btn.disabled = true; btn.textContent = 'Yükleniyor…';
+      try { await SB.signInWithGoogle(); }
+      catch (e) { showAlert(e.message || 'Bir hata oluştu.'); btn.disabled = false; btn.textContent = 'Google ile devam et'; }
+    });
+
+    /* ─── Giriş formu ────────────────────────────────────────── */
+    loginForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      clearAlert();
+      var email = document.getElementById('login-email').value.trim();
+      var pw    = document.getElementById('login-password').value;
+      if (!email || !pw) { showAlert('E-posta ve şifre gereklidir.'); return; }
+
+      var btn = document.getElementById('login-btn');
+      btn.classList.add('is-loading'); btn.disabled = true;
+
+      try {
+        if (!await waitSB()) throw new Error('Sunucuya bağlanılamadı.');
+        var res = await SB.signIn(email, pw);
+        if (res && res.error) throw res.error;
+        var profile = await SB.myProfile();
+        afterAuth(profile);
+      } catch (err) {
+        var msg = err && err.message;
+        if (msg && (msg.includes('Invalid') || msg.includes('credentials') || msg.includes('password'))) msg = 'E-posta veya şifre hatalı.';
+        else if (msg && msg.includes('Email not confirmed')) msg = 'E-posta adresinizi doğrulamadınız. Gelen kutunuzu kontrol edin.';
+        showAlert(msg || 'Giriş yapılamadı.');
+        btn.classList.remove('is-loading'); btn.disabled = false;
+      }
+    });
+
+    /* ─── Kayıt formu ────────────────────────────────────────── */
+    registerForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      clearAlert();
+      var ad      = document.getElementById('reg-name').value.trim();
+      var email   = document.getElementById('reg-email').value.trim();
+      var tel     = document.getElementById('reg-phone').value.trim();
+      var pw      = document.getElementById('reg-password').value;
+      var agreed  = document.getElementById('reg-agree').checked;
+
+      if (!ad)     { showAlert('Ad Soyad gereklidir.'); return; }
+      if (!email)  { showAlert('E-posta gereklidir.'); return; }
+      if (pw.length < 6) { showAlert('Şifre en az 6 karakter olmalıdır.'); return; }
+      if (!agreed) { showAlert('Devam etmek için şartları kabul etmelisiniz.'); return; }
+
+      var btn = document.getElementById('register-btn');
+      btn.classList.add('is-loading'); btn.disabled = true;
+
+      try {
+        if (!await waitSB()) throw new Error('Sunucuya bağlanılamadı.');
+        var res = await SB.signUp(email, pw, ad, tel);
+        if (res && res.error) throw res.error;
+        location.href = 'verify-email.html?email=' + encodeURIComponent(email);
+      } catch (err) {
+        var msg = err && err.message;
+        if (msg && msg.includes('already registered')) msg = 'Bu e-posta adresi zaten kayıtlı.';
+        showAlert(msg || 'Kayıt olunamadı.');
+        btn.classList.remove('is-loading'); btn.disabled = false;
+      }
+    });
+
+    /* ─── OAuth callback (sayfa yüklenince) ─────────────────── */
+    (async function checkCallback() {
+      if (!window.SB || !SB.isOn()) return;
+      try {
+        var user = await SB.getUser();
+        if (user) {
+          var profile = await SB.myProfile();
+          afterAuth(profile);
         }
-        function draw() {
-          ctx.clearRect(0, 0, w, h);
-          for (var i = 0; i < pts.length; i++) {
-            var p = pts[i]; p.x += p.vx; p.y += p.vy;
-            if (p.x < 0 || p.x > w) p.vx *= -1; if (p.y < 0 || p.y > h) p.vy *= -1;
-            for (var j = i + 1; j < pts.length; j++) {
-              var q = pts[j], dx = p.x - q.x, dy = p.y - q.y, d = Math.sqrt(dx * dx + dy * dy);
-              if (d < 130) { ctx.strokeStyle = "rgba(124,140,220," + (.12 * (1 - d / 130)) + ")"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
-            }
-            ctx.fillStyle = "rgba(160,180,255,.55)"; ctx.beginPath(); ctx.arc(p.x, p.y, 1.4, 0, 6.28); ctx.fill();
-          }
-          raf = requestAnimationFrame(draw);
-        }
-        addEventListener("resize", size); size(); cancelAnimationFrame(raf); draw();
-      })();
-
-      /* ---- sekme / mod ---- */
-      var tabs = document.getElementById("authTabs");
-      var loginForm = document.getElementById("loginForm");
-      var registerForm = document.getElementById("registerForm");
-      var navBtns = document.querySelectorAll(".auth-navbtns button");
-      var msg = document.getElementById("authMsg");
-      var mode = "login";
-
-      var slider = tabs.querySelector(".auth-slider");
-      function setMode(m) {
-        mode = m;
-        tabs.setAttribute("data-mode", m);
-        if (slider) slider.style.transform = m === "register" ? "translateX(100%)" : "translateX(0)";
-        tabs.querySelectorAll("button").forEach(function (b) {
-          var on = b.getAttribute("data-mode") === m;
-          b.classList.toggle("active", on);
-          b.setAttribute("aria-selected", on ? "true" : "false");
-        });
-        navBtns.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-go") === m); });
-        loginForm.classList.toggle("active", m === "login");
-        registerForm.classList.toggle("active", m === "register");
-        msg.hidden = true;
-        clearAllFieldErrors();
-      }
-      tabs.querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.getAttribute("data-mode")); }); });
-      navBtns.forEach(function (b) { b.addEventListener("click", function () { setMode(b.getAttribute("data-go")); document.querySelector(".auth-card").scrollIntoView({ behavior: "smooth", block: "center" }); }); });
-
-      /* ---- şifre göster/gizle ---- */
-      var eyeOpen = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
-      var eyeOff = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.9 10.9 0 0 1 12 6c6.5 0 10 7 10 7a18 18 0 0 1-3.2 4M6.6 6.6A18 18 0 0 0 2 13s3.5 7 10 7a10.9 10.9 0 0 0 4.5-1"/></svg>';
-      document.querySelectorAll(".eye").forEach(function (btn) {
-        btn.innerHTML = eyeOpen;
-        btn.addEventListener("click", function () {
-          var inp = document.getElementById(btn.getAttribute("data-eye"));
-          var show = inp.type === "password";
-          inp.type = show ? "text" : "password";
-          btn.innerHTML = show ? eyeOff : eyeOpen;
-          btn.setAttribute("aria-pressed", show ? "true" : "false");
-        });
-      });
-
-      /* ---- mesaj (sunucu/oturum hataları) ---- */
-      function showErr(text) { msg.hidden = false; msg.classList.add("err"); msg.textContent = text; }
-      function showOk(text) { msg.hidden = false; msg.classList.remove("err"); msg.textContent = text; }
-
-      /* ---- alan-bazlı inline validasyon ---- */
-      function fieldOf(inputId) { var el = document.getElementById(inputId); return el ? el.closest(".auth-field") : null; }
-      function setFieldError(inputId, text) {
-        var f = fieldOf(inputId); if (!f) return;
-        f.classList.add("invalid"); f.classList.remove("valid");
-        var e = document.getElementById(inputId + "Err"); if (e) e.textContent = text || "";
-      }
-      function setFieldValid(inputId) {
-        var f = fieldOf(inputId); if (!f) return;
-        f.classList.remove("invalid"); f.classList.add("valid");
-        var e = document.getElementById(inputId + "Err"); if (e) e.textContent = "";
-      }
-      function clearFieldError(inputId) {
-        var f = fieldOf(inputId); if (!f) return;
-        f.classList.remove("invalid"); f.classList.remove("valid");
-        var e = document.getElementById(inputId + "Err"); if (e) e.textContent = "";
-      }
-      function clearAllFieldErrors() {
-        document.querySelectorAll(".auth-field.invalid,.auth-field.valid").forEach(function (f) { f.classList.remove("invalid", "valid"); });
-        document.querySelectorAll(".field-err").forEach(function (e) { e.textContent = ""; });
-      }
-      var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      function validateEmail(id) {
-        var v = (document.getElementById(id).value || "").trim();
-        if (!v) { setFieldError(id, t("auth.emailRequired")); return false; }
-        if (!EMAIL_RE.test(v)) { setFieldError(id, t("auth.invalidEmail")); return false; }
-        setFieldValid(id); return true;
-      }
-      function validatePass(id, isNew) {
-        var v = document.getElementById(id).value || "";
-        if (!v) { setFieldError(id, t("auth.passRequired")); return false; }
-        if (v.length < 6) { setFieldError(id, t("auth.shortPass")); return false; }
-        setFieldValid(id); return true;
-      }
-      function validateName(id) {
-        var v = (document.getElementById(id).value || "").trim();
-        if (!v) { setFieldError(id, t("auth.nameRequired")); return false; }
-        setFieldValid(id); return true;
-      }
-      // blur'da doğrula, yazmaya başlayınca hatayı temizle
-      function wireLiveValidation(id, fn) {
-        var el = document.getElementById(id); if (!el) return;
-        el.addEventListener("blur", function () { if (el.value.trim()) fn(); });
-        el.addEventListener("input", function () { clearFieldError(id); });
-      }
-      wireLiveValidation("lEmail", function () { validateEmail("lEmail"); });
-      wireLiveValidation("rName", function () { validateName("rName"); });
-      wireLiveValidation("rEmail", function () { validateEmail("rEmail"); });
-      if (window.KB && KB.bindDraft) KB.bindDraft(registerForm, "auth_register");
-
-      /* ---- buton loading / başarı durumu ---- */
-      function setLoading(btn, on, label) {
-        if (!btn) return;
-        if (on) { btn.dataset.label = btn.textContent; btn.classList.add("is-loading"); btn.disabled = true; if (label) btn.setAttribute("aria-label", label); }
-        else { btn.classList.remove("is-loading"); btn.disabled = false; if (btn.dataset.label) { btn.textContent = btn.dataset.label; } btn.removeAttribute("aria-label"); }
-      }
-      function setSuccess(btn, label) {
-        if (!btn) return;
-        btn.classList.remove("is-loading"); btn.classList.add("is-ok");
-        btn.textContent = "✓ " + (label || t("auth.successShort"));
-      }
-
-      /* ---- parola gücü (kayıt) ---- */
-      (function passStrength() {
-        var inp = document.getElementById("rPass");
-        var meter = document.getElementById("rPassMeter");
-        var txt = document.getElementById("rPassMeterTxt");
-        if (!inp || !meter) return;
-        inp.addEventListener("input", function () {
-          var v = inp.value || "";
-          if (!v) { meter.classList.remove("show"); meter.removeAttribute("data-lvl"); return; }
-          meter.classList.add("show");
-          var score = 0;
-          if (v.length >= 6) score++;
-          if (v.length >= 10) score++;
-          if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
-          if (/\d/.test(v)) score++;
-          if (/[^A-Za-z0-9]/.test(v)) score++;
-          var lvl = score <= 2 ? 1 : score === 3 ? 2 : 3;
-          meter.setAttribute("data-lvl", lvl);
-          txt.textContent = t(lvl === 1 ? "auth.strengthWeak" : lvl === 2 ? "auth.strengthMedium" : "auth.strengthStrong");
-        });
-      })();
-
-      /* ---- şifremi unuttum ---- */
-      document.getElementById("forgotLink").addEventListener("click", async function (e) {
-        e.preventDefault();
-        if (!(window.KB && KB.isOnline())) { showErr(t("auth.errGeneric")); return; }
-        var email = document.getElementById("lEmail").value.trim();
-        if (!email) { showErr(t("auth.resetEmailFirst")); return; }
-        try {
-          var r = await SB.resetPassword(email);
-          if (r && r.error) { showErr(r.error.message || t("auth.errGeneric")); return; }
-          showOk(t("auth.resetSent"));
-        } catch (err) { showErr(err.message || t("auth.errGeneric")); }
-      });
-
-      /* ---- giriş ---- */
-      loginForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        msg.hidden = true;
-        var okEmail = validateEmail("lEmail");
-        var okPass = validatePass("lPass");
-        if (!okEmail || !okPass) { document.getElementById(okEmail ? "lPass" : "lEmail").focus(); return; }
-        var email = document.getElementById("lEmail").value.trim();
-        var pass = document.getElementById("lPass").value;
-        if (!(window.KB && KB.isOnline())) { KB.setRole("kurye"); location.href = KB.panelHref(); return; }
-        var btn = loginForm.querySelector(".auth-submit");
-        setLoading(btn, true, t("auth.loadingLogin"));
-        try {
-          var r = await SB.signIn(email, pass);
-          if (r.error) { showErr(r.error.message || t("auth.errGeneric")); setLoading(btn, false); return; }
-          var prof = await SB.myProfile();
-          setSuccess(btn, t("auth.successShort"));
-          setTimeout(function () { location.href = KB.roleToPanel(prof && prof.role); }, 900);
-        } catch (err) { showErr(err.message || t("auth.errGeneric")); setLoading(btn, false); }
-      });
-
-      /* ---- kayıt ---- */
-      registerForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        msg.hidden = true;
-        var okName = validateName("rName");
-        var okEmail = validateEmail("rEmail");
-        var okPass = validatePass("rPass", true);
-        if (!okName || !okEmail || !okPass) {
-          document.getElementById(!okName ? "rName" : !okEmail ? "rEmail" : "rPass").focus();
-          return;
-        }
-        var ad = document.getElementById("rName").value.trim();
-        var email = document.getElementById("rEmail").value.trim();
-        var pass = document.getElementById("rPass").value;
-        if (!(window.KB && KB.isOnline())) { KB.setRole("kurye"); location.href = "onboarding.html"; return; }
-        var btn = registerForm.querySelector(".auth-submit");
-        setLoading(btn, true, t("auth.loadingRegister"));
-        try {
-          // Telefon onboarding adımında toplanır; kayıt yalnız ad+e-posta+şifre.
-          var r = await SB.signUp(email, pass, ad);
-          if (r.error) { showErr(r.error.message || t("auth.errGeneric")); setLoading(btn, false); return; }
-          if (r.data && r.data.session) {
-            if (window.KB && KB.clearDraft) KB.clearDraft("auth_register");
-            setSuccess(btn, t("auth.successShort"));
-            setTimeout(function () { location.href = "onboarding.html"; }, 1000);
-          } else {
-            setLoading(btn, false);
-            showOk(t("auth.okRegisterConfirm"));
-          }
-        } catch (err) { showErr(err.message || t("auth.errGeneric")); setLoading(btn, false); }
-      });
-
-      setMode("login");
-
-      /* ---- Google ile devam et ---- */
-      // Resmi Google "G" logosu
-      var gLogo = '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
-        '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
-        '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>' +
-        '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>' +
-        '</svg>';
-      document.querySelectorAll("[data-google]").forEach(function (btn) {
-        btn.insertAdjacentHTML("afterbegin", gLogo);
-        btn.addEventListener("click", async function () {
-          if (!(window.KB && KB.isOnline())) { showErr(t("auth.errGeneric")); return; }
-          document.querySelectorAll("[data-google]").forEach(function (b) { b.disabled = true; });
-          btn.classList.add("is-loading");
-          showOk(t("auth.googleSigningIn"));
-          try {
-            var r = await SB.signInWithGoogle();
-            if (r && r.error) {
-              showErr(r.error.message || t("auth.errGeneric"));
-              btn.classList.remove("is-loading");
-              document.querySelectorAll("[data-google]").forEach(function (b) { b.disabled = false; });
-            }
-            // başarılıysa tarayıcı Google'a yönlenir; dönüşte aşağıdaki blok çalışır
-          } catch (err) {
-            showErr(err.message || t("auth.errGeneric"));
-            btn.classList.remove("is-loading");
-            document.querySelectorAll("[data-google]").forEach(function (b) { b.disabled = false; });
-          }
-        });
-      });
-
-      /* ---- OAuth dönüşü: oturum tespiti + yönlendirme ---- */
-      // Google'dan dönüşte URL'de ?code=... (PKCE) veya #access_token=... bulunur.
-      (function oauthReturn() {
-        var hasOAuth = /[?&]code=/.test(location.search) || /access_token=/.test(location.hash);
-        if (!hasOAuth || !(window.SB && SB.isOn())) return;
-        showOk(t("auth.googleSigningIn"));
-        var routed = false;
-        async function route(user) {
-          if (routed || !user) return;
-          routed = true;
-          var prof = null;
-          try { prof = await SB.myProfile(); } catch (e) {}
-          // Profil henüz tamamlanmamışsa (ad boş) -> onboarding (rol seçimi + temel bilgiler)
-          if (!prof || !prof.ad) { location.href = "onboarding.html"; }
-          else { location.href = KB.roleToPanel(prof.role); }
-        }
-        // detectSessionInUrl, code'u oturuma çevirince SIGNED_IN tetiklenir
-        SB.onAuthChange(function (user) { route(user); });
-        // Yedek: kısa bir gecikmeyle mevcut oturumu da kontrol et
-        setTimeout(async function () {
-          try { var u = await SB.getUser(); if (u) route(u); } catch (e) {}
-        }, 1200);
-      })();
+      } catch (e) {}
     })();
-    </script>
+
+  }());
+  </script>
 </body>
 </html>

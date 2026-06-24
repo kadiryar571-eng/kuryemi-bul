@@ -1,34 +1,46 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title data-i18n="title.profilFirma">Firma Profili · Kuryemi Bul</title>
-    <meta name="description" content="Kurye firması profili: hizmet bölgeleri, kapasite ve hizmetler.">
-    <link rel="icon" href="assets/logo.png">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Kuryemi Bul">
-    <meta property="og:title" content="Firma Profili · Kuryemi Bul">
-    <meta property="og:description" content="Kurye firması profili: hizmet bölgeleri, kapasite ve hizmetler.">
-    <meta property="og:url" content="https://kuryemibul.com/profil-firma.html">
-    <meta property="og:image" content="https://kuryemibul.com/assets/og-cover.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="assets/css/bundle-core.css">
-    <link id="kb-mobile-ux-css" rel="stylesheet" href="assets/css/bundle-mobile.css">
-    <link id="sidebar-css" rel="stylesheet" href="assets/css/sidebar.css"></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firma Profili · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
 <body>
-    <div id="app-header"></div>
-    <main class="prf-main"><div class="prf-container"><div id="profileRoot"></div></div></main>
-    <div id="app-footer"></div>
-    <script src="assets/js/i18n.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/js/supabase.js"></script>
-    <script src="assets/js/data.js"></script>
-    <script src="assets/js/components.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/motion.js"></script>
-    <script>KBApp.renderProfile("firma");</script>
+
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <div id="profileRoot">
+      <div class="prf">
+        <div class="prf__cover"></div>
+        <div class="prf__head">
+          <div class="prf__av"><span class="skel" style="width:96px;height:96px;border-radius:50%;display:block"></span></div>
+          <div class="prf__meta">
+            <span class="skel skel--line" style="width:160px;display:block"></span>
+            <span class="skel skel--line" style="width:100px;margin-top:10px;display:block"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.KBApp && KBApp.renderProfile) KBApp.renderProfile('firma');
+    });
+  </script>
 </body>
 </html>
