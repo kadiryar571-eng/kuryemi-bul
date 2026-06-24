@@ -2377,7 +2377,286 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .notif-clear-btn { align-self: flex-start; }
 }
 
-/* ─── 46. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 46. KİŞİSEL BİLGİLER — profil-duzenle ─────────────── */
+.pi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+  max-width: 680px;
+}
+
+/* Photo row */
+.pi-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pi-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--border);
+}
+
+.pi-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pi-avatar__cam {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--transition);
+  border-radius: 50%;
+}
+.pi-avatar:hover .pi-avatar__cam { opacity: 1; }
+
+.pi-photo-meta { display: flex; flex-direction: column; gap: 6px; }
+
+.pi-display-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.pi-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #15803D;
+  background: #DCFCE7;
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  width: fit-content;
+}
+
+/* Section head */
+.pi-sec-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pi-sec-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.pi-sec-sub { font-size: 12px; color: var(--text-3); }
+
+/* View mode */
+.pi-view { display: flex; flex-direction: column; }
+
+.pi-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pi-row:last-child { border-bottom: none; }
+
+.pi-row__label {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  padding-top: 1px;
+}
+
+.pi-row__val {
+  flex: 1;
+  font-size: 13.5px;
+  color: var(--text);
+  font-weight: 500;
+  word-break: break-word;
+}
+.pi-row__val--empty { color: var(--text-3); font-weight: 400; }
+.pi-row__val--bio   { font-weight: 400; color: var(--text-2); white-space: pre-wrap; }
+
+/* Edit form */
+.pi-form { padding-top: 4px; }
+
+.pi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.pf-field { display: flex; flex-direction: column; gap: 4px; }
+.pf-field--full { grid-column: 1 / -1; }
+
+.pf-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.pf-req { color: var(--error); }
+
+.pf-input, .pf-textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.pf-input:focus, .pf-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0,87,255,.07);
+}
+.pf-input.is-error, .pf-textarea.is-error { border-color: var(--error); }
+
+.pf-readonly {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  cursor: default;
+  user-select: none;
+}
+
+.pf-textarea  { resize: vertical; min-height: 88px; }
+.pf-hint      { font-size: 11px; color: var(--text-3); }
+.pf-err       { font-size: 11px; color: var(--error); min-height: 14px; }
+.pf-char-count { font-size: 11px; color: var(--text-3); text-align: right; }
+
+/* Auto-save */
+.pi-autosave {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+.pi-autosave__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: asavePulse 1s ease infinite;
+}
+@keyframes asavePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+/* Actions */
+.pi-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+/* Feedback banners */
+.pi-feedback {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #15803D;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+
+.pi-inline-ok {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #15803D;
+}
+
+/* Role pills */
+.pi-role-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.pi-role-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+  user-select: none;
+}
+.pi-role-pill.is-active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.pi-role-pill:hover:not(.is-active) { border-color: var(--text-3); }
+
+@media (max-width: 640px) {
+  .pi-card     { padding: 14px; }
+  .pi-avatar   { width: 68px; height: 68px; font-size: 1.4rem; }
+  .pi-row__label { width: 96px; font-size: 12px; }
+  .pi-grid     { grid-template-columns: 1fr; }
+  .pf-field--full { grid-column: 1; }
+  .pi-sec-head { flex-direction: column; gap: 8px; }
+  .pi-sec-head .btn { align-self: flex-start; }
+}
+
+/* ─── 47. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);
