@@ -306,26 +306,117 @@
       line-height: 1.65;
     }
 
-    /* How it works */
-    .lp-how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .lp-how__card {
+    /* ── HOW IT WORKS ────────────────────────────────── */
+    .hiw-section {
+      padding: 80px 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .hiw-head {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .hiw-head h2 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .hiw-head p {
+      font-size: 0.95rem;
+      color: var(--text-2);
+      line-height: 1.65;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    /* 5-col grid: step | connector | step | connector | step */
+    .hiw-flow {
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr 72px 1fr;
+      align-items: start;
+      margin-bottom: 48px;
+    }
+
+    /* Connector line */
+    .hiw-conn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 32px; /* align with icon vertical center */
+    }
+    .hiw-conn__line {
+      width: 100%;
+      height: 0;
+      border-top: 2px dashed #D1D9E6;
+    }
+
+    /* Step card */
+    .hiw-step {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
+      border-radius: 16px;
       padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+      opacity: 0;
+      /* hover transition — entry uses animation */
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
-    .lp-how__num {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      background: #EEF3FF;
+    .hiw-step:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    @keyframes hiw-step-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hiw-step.is-visible { animation: hiw-step-in 0.5s ease forwards; }
+    .hiw-step:nth-child(1).is-visible { animation-delay: 0.05s; }
+    .hiw-step:nth-child(3).is-visible { animation-delay: 0.18s; }
+    .hiw-step:nth-child(5).is-visible { animation-delay: 0.31s; }
+
+    /* Icon circle */
+    .hiw-step__ic-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+    .hiw-step__ic {
+      width: 64px; height: 64px;
+      border-radius: 18px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Step number badge */
+    .hiw-step__num {
+      position: absolute;
+      top: -7px; right: -7px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--primary);
       color: var(--primary);
-      font-weight: 700;
-      font-size: 0.95rem;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 14px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
-    .lp-how__card h3 { font-size: 0.975rem; font-weight: 700; margin-bottom: 8px; }
-    .lp-how__card p  { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; margin: 0; }
+
+    .hiw-step h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; }
+    .hiw-step p  { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; margin: 0; }
+
+    /* Bottom CTA */
+    .hiw-cta { text-align: center; }
 
     /* Roles */
     .lp-roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -801,6 +892,12 @@
       .lp-phone--2 { height: 290px; }
       .lp-phone--3 { right: 0; height: 250px; }
       .lp-how, .lp-roles { grid-template-columns: 1fr; }
+      .hiw-flow { grid-template-columns: 1fr; gap: 0; }
+      .hiw-conn { display: none; }
+      .hiw-step { flex-direction: row; text-align: left; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+      .hiw-step__ic-wrap { flex-shrink: 0; }
+      .hiw-step h3 { text-align: left; }
+      .hiw-step p { text-align: left; }
       .lp-trust__inner { gap: 20px; }
     }
 
@@ -1163,28 +1260,72 @@
     </div>
   </section>
 
-  <!-- ── NASIL ÇALIŞIR ─────────────────────────────────── -->
-  <section class="lp-section">
+  <!-- ── HOW IT WORKS ─────────────────────────────────── -->
+  <section class="hiw-section">
     <div class="container">
-      <h2 class="lp-section__title">Nasıl Çalışır?</h2>
-      <p class="lp-section__sub">Üç adımda doğru ilanı bul ve işe başla.</p>
-      <div class="lp-how">
-        <div class="lp-how__card">
-          <div class="lp-how__num">1</div>
-          <h3>Hesap Oluştur</h3>
-          <p>Kurye, işletme veya kurye firması olarak kaydol. 2 dakikada profilini tamamla.</p>
-        </div>
-        <div class="lp-how__card">
-          <div class="lp-how__num">2</div>
-          <h3>İlanları İncele & Başvur</h3>
-          <p>Bölgeye, araca ve ücrete göre filtrele. Uygun ilanlara tek tıkla başvur.</p>
-        </div>
-        <div class="lp-how__card">
-          <div class="lp-how__num">3</div>
-          <h3>İşverenle İletişime Geç</h3>
-          <p>Platform üzerinden doğrudan mesajlaş, teklifi değerlendir ve anlaş.</p>
-        </div>
+
+      <div class="hiw-head">
+        <h2>İşe Başlamak Çok Kolay</h2>
+        <p>Sadece birkaç adımda sana uygun işleri bulmaya başlayabilirsin.</p>
       </div>
+
+      <div class="hiw-flow">
+
+        <!-- Adım 1 -->
+        <div class="hiw-step">
+          <div class="hiw-step__ic-wrap">
+            <div class="hiw-step__ic">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="hiw-step__num">1</div>
+          </div>
+          <h3>Profilini Oluştur</h3>
+          <p>Kişisel bilgilerini, çalışma bölgelerini ve deneyimlerini ekle.</p>
+        </div>
+
+        <!-- Bağlantı çizgisi -->
+        <div class="hiw-conn"><div class="hiw-conn__line"></div></div>
+
+        <!-- Adım 2 -->
+        <div class="hiw-step">
+          <div class="hiw-step__ic-wrap">
+            <div class="hiw-step__ic">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="hiw-step__num">2</div>
+          </div>
+          <h3>İlanları Keşfet</h3>
+          <p>Bölgenizdeki aktif iş ilanlarını filtreleyin ve size uygun işleri bulun.</p>
+        </div>
+
+        <!-- Bağlantı çizgisi -->
+        <div class="hiw-conn"><div class="hiw-conn__line"></div></div>
+
+        <!-- Adım 3 -->
+        <div class="hiw-step">
+          <div class="hiw-step__ic-wrap">
+            <div class="hiw-step__ic">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              </svg>
+            </div>
+            <div class="hiw-step__num">3</div>
+          </div>
+          <h3>Başvur ve İletişime Geç</h3>
+          <p>Tek tıkla başvurunuzu gönderin ve işverenle doğrudan konuşun.</p>
+        </div>
+
+      </div>
+
+      <!-- CTA -->
+      <div class="hiw-cta">
+        <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Şimdi Profil Oluştur</a>
+      </div>
+
     </div>
   </section>
 
@@ -1261,6 +1402,13 @@
       }
       requestAnimationFrame(step);
     }
+
+    /* How-it-works adım kartları */
+    var hiwSteps = document.querySelectorAll('.hiw-step');
+    var hiwObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('is-visible'); });
+    }, { threshold: 0.2 });
+    hiwSteps.forEach(function (s) { hiwObs.observe(s); });
 
     /* System preview kartları */
     var spCards = document.querySelectorAll('.sp-card');
