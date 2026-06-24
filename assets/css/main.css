@@ -2656,7 +2656,126 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .pi-sec-head .btn { align-self: flex-start; }
 }
 
-/* ─── 47. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 47. ÇALIŞMA BİLGİLERİ ─────────────────────────────── */
+.wi-fields { display: flex; flex-direction: column; gap: 22px; }
+
+.wi-group__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2);
+  margin-bottom: 9px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.wi-group__label svg { flex-shrink: 0; }
+
+.wi-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.wi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+  line-height: 1;
+}
+.wi-chip:hover:not(.is-selected) {
+  border-color: var(--text-3);
+  background: var(--surface-2);
+}
+.wi-chip.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+.wi-chip__chk            { flex-shrink: 0; display: none; }
+.wi-chip.is-selected .wi-chip__chk { display: block; }
+
+.wi-hours-row { display: flex; align-items: center; gap: 10px; }
+
+.wi-hours-input {
+  width: 76px;
+  padding: 9px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  font-family: inherit;
+}
+.wi-hours-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0,87,255,.07);
+}
+.wi-hours-sfx { font-size: 13.5px; color: var(--text-2); }
+
+/* View mode */
+.wi-view { display: flex; flex-direction: column; }
+
+.wi-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.wi-row:last-child { border-bottom: none; }
+
+.wi-row__label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  padding-top: 1px;
+}
+
+.wi-row__val {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.wi-val-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(0,87,255,.12);
+}
+
+.wi-val-empty { font-size: 13px; color: var(--text-3); }
+
+@media (max-width: 640px) {
+  .wi-row__label  { width: 108px; }
+  .wi-chip        { font-size: 12.5px; padding: 6px 11px; }
+  .wi-group__label { font-size: 10.5px; }
+}
+
+/* ─── 48. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);

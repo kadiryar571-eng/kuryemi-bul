@@ -209,6 +209,200 @@
       </form>
     </div>
 
+    <!-- Çalışma Bilgileri (yalnızca kurye) -->
+    <div class="pi-card" id="wiCard" style="display:none">
+
+      <div class="pi-sec-head">
+        <div>
+          <div class="pi-sec-title">Çalışma Bilgileri</div>
+          <div class="pi-sec-sub">Nasıl çalıştığını ve iş tercihlerini belirt.</div>
+        </div>
+        <button type="button" class="btn btn--ghost btn--sm" id="wiEditBtn">Düzenle</button>
+      </div>
+
+      <!-- Görüntüleme modu -->
+      <div id="wiView" class="wi-view">
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Çalışma Modeli
+          </span>
+          <div class="wi-row__val" id="vwModel"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            Teslimat Türü
+          </span>
+          <div class="wi-row__val" id="vwTeslimat"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            Deneyim
+          </span>
+          <div class="wi-row__val" id="vwDeneyim"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Günlük Saat
+          </span>
+          <div class="wi-row__val" id="vwSaat"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Durum
+          </span>
+          <div class="wi-row__val" id="vwDurum"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Vardiya
+          </span>
+          <div class="wi-row__val" id="vwVardiya"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+      </div>
+
+      <!-- Düzenleme formu -->
+      <form id="wiForm" class="pi-form" style="display:none" novalidate>
+        <div class="wi-fields">
+
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+              Çalışma Modeli
+            </div>
+            <div class="wi-chips" id="wiChipModel">
+              <button type="button" class="wi-chip" data-val="Tam Zamanlı">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Tam Zamanlı
+              </button>
+              <button type="button" class="wi-chip" data-val="Part Time">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Part Time
+              </button>
+              <button type="button" class="wi-chip" data-val="Esnek Çalışma">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Esnek Çalışma
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Teslimat Türü
+              <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(çoklu seçim)</span>
+            </div>
+            <div class="wi-chips" id="wiChipTeslimat" data-wi-multi="true">
+              <button type="button" class="wi-chip" data-val="Motorlu Kurye">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🏍 Motorlu
+              </button>
+              <button type="button" class="wi-chip" data-val="Araçlı Kurye">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🚗 Araçlı
+              </button>
+              <button type="button" class="wi-chip" data-val="Yaya Kurye">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🚶 Yaya
+              </button>
+              <button type="button" class="wi-chip" data-val="Bisikletli Kurye">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🚲 Bisikletli
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              Deneyim Seviyesi
+            </div>
+            <select class="pf-input" id="wiDeneyim" style="max-width:240px">
+              <option value="">— Seçiniz —</option>
+              <option value="Yeni Başlayan">Yeni Başlayan</option>
+              <option value="1-2 Yıl">1-2 Yıl</option>
+              <option value="3-5 Yıl">3-5 Yıl</option>
+              <option value="5+ Yıl">5+ Yıl</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Günlük Uygunluk
+            </div>
+            <div class="wi-hours-row">
+              <input class="wi-hours-input" type="number" id="wiSaat" min="1" max="24" placeholder="8">
+              <span class="wi-hours-sfx">Saat / Gün</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Mevcut Durum
+            </div>
+            <div class="wi-chips" id="wiChipDurum">
+              <button type="button" class="wi-chip" data-val="Aktif Çalışıyorum">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Aktif Çalışıyorum
+              </button>
+              <button type="button" class="wi-chip" data-val="İş Arıyorum">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                İş Arıyorum
+              </button>
+              <button type="button" class="wi-chip" data-val="Yakında Başlayacağım">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Yakında Başlayacağım
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Vardiya Tercihi
+              <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(çoklu seçim)</span>
+            </div>
+            <div class="wi-chips" id="wiChipVardiya" data-wi-multi="true">
+              <button type="button" class="wi-chip" data-val="Sabah">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🌅 Sabah
+              </button>
+              <button type="button" class="wi-chip" data-val="Öğlen">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                ☀️ Öğlen
+              </button>
+              <button type="button" class="wi-chip" data-val="Akşam">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🌆 Akşam
+              </button>
+              <button type="button" class="wi-chip" data-val="Gece">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🌙 Gece
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pi-actions" style="margin-top:20px">
+          <button type="submit" class="btn btn--primary" id="wiSaveBtn">Kaydet</button>
+          <button type="button" class="btn btn--ghost" id="wiCancelBtn">İptal</button>
+        </div>
+      </form>
+
+      <div class="pi-feedback" id="wiFeedback" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Çalışma bilgileri kaydedildi.
+      </div>
+    </div>
+
   </div><!-- /.app-content -->
 
   <div id="app-footer"></div>
@@ -442,6 +636,8 @@
       document.getElementById('deneyimField').style.display  = role === 'kurye'   ? '' : 'none';
       document.getElementById('turField').style.display      = role === 'isletme' ? '' : 'none';
       document.getElementById('kapasiteField').style.display = role === 'firma'   ? '' : 'none';
+      var wiCard = document.getElementById('wiCard');
+      if (wiCard) wiCard.style.display = role === 'kurye' ? '' : 'none';
     }
 
     document.querySelectorAll('.pi-role-pill').forEach(function(p) {
@@ -468,6 +664,137 @@
       btn.disabled = false; btn.textContent = 'Kaydet';
     });
 
+    /* ── Work Info ────────────────────────────── */
+    function wiParseArr(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      try { return JSON.parse(val); } catch(e) { return String(val).split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+    }
+
+    function wiGetVals(groupEl) {
+      if (!groupEl) return null;
+      var isMulti = groupEl.dataset.wiMulti === 'true';
+      var selected = Array.from(groupEl.querySelectorAll('.wi-chip.is-selected')).map(function(c){ return c.dataset.val; });
+      return isMulti ? selected : (selected[0] || null);
+    }
+
+    function wiSetVals(groupEl, vals) {
+      if (!groupEl) return;
+      var isMulti = groupEl.dataset.wiMulti === 'true';
+      var arr = Array.isArray(vals) ? vals : (vals ? [vals] : []);
+      groupEl.querySelectorAll('.wi-chip').forEach(function(c) {
+        c.classList.toggle('is-selected', arr.indexOf(c.dataset.val) !== -1);
+      });
+    }
+
+    function wiInitChipGroup(groupEl) {
+      if (!groupEl) return;
+      var isMulti = groupEl.dataset.wiMulti === 'true';
+      groupEl.addEventListener('click', function(e) {
+        var chip = e.target.closest('.wi-chip');
+        if (!chip) return;
+        if (!isMulti) {
+          groupEl.querySelectorAll('.wi-chip').forEach(function(c){ c.classList.remove('is-selected'); });
+          chip.classList.add('is-selected');
+        } else {
+          chip.classList.toggle('is-selected');
+        }
+      });
+    }
+
+    function wiRenderRow(id, vals, suffix) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var arr = Array.isArray(vals) ? vals : (vals ? [vals] : []);
+      if (!arr.length) {
+        el.innerHTML = '<span class="wi-val-empty">Eklenmedi</span>';
+      } else {
+        el.innerHTML = arr.map(function(v) {
+          return '<span class="wi-val-chip">' + v + (suffix ? ' ' + suffix : '') + '</span>';
+        }).join('');
+      }
+    }
+
+    function wiPopulateView(p) {
+      wiRenderRow('vwModel',    p && p.calisma_modeli   ? [p.calisma_modeli] : []);
+      wiRenderRow('vwTeslimat', p && wiParseArr(p.teslimat_turu));
+      wiRenderRow('vwDeneyim',  p && p.deneyim_seviye   ? [p.deneyim_seviye] : []);
+      wiRenderRow('vwSaat',     p && p.gunluk_saat       ? [p.gunluk_saat + ' Saat'] : []);
+      wiRenderRow('vwDurum',    p && p.mevcut_durum      ? [p.mevcut_durum] : []);
+      wiRenderRow('vwVardiya',  p && wiParseArr(p.vardiya_tercihi));
+    }
+
+    function wiPopulateForm(p) {
+      wiSetVals(document.getElementById('wiChipModel'),    p && p.calisma_modeli);
+      wiSetVals(document.getElementById('wiChipTeslimat'), p && wiParseArr(p.teslimat_turu));
+      var denSel = document.getElementById('wiDeneyim');
+      if (denSel) denSel.value = (p && p.deneyim_seviye) || '';
+      var saatInp = document.getElementById('wiSaat');
+      if (saatInp) saatInp.value = (p && p.gunluk_saat) || '';
+      wiSetVals(document.getElementById('wiChipDurum'),    p && p.mevcut_durum);
+      wiSetVals(document.getElementById('wiChipVardiya'),  p && wiParseArr(p.vardiya_tercihi));
+    }
+
+    function wiEnterEdit() {
+      wiPopulateForm(profile);
+      document.getElementById('wiView').style.display   = 'none';
+      document.getElementById('wiForm').style.display   = '';
+      document.getElementById('wiEditBtn').style.display = 'none';
+      document.getElementById('wiFeedback').style.display = 'none';
+    }
+
+    function wiExitEdit() {
+      document.getElementById('wiView').style.display   = '';
+      document.getElementById('wiForm').style.display   = 'none';
+      document.getElementById('wiEditBtn').style.display = '';
+    }
+
+    function wiCollect() {
+      var teslimat = wiGetVals(document.getElementById('wiChipTeslimat'));
+      var vardiya  = wiGetVals(document.getElementById('wiChipVardiya'));
+      return {
+        calisma_modeli:  wiGetVals(document.getElementById('wiChipModel')),
+        teslimat_turu:   JSON.stringify(Array.isArray(teslimat) ? teslimat : []),
+        deneyim_seviye:  document.getElementById('wiDeneyim').value || null,
+        gunluk_saat:     parseInt(document.getElementById('wiSaat').value) || null,
+        mevcut_durum:    wiGetVals(document.getElementById('wiChipDurum')),
+        vardiya_tercihi: JSON.stringify(Array.isArray(vardiya) ? vardiya : []),
+      };
+    }
+
+    function initWorkInfo() {
+      wiInitChipGroup(document.getElementById('wiChipModel'));
+      wiInitChipGroup(document.getElementById('wiChipTeslimat'));
+      wiInitChipGroup(document.getElementById('wiChipDurum'));
+      wiInitChipGroup(document.getElementById('wiChipVardiya'));
+
+      var editBtn = document.getElementById('wiEditBtn');
+      if (editBtn) editBtn.addEventListener('click', wiEnterEdit);
+
+      var cancelBtn = document.getElementById('wiCancelBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', wiExitEdit);
+
+      var form = document.getElementById('wiForm');
+      if (form) form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var btn = document.getElementById('wiSaveBtn');
+        btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+        var fields = wiCollect();
+        try {
+          if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+          if (profile) Object.assign(profile, fields);
+          wiPopulateView(profile);
+          wiExitEdit();
+          var fb = document.getElementById('wiFeedback');
+          fb.style.display = 'flex';
+          setTimeout(function(){ fb.style.display = 'none'; }, 3500);
+        } catch(err) {}
+        btn.disabled = false; btn.textContent = 'Kaydet';
+      });
+
+      wiPopulateView(profile);
+    }
+
     /* ── Init ─────────────────────────────────── */
     try {
       if (window.SB && SB.isOn()) profile = await SB.myProfile();
@@ -478,6 +805,7 @@
 
     var role = (profile && profile.role) || 'kurye';
     updateRoleUI(role);
+    initWorkInfo();
     if (profile) {
       document.getElementById('editArac').value     = profile.arac     || '';
       document.getElementById('editDeneyim').value  = profile.deneyim  || '';
