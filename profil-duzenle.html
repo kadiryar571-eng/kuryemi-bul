@@ -675,6 +675,117 @@
       </div>
     </div>
 
+    <!-- Deneyimlerim -->
+    <div class="pi-card" id="expCard" style="display:none">
+      <div class="pi-sec-head">
+        <div>
+          <div class="pi-sec-title">Deneyimlerim</div>
+          <div class="pi-sec-sub">Geçmiş çalışma deneyimlerini ekleyerek işverenlere kendini daha iyi göster.</div>
+        </div>
+      </div>
+
+      <!-- Rozetler -->
+      <div class="exp-badges" id="expBadges"></div>
+
+      <!-- İstatistikler -->
+      <div class="exp-stats" id="expStats" style="display:none">
+        <div class="exp-stat"><div class="exp-stat__val" id="expStatYears">—</div><div class="exp-stat__lbl">Yıl</div></div>
+        <div class="exp-stat"><div class="exp-stat__val" id="expStatMonths">—</div><div class="exp-stat__lbl">Ay Toplam</div></div>
+        <div class="exp-stat"><div class="exp-stat__val" id="expStatCount">—</div><div class="exp-stat__lbl">Deneyim</div></div>
+        <div class="exp-stat"><div class="exp-stat__val" id="expStatActive">—</div><div class="exp-stat__lbl">Aktif İş</div></div>
+      </div>
+
+      <!-- Araç çubuğu -->
+      <div class="exp-toolbar">
+        <button type="button" class="btn btn--primary btn--sm" id="expAddBtn">+ Deneyim Ekle</button>
+      </div>
+
+      <!-- Form panel -->
+      <div class="exp-form-panel" id="expFormPanel">
+        <div class="exp-form-panel__title" id="expFormTitle">Yeni Deneyim</div>
+        <input type="hidden" id="expEditId">
+        <div class="exp-form-grid">
+          <div class="exp-form-group">
+            <label class="exp-form-label" for="expSirket">Şirket Adı *</label>
+            <input type="text" id="expSirket" class="exp-form-input" placeholder="Lezzet Burger" maxlength="80" autocomplete="organization">
+          </div>
+          <div class="exp-form-group">
+            <label class="exp-form-label" for="expPozisyon">Pozisyon *</label>
+            <input type="text" id="expPozisyon" class="exp-form-input" placeholder="Motokurye" maxlength="80">
+          </div>
+          <div class="exp-form-group">
+            <label class="exp-form-label" for="expModel">Çalışma Modeli</label>
+            <select id="expModel" class="exp-form-select">
+              <option value="">Seçin</option>
+              <option value="Tam zamanlı">Tam zamanlı</option>
+              <option value="Part time">Part time</option>
+              <option value="Freelance">Freelance</option>
+            </select>
+          </div>
+          <div class="exp-form-group">
+            <label class="exp-form-label" for="expSehir">Şehir / Bölge</label>
+            <input type="text" id="expSehir" class="exp-form-input" placeholder="İstanbul, Kadıköy" maxlength="60">
+          </div>
+          <div class="exp-form-group">
+            <label class="exp-form-label">Başlangıç Tarihi *</label>
+            <div class="exp-date-wrap">
+              <select id="expBaslangicAy" class="exp-form-select"></select>
+              <select id="expBaslangicYil" class="exp-form-select"></select>
+            </div>
+          </div>
+          <div class="exp-form-group" id="expBitisGrup">
+            <label class="exp-form-label">Bitiş Tarihi</label>
+            <div class="exp-date-wrap">
+              <select id="expBitisAy" class="exp-form-select"></select>
+              <select id="expBitisYil" class="exp-form-select"></select>
+            </div>
+          </div>
+          <div class="exp-form-group exp-form-group--full">
+            <div class="exp-check-row">
+              <input type="checkbox" id="expAktif">
+              <label for="expAktif">Şu an burada çalışıyorum</label>
+            </div>
+          </div>
+          <div class="exp-form-group exp-form-group--full">
+            <label class="exp-form-label">Deneyim Etiketleri</label>
+            <div class="exp-tags-grid">
+              <span class="exp-tag-toggle" data-tag="Yemek Teslimatı">🍔 Yemek Teslimatı</span>
+              <span class="exp-tag-toggle" data-tag="Market Teslimatı">🛒 Market Teslimatı</span>
+              <span class="exp-tag-toggle" data-tag="E-Ticaret">📦 E-Ticaret</span>
+              <span class="exp-tag-toggle" data-tag="Gece Vardiyası">🌙 Gece Vardiyası</span>
+              <span class="exp-tag-toggle" data-tag="Yoğun Bölge Deneyimi">🗺️ Yoğun Bölge Deneyimi</span>
+            </div>
+          </div>
+          <div class="exp-form-group exp-form-group--full">
+            <label class="exp-form-label" for="expAciklama">Açıklama</label>
+            <textarea id="expAciklama" class="exp-form-textarea" placeholder="Yapılan iş, kazanılan deneyimler, kullanılan araçlar..." rows="3" maxlength="500"></textarea>
+          </div>
+          <div class="exp-form-group">
+            <label class="exp-form-label" for="expRefAd">Referans Kişi</label>
+            <input type="text" id="expRefAd" class="exp-form-input" placeholder="Ali Yılmaz (opsiyonel)" maxlength="60">
+          </div>
+          <div class="exp-form-group">
+            <label class="exp-form-label" for="expRefTel">Referans Telefonu</label>
+            <input type="text" id="expRefTel" class="exp-form-input" placeholder="0532 xxx xx xx" maxlength="20">
+          </div>
+        </div>
+        <div class="exp-form-actions">
+          <button type="button" class="btn btn--primary btn--sm" id="expSaveBtn">Kaydet</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="expCancelBtn">İptal</button>
+          <span class="exp-form-err" id="expFormErr" style="display:none"></span>
+        </div>
+      </div>
+
+      <!-- Zaman çizelgesi -->
+      <div id="expTimeline"></div>
+
+      <!-- Aktivite günlüğü -->
+      <div class="exp-activity-wrap" id="expActivityWrap" style="display:none">
+        <div class="exp-activity-title">Son İşlemler</div>
+        <div id="expActivityList"></div>
+      </div>
+    </div>
+
   </div><!-- /.app-content -->
 
   <div id="app-footer"></div>
@@ -914,6 +1025,8 @@
       if (abCard) abCard.style.display = role === 'kurye' ? '' : 'none';
       var belgeCard = document.getElementById('belgeCard');
       if (belgeCard) belgeCard.style.display = role === 'kurye' ? '' : 'none';
+      var expCard = document.getElementById('expCard');
+      if (expCard) expCard.style.display = role === 'kurye' ? '' : 'none';
     }
 
     document.querySelectorAll('.pi-role-pill').forEach(function(p) {
@@ -1725,6 +1838,411 @@
       if (!document.getElementById('docGrid')) return;
       var ready = (window.KB && KB.ready) ? KB.ready() : Promise.resolve();
       ready.then(renderDocGrid).catch(renderDocGrid);
+    });
+
+  })();
+  </script>
+
+  <!-- ─── Deneyimlerim Modülü ─────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    var MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    var TAG_ICOS  = { 'Yemek Teslimatı':'🍔','Market Teslimatı':'🛒','E-Ticaret':'📦','Gece Vardiyası':'🌙','Yoğun Bölge Deneyimi':'🗺️' };
+
+    /* ── Depolama ── */
+    function getUid() { try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch(e) {} return 'demo'; }
+    function expKey() { return 'kb_exp_' + getUid(); }
+    function logKey() { return 'kb_exp_log_' + getUid(); }
+    function loadExps() { try { return JSON.parse(localStorage.getItem(expKey())) || []; } catch(e) { return []; } }
+    function saveExps(arr) { try { localStorage.setItem(expKey(), JSON.stringify(arr)); } catch(e) { toast('Depolama alanı dolu!', 'error'); } }
+    function loadLog()  { try { return JSON.parse(localStorage.getItem(logKey())) || []; } catch(e) { return []; } }
+    function addLog(action, note) {
+      var log = loadLog();
+      log.unshift({ action: action, note: note || '', ts: new Date().toISOString() });
+      try { localStorage.setItem(logKey(), JSON.stringify(log.slice(0, 30))); } catch(e) {}
+      renderActivityLog();
+    }
+
+    /* ── Yardımcılar ── */
+    function esc(s) {
+      return (window.KB && KB.esc) ? KB.esc(s)
+        : String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; });
+    }
+    function genId() { return 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
+    function toast(msg, type) {
+      if (window.KBMotion) { type === 'success' ? KBMotion.showSuccess(msg, '', 2200) : KBMotion.showErrorToast(msg); }
+    }
+
+    /* ── Tarih işlemleri ── */
+    function parseDateStr(s) {
+      if (!s) return null;
+      var p = s.split('-');
+      return { y: parseInt(p[0], 10), m: parseInt(p[1], 10) };
+    }
+    function monthsBetween(from, to) {
+      if (!from) return 0;
+      var f = parseDateStr(from);
+      var t = to ? parseDateStr(to) : { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
+      if (!f || !t) return 0;
+      return Math.max(0, (t.y - f.y) * 12 + (t.m - f.m));
+    }
+    function fmtYM(s) {
+      if (!s) return '';
+      var d = parseDateStr(s);
+      return d ? MONTHS_TR[d.m - 1] + ' ' + d.y : s;
+    }
+    function durationStr(months) {
+      if (!months) return '';
+      var y = Math.floor(months / 12), m = months % 12;
+      return [y > 0 ? y + ' yıl' : '', m > 0 ? m + ' ay' : ''].filter(Boolean).join(' ');
+    }
+    function expMonths(exp) { return monthsBetween(exp.baslangic, exp.aktif ? null : exp.bitis); }
+    function totalMonths(exps) { return exps.reduce(function(s, e){ return s + expMonths(e); }, 0); }
+    function fmtTs(iso) {
+      try { return new Date(iso).toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e) { return iso; }
+    }
+
+    /* ── Rozetler ── */
+    function calcBadges(exps) {
+      var badges = [], total = totalMonths(exps);
+      var hasActive   = exps.some(function(e){ return e.aktif; });
+      var hasVerified = exps.some(function(e){ return e.verified; });
+      var hasLong     = exps.some(function(e){ return expMonths(e) >= 12; });
+      if (total >= 24)  badges.push({ ico:'⭐', label:'2+ Yıl Deneyim',     cls:'exp-badge--gold' });
+      if (hasActive)    badges.push({ ico:'🟢', label:'Aktif Kurye',         cls:'exp-badge--green' });
+      if (hasVerified)  badges.push({ ico:'✓',  label:'Doğrulanmış Deneyim', cls:'exp-badge--blue' });
+      if (hasLong)      badges.push({ ico:'🏆', label:'Uzun Süreli Çalışma', cls:'exp-badge--purple' });
+      return badges;
+    }
+
+    /* ── Render ── */
+    function render() {
+      var exps = loadExps();
+      renderBadges(exps);
+      renderStats(exps);
+      renderTimeline(exps);
+    }
+
+    function renderBadges(exps) {
+      var el = document.getElementById('expBadges');
+      if (!el) return;
+      el.innerHTML = calcBadges(exps).map(function(b){
+        return '<span class="exp-badge ' + b.cls + '">' + b.ico + ' ' + esc(b.label) + '</span>';
+      }).join('');
+    }
+
+    function renderStats(exps) {
+      var el = document.getElementById('expStats');
+      if (!el) return;
+      if (!exps.length) { el.style.display = 'none'; return; }
+      el.style.display = 'flex';
+      var total  = totalMonths(exps);
+      var active = exps.filter(function(e){ return e.aktif; }).length;
+      var set = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+      set('expStatYears',  (total / 12).toFixed(1));
+      set('expStatMonths', total);
+      set('expStatCount',  exps.length);
+      set('expStatActive', active);
+    }
+
+    function renderTimeline(exps) {
+      var host = document.getElementById('expTimeline');
+      if (!host) return;
+      if (!exps.length) {
+        host.innerHTML =
+          '<div class="exp-empty">' +
+          '<div class="exp-empty__ico">🏗️</div>' +
+          '<div class="exp-empty__title">Henüz deneyim eklenmedi</div>' +
+          '<div class="exp-empty__sub">İş geçmişini ekleyerek işverenlerden çok daha fazla teklif al.</div>' +
+          '</div>';
+        return;
+      }
+      host.innerHTML = '<div class="exp-timeline">' +
+        exps.map(function(exp, i){ return buildItem(exp, i, exps.length); }).join('') +
+        '</div>';
+      wireTimeline();
+    }
+
+    function buildItem(exp, idx, total) {
+      var months  = expMonths(exp);
+      var dur     = durationStr(months);
+      var dateFrom = fmtYM(exp.baslangic);
+      var dateTo   = exp.aktif ? 'Devam ediyor' : (fmtYM(exp.bitis) || '—');
+      var cls = 'exp-item' + (exp.aktif ? ' exp-item--active' : '') + (exp.verified ? ' exp-item--verified' : '');
+      var cardCls = 'exp-card' + (exp.aktif ? ' exp-card--active' : '') + (exp.verified ? ' exp-card--verified' : '');
+
+      /* Tags */
+      var tagsHtml = exp.etiketler && exp.etiketler.length
+        ? '<div class="exp-card__tags">' + exp.etiketler.map(function(t){
+            return '<span class="exp-tag">' + (TAG_ICOS[t] || '') + ' ' + esc(t) + '</span>';
+          }).join('') + '</div>' : '';
+
+      /* Model + city */
+      var parts = [exp.model, exp.sehir].filter(Boolean);
+      var modelCity = parts.length
+        ? '<div class="exp-card__model-city">' + parts.map(esc).join(' <span class="exp-card__dot">·</span> ') + '</div>' : '';
+
+      /* Status chips */
+      var chips = '';
+      if (exp.aktif || exp.verified) {
+        chips = '<div class="exp-chips">' +
+          (exp.aktif    ? '<span class="exp-chip-aktif">🟢 Aktif</span>' : '') +
+          (exp.verified ? '<span class="exp-chip-verified">✓ Doğrulandı</span>' : '') +
+          '</div>';
+      }
+
+      /* Reference */
+      var refHtml = (exp.referans_ad || exp.referans_tel)
+        ? '<div class="exp-card__ref">👤 ' + esc(exp.referans_ad || '') +
+          (exp.referans_tel ? ' &nbsp;·&nbsp; 📞 ' + esc(exp.referans_tel) : '') + '</div>' : '';
+
+      /* Description */
+      var descHtml = exp.aciklama
+        ? '<div class="exp-card__desc">' + esc(exp.aciklama).replace(/\n/g, '<br>') + '</div>' : '';
+
+      /* Up/down move buttons */
+      var moveHtml = '';
+      if (idx > 0)          moveHtml += '<button class="btn btn--ghost btn--sm" data-act="up"   data-id="' + exp.id + '" title="Yukarı">↑</button>';
+      if (idx < total - 1)  moveHtml += '<button class="btn btn--ghost btn--sm" data-act="down" data-id="' + exp.id + '" title="Aşağı">↓</button>';
+
+      return '<div class="' + cls + '">' +
+        '<div class="' + cardCls + '">' +
+          '<div class="exp-card__header">' +
+            '<div class="exp-card__meta">' +
+              '<div class="exp-card__company">' + esc(exp.sirket) + '</div>' +
+              '<div class="exp-card__position">' + esc(exp.pozisyon) + '</div>' +
+              '<div class="exp-card__date">' + dateFrom + ' — ' + dateTo +
+                (dur ? '<span class="exp-card__duration">' + dur + '</span>' : '') + '</div>' +
+              chips +
+            '</div>' +
+            '<div class="exp-card__actions">' +
+              moveHtml +
+              '<button class="btn btn--ghost btn--sm" data-act="edit"   data-id="' + exp.id + '" title="Düzenle">✏️</button>' +
+              '<button class="btn btn--ghost btn--sm" data-act="delete" data-id="' + exp.id + '" title="Sil" style="color:#DC2626">🗑</button>' +
+            '</div>' +
+          '</div>' +
+          modelCity + tagsHtml + descHtml + refHtml +
+        '</div>' +
+        '</div>';
+    }
+
+    /* ── Aktivite günlüğü ── */
+    function renderActivityLog() {
+      var wrap = document.getElementById('expActivityWrap');
+      var list = document.getElementById('expActivityList');
+      if (!wrap || !list) return;
+      var log = loadLog();
+      if (!log.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+      var icos = { add:'＋', edit:'✏️', delete:'🗑', verify:'✓' };
+      list.innerHTML = log.slice(0, 10).map(function(e){
+        return '<div class="exp-activity-item">' +
+          '<div class="exp-activity__ico">' + (icos[e.action] || '•') + '</div>' +
+          '<div class="exp-activity__body">' +
+            '<div class="exp-activity__text">' + esc(e.note) + '</div>' +
+            '<div class="exp-activity__meta">' + fmtTs(e.ts) + '</div>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    /* ── Form ── */
+    function populateSelects() {
+      var now = new Date(), curY = now.getFullYear();
+      ['expBaslangicAy','expBitisAy'].forEach(function(id) {
+        var sel = document.getElementById(id);
+        if (!sel || sel._pop) return; sel._pop = true;
+        sel.innerHTML = '<option value="">Ay</option>' +
+          MONTHS_TR.map(function(m, i){ return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+      });
+      ['expBaslangicYil','expBitisYil'].forEach(function(id) {
+        var sel = document.getElementById(id);
+        if (!sel || sel._pop) return; sel._pop = true;
+        var opts = '<option value="">Yıl</option>';
+        for (var y = curY + 1; y >= 1990; y--) opts += '<option value="' + y + '">' + y + '</option>';
+        sel.innerHTML = opts;
+      });
+    }
+
+    function clearForm() {
+      ['expSirket','expPozisyon','expSehir','expAciklama','expRefAd','expRefTel'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.value = '';
+      });
+      var model = document.getElementById('expModel'); if (model) model.value = '';
+      var aktif = document.getElementById('expAktif'); if (aktif) aktif.checked = false;
+      ['expBaslangicAy','expBaslangicYil','expBitisAy','expBitisYil'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('expEditId').value = '';
+      document.querySelectorAll('.exp-tag-toggle').forEach(function(t){ t.classList.remove('is-active'); });
+      toggleBitis(false);
+      clearFormErr();
+    }
+
+    function fillForm(exp) {
+      document.getElementById('expEditId').value   = exp.id || '';
+      document.getElementById('expSirket').value   = exp.sirket   || '';
+      document.getElementById('expPozisyon').value = exp.pozisyon || '';
+      document.getElementById('expModel').value    = exp.model    || '';
+      document.getElementById('expSehir').value    = exp.sehir    || '';
+      document.getElementById('expAciklama').value = exp.aciklama || '';
+      document.getElementById('expRefAd').value    = exp.referans_ad  || '';
+      document.getElementById('expRefTel').value   = exp.referans_tel || '';
+      document.getElementById('expAktif').checked  = !!exp.aktif;
+      if (exp.baslangic) {
+        var d = parseDateStr(exp.baslangic);
+        if (d) { document.getElementById('expBaslangicAy').value = d.m; document.getElementById('expBaslangicYil').value = d.y; }
+      }
+      if (!exp.aktif && exp.bitis) {
+        var d2 = parseDateStr(exp.bitis);
+        if (d2) { document.getElementById('expBitisAy').value = d2.m; document.getElementById('expBitisYil').value = d2.y; }
+      }
+      document.querySelectorAll('.exp-tag-toggle').forEach(function(t){
+        t.classList.toggle('is-active', !!(exp.etiketler && exp.etiketler.indexOf(t.dataset.tag) !== -1));
+      });
+      toggleBitis(exp.aktif);
+    }
+
+    function toggleBitis(hidden) {
+      var g = document.getElementById('expBitisGrup');
+      if (g) g.style.display = hidden ? 'none' : '';
+    }
+
+    function openForm(exp) {
+      populateSelects();
+      clearForm();
+      var panel = document.getElementById('expFormPanel');
+      var title = document.getElementById('expFormTitle');
+      if (exp) { fillForm(exp); if (title) title.textContent = 'Deneyimi Düzenle'; }
+      else { if (title) title.textContent = 'Yeni Deneyim Ekle'; }
+      if (panel) { panel.classList.add('is-open'); panel.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+    }
+
+    function closeForm() {
+      var panel = document.getElementById('expFormPanel');
+      if (panel) panel.classList.remove('is-open');
+    }
+
+    function getDate(ayId, yilId) {
+      var ay = document.getElementById(ayId).value, yil = document.getElementById(yilId).value;
+      if (!ay || !yil) return null;
+      return yil + '-' + String(ay).padStart(2, '0');
+    }
+
+    function showFormErr(msg) {
+      var el = document.getElementById('expFormErr');
+      if (!el) return; el.textContent = msg; el.style.display = 'inline-block';
+      setTimeout(function(){ el.style.display = 'none'; }, 5000);
+    }
+    function clearFormErr() {
+      var el = document.getElementById('expFormErr'); if (el) el.style.display = 'none';
+    }
+
+    function saveForm() {
+      var sirket    = (document.getElementById('expSirket').value    || '').trim();
+      var pozisyon  = (document.getElementById('expPozisyon').value  || '').trim();
+      var baslangic = getDate('expBaslangicAy', 'expBaslangicYil');
+      if (!sirket)    { showFormErr('Şirket adı zorunludur.'); return; }
+      if (!pozisyon)  { showFormErr('Pozisyon zorunludur.'); return; }
+      if (!baslangic) { showFormErr('Başlangıç tarihi zorunludur.'); return; }
+
+      var aktif = document.getElementById('expAktif').checked;
+      var bitis = aktif ? null : getDate('expBitisAy', 'expBitisYil');
+      if (!aktif && !bitis) { showFormErr('Bitiş tarihini girin veya "Şu an burada çalışıyorum"u işaretleyin.'); return; }
+
+      var etiketler = [];
+      document.querySelectorAll('.exp-tag-toggle.is-active').forEach(function(t){ etiketler.push(t.dataset.tag); });
+
+      var editId = document.getElementById('expEditId').value;
+      var exps   = loadExps();
+      var now    = new Date().toISOString();
+      var data   = {
+        sirket: sirket, pozisyon: pozisyon,
+        model: (document.getElementById('expModel').value || ''),
+        sehir: (document.getElementById('expSehir').value    || '').trim(),
+        baslangic: baslangic, bitis: bitis, aktif: aktif,
+        aciklama:     (document.getElementById('expAciklama').value || '').trim(),
+        referans_ad:  (document.getElementById('expRefAd').value    || '').trim(),
+        referans_tel: (document.getElementById('expRefTel').value   || '').trim(),
+        etiketler: etiketler, updatedAt: now
+      };
+
+      if (editId) {
+        var found = false;
+        exps = exps.map(function(e){ if (e.id === editId) { found = true; return Object.assign({}, e, data); } return e; });
+        if (found) {
+          addLog('edit', '"' + sirket + '" deneyimi düzenlendi.');
+          toast('Deneyim güncellendi.', 'success');
+        }
+      } else {
+        exps.unshift(Object.assign({ id: genId(), verified: false, createdAt: now }, data));
+        addLog('add', '"' + sirket + '" deneyimi eklendi.');
+        toast('Deneyim eklendi.', 'success');
+      }
+      saveExps(exps);
+      closeForm();
+      render();
+    }
+
+    /* ── CRUD işlemleri ── */
+    function deleteExp(id) {
+      var exps = loadExps();
+      var exp  = exps.filter(function(e){ return e.id === id; })[0];
+      if (!exp || !confirm('"' + exp.sirket + '" deneyimi silinsin mi?')) return;
+      saveExps(exps.filter(function(e){ return e.id !== id; }));
+      addLog('delete', '"' + exp.sirket + '" deneyimi silindi.');
+      toast('Deneyim silindi.', 'success');
+      render();
+    }
+
+    function moveExp(id, dir) {
+      var exps = loadExps(), idx = -1;
+      exps.forEach(function(e, i){ if (e.id === id) idx = i; });
+      if (idx === -1) return;
+      var ni = idx + dir;
+      if (ni < 0 || ni >= exps.length) return;
+      var tmp = exps[idx]; exps[idx] = exps[ni]; exps[ni] = tmp;
+      saveExps(exps);
+      render();
+    }
+
+    /* ── Wire ── */
+    function wireForm() {
+      function on(id, ev, fn) { var el = document.getElementById(id); if (el && !el['_w_' + ev]) { el['_w_' + ev] = true; el.addEventListener(ev, fn); } }
+      on('expAddBtn',    'click',  function(){ openForm(null); });
+      on('expSaveBtn',   'click',  saveForm);
+      on('expCancelBtn', 'click',  closeForm);
+      on('expAktif',     'change', function(){ toggleBitis(this.checked); });
+      document.querySelectorAll('.exp-tag-toggle').forEach(function(t) {
+        if (!t._tw) { t._tw = true; t.addEventListener('click', function(){ t.classList.toggle('is-active'); }); }
+      });
+    }
+
+    function wireTimeline() {
+      var host = document.getElementById('expTimeline');
+      if (!host || host._w) return;
+      host._w = true;
+      host.addEventListener('click', function(e) {
+        var btn = e.target.closest && e.target.closest('[data-act]');
+        if (!btn) return;
+        var act = btn.getAttribute('data-act');
+        var id  = btn.getAttribute('data-id');
+        if (act === 'edit') {
+          var exp = loadExps().filter(function(e){ return e.id === id; })[0];
+          if (exp) openForm(exp);
+        }
+        if (act === 'delete') deleteExp(id);
+        if (act === 'up')     moveExp(id, -1);
+        if (act === 'down')   moveExp(id,  1);
+      });
+    }
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!document.getElementById('expTimeline')) return;
+      var ready = (window.KB && KB.ready) ? KB.ready() : Promise.resolve();
+      ready.then(function() { wireForm(); render(); renderActivityLog(); }).catch(function() { wireForm(); render(); renderActivityLog(); });
     });
 
   })();

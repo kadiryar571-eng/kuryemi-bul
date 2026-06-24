@@ -2948,7 +2948,101 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .doc-progress { flex-wrap:wrap; }
 }
 
-/* ─── 51. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 51. DENEYİMLER ────────────────────────────────────────── */
+
+/* Badges */
+.exp-badges { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+.exp-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:var(--radius-full); font-size:0.72rem; font-weight:600; border:1px solid transparent; }
+.exp-badge--gold   { background:#FFFBEB; color:#92400E; border-color:rgba(245,158,11,.3); }
+.exp-badge--green  { background:#DCFCE7; color:#15803D; border-color:rgba(21,128,61,.25); }
+.exp-badge--blue   { background:#EFF6FF; color:#1D4ED8; border-color:rgba(59,130,246,.3); }
+.exp-badge--purple { background:#F5F3FF; color:#6D28D9; border-color:rgba(109,40,217,.25); }
+
+/* Stats bar */
+.exp-stats { display:flex; gap:14px; margin-bottom:16px; padding:12px 16px; background:var(--surface-2); border-radius:var(--radius-lg); flex-wrap:wrap; }
+.exp-stat { text-align:center; min-width:54px; }
+.exp-stat__val { font-size:1.1rem; font-weight:700; color:var(--primary); line-height:1.2; }
+.exp-stat__lbl { font-size:0.68rem; color:var(--text-3); margin-top:1px; white-space:nowrap; }
+
+/* Timeline */
+.exp-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.exp-timeline { position:relative; padding-left:22px; }
+.exp-timeline::before { content:''; position:absolute; left:7px; top:14px; bottom:14px; width:2px; background:var(--border); border-radius:2px; }
+.exp-item { position:relative; padding:0 0 16px 18px; }
+.exp-item::before { content:''; position:absolute; left:-7px; top:14px; width:10px; height:10px; border-radius:50%; background:var(--border); border:2px solid var(--surface); box-shadow:0 0 0 2px var(--border); transition:background .2s,box-shadow .2s; }
+.exp-item--active::before   { background:var(--primary); box-shadow:0 0 0 2px rgba(0,87,255,.25); }
+.exp-item--verified::before { background:#15803D; box-shadow:0 0 0 2px rgba(21,128,61,.25); }
+.exp-item:last-child { padding-bottom:0; }
+
+/* Cards */
+.exp-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:14px 16px; transition:border-color .2s; }
+.exp-card:hover     { border-color:rgba(0,87,255,.2); }
+.exp-card--active   { border-color:rgba(0,87,255,.25); }
+.exp-card--verified { border-color:rgba(21,128,61,.25); }
+.exp-card__header { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.exp-card__meta { flex:1; min-width:0; }
+.exp-card__company  { font-size:0.9rem; font-weight:700; color:var(--text); }
+.exp-card__position { font-size:0.82rem; font-weight:500; color:var(--primary); margin-top:1px; }
+.exp-card__date { font-size:0.75rem; color:var(--text-3); margin-top:4px; }
+.exp-card__duration { display:inline-block; background:var(--primary-light); color:var(--primary); font-size:0.68rem; font-weight:600; padding:1px 7px; border-radius:var(--radius-full); margin-left:6px; }
+.exp-card__actions { display:flex; gap:3px; flex-shrink:0; }
+.exp-card__model-city { display:flex; align-items:center; gap:7px; margin-top:6px; font-size:0.76rem; color:var(--text-3); flex-wrap:wrap; }
+.exp-card__dot { color:var(--border); }
+.exp-card__tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.exp-tag  { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:var(--radius-full); font-size:0.69rem; font-weight:500; background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }
+.exp-card__desc { font-size:0.79rem; color:var(--text-2); margin-top:8px; line-height:1.55; }
+.exp-card__ref  { display:flex; align-items:center; gap:6px; margin-top:8px; padding:7px 10px; background:var(--surface-2); border-radius:var(--radius); font-size:0.76rem; color:var(--text-2); }
+
+/* Status chips */
+.exp-chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
+.exp-chip-aktif    { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:var(--radius-full); font-size:0.69rem; font-weight:600; background:#DCFCE7; color:#15803D; border:1px solid rgba(21,128,61,.25); }
+.exp-chip-verified { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:var(--radius-full); font-size:0.69rem; font-weight:600; background:#EFF6FF; color:#1D4ED8; border:1px solid rgba(59,130,246,.25); }
+
+/* Empty */
+.exp-empty { text-align:center; padding:40px 20px; }
+.exp-empty__ico   { font-size:2.2rem; margin-bottom:10px; }
+.exp-empty__title { font-size:0.9rem; font-weight:600; color:var(--text-2); margin-bottom:5px; }
+.exp-empty__sub   { font-size:0.78rem; color:var(--text-3); max-width:280px; margin:0 auto; line-height:1.5; }
+
+/* Form panel */
+.exp-form-panel { background:var(--surface-2); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:18px; margin-bottom:16px; display:none; }
+.exp-form-panel.is-open { display:block; }
+.exp-form-panel__title { font-size:0.88rem; font-weight:700; color:var(--text); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.exp-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.exp-form-group { display:flex; flex-direction:column; gap:5px; }
+.exp-form-group--full { grid-column:1/-1; }
+.exp-form-label { font-size:0.77rem; font-weight:500; color:var(--text-2); }
+.exp-form-input,.exp-form-select,.exp-form-textarea { border:1px solid var(--border); border-radius:var(--radius); padding:7px 10px; font-size:0.84rem; color:var(--text); background:var(--surface); font-family:inherit; transition:border-color .15s; box-sizing:border-box; width:100%; }
+.exp-form-input:focus,.exp-form-select:focus,.exp-form-textarea:focus { border-color:var(--primary); outline:none; box-shadow:0 0 0 3px rgba(0,87,255,.07); }
+.exp-form-textarea { resize:vertical; min-height:70px; }
+.exp-date-wrap { display:flex; gap:6px; }
+.exp-date-wrap .exp-form-select { flex:1; }
+.exp-tags-grid { display:flex; flex-wrap:wrap; gap:6px; padding:8px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+.exp-tag-toggle { cursor:pointer; user-select:none; display:inline-flex; align-items:center; padding:4px 10px; border-radius:var(--radius-full); font-size:0.74rem; font-weight:500; color:var(--text-3); background:var(--surface-2); border:1px solid var(--border); transition:all .15s; }
+.exp-tag-toggle.is-active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.exp-check-row { display:flex; align-items:center; gap:8px; }
+.exp-check-row input[type=checkbox] { width:16px; height:16px; accent-color:var(--primary); }
+.exp-check-row label { font-size:0.82rem; color:var(--text-2); cursor:pointer; }
+.exp-form-actions { display:flex; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); align-items:center; flex-wrap:wrap; }
+.exp-form-err { font-size:0.77rem; color:#DC2626; }
+
+/* Activity log */
+.exp-activity-wrap { margin-top:20px; border-top:1px solid var(--border); padding-top:14px; }
+.exp-activity-title { font-size:0.8rem; font-weight:600; color:var(--text-2); margin-bottom:9px; }
+.exp-activity-item { display:flex; align-items:flex-start; gap:9px; padding:6px 0; border-bottom:1px solid var(--border); }
+.exp-activity-item:last-child { border-bottom:none; }
+.exp-activity__ico  { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.72rem; flex-shrink:0; background:var(--surface-2); border:1px solid var(--border); }
+.exp-activity__body { flex:1; }
+.exp-activity__text { font-size:0.76rem; color:var(--text); line-height:1.4; }
+.exp-activity__meta { font-size:0.69rem; color:var(--text-3); margin-top:1px; }
+
+@media (max-width:640px) {
+  .exp-form-grid { grid-template-columns:1fr; }
+  .exp-stats { gap:8px; }
+  .exp-timeline { padding-left:18px; }
+}
+
+/* ─── 52. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);
