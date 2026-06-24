@@ -201,6 +201,24 @@
       </div>
     </div>
 
+    <!-- Smart Suggestions -->
+    <div class="smart-sugg" id="smartSugg">
+      <div class="smart-sugg__head">
+        <div class="smart-sugg__title">Senin İçin Önerilenler</div>
+        <div class="smart-sugg__sub">Geçmiş başvurularına ve çalışma tercihine göre öneriler.</div>
+      </div>
+      <div class="ss-tabs">
+        <button class="ss-tab is-active" data-ss="ilanlar">Önerilen İlanlar</button>
+        <button class="ss-tab" data-ss="isletmeler">Önerilen İşletmeler</button>
+      </div>
+      <div class="ss-panel" id="ssPanelIlanlar">
+        <div class="ss-scroll" id="suggIlanList"></div>
+      </div>
+      <div class="ss-panel is-hidden" id="ssPanelIsletmeler">
+        <div class="ss-scroll" id="suggBizList"></div>
+      </div>
+    </div>
+
     <!-- Tab nav -->
     <nav class="dash__nav">
       <button data-tab="ana">Genel Bakış</button>
@@ -537,6 +555,115 @@
     }
     /* ─── /Activity Timeline ─────────────────────────────────── */
 
+    /* ─── Smart Suggestions ─────────────────────────────────── */
+    var SUGG_ILANLAR = [
+      { id:'si1', sirket:'Getir',            baslik:'Motokurye',        sehir:'İstanbul', ilce:'Beşiktaş',  maas_min:14000, maas_max:17000, tip:'Tam Zamanlı', tag:'uygun' },
+      { id:'si2', sirket:'Trendyol Express', baslik:'Dağıtım Kurye',    sehir:'İstanbul', ilce:'Kadıköy',   maas_min:15000, maas_max:19000, tip:'Part Time',   tag:'yakın' },
+      { id:'si3', sirket:'Yemeksepeti',      baslik:'Bisiklet Kurye',   sehir:'İstanbul', ilce:'Şişli',     maas_min:null,  maas_max:null,  tip:'Paket Başı',  tag:'yeni'  },
+      { id:'si4', sirket:'Hepsiburada',      baslik:'Kurye',            sehir:'İstanbul', ilce:'Üsküdar',   maas_min:13000, maas_max:16000, tip:'Tam Zamanlı', tag:'uygun' },
+      { id:'si5', sirket:'CargoX',           baslik:'Motokurye (Gece)', sehir:'İstanbul', ilce:'Bağcılar',  maas_min:null,  maas_max:null,  tip:'Paket Başı',  tag:'yeni'  },
+    ];
+    var SUGG_ISLETMELER = [
+      { id:'sb1', ad:'Getir Lojistik',   ilan:4, bolge:'Avrupa Yakası',   son: Date.now()-3600000,   ava:'G' },
+      { id:'sb2', ad:'Trendyol Express', ilan:2, bolge:'Anadolu Yakası',  son: Date.now()-86400000,  ava:'T' },
+      { id:'sb3', ad:'Terra Pizza',      ilan:1, bolge:'Kadıköy',         son: Date.now()-7200000,   ava:'T' },
+      { id:'sb4', ad:'MNG Kargo',        ilan:3, bolge:'İstanbul Geneli', son: Date.now()-172800000, ava:'M' },
+    ];
+    var SUGG_TAGS = {
+      uygun: '<span class="job-badge job-badge--match">Sana Uygun</span>',
+      yakın: '<span class="job-badge job-badge--new">Yakınında</span>',
+      yeni:  '<span class="job-badge job-badge--new">Yeni</span>',
+    };
+
+    function buildSuggIlan(job) {
+      var maas = (job.maas_min && job.maas_max)
+        ? job.maas_min.toLocaleString('tr-TR') + ' – ' + job.maas_max.toLocaleString('tr-TR') + ' ₺'
+        : '—';
+      var el = document.createElement('div');
+      el.className = 'ss-ilan-card';
+      el.innerHTML =
+        '<div class="ss-ilan-card__head">' +
+          '<div class="ss-ilan-card__left">' +
+            '<div class="ss-ilan-card__company">' + job.sirket + '</div>' +
+            '<div class="ss-ilan-card__title">' + job.baslik + '</div>' +
+            '<div class="ss-ilan-card__loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + job.ilce + ', ' + job.sehir + '</div>' +
+          '</div>' +
+          (SUGG_TAGS[job.tag] || '') +
+        '</div>' +
+        '<div class="ss-ilan-card__info">' +
+          '<div class="ss-ilan-drow"><span class="ss-ilan-dl">Maaş</span><span class="ss-ilan-dv">' + maas + '</span></div>' +
+          '<div class="ss-ilan-drow"><span class="ss-ilan-dl">Çalışma Tipi</span><span class="ss-ilan-dv">' + job.tip + '</span></div>' +
+        '</div>' +
+        '<div class="ss-ilan-card__actions">' +
+          '<button class="btn btn--primary btn--sm sugg-apply-btn" data-sid="' + job.id + '">Başvur</button>' +
+          '<a href="ilanlar.html" class="btn btn--ghost btn--sm">Detay</a>' +
+        '</div>';
+      return el;
+    }
+
+    function buildSuggBiz(biz) {
+      var el = document.createElement('div');
+      el.className = 'ss-biz-card';
+      el.innerHTML =
+        '<div class="ss-biz-card__top">' +
+          '<div class="ss-biz-ava">' + biz.ava + '</div>' +
+          '<div><div class="ss-biz-card__name">' + biz.ad + '</div><div class="ss-biz-card__ilan-count">' + biz.ilan + ' aktif ilan</div></div>' +
+        '</div>' +
+        '<div class="ss-biz-card__info">' +
+          '<div class="ss-biz-drow"><span class="ss-biz-dl">Bölge</span><span class="ss-biz-dv">' + biz.bolge + '</span></div>' +
+          '<div class="ss-biz-drow"><span class="ss-biz-dl">Son aktif</span><span class="ss-biz-dv">' + relTime(biz.son) + '</span></div>' +
+        '</div>' +
+        '<div class="ss-biz-card__actions">' +
+          '<a href="isletmeler.html" class="btn btn--primary btn--sm">Profili Gör</a>' +
+          '<a href="ilanlar.html" class="btn btn--ghost btn--sm">İlanları İncele</a>' +
+        '</div>';
+      return el;
+    }
+
+    function initSmartSugg(userCity) {
+      var ilanList = document.getElementById('suggIlanList');
+      if (ilanList) {
+        var items = SUGG_ILANLAR.slice();
+        if (userCity) {
+          items.sort(function(a, b) {
+            return (b.sehir === userCity ? 1 : 0) - (a.sehir === userCity ? 1 : 0);
+          });
+        }
+        var frag = document.createDocumentFragment();
+        items.forEach(function(j) { frag.appendChild(buildSuggIlan(j)); });
+        ilanList.appendChild(frag);
+
+        ilanList.addEventListener('click', function(e) {
+          var btn = e.target.closest('.sugg-apply-btn');
+          if (!btn || btn.disabled) return;
+          btn.disabled = true;
+          btn.textContent = '✓ Başvuruldu';
+          btn.classList.replace('btn--primary', 'btn--secondary');
+          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'İşletme en kısa sürede iletişime geçecek.', 2600);
+        });
+      }
+
+      var bizList = document.getElementById('suggBizList');
+      if (bizList) {
+        var bfrag = document.createDocumentFragment();
+        SUGG_ISLETMELER.slice()
+          .sort(function(a, b) { return b.ilan - a.ilan; })
+          .forEach(function(b) { bfrag.appendChild(buildSuggBiz(b)); });
+        bizList.appendChild(bfrag);
+      }
+
+      document.querySelectorAll('.ss-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.ss-tab').forEach(function(b) { b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          var t = btn.dataset.ss;
+          document.getElementById('ssPanelIlanlar').classList.toggle('is-hidden', t !== 'ilanlar');
+          document.getElementById('ssPanelIsletmeler').classList.toggle('is-hidden', t !== 'isletmeler');
+        });
+      });
+    }
+    /* ─── /Smart Suggestions ─────────────────────────────────── */
+
     function renderProfEngine(profile, role) {
       var el = document.getElementById('profEngine');
       if (!el || !profile) return;
@@ -689,11 +816,13 @@
 
         initJobFeed(profile ? profile.sehir : '');
         initTimeline();
+        initSmartSugg(profile ? profile.sehir : '');
 
       } catch(err) {
         console.warn('Welcome block error:', err);
         initJobFeed('');
         initTimeline();
+        initSmartSugg('');
       }
     });
   </script>
