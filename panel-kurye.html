@@ -74,6 +74,32 @@
       </div>
     </div>
 
+    <!-- Personalized Job Feed -->
+    <div class="job-feed" id="jobFeedSection">
+      <div class="job-feed__head">
+        <div>
+          <div class="job-feed__title">Sana Uygun İlanlar</div>
+          <div class="job-feed__sub">Profiline ve çalışma bölgene göre önerilen ilanlar.</div>
+        </div>
+        <a href="ilanlar.html" class="job-feed__all">Tümünü Gör →</a>
+      </div>
+      <div class="job-feed__filters">
+        <button class="jf-pill is-active" data-filter="all">Tümü</button>
+        <button class="jf-pill" data-filter="yakin">Yakınımdaki</button>
+        <button class="jf-pill" data-filter="yeni">Yeni İlanlar</button>
+        <button class="jf-pill" data-filter="maas">Yüksek Maaş</button>
+        <button class="jf-pill" data-filter="acil">Acil İşler</button>
+      </div>
+      <div class="job-feed__list" id="jobFeedList">
+        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel" style="width:42px;height:42px;border-radius:8px;display:block"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:40%;margin-bottom:6px"></span><span class="skel skel--line" style="width:70%;margin-bottom:6px"></span><span class="skel skel--line" style="width:50%"></span></div></div></div>
+        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel" style="width:42px;height:42px;border-radius:8px;display:block"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:40%;margin-bottom:6px"></span><span class="skel skel--line" style="width:65%;margin-bottom:6px"></span><span class="skel skel--line" style="width:45%"></span></div></div></div>
+        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel" style="width:42px;height:42px;border-radius:8px;display:block"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:35%;margin-bottom:6px"></span><span class="skel skel--line" style="width:75%;margin-bottom:6px"></span><span class="skel skel--line" style="width:55%"></span></div></div></div>
+      </div>
+      <div class="job-feed__more">
+        <button class="btn btn--ghost btn--sm" id="jobFeedMore" style="display:none">Daha Fazla Göster</button>
+      </div>
+    </div>
+
     <!-- Tab nav -->
     <nav class="dash__nav">
       <button data-tab="ana">Genel Bakış</button>
@@ -158,6 +184,167 @@
         p.classList.toggle('is-active', p.id === 'panel-' + tabName);
       });
     }
+
+    /* ─── Job Feed ──────────────────────────────────────────── */
+    var MOCK_JOBS = [
+      { id:'j1', sirket:'Hepsiburada Lojistik', baslik:'Motokurye Aranıyor',       sehir:'İstanbul', ilce:'Kadıköy',    tipler:['Tam Zamanlı','Motorlu'],  odeme:'Maaşlı',    maas_min:15000, maas_max:18000, saat:'08:00–18:00', bolge:'Anadolu Yakası', prim:true,  badge:'yeni',  ts: Date.now()-7200000   },
+      { id:'j2', sirket:'Getir',                baslik:'Bisiklet Kurye',            sehir:'İstanbul', ilce:'Beşiktaş',  tipler:['Part Time','Yaya'],        odeme:'Paket Başı', maas_min:null,  maas_max:null,  saat:'Esnek',      bolge:'Avrupa Yakası', prim:false, badge:'uygun', ts: Date.now()-3600000   },
+      { id:'j3', sirket:'Yemeksepeti',          baslik:'Motokurye (Acil)',          sehir:'Ankara',   ilce:'Çankaya',   tipler:['Tam Zamanlı','Motorlu'],  odeme:'Maaşlı',    maas_min:14000, maas_max:17000, saat:'12:00–00:00', bolge:'Çankaya',       prim:true,  badge:'acil',  ts: Date.now()-1800000   },
+      { id:'j4', sirket:'Trendyol Express',     baslik:'Dağıtım Kurye',            sehir:'İzmir',    ilce:'Konak',     tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:16000, maas_max:20000, saat:'09:00–18:00', bolge:'Konak',          prim:true,  badge:'',      ts: Date.now()-86400000  },
+      { id:'j5', sirket:'MNG Kargo',            baslik:'Kargo Kurye',              sehir:'İstanbul', ilce:'Şişli',     tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:13000, maas_max:15000, saat:'08:00–17:00', bolge:'Avrupa Yakası', prim:false, badge:'',      ts: Date.now()-172800000 },
+      { id:'j6', sirket:'CargoX',               baslik:'Motokurye (Hafta Sonu)',   sehir:'İstanbul', ilce:'Üsküdar',   tipler:['Part Time','Motorlu'],    odeme:'Paket Başı', maas_min:null,  maas_max:null,  saat:'Esnek',      bolge:'Anadolu Yakası', prim:true,  badge:'yeni',  ts: Date.now()-900000    },
+      { id:'j7', sirket:'Sürat Kargo',          baslik:'Bölge Kurye',              sehir:'Bursa',    ilce:'Osmangazi', tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:14500, maas_max:16500, saat:'08:00–18:00', bolge:'Osmangazi',      prim:true,  badge:'',      ts: Date.now()-259200000 },
+      { id:'j8', sirket:'Aras Kargo',           baslik:'Dağıtım Görevlisi',        sehir:'İstanbul', ilce:'Bağcılar',  tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:12000, maas_max:14000, saat:'07:00–16:00', bolge:'Avrupa Yakası', prim:false, badge:'',      ts: Date.now()-345600000 },
+    ];
+
+    var jobUserCity = '';
+    var jobActiveFilter = 'all';
+    var jobPage = 1;
+    var JOB_PER_PAGE = 4;
+
+    function getFilteredJobs(filter) {
+      var jobs = MOCK_JOBS.slice();
+      if (filter === 'yakin' && jobUserCity) {
+        jobs = jobs.filter(function(j){ return j.sehir === jobUserCity; });
+      } else if (filter === 'yeni') {
+        var cutoff = Date.now() - 48 * 3600 * 1000;
+        jobs = jobs.filter(function(j){ return j.ts > cutoff; });
+      } else if (filter === 'maas') {
+        jobs = jobs.filter(function(j){ return j.maas_min; }).sort(function(a,b){ return b.maas_min - a.maas_min; });
+      } else if (filter === 'acil') {
+        jobs = jobs.filter(function(j){ return j.badge === 'acil'; });
+      }
+      return jobs;
+    }
+
+    function fmtMaas(min, max) {
+      if (!min && !max) return '—';
+      var f = function(n){ return n.toLocaleString('tr-TR') + ' ₺'; };
+      if (min && max) return f(min) + ' – ' + f(max);
+      return min ? f(min) + '+' : f(max);
+    }
+
+    function getSaved() {
+      try { return JSON.parse(localStorage.getItem('kb_saved_jobs') || '[]'); } catch(e) { return []; }
+    }
+    function toggleSaved(id) {
+      var s = getSaved(); var i = s.indexOf(id);
+      if (i > -1) { s.splice(i, 1); } else { s.push(id); }
+      localStorage.setItem('kb_saved_jobs', JSON.stringify(s));
+      return s.indexOf(id) > -1;
+    }
+
+    function buildJobCard(job) {
+      var saved = getSaved().indexOf(job.id) > -1;
+      var initials = job.sirket.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+      var badgeHtml = '';
+      if (job.badge === 'yeni')  badgeHtml = '<span class="job-badge job-badge--new">Yeni</span>';
+      if (job.badge === 'uygun') badgeHtml = '<span class="job-badge job-badge--match">Sana Uygun</span>';
+      if (job.badge === 'acil')  badgeHtml = '<span class="job-badge job-badge--urgent">Acil Alım</span>';
+      var tagsHtml = job.tipler.map(function(t){ return '<span class="job-tag">' + t + '</span>'; }).join('') +
+                     '<span class="job-tag">' + job.odeme + '</span>';
+      var saveSvgFill = saved ? 'currentColor' : 'none';
+      var el = document.createElement('div');
+      el.className = 'job-card';
+      el.dataset.id = job.id;
+      el.innerHTML =
+        '<div class="job-card__row">' +
+          '<div class="job-card__ava">' + initials + '</div>' +
+          '<div class="job-card__main">' +
+            '<div class="job-card__company">' + job.sirket + '</div>' +
+            '<div class="job-card__title">' + job.baslik + '</div>' +
+            '<div class="job-card__loc">' +
+              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+              job.ilce + ', ' + job.sehir +
+            '</div>' +
+          '</div>' +
+          '<div class="job-card__side">' +
+            badgeHtml +
+            '<button class="job-card__save' + (saved ? ' is-saved' : '') + '" data-jid="' + job.id + '" title="Kaydet">' +
+              '<svg width="13" height="13" viewBox="0 0 24 24" fill="' + saveSvgFill + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="job-card__tags">' + tagsHtml + '</div>' +
+        '<div class="job-card__details">' +
+          '<div class="job-drow"><span class="job-dlabel">Maaş</span><span class="job-dval">' + fmtMaas(job.maas_min, job.maas_max) + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Çalışma Saati</span><span class="job-dval">' + job.saat + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Bölge</span><span class="job-dval">' + job.bolge + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Prim</span>' +
+            (job.prim ? '<span class="job-dval job-dval--yes">Var</span>' : '<span class="job-dval job-dval--no">Yok</span>') +
+          '</div>' +
+        '</div>' +
+        '<div class="job-card__actions">' +
+          '<button class="btn btn--primary btn--sm job-apply-btn" data-jid="' + job.id + '">Başvur</button>' +
+          '<a href="ilanlar.html" class="btn btn--ghost btn--sm">Detay</a>' +
+        '</div>';
+      return el;
+    }
+
+    function renderJobFeed(filter, page) {
+      var listEl = document.getElementById('jobFeedList');
+      var moreBtn = document.getElementById('jobFeedMore');
+      if (!listEl) return;
+      var jobs = getFilteredJobs(filter);
+      if (jobs.length === 0) {
+        listEl.innerHTML = '<div class="job-feed__empty">Bu filtreye uygun ilan bulunamadı.</div>';
+        if (moreBtn) moreBtn.style.display = 'none';
+        return;
+      }
+      var slice = jobs.slice(0, page * JOB_PER_PAGE);
+      listEl.innerHTML = '';
+      var frag = document.createDocumentFragment();
+      slice.forEach(function(job){ frag.appendChild(buildJobCard(job)); });
+      listEl.appendChild(frag);
+      if (moreBtn) moreBtn.style.display = slice.length < jobs.length ? '' : 'none';
+    }
+
+    function initJobFeed(userCity) {
+      jobUserCity = userCity || '';
+      renderJobFeed('all', 1);
+
+      document.querySelectorAll('.jf-pill').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.jf-pill').forEach(function(b){ b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          jobActiveFilter = btn.dataset.filter;
+          jobPage = 1;
+          renderJobFeed(jobActiveFilter, 1);
+        });
+      });
+
+      var moreBtn = document.getElementById('jobFeedMore');
+      if (moreBtn) {
+        moreBtn.addEventListener('click', function() {
+          jobPage++;
+          renderJobFeed(jobActiveFilter, jobPage);
+        });
+      }
+
+      document.getElementById('jobFeedList').addEventListener('click', function(e) {
+        var saveBtn = e.target.closest('.job-card__save');
+        var applyBtn = e.target.closest('.job-apply-btn');
+
+        if (saveBtn) {
+          e.preventDefault();
+          var jid = saveBtn.dataset.jid;
+          var nowSaved = toggleSaved(jid);
+          saveBtn.classList.toggle('is-saved', nowSaved);
+          var svg = saveBtn.querySelector('svg');
+          if (svg) svg.setAttribute('fill', nowSaved ? 'currentColor' : 'none');
+          if (window.KBMotion) KBMotion.showSuccess(nowSaved ? 'İlan kaydedildi.' : 'İlan kayıtlardan çıkarıldı.', '', 1600);
+        }
+
+        if (applyBtn && !applyBtn.disabled) {
+          e.preventDefault();
+          applyBtn.disabled = true;
+          applyBtn.textContent = '✓ Başvuruldu';
+          applyBtn.classList.replace('btn--primary', 'btn--secondary');
+          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'İşletme en kısa sürede iletişime geçecek.', 2600);
+        }
+      });
+    }
+    /* ─── /Job Feed ─────────────────────────────────────────── */
 
     function renderProfEngine(profile, role) {
       var el = document.getElementById('profEngine');
@@ -305,8 +492,13 @@
         basvuruSub.textContent = basvuruSayisi === 1 ? '1 aktif başvuru' : basvuruSayisi + ' aktif başvuru';
         basvuruSub.className = 'dash-stat__delta' + (basvuruSayisi > 0 ? '' : ' is-neutral');
 
+        /* Job feed — initiate after profile loaded for city-based filter */
+        initJobFeed(profile ? profile.sehir : '');
+
       } catch(err) {
         console.warn('Welcome block error:', err);
+        /* Init job feed even if profile load fails */
+        initJobFeed('');
       }
     });
   </script>
