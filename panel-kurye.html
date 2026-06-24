@@ -100,6 +100,34 @@
       </div>
     </div>
 
+    <!-- Activity Timeline -->
+    <div class="activity-tl" id="activityTl">
+      <div class="activity-tl__head">
+        <div>
+          <div class="activity-tl__title">Son Hareketlerin</div>
+          <div class="activity-tl__sub">Başvuruların ve profil aktivitelerin burada görünür.</div>
+        </div>
+      </div>
+      <div class="atl-list" id="atlList">
+        <!-- skeleton while loading -->
+        <div class="atl-item" style="pointer-events:none">
+          <div class="atl-dot atl-dot--apply"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
+          <div class="atl-body"><span class="skel skel--line" style="width:65%;margin-bottom:8px"></span><span class="skel skel--line" style="width:35%"></span></div>
+        </div>
+        <div class="atl-item" style="pointer-events:none">
+          <div class="atl-dot atl-dot--view"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
+          <div class="atl-body"><span class="skel skel--line" style="width:55%;margin-bottom:8px"></span><span class="skel skel--line" style="width:30%"></span></div>
+        </div>
+        <div class="atl-item" style="pointer-events:none">
+          <div class="atl-dot atl-dot--msg"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
+          <div class="atl-body"><span class="skel skel--line" style="width:50%;margin-bottom:8px"></span><span class="skel skel--line" style="width:25%"></span></div>
+        </div>
+      </div>
+      <div class="activity-tl__more" id="atlMoreWrap" style="display:none">
+        <button class="btn btn--ghost btn--sm" id="atlMoreBtn">Geçmişi Göster</button>
+      </div>
+    </div>
+
     <!-- Tab nav -->
     <nav class="dash__nav">
       <button data-tab="ana">Genel Bakış</button>
@@ -346,6 +374,96 @@
     }
     /* ─── /Job Feed ─────────────────────────────────────────── */
 
+    /* ─── Activity Timeline ─────────────────────────────────── */
+    var MOCK_TIMELINE = [
+      { id:'t1', type:'msg',     text:'Yeni mesaj aldın.',                               href:'mesajlar.html',     ts: Date.now()-1800000   },
+      { id:'t2', type:'view',    text:'Başvurun Terra Pizza tarafından görüntülendi.',    href:'eslesme.html',      ts: Date.now()-3600000   },
+      { id:'t3', type:'apply',   text:'Terra Pizza ilanına başvurdun.',                   href:'ilanlar.html',      ts: Date.now()-7200000   },
+      { id:'t4', type:'profile', text:'Profilin 3 işletme tarafından görüntülendi.',      href:'profil-kurye.html', ts: Date.now()-86400000  },
+      { id:'t5', type:'save',    text:'Bir ilanı kaydettin.',                             href:'havuzum.html',      ts: Date.now()-172800000 },
+      { id:'t6', type:'apply',   text:'Getir ilanına başvurdun.',                         href:'ilanlar.html',      ts: Date.now()-259200000 },
+      { id:'t7', type:'profile', text:'Profilin 7 işletme tarafından görüntülendi.',      href:'profil-kurye.html', ts: Date.now()-345600000 },
+    ];
+
+    var ATL_SHOW = 4;
+    var atlExpanded = false;
+
+    var ATL_CFG = {
+      apply:   { label:'Başvuru Gönderildi', bc:'atl-badge--apply',   dc:'atl-dot--apply',
+        ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' },
+      view:    { label:'Görüntülendi',        bc:'atl-badge--view',    dc:'atl-dot--view',
+        ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' },
+      msg:     { label:'Mesaj',               bc:'atl-badge--msg',     dc:'atl-dot--msg',
+        ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' },
+      profile: { label:'Görüntülenme',        bc:'atl-badge--profile', dc:'atl-dot--profile',
+        ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+      save:    { label:'Kaydedildi',          bc:'atl-badge--save',    dc:'atl-dot--save',
+        ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' },
+    };
+
+    function relTime(ts) {
+      var d = Date.now() - ts;
+      var m = Math.floor(d / 60000), h = Math.floor(d / 3600000), day = Math.floor(d / 86400000);
+      if (m < 2)   return 'Az önce';
+      if (m < 60)  return m + ' dakika önce';
+      if (h < 24)  return h + ' saat önce';
+      if (day ===1) return 'Dün';
+      if (day < 7) return day + ' gün önce';
+      return new Date(ts).toLocaleDateString('tr-TR', { day:'numeric', month:'long' });
+    }
+
+    function buildAtlItem(item, hidden) {
+      var c = ATL_CFG[item.type] || ATL_CFG.apply;
+      var a = document.createElement('a');
+      a.href = item.href;
+      a.className = 'atl-item' + (hidden ? ' is-hidden' : '');
+      a.innerHTML =
+        '<div class="atl-dot ' + c.dc + '">' + c.ico + '</div>' +
+        '<div class="atl-body">' +
+          '<div class="atl-text">' + item.text + '</div>' +
+          '<div class="atl-meta">' +
+            '<span class="atl-time">' + relTime(item.ts) + '</span>' +
+            '<span class="atl-badge ' + c.bc + '">' + c.label + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span class="atl-arrow">›</span>';
+      return a;
+    }
+
+    function renderTimeline(items) {
+      var listEl = document.getElementById('atlList');
+      var moreWrap = document.getElementById('atlMoreWrap');
+      if (!listEl) return;
+      if (!items || items.length === 0) {
+        listEl.innerHTML = '<div class="activity-tl__empty">Henüz aktivite yok. Bir ilana başvur veya profilini tamamla.</div>';
+        if (moreWrap) moreWrap.style.display = 'none';
+        return;
+      }
+      listEl.innerHTML = '';
+      var frag = document.createDocumentFragment();
+      items.forEach(function(item, idx) {
+        frag.appendChild(buildAtlItem(item, idx >= ATL_SHOW && !atlExpanded));
+      });
+      listEl.appendChild(frag);
+      if (moreWrap) moreWrap.style.display = (items.length > ATL_SHOW && !atlExpanded) ? '' : 'none';
+    }
+
+    function initTimeline() {
+      var sorted = MOCK_TIMELINE.slice().sort(function(a, b){ return b.ts - a.ts; });
+      renderTimeline(sorted);
+      var moreBtn = document.getElementById('atlMoreBtn');
+      if (moreBtn) {
+        moreBtn.addEventListener('click', function() {
+          atlExpanded = true;
+          document.querySelectorAll('#atlList .atl-item.is-hidden').forEach(function(el){
+            el.classList.remove('is-hidden');
+          });
+          document.getElementById('atlMoreWrap').style.display = 'none';
+        });
+      }
+    }
+    /* ─── /Activity Timeline ─────────────────────────────────── */
+
     function renderProfEngine(profile, role) {
       var el = document.getElementById('profEngine');
       if (!el || !profile) return;
@@ -492,13 +610,13 @@
         basvuruSub.textContent = basvuruSayisi === 1 ? '1 aktif başvuru' : basvuruSayisi + ' aktif başvuru';
         basvuruSub.className = 'dash-stat__delta' + (basvuruSayisi > 0 ? '' : ' is-neutral');
 
-        /* Job feed — initiate after profile loaded for city-based filter */
         initJobFeed(profile ? profile.sehir : '');
+        initTimeline();
 
       } catch(err) {
         console.warn('Welcome block error:', err);
-        /* Init job feed even if profile load fails */
         initJobFeed('');
+        initTimeline();
       }
     });
   </script>

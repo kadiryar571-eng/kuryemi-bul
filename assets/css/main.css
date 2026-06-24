@@ -1918,7 +1918,104 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .job-card__details { grid-template-columns: 1fr; }
 }
 
-/* ─── 42. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 42. AKTİVİTE ZAMANÇİZELGESİ ──────────────────────────── */
+.activity-tl { margin-bottom: 24px; }
+.activity-tl__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.activity-tl__title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.activity-tl__sub { font-size: 0.82rem; color: var(--text-2); }
+
+.atl-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.atl-item {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding: 14px 16px 14px 52px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.atl-item:last-child { border-bottom: none; }
+.atl-item:hover { background: var(--surface-2); }
+
+/* Vertical connector line between dots */
+.atl-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 28px;
+  top: 38px;
+  bottom: -1px;
+  width: 1px;
+  background: var(--border);
+  z-index: 0;
+}
+
+/* Type dot */
+.atl-dot {
+  position: absolute;
+  left: 17px;
+  top: 14px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.atl-dot--apply   { background: #EEF3FF; color: var(--primary); }
+.atl-dot--view    { background: #FFF7ED; color: #C2410C; }
+.atl-dot--msg     { background: #F0FDF4; color: #16A34A; }
+.atl-dot--profile { background: #F5F3FF; color: #7C3AED; }
+.atl-dot--save    { background: #F3F4F6; color: #4B5563; }
+
+.atl-body { flex: 1; min-width: 0; }
+.atl-text { font-size: 0.875rem; color: var(--text); line-height: 1.4; margin-bottom: 5px; }
+.atl-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.atl-time { font-size: 0.74rem; color: var(--text-3); }
+.atl-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.atl-badge--apply   { background: #EEF3FF; color: var(--primary); }
+.atl-badge--view    { background: #FFF7ED; color: #C2410C; }
+.atl-badge--msg     { background: #F0FDF4; color: #16A34A; }
+.atl-badge--profile { background: #F5F3FF; color: #7C3AED; }
+.atl-badge--save    { background: #F3F4F6; color: #4B5563; }
+
+.atl-arrow { color: var(--text-3); flex-shrink: 0; align-self: center; padding-left: 10px; font-size: 1rem; line-height: 1; }
+
+.atl-item.is-hidden { display: none; }
+
+.activity-tl__more { text-align: center; margin-top: 8px; }
+.activity-tl__empty { text-align: center; padding: 40px 16px; color: var(--text-3); font-size: 0.88rem; }
+
+@media (max-width: 680px) {
+  .atl-item { padding: 12px 12px 12px 46px; }
+  .atl-dot { left: 14px; }
+  .atl-item:not(:last-child)::after { left: 25px; }
+}
+
+/* ─── 43. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);
