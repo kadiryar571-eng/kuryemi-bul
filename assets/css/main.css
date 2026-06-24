@@ -2775,7 +2775,102 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .wi-group__label { font-size: 10.5px; }
 }
 
-/* ─── 48. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 48. ARAÇ BİLGİLERİ ────────────────────────────────── */
+.wi-val-chip--ok   { background: #DCFCE7; color: #15803D; border-color: rgba(21,128,61,.15); }
+.wi-val-chip--warn { background: #FEE2E2; color: #DC2626; border-color: rgba(220,38,38,.15); }
+
+.ab-plate-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+.ab-hide-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  width: fit-content;
+}
+.ab-hide-opt input[type="checkbox"] { display: none; }
+
+.ab-hide-cb {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color var(--transition), background var(--transition);
+}
+.ab-hide-opt input:checked + .ab-hide-cb {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+.ab-hide-cb svg                      { display: none; color: #fff; }
+.ab-hide-opt input:checked + .ab-hide-cb svg { display: block; }
+.ab-hide-lbl { font-size: 12px; color: var(--text-2); }
+
+.ab-docs { display: flex; flex-direction: column; gap: 7px; }
+
+.ab-doc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--transition), background var(--transition);
+}
+.ab-doc:hover { background: var(--surface); }
+.ab-doc.is-checked { border-color: rgba(21,128,61,.3); background: #F0FDF4; }
+.ab-doc input[type="checkbox"] { display: none; }
+
+.ab-doc__ic {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: transparent;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+.ab-doc.is-checked .ab-doc__ic { background: #16A34A; border-color: #16A34A; color: #fff; }
+.ab-doc__lbl { flex: 1; font-size: 13px; color: var(--text-2); }
+.ab-doc.is-checked .ab-doc__lbl { color: var(--text); font-weight: 500; }
+
+.ab-doc-view { display: flex; flex-direction: column; gap: 5px; }
+
+.ab-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+}
+
+.ab-doc-row__ic {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ab-doc-row__ic--ok { background: #DCFCE7; color: #16A34A; }
+.ab-doc-row__ic--nd { background: var(--surface-2); color: var(--text-3); }
+.ab-doc-row__lbl { color: var(--text-3); }
+.ab-doc-row.is-done .ab-doc-row__lbl { color: var(--text-2); font-weight: 500; }
+
+@media (max-width: 640px) {
+  .ab-doc { padding: 8px 10px; }
+}
+
+/* ─── 49. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);

@@ -403,6 +403,250 @@
       </div>
     </div>
 
+    <!-- Araç Bilgileri (yalnızca kurye) -->
+    <div class="pi-card" id="abCard" style="display:none">
+
+      <div class="pi-sec-head">
+        <div>
+          <div class="pi-sec-title">Araç Bilgileri</div>
+          <div class="pi-sec-sub">Kullandığın araç bilgilerini ekleyerek sana uygun ilanları daha doğru eşleştirelim.</div>
+        </div>
+        <button type="button" class="btn btn--ghost btn--sm" id="abEditBtn">Düzenle</button>
+      </div>
+
+      <!-- Görüntüleme modu -->
+      <div id="abView" class="wi-view">
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            Araç Tipi
+          </span>
+          <div class="wi-row__val" id="vwAracTipi"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row" id="vwAracBMRow">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Marka / Model
+          </span>
+          <div class="wi-row__val" id="vwAracBM"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row" id="vwPlakaRow">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Plaka
+          </span>
+          <div class="wi-row__val" id="vwPlaka"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row" id="vwEhliyetRow">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Ehliyet Sınıfı
+          </span>
+          <div class="wi-row__val" id="vwEhliyet"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            Sahiplik
+          </span>
+          <div class="wi-row__val" id="vwSahiplik"><span class="wi-val-empty">Eklenmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            Sigorta
+          </span>
+          <div class="wi-row__val" id="vwSigorta"><span class="wi-val-empty">Belirtilmedi</span></div>
+        </div>
+        <div class="wi-row">
+          <span class="wi-row__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Belgeler
+          </span>
+          <div class="wi-row__val">
+            <div class="ab-doc-view" id="vwBelgeler"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Düzenleme formu -->
+      <form id="abForm" class="pi-form" style="display:none" novalidate>
+        <div class="wi-fields">
+
+          <!-- Araç Tipi -->
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Araç Tipi
+            </div>
+            <div class="wi-chips" id="abChipTipi">
+              <button type="button" class="wi-chip" data-val="Motorsiklet">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🏍 Motorsiklet
+              </button>
+              <button type="button" class="wi-chip" data-val="Otomobil">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🚗 Otomobil
+              </button>
+              <button type="button" class="wi-chip" data-val="Bisiklet">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🚲 Bisiklet
+              </button>
+              <button type="button" class="wi-chip" data-val="Yaya">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                🚶 Yaya
+              </button>
+              <button type="button" class="wi-chip" data-val="Elektrikli Scooter">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                ⚡ Elektrikli Scooter
+              </button>
+            </div>
+          </div>
+
+          <!-- Marka / Model / Plaka / Ehliyet (Yaya seçilince gizlenir) -->
+          <div id="abVehicleFields" style="display:flex;flex-direction:column;gap:22px">
+
+            <div class="pf-field">
+              <label class="pf-label" for="abMarka">Araç Markası</label>
+              <input class="pf-input" type="text" id="abMarka" placeholder="Honda, Yamaha, vb." autocomplete="off">
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label" for="abModel">Araç Modeli</label>
+              <input class="pf-input" type="text" id="abModel" placeholder="PCX 125, N-Max, vb." autocomplete="off">
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label" for="abPlaka">Plaka Numarası</label>
+              <div class="ab-plate-wrap">
+                <input class="pf-input" type="text" id="abPlaka" placeholder="34 ABC 123" maxlength="12" autocomplete="off">
+                <label class="ab-hide-opt" for="abPlakaGizli">
+                  <input type="checkbox" id="abPlakaGizli">
+                  <span class="ab-hide-cb">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="ab-hide-lbl">İşletmeler görmesin</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="wi-group__label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Ehliyet Sınıfı
+                <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(çoklu seçim)</span>
+              </div>
+              <div class="wi-chips" id="abChipEhliyet" data-wi-multi="true">
+                <button type="button" class="wi-chip" data-val="A1">
+                  <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  A1
+                </button>
+                <button type="button" class="wi-chip" data-val="A2">
+                  <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  A2
+                </button>
+                <button type="button" class="wi-chip" data-val="B">
+                  <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  B
+                </button>
+                <button type="button" class="wi-chip" data-val="B1">
+                  <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  B1
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /#abVehicleFields -->
+
+          <!-- Araç Sahipliği -->
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              Araç Sahipliği
+            </div>
+            <div class="wi-chips" id="abChipSahiplik">
+              <button type="button" class="wi-chip" data-val="Kendi Aracım">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Kendi Aracım
+              </button>
+              <button type="button" class="wi-chip" data-val="Kiralık">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Kiralık
+              </button>
+              <button type="button" class="wi-chip" data-val="Şirket Aracı">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Şirket Aracı
+              </button>
+            </div>
+          </div>
+
+          <!-- Sigorta Durumu -->
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              Sigorta Durumu
+            </div>
+            <div class="wi-chips" id="abChipSigorta">
+              <button type="button" class="wi-chip" data-val="Var">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Var
+              </button>
+              <button type="button" class="wi-chip" data-val="Yok">
+                <svg class="wi-chip__chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Yok
+              </button>
+            </div>
+          </div>
+
+          <!-- Belge Durumu -->
+          <div>
+            <div class="wi-group__label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Belge Durumu
+            </div>
+            <div class="ab-docs">
+              <label class="ab-doc" id="abDocRuhsat">
+                <input type="checkbox" id="abBelgeRuhsat">
+                <div class="ab-doc__ic">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="ab-doc__lbl">Ruhsat yüklendi</span>
+              </label>
+              <label class="ab-doc" id="abDocSigorta">
+                <input type="checkbox" id="abBelgeSigorta">
+                <div class="ab-doc__ic">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="ab-doc__lbl">Sigorta belgesi yüklendi</span>
+              </label>
+              <label class="ab-doc" id="abDocEhliyet">
+                <input type="checkbox" id="abBelgeEhliyet">
+                <div class="ab-doc__ic">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="ab-doc__lbl">Ehliyet yüklendi</span>
+              </label>
+            </div>
+          </div>
+
+        </div><!-- /.wi-fields -->
+
+        <div class="pi-autosave" id="abAutosave" style="display:none">
+          <span class="pi-autosave__dot"></span> Otomatik kaydediliyor…
+        </div>
+
+        <div class="pi-actions" style="margin-top:20px">
+          <button type="submit" class="btn btn--primary" id="abSaveBtn">Kaydet</button>
+          <button type="button" class="btn btn--ghost" id="abCancelBtn">İptal</button>
+        </div>
+      </form>
+
+      <div class="pi-feedback" id="abFeedback" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Araç bilgileri kaydedildi.
+      </div>
+    </div>
+
   </div><!-- /.app-content -->
 
   <div id="app-footer"></div>
@@ -638,6 +882,8 @@
       document.getElementById('kapasiteField').style.display = role === 'firma'   ? '' : 'none';
       var wiCard = document.getElementById('wiCard');
       if (wiCard) wiCard.style.display = role === 'kurye' ? '' : 'none';
+      var abCard = document.getElementById('abCard');
+      if (abCard) abCard.style.display = role === 'kurye' ? '' : 'none';
     }
 
     document.querySelectorAll('.pi-role-pill').forEach(function(p) {
@@ -795,6 +1041,222 @@
       wiPopulateView(profile);
     }
 
+    /* ── Vehicle Info ─────────────────────────── */
+    function abParseArr(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      try { return JSON.parse(val); } catch(e) { return String(val).split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+    }
+
+    function abRenderRow(id, vals) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var arr = Array.isArray(vals) ? vals : (vals ? [vals] : []);
+      el.innerHTML = arr.length
+        ? arr.map(function(v){ return '<span class="wi-val-chip">' + v + '</span>'; }).join('')
+        : '<span class="wi-val-empty">Eklenmedi</span>';
+    }
+
+    function abPopulateView(p) {
+      abRenderRow('vwAracTipi',  p && p.arac_tipi    ? [p.arac_tipi]    : []);
+      abRenderRow('vwEhliyet',   p && abParseArr(p.ehliyet_sinifi));
+      abRenderRow('vwSahiplik',  p && p.arac_sahiplik ? [p.arac_sahiplik] : []);
+
+      /* Marka / Model combined */
+      var bmEl = document.getElementById('vwAracBM');
+      if (bmEl) {
+        var parts = [];
+        if (p && p.arac_marka) parts.push(p.arac_marka);
+        if (p && p.arac_model) parts.push(p.arac_model);
+        bmEl.innerHTML = parts.length
+          ? '<span class="wi-val-chip">' + parts.join(' ') + '</span>'
+          : '<span class="wi-val-empty">Eklenmedi</span>';
+      }
+
+      /* Plaka */
+      var plakaEl = document.getElementById('vwPlaka');
+      if (plakaEl) {
+        if (p && p.plaka_gizli) {
+          plakaEl.innerHTML = '<span class="wi-val-chip">Gizli</span>';
+        } else if (p && p.plaka) {
+          plakaEl.innerHTML = '<span class="wi-val-chip">' + p.plaka + '</span>';
+        } else {
+          plakaEl.innerHTML = '<span class="wi-val-empty">Eklenmedi</span>';
+        }
+      }
+
+      /* Sigorta (renkli chip) */
+      var sigEl = document.getElementById('vwSigorta');
+      if (sigEl) {
+        var s = p && p.sigorta_durumu;
+        if (s === 'Var')  sigEl.innerHTML = '<span class="wi-val-chip wi-val-chip--ok">Var</span>';
+        else if (s === 'Yok') sigEl.innerHTML = '<span class="wi-val-chip wi-val-chip--warn">Yok</span>';
+        else sigEl.innerHTML = '<span class="wi-val-empty">Belirtilmedi</span>';
+      }
+
+      /* Belgeler (view) */
+      var docs = [
+        { field: 'belge_ruhsat',  label: 'Ruhsat' },
+        { field: 'belge_sigorta', label: 'Sigorta Belgesi' },
+        { field: 'belge_ehliyet', label: 'Ehliyet' },
+      ];
+      var docsEl = document.getElementById('vwBelgeler');
+      if (docsEl) {
+        docsEl.innerHTML = docs.map(function(d) {
+          var done = p && p[d.field];
+          return '<div class="ab-doc-row' + (done ? ' is-done' : '') + '">' +
+            '<div class="ab-doc-row__ic ' + (done ? 'ab-doc-row__ic--ok' : 'ab-doc-row__ic--nd') + '">' +
+              (done
+                ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                : '<svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>') +
+            '</div>' +
+            '<span class="ab-doc-row__lbl">' + d.label + '</span>' +
+          '</div>';
+        }).join('');
+      }
+
+      /* Show/hide rows that don't apply to Yaya */
+      var isYaya = p && p.arac_tipi === 'Yaya';
+      ['vwAracBMRow','vwPlakaRow','vwEhliyetRow'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = isYaya ? 'none' : '';
+      });
+    }
+
+    function abPopulateForm(p) {
+      wiSetVals(document.getElementById('abChipTipi'),     p && p.arac_tipi);
+      wiSetVals(document.getElementById('abChipEhliyet'),  p && abParseArr(p.ehliyet_sinifi));
+      wiSetVals(document.getElementById('abChipSahiplik'), p && p.arac_sahiplik);
+      wiSetVals(document.getElementById('abChipSigorta'),  p && p.sigorta_durumu);
+      var el;
+      el = document.getElementById('abMarka');    if (el) el.value = (p && p.arac_marka)  || '';
+      el = document.getElementById('abModel');    if (el) el.value = (p && p.arac_model)  || '';
+      el = document.getElementById('abPlaka');    if (el) el.value = (p && p.plaka)       || '';
+      el = document.getElementById('abPlakaGizli');  if (el) el.checked = !!(p && p.plaka_gizli);
+      el = document.getElementById('abBelgeRuhsat'); if (el) el.checked = !!(p && p.belge_ruhsat);
+      el = document.getElementById('abBelgeSigorta'); if (el) el.checked = !!(p && p.belge_sigorta);
+      el = document.getElementById('abBelgeEhliyet'); if (el) el.checked = !!(p && p.belge_ehliyet);
+      abSyncDocs();
+      abUpdateConditional();
+    }
+
+    function abSyncDocs() {
+      ['abDocRuhsat','abDocSigorta','abDocEhliyet'].forEach(function(id) {
+        var item = document.getElementById(id);
+        if (!item) return;
+        var cb = item.querySelector('input[type="checkbox"]');
+        item.classList.toggle('is-checked', cb ? cb.checked : false);
+      });
+    }
+
+    function abUpdateConditional() {
+      var tipGroup = document.getElementById('abChipTipi');
+      var selected = tipGroup && tipGroup.querySelector('.wi-chip.is-selected');
+      var isYaya = selected && selected.dataset.val === 'Yaya';
+      var vf = document.getElementById('abVehicleFields');
+      if (vf) vf.style.display = isYaya ? 'none' : '';
+    }
+
+    function abEnterEdit() {
+      abPopulateForm(profile);
+      document.getElementById('abView').style.display   = 'none';
+      document.getElementById('abForm').style.display   = '';
+      document.getElementById('abEditBtn').style.display = 'none';
+      document.getElementById('abFeedback').style.display = 'none';
+    }
+
+    function abExitEdit() {
+      document.getElementById('abView').style.display   = '';
+      document.getElementById('abForm').style.display   = 'none';
+      document.getElementById('abEditBtn').style.display = '';
+    }
+
+    function abCollect() {
+      var ehliyet = wiGetVals(document.getElementById('abChipEhliyet'));
+      return {
+        arac_tipi:      wiGetVals(document.getElementById('abChipTipi')),
+        arac_marka:     (document.getElementById('abMarka') || {}).value ? document.getElementById('abMarka').value.trim() : null,
+        arac_model:     (document.getElementById('abModel') || {}).value ? document.getElementById('abModel').value.trim() : null,
+        plaka:          (document.getElementById('abPlaka') || {}).value ? document.getElementById('abPlaka').value.trim() : null,
+        plaka_gizli:    !!(document.getElementById('abPlakaGizli') && document.getElementById('abPlakaGizli').checked),
+        ehliyet_sinifi: JSON.stringify(Array.isArray(ehliyet) ? ehliyet : []),
+        arac_sahiplik:  wiGetVals(document.getElementById('abChipSahiplik')),
+        sigorta_durumu: wiGetVals(document.getElementById('abChipSigorta')),
+        belge_ruhsat:   !!(document.getElementById('abBelgeRuhsat')  && document.getElementById('abBelgeRuhsat').checked),
+        belge_sigorta:  !!(document.getElementById('abBelgeSigorta') && document.getElementById('abBelgeSigorta').checked),
+        belge_ehliyet:  !!(document.getElementById('abBelgeEhliyet') && document.getElementById('abBelgeEhliyet').checked),
+      };
+    }
+
+    var abAutoTimer = null;
+
+    function initVehicleInfo() {
+      /* Chip groups */
+      var tipGroup = document.getElementById('abChipTipi');
+      wiInitChipGroup(tipGroup);
+      if (tipGroup) tipGroup.addEventListener('click', function(){ setTimeout(abUpdateConditional, 0); });
+      wiInitChipGroup(document.getElementById('abChipEhliyet'));
+      wiInitChipGroup(document.getElementById('abChipSahiplik'));
+      wiInitChipGroup(document.getElementById('abChipSigorta'));
+
+      /* Document checkboxes — label click already toggles, just sync style */
+      ['abDocRuhsat','abDocSigorta','abDocEhliyet'].forEach(function(id) {
+        var item = document.getElementById(id);
+        if (!item) return;
+        item.addEventListener('change', abSyncDocs);
+      });
+
+      /* Auto-save on text fields */
+      ['abMarka','abModel','abPlaka'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', function() {
+          clearTimeout(abAutoTimer);
+          var as = document.getElementById('abAutosave');
+          if (as) as.style.display = 'flex';
+          abAutoTimer = setTimeout(async function() {
+            var fields = abCollect();
+            try {
+              if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+              if (profile) Object.assign(profile, fields);
+              abPopulateView(profile);
+            } catch(e) {}
+            if (as) as.style.display = 'none';
+          }, 2500);
+        });
+      });
+
+      /* Edit / Cancel */
+      var editBtn = document.getElementById('abEditBtn');
+      if (editBtn) editBtn.addEventListener('click', abEnterEdit);
+      var cancelBtn = document.getElementById('abCancelBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', abExitEdit);
+
+      /* Form submit */
+      var form = document.getElementById('abForm');
+      if (form) form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearTimeout(abAutoTimer);
+        var as = document.getElementById('abAutosave');
+        if (as) as.style.display = 'none';
+        var btn = document.getElementById('abSaveBtn');
+        btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+        var fields = abCollect();
+        try {
+          if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+          if (profile) Object.assign(profile, fields);
+          abPopulateView(profile);
+          abExitEdit();
+          var fb = document.getElementById('abFeedback');
+          fb.style.display = 'flex';
+          setTimeout(function(){ fb.style.display = 'none'; }, 3500);
+        } catch(err) {}
+        btn.disabled = false; btn.textContent = 'Kaydet';
+      });
+
+      abPopulateView(profile);
+    }
+
     /* ── Init ─────────────────────────────────── */
     try {
       if (window.SB && SB.isOn()) profile = await SB.myProfile();
@@ -806,6 +1268,7 @@
     var role = (profile && profile.role) || 'kurye';
     updateRoleUI(role);
     initWorkInfo();
+    initVehicleInfo();
     if (profile) {
       document.getElementById('editArac').value     = profile.arac     || '';
       document.getElementById('editDeneyim').value  = profile.deneyim  || '';
