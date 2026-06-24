@@ -52,6 +52,28 @@
       </a>
     </div>
 
+    <!-- Profile Completion Engine -->
+    <div class="prof-engine" id="profEngine" style="display:none">
+      <div class="prof-engine__head">
+        <div>
+          <div class="prof-engine__title">Profilini Tamamla</div>
+          <div class="prof-engine__sub">Profil bilgilerini tamamlayarak daha fazla iş fırsatına ulaş.</div>
+        </div>
+        <div class="prof-engine__pct-wrap">
+          <span class="prof-engine__pct" id="profPct">%0</span>
+          <span class="prof-engine__pct-label">Tamamlandı</span>
+        </div>
+      </div>
+      <div class="prof-engine__bar-track">
+        <div class="prof-engine__bar-fill" id="profBarFill" style="width:0%"></div>
+      </div>
+      <div class="prof-engine__steps" id="profSteps"></div>
+      <div class="prof-engine__footer">
+        <a href="profil-duzenle.html" class="btn btn--primary btn--sm">Profili Düzenle</a>
+        <span class="prof-engine__note">Tamamlanan profiller daha fazla görüntülenir.</span>
+      </div>
+    </div>
+
     <!-- Tab nav -->
     <nav class="dash__nav">
       <button data-tab="ana">Genel Bakış</button>
@@ -137,6 +159,60 @@
       });
     }
 
+    function renderProfEngine(profile, role) {
+      var el = document.getElementById('profEngine');
+      if (!el || !profile) return;
+      var STEPS = {
+        kurye: [
+          { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
+          { label: 'Çalışma bölgelerini seç',       done: !!(profile.sehir) },
+          { label: 'Araç bilgilerini ekle',          done: !!(profile.arac_tipi) },
+          { label: 'Deneyim bilgilerini doldur',     done: profile.deneyim_yil != null },
+          { label: 'Belgelerini yükle',              done: !!(profile.ehliyet || profile.belge_url) },
+          { label: 'Çalışma tercihlerini belirle',   done: !!(profile.calisma_tercihleri || profile.tercih) },
+        ],
+        isletme: [
+          { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
+          { label: 'Faaliyet bölgeni belirle',      done: !!(profile.sehir) },
+          { label: 'İşletme bilgilerini doldur',    done: !!(profile.hakkinda || profile.bio) },
+          { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
+          { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
+          { label: 'Çalışma tercihlerini belirle',  done: !!(profile.tercihler || profile.tercih) },
+        ],
+        firma: [
+          { label: 'Temel bilgilerini tamamla',     done: !!(profile.ad && profile.ad.length > 1) },
+          { label: 'Hizmet bölgelerini seç',        done: !!(profile.sehir) },
+          { label: 'Firma bilgilerini doldur',       done: !!(profile.hakkinda || profile.bio) },
+          { label: 'Kurye ihtiyaçlarını belirle',   done: !!(profile.kurye_sayisi || profile.ihtiyac) },
+          { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
+          { label: 'İletişim tercihlerini ayarla',  done: !!(profile.web || profile.telefon) },
+        ],
+      };
+      var steps = STEPS[role] || STEPS.kurye;
+      var doneCount = steps.filter(function(s){ return s.done; }).length;
+      var pct = Math.round((doneCount / steps.length) * 100);
+      if (pct >= 100) { el.style.display = 'none'; return; }
+      el.style.display = '';
+      document.getElementById('profPct').textContent = '%' + pct;
+      requestAnimationFrame(function(){ document.getElementById('profBarFill').style.width = pct + '%'; });
+      var stepsEl = document.getElementById('profSteps');
+      stepsEl.innerHTML = '';
+      steps.forEach(function(step) {
+        var a = document.createElement('a');
+        a.href = 'profil-duzenle.html';
+        a.className = 'prof-step' + (step.done ? ' is-done' : '');
+        a.innerHTML =
+          '<div class="prof-step__ic ' + (step.done ? 'prof-step__ic--done' : 'prof-step__ic--pending') + '">' +
+            (step.done
+              ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+              : '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>') +
+          '</div>' +
+          '<span class="prof-step__label">' + step.label + '</span>' +
+          '<span class="prof-step__arr">' + (step.done ? '✓' : '→') + '</span>';
+        stepsEl.appendChild(a);
+      });
+    }
+
     function animateCount(el, target) {
       var start = 0;
       var duration = 900;
@@ -176,6 +252,8 @@
           progFill.style.width = pct + '%';
           progLabel.textContent = 'Profil %' + pct + ' tamamlandı';
           if (pct < 100) { progLink.style.display = ''; }
+
+          renderProfEngine(profile, 'kurye');
 
           /* Subtitle: yeni ilan sayısı */
           var ilanSayisi = 0;
