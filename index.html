@@ -3,65 +3,393 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KuryemiBul · Kuryeler İş Bulur, İşletmeler Kurye Bulur</title>
-  <meta name="description" content="Kuryeler iş bulur, işletmeler ve firmalar doğrulanmış kurye bulur. Türkiye'nin kurye platformu.">
+  <title>KuryemiBul · Türkiye'nin Kurye İş Bulma Platformu</title>
+  <meta name="description" content="Bölgenizdeki kurye ilanlarını inceleyin, başvurun ve işverenlerle doğrudan iletişime geçin.">
   <link rel="icon" href="assets/logo.png">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="KuryemiBul · Kuryeler İş Bulur, İşletmeler Kurye Bulur">
-  <meta property="og:description" content="Kuryeler iş bulur, işletmeler ve firmalar doğrulanmış kurye bulur.">
+  <meta property="og:title" content="KuryemiBul · Kurye İş Bulma Platformu">
+  <meta property="og:description" content="Bulunduğunuz bölgedeki aktif kurye ilanlarını inceleyin ve başvurun.">
   <meta property="og:url" content="https://kuryemibul.com/">
   <link rel="stylesheet" href="assets/css/main.css">
   <style>
-    /* Landing'e özel inline stiller */
-    .hero { padding: 80px 0 64px; text-align: center; }
-    .hero h1 { font-size: clamp(1.75rem, 4vw, 3rem); font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
-    .hero h1 span { color: var(--primary); }
-    .hero .sub  { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text-2); max-width: 540px; margin: 0 auto 32px; line-height: 1.6; }
-    .hero-cta   { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .hero-stats { display: flex; justify-content: center; gap: 40px; margin-top: 56px; flex-wrap: wrap; }
-    .hero-stat__num { font-size: 1.8rem; font-weight: 800; color: var(--text); }
-    .hero-stat__lbl { font-size: 0.875rem; color: var(--text-2); margin-top: 2px; }
+    /* ── HERO ───────────────────────────────────────────── */
+    .lp-hero {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .lp-hero__inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+      align-items: center;
+      padding: 72px 0 0;
+    }
+    .lp-hero__left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding-bottom: 56px;
+    }
 
-    .section       { padding: 64px 0; }
-    .section--gray { background: var(--surface); }
-    .section-title { font-size: 1.75rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
-    .section-sub   { text-align: center; color: var(--text-2); max-width: 520px; margin: 0 auto 40px; }
+    /* Badge */
+    .lp-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #EEF3FF;
+      color: var(--primary);
+      border: 1px solid #C7D7FF;
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .lp-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: 0.7;
+    }
 
-    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .how-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; text-align: center; }
-    .how-card__num { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-    .how-card h3   { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
-    .how-card p    { font-size: 0.875rem; color: var(--text-2); line-height: 1.6; }
+    /* Headline */
+    .lp-hero__h1 {
+      font-size: clamp(1.9rem, 3.5vw, 2.9rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin: 0;
+    }
 
-    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .role-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px 24px; }
-    .role-item__ico  { font-size: 2rem; margin-bottom: 12px; }
-    .role-item__name { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
-    .role-item__desc { font-size: 0.875rem; color: var(--text-2); line-height: 1.6; margin-bottom: 20px; }
+    /* Sub */
+    .lp-hero__sub {
+      font-size: 1rem;
+      color: var(--text-2);
+      line-height: 1.75;
+      max-width: 400px;
+      margin: 0;
+    }
 
-    .cta-section { padding: 80px 0; text-align: center; background: var(--primary); color: #fff; }
-    .cta-section h2  { font-size: 2rem; font-weight: 700; margin-bottom: 12px; color: #fff; }
-    .cta-section p   { font-size: 1rem; opacity: .85; margin-bottom: 32px; }
-    .cta-section .btn--primary { background: #fff; color: var(--primary); }
-    .cta-section .btn--primary:hover { background: #f0f4ff; }
-    .cta-section .btn--ghost { border-color: rgba(255,255,255,.5); color: #fff; }
-    .cta-section .btn--ghost:hover { background: rgba(255,255,255,.1); }
+    /* CTA row */
+    .lp-hero__cta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
 
-    .landing-footer { background: var(--text); color: rgba(255,255,255,.7); padding: 32px 0; font-size: 0.875rem; }
-    .landing-footer a { color: rgba(255,255,255,.7); }
-    .landing-footer a:hover { color: #fff; }
-    .footer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .footer-links { display: flex; gap: 20px; }
+    /* ── PHONE MOCKUPS ──────────────────────────────────── */
+    .lp-phones {
+      position: relative;
+      height: 440px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
 
-    @media (max-width: 768px) {
-      .how-grid, .role-grid { grid-template-columns: 1fr; }
-      .hero-stats { gap: 24px; }
+    .lp-phone {
+      position: absolute;
+      width: 148px;
+      border-radius: 22px;
+      border: 2px solid #D8DEE9;
+      background: #FAFBFC;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Notch */
+    .lp-phone__notch {
+      width: 40px; height: 6px;
+      background: #DDE1E7;
+      border-radius: 99px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+
+    /* Phone screen body */
+    .lp-phone__screen {
+      flex: 1;
+      padding: 10px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      overflow: hidden;
+    }
+
+    /* Phone topbar */
+    .lp-phone__bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .lp-phone__bar-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #1A1A2E;
+    }
+    .lp-phone__bar-ic {
+      font-size: 0.7rem;
+    }
+
+    /* Mini job card */
+    .lp-jcard {
+      background: #fff;
+      border: 1px solid #E8ECF2;
+      border-radius: 8px;
+      padding: 7px 8px;
+    }
+    .lp-jcard__title { font-size: 0.6rem; font-weight: 700; color: #1A1A2E; margin-bottom: 3px; }
+    .lp-jcard__row   { display: flex; align-items: center; gap: 4px; font-size: 0.55rem; color: #6B7280; }
+    .lp-jcard__tag   { background: #EEF3FF; color: #0057FF; border-radius: 4px; padding: 1px 5px; font-size: 0.5rem; font-weight: 600; }
+    .lp-jcard__price { font-size: 0.6rem; font-weight: 700; color: #16A34A; margin-top: 4px; }
+    .lp-jbtn {
+      margin-top: 2px;
+      background: #0057FF;
+      color: #fff;
+      border-radius: 5px;
+      padding: 3px 0;
+      font-size: 0.5rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Profile phone */
+    .lp-pav {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #0057FF;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 8px auto 6px;
+      flex-shrink: 0;
+    }
+    .lp-pname { font-size: 0.65rem; font-weight: 700; color: #1A1A2E; text-align: center; }
+    .lp-pstars { font-size: 0.55rem; color: #D97706; text-align: center; margin-top: 2px; }
+    .lp-ptags {
+      display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 6px;
+    }
+    .lp-ptag {
+      background: #F4F5F7; border: 1px solid #DDE1E7;
+      border-radius: 99px; padding: 2px 7px;
+      font-size: 0.5rem; color: #4B5563; font-weight: 500;
+    }
+    .lp-pbtn {
+      background: #0057FF; color: #fff; border-radius: 7px;
+      padding: 5px; font-size: 0.55rem; font-weight: 600;
+      text-align: center; margin-top: 8px;
+    }
+    .lp-pbtn2 {
+      background: #fff; border: 1.5px solid #0057FF; color: #0057FF; border-radius: 7px;
+      padding: 4px; font-size: 0.55rem; font-weight: 600;
+      text-align: center; margin-top: 4px;
+    }
+
+    /* Post form phone */
+    .lp-field {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .lp-field label { font-size: 0.5rem; color: #6B7280; font-weight: 600; }
+    .lp-field .lp-finput {
+      background: #fff; border: 1px solid #DDE1E7; border-radius: 5px;
+      padding: 4px 7px; font-size: 0.55rem; color: #1A1A2E;
+    }
+    .lp-post-btn {
+      background: #0057FF; color: #fff; border-radius: 7px;
+      padding: 5px; font-size: 0.55rem; font-weight: 700;
+      text-align: center; margin-top: 6px;
+    }
+
+    /* Phone positioning */
+    .lp-phone--1 {
+      left: 0px;
+      bottom: 0;
+      height: 320px;
+      transform: rotate(-3deg) translateX(10px);
+      z-index: 1;
+    }
+    .lp-phone--2 {
+      left: 50%;
+      bottom: 0;
+      height: 390px;
+      transform: translateX(-50%);
+      z-index: 3;
+      border-color: #C2CBDC;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.11), 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .lp-phone--3 {
+      right: 0px;
+      bottom: 0;
+      height: 340px;
+      transform: rotate(3deg) translateX(-10px);
+      z-index: 2;
+    }
+
+    /* Hover lift */
+    .lp-phone:hover {
+      transform: translateY(-6px) !important;
+      z-index: 10 !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.13) !important;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    /* Fade-in animation */
+    @keyframes lp-fadein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .lp-hero__left > * { animation: lp-fadein 0.5s ease both; }
+    .lp-hero__left > *:nth-child(1) { animation-delay: 0.05s; }
+    .lp-hero__left > *:nth-child(2) { animation-delay: 0.12s; }
+    .lp-hero__left > *:nth-child(3) { animation-delay: 0.18s; }
+    .lp-hero__left > *:nth-child(4) { animation-delay: 0.24s; }
+
+    @keyframes lp-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .lp-phone--1 { animation: lp-rise 0.6s 0.15s ease both; }
+    .lp-phone--2 { animation: lp-rise 0.6s 0.05s ease both; }
+    .lp-phone--3 { animation: lp-rise 0.6s 0.25s ease both; }
+
+    /* ── TRUST STRIP ──────────────────────────────────── */
+    .lp-trust {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 18px 0;
+    }
+    .lp-trust__inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      flex-wrap: wrap;
+    }
+    .lp-trust__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+    .lp-trust__ic {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: #EEF3FF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    /* ── REST OF PAGE ────────────────────────────────── */
+    .lp-section { padding: 72px 0; }
+    .lp-section--gray {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .lp-section__title {
+      font-size: 1.65rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .lp-section__sub {
+      text-align: center;
+      color: var(--text-2);
+      font-size: 0.95rem;
+      max-width: 480px;
+      margin: 0 auto 40px;
+      line-height: 1.65;
+    }
+
+    /* How it works */
+    .lp-how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .lp-how__card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+    }
+    .lp-how__num {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: #EEF3FF;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .lp-how__card h3 { font-size: 0.975rem; font-weight: 700; margin-bottom: 8px; }
+    .lp-how__card p  { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; margin: 0; }
+
+    /* Roles */
+    .lp-roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .lp-role {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .lp-role__ic  { font-size: 1.75rem; }
+    .lp-role__name { font-size: 1rem; font-weight: 700; }
+    .lp-role__desc { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; flex: 1; margin: 0; }
+
+    /* CTA section */
+    .lp-cta-sec {
+      padding: 72px 0;
+      text-align: center;
+      background: var(--primary);
+    }
+    .lp-cta-sec h2  { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .lp-cta-sec p   { font-size: 0.95rem; color: rgba(255,255,255,.8); margin-bottom: 28px; }
+    .lp-cta-sec .btn--primary { background: #fff; color: var(--primary); }
+    .lp-cta-sec .btn--primary:hover { background: #EEF3FF; }
+    .lp-cta-sec .btn--ghost { border-color: rgba(255,255,255,.4); color: #fff; }
+    .lp-cta-sec .btn--ghost:hover { background: rgba(255,255,255,.1); }
+
+    /* Footer */
+    .lp-foot { background: #111827; color: rgba(255,255,255,.6); padding: 28px 0; font-size: 0.85rem; }
+    .lp-foot a { color: rgba(255,255,255,.6); text-decoration: none; }
+    .lp-foot a:hover { color: #fff; }
+    .lp-foot__row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .lp-foot__links { display: flex; gap: 20px; }
+
+    /* ── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width: 860px) {
+      .lp-hero__inner {
+        grid-template-columns: 1fr;
+        padding: 48px 0 0;
+        gap: 40px;
+      }
+      .lp-hero__left { padding-bottom: 0; align-items: center; text-align: center; }
+      .lp-hero__sub { text-align: center; max-width: 100%; }
+      .lp-hero__cta { justify-content: center; }
+      .lp-phones { height: 320px; margin-bottom: -1px; }
+      .lp-phone--1 { left: 0; height: 230px; }
+      .lp-phone--2 { height: 290px; }
+      .lp-phone--3 { right: 0; height: 250px; }
+      .lp-how, .lp-roles { grid-template-columns: 1fr; }
+      .lp-trust__inner { gap: 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .lp-phones { height: 260px; }
+      .lp-phone--1 { width: 110px; height: 190px; left: 4px; }
+      .lp-phone--2 { width: 130px; height: 240px; }
+      .lp-phone--3 { width: 110px; height: 200px; right: 4px; }
     }
   </style>
 </head>
 <body style="background:var(--bg)">
 
-  <!-- NAV -->
+  <!-- ── NAV ─────────────────────────────────────────── -->
   <nav class="public-nav">
     <a class="nav-brand" href="index.html">KuryemiBul</a>
     <div class="nav-links">
@@ -76,107 +404,223 @@
     </div>
   </nav>
 
-  <!-- HERO -->
-  <section class="hero" style="background:var(--surface);border-bottom:1px solid var(--border)">
-    <div class="container container--md">
-      <h1>Kuryeler iş bulur,<br><span>İşletmeler kurye bulur</span></h1>
-      <p class="sub">Türkiye'nin kurye-işletme eşleştirme platformu. Kurye olarak iş başvur, işletme olarak doğrulanmış kurye bul.</p>
-      <div class="hero-cta">
-        <a href="giris.html?mode=register" class="btn btn--primary btn--xl">Hemen Başla — Ücretsiz</a>
-        <a href="ilanlar.html" class="btn btn--ghost btn--xl">İlanları Gör</a>
+  <!-- ── HERO ─────────────────────────────────────────── -->
+  <section class="lp-hero">
+    <div class="container">
+      <div class="lp-hero__inner">
+
+        <!-- LEFT: Copy & CTAs -->
+        <div class="lp-hero__left">
+          <div class="lp-badge">Türkiye'nin kurye iş bulma platformu</div>
+          <h1 class="lp-hero__h1">Size uygun kurye işlerini kolayca bulun.</h1>
+          <p class="lp-hero__sub">KuryemiBul ile bulunduğunuz bölgedeki aktif kurye ilanlarını inceleyin, başvurun ve işverenlerle doğrudan iletişime geçin.</p>
+          <div class="lp-hero__cta">
+            <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hemen Başla</a>
+            <a href="ilanlar.html" class="btn btn--ghost btn--lg">İlanları İncele</a>
+          </div>
+        </div>
+
+        <!-- RIGHT: Phone mockups -->
+        <div class="lp-phones">
+
+          <!-- Phone 1: İlan Listesi -->
+          <div class="lp-phone lp-phone--1">
+            <div class="lp-phone__notch"></div>
+            <div class="lp-phone__screen">
+              <div class="lp-phone__bar">
+                <span class="lp-phone__bar-ic">🔍</span>
+                <span class="lp-phone__bar-title">İş İlanları</span>
+              </div>
+              <div class="lp-jcard">
+                <div class="lp-jcard__title">Moto Kurye Aranıyor</div>
+                <div class="lp-jcard__row">
+                  <span>📍 Kadıköy, İst.</span>
+                </div>
+                <div class="lp-jcard__row" style="margin-top:3px">
+                  <span class="lp-jcard__tag">Motosiklet</span>
+                  <span class="lp-jcard__tag">Tam zamanlı</span>
+                </div>
+                <div class="lp-jcard__price">₺160/gün</div>
+                <div class="lp-jbtn">Başvur →</div>
+              </div>
+              <div class="lp-jcard">
+                <div class="lp-jcard__title">Bisiklet Kurye</div>
+                <div class="lp-jcard__row">📍 Beşiktaş, İst.</div>
+                <div class="lp-jcard__row" style="margin-top:3px">
+                  <span class="lp-jcard__tag">Bisiklet</span>
+                </div>
+                <div class="lp-jcard__price">₺130/gün</div>
+              </div>
+              <div class="lp-jcard">
+                <div class="lp-jcard__title">Kurye Aranıyor</div>
+                <div class="lp-jcard__row">📍 Çankaya, Ank.</div>
+                <div class="lp-jcard__price">₺145/gün</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone 2: Kurye Profili -->
+          <div class="lp-phone lp-phone--2">
+            <div class="lp-phone__notch"></div>
+            <div class="lp-phone__screen">
+              <div class="lp-phone__bar">
+                <span style="font-size:0.6rem;color:#6B7280">← Geri</span>
+              </div>
+              <div class="lp-pav">AY</div>
+              <div class="lp-pname">Ali Yılmaz</div>
+              <div class="lp-pstars">★★★★★ 4.9 · 127 yorum</div>
+              <div class="lp-ptags">
+                <span class="lp-ptag">🛵 Moto</span>
+                <span class="lp-ptag">📍 İstanbul</span>
+                <span class="lp-ptag">3 yıl</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:5px;margin-top:10px">
+                <div style="display:flex;justify-content:space-between;background:#F4F5F7;border-radius:6px;padding:5px 8px">
+                  <span style="font-size:0.5rem;color:#6B7280">Tamamlanan İş</span>
+                  <span style="font-size:0.55rem;font-weight:700;color:#1A1A2E">248</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;background:#F4F5F7;border-radius:6px;padding:5px 8px">
+                  <span style="font-size:0.5rem;color:#6B7280">Yanıt Süresi</span>
+                  <span style="font-size:0.55rem;font-weight:700;color:#16A34A">&lt; 1 sa</span>
+                </div>
+              </div>
+              <div class="lp-pbtn">Teklif Gönder</div>
+              <div class="lp-pbtn2">Mesaj Yaz</div>
+            </div>
+          </div>
+
+          <!-- Phone 3: İlan Ver -->
+          <div class="lp-phone lp-phone--3">
+            <div class="lp-phone__notch"></div>
+            <div class="lp-phone__screen">
+              <div class="lp-phone__bar">
+                <span class="lp-phone__bar-ic">✚</span>
+                <span class="lp-phone__bar-title">İlan Ver</span>
+              </div>
+              <div class="lp-field">
+                <label>Pozisyon</label>
+                <div class="lp-finput">Moto Kurye</div>
+              </div>
+              <div class="lp-field">
+                <label>Şehir</label>
+                <div class="lp-finput">İstanbul</div>
+              </div>
+              <div class="lp-field">
+                <label>Günlük Ücret</label>
+                <div class="lp-finput">₺150</div>
+              </div>
+              <div class="lp-field">
+                <label>Araç Tipi</label>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
+                  <span style="background:#0057FF;color:#fff;border-radius:4px;padding:2px 6px;font-size:0.5rem;font-weight:600">Motosiklet</span>
+                  <span style="background:#F4F5F7;color:#6B7280;border-radius:4px;padding:2px 6px;font-size:0.5rem">Bisiklet</span>
+                </div>
+              </div>
+              <div class="lp-post-btn">İlanı Yayınla</div>
+              <div style="font-size:0.47rem;color:#6B7280;text-align:center;margin-top:4px">Ücretsiz · Anında Yayınlanır</div>
+            </div>
+          </div>
+
+        </div>
       </div>
-      <div class="hero-stats">
-        <div>
-          <div class="hero-stat__num">1.200+</div>
-          <div class="hero-stat__lbl">Kayıtlı Kurye</div>
-        </div>
-        <div>
-          <div class="hero-stat__num">340+</div>
-          <div class="hero-stat__lbl">İşletme</div>
-        </div>
-        <div>
-          <div class="hero-stat__num">85+</div>
-          <div class="hero-stat__lbl">Aktif İlan</div>
-        </div>
-        <div>
-          <div class="hero-stat__num">%94</div>
-          <div class="hero-stat__lbl">Memnuniyet</div>
+    </div>
+
+    <!-- Trust strip -->
+    <div class="lp-trust">
+      <div class="container">
+        <div class="lp-trust__inner">
+          <div class="lp-trust__item">
+            <div class="lp-trust__ic">✅</div>
+            Doğrulanmış İşletmeler
+          </div>
+          <div class="lp-trust__item">
+            <div class="lp-trust__ic">📋</div>
+            Gerçek İş İlanları
+          </div>
+          <div class="lp-trust__item">
+            <div class="lp-trust__ic">⚡</div>
+            Hızlı Başvuru
+          </div>
+          <div class="lp-trust__item">
+            <div class="lp-trust__ic">📍</div>
+            Bölgesel Eşleşme
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- NASIL ÇALIŞIR -->
-  <section class="section">
+  <!-- ── NASIL ÇALIŞIR ─────────────────────────────────── -->
+  <section class="lp-section">
     <div class="container">
-      <h2 class="section-title">Nasıl Çalışır?</h2>
-      <p class="section-sub">Üç basit adımda doğru eşleşmeyi bul.</p>
-      <div class="how-grid">
-        <div class="how-card">
-          <div class="how-card__num">1</div>
+      <h2 class="lp-section__title">Nasıl Çalışır?</h2>
+      <p class="lp-section__sub">Üç adımda doğru ilanı bul ve işe başla.</p>
+      <div class="lp-how">
+        <div class="lp-how__card">
+          <div class="lp-how__num">1</div>
           <h3>Hesap Oluştur</h3>
-          <p>Kurye, işletme veya kurye firması olarak kayıt ol. Profilini doldur, alanını belirle.</p>
+          <p>Kurye, işletme veya kurye firması olarak kaydol. 2 dakikada profilini tamamla.</p>
         </div>
-        <div class="how-card">
-          <div class="how-card__num">2</div>
-          <h3>Keşfet & Başvur</h3>
-          <p>İlanlara başvur, teklif gönder veya kurye havuzunda filtrele. Harita üzerinden bölgesel ara.</p>
+        <div class="lp-how__card">
+          <div class="lp-how__num">2</div>
+          <h3>İlanları İncele & Başvur</h3>
+          <p>Bölgeye, araca ve ücrete göre filtrele. Uygun ilanlara tek tıkla başvur.</p>
         </div>
-        <div class="how-card">
-          <div class="how-card__num">3</div>
-          <h3>Eşleş & Çalış</h3>
-          <p>Teklifi kabul et, platform üzerinden mesajlaş ve işe başla. Tamamlayınca değerlendir.</p>
+        <div class="lp-how__card">
+          <div class="lp-how__num">3</div>
+          <h3>İşverenle İletişime Geç</h3>
+          <p>Platform üzerinden doğrudan mesajlaş, teklifi değerlendir ve anlaş.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ROLLER -->
-  <section class="section section--gray" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <!-- ── ROLLER ────────────────────────────────────────── -->
+  <section class="lp-section lp-section--gray">
     <div class="container">
-      <h2 class="section-title">Senin için ne yapabiliriz?</h2>
-      <p class="section-sub">Her rol için özel panel ve araçlar.</p>
-      <div class="role-grid">
-        <div class="role-item">
-          <div class="role-item__ico">🛵</div>
-          <div class="role-item__name">Kuryeyim</div>
-          <p class="role-item__desc">İlanlara başvur, profilini öne çıkar, teklif al ve kariyer seviyeni yükselt.</p>
-          <a href="giris.html?mode=register" class="btn btn--primary btn--sm">Kurye olarak katıl</a>
+      <h2 class="lp-section__title">Sana özel platform</h2>
+      <p class="lp-section__sub">Her rol için ayrı panel, araç ve iş akışı.</p>
+      <div class="lp-roles">
+        <div class="lp-role">
+          <div class="lp-role__ic">🛵</div>
+          <div class="lp-role__name">Kuryeyim</div>
+          <p class="lp-role__desc">İş ilanlarını tara, başvur, profilini öne çıkar ve teklifler al. Kariyer seviyeni belgele.</p>
+          <a href="giris.html?mode=register" class="btn btn--primary btn--sm" style="align-self:flex-start">Kurye olarak başla</a>
         </div>
-        <div class="role-item">
-          <div class="role-item__ico">🏪</div>
-          <div class="role-item__name">İşletmeyim</div>
-          <p class="role-item__desc">Kurye havuzunu tara, ilan ver, teklif gönder. Doğrulanmış kuryeyle çalış.</p>
-          <a href="giris.html?mode=register" class="btn btn--primary btn--sm">İşletme olarak katıl</a>
+        <div class="lp-role">
+          <div class="lp-role__ic">🏪</div>
+          <div class="lp-role__name">İşletmeyim</div>
+          <p class="lp-role__desc">Bölgenizde doğrulanmış kurye bul. İlan ver, kurye havuzunu tara, doğrudan mesajlaş.</p>
+          <a href="giris.html?mode=register" class="btn btn--primary btn--sm" style="align-self:flex-start">İşletme olarak başla</a>
         </div>
-        <div class="role-item">
-          <div class="role-item__ico">🏢</div>
-          <div class="role-item__name">Kurye Firmasıyım</div>
-          <p class="role-item__desc">Kurye kadronuzu yönetin, işletmelere toplu hizmet sunun.</p>
-          <a href="giris.html?mode=register" class="btn btn--primary btn--sm">Firma olarak katıl</a>
+        <div class="lp-role">
+          <div class="lp-role__ic">🏢</div>
+          <div class="lp-role__name">Kurye Firmasıyım</div>
+          <p class="lp-role__desc">Kurye kadronuzu yönetin, işletmelere hizmet sunun ve ilan verin.</p>
+          <a href="giris.html?mode=register" class="btn btn--primary btn--sm" style="align-self:flex-start">Firma olarak başla</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
-  <section class="cta-section">
+  <!-- ── CTA ──────────────────────────────────────────── -->
+  <section class="lp-cta-sec">
     <div class="container container--sm">
       <h2>Hemen başla, ücretsiz</h2>
       <p>Hesap oluşturmak 2 dakika alır. Kredi kartı gerekmez.</p>
-      <div class="hero-cta">
-        <a href="giris.html?mode=register" class="btn btn--primary btn--xl">Hesap Oluştur</a>
-        <a href="giris.html" class="btn btn--ghost btn--xl">Giriş Yap</a>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hesap Oluştur</a>
+        <a href="giris.html" class="btn btn--ghost btn--lg">Giriş Yap</a>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer class="landing-footer">
+  <!-- ── FOOTER ────────────────────────────────────────── -->
+  <footer class="lp-foot">
     <div class="container">
-      <div class="footer-row">
+      <div class="lp-foot__row">
         <span>© 2025 KuryemiBul</span>
-        <div class="footer-links">
+        <div class="lp-foot__links">
           <a href="kvkk.html">KVKK</a>
           <a href="gizlilik.html">Gizlilik</a>
           <a href="sartlar.html">Şartlar</a>
@@ -191,7 +635,6 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/components.js"></script>
   <script>
-  /* Zaten giriş yapılmışsa panele yönlendir */
   (async function () {
     if (!window.SB || !SB.isOn()) return;
     try {
@@ -204,5 +647,6 @@
     } catch (e) {}
   })();
   </script>
+
 </body>
 </html>
