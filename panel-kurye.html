@@ -14,9 +14,42 @@
   <nav id="app-sidebar"></nav>
 
   <div class="app-content">
-    <div class="page-header">
-      <h1>Dashboard</h1>
-      <p class="page-sub">Başvurularını ve tekliflerini buradan yönet.</p>
+
+    <!-- Hoşgeldin Bloğu -->
+    <div class="dash-welcome" id="dashWelcome">
+      <div class="dash-welcome__left">
+        <div class="dash-welcome__greeting" id="welcomeGreeting">Merhaba!</div>
+        <div class="dash-welcome__sub" id="welcomeSub">Profil verilerin yükleniyor…</div>
+      </div>
+      <div class="dash-welcome__right">
+        <div class="dash-welcome__avatar" id="welcomeAvatar">—</div>
+        <div class="dash-welcome__progress">
+          <div class="dash-welcome__prog-bar">
+            <div class="dash-welcome__prog-bar-fill" id="welcomeProgFill" style="width:0%"></div>
+          </div>
+          <div class="dash-welcome__prog-label" id="welcomeProgLabel">Profil yükleniyor</div>
+          <a href="profil-duzenle.html" class="dash-welcome__prog-link" id="welcomeProgLink" style="display:none">Profili Tamamla →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini İstatistikler -->
+    <div class="dash-stats-mini">
+      <a href="panel-kurye.html#basvurular" class="dash-stat" onclick="switchTab('basvurular')">
+        <span class="dash-stat__label">Başvurularım</span>
+        <span class="dash-stat__value" id="statBasvuru">—</span>
+        <span class="dash-stat__delta is-neutral" id="statBasvuruSub">yükleniyor</span>
+      </a>
+      <a href="profil-kurye.html" class="dash-stat">
+        <span class="dash-stat__label">Görüntülenen Profil</span>
+        <span class="dash-stat__value" id="statGoruntulenme">—</span>
+        <span class="dash-stat__delta is-neutral">bu hafta</span>
+      </a>
+      <a href="ilanlar.html" class="dash-stat">
+        <span class="dash-stat__label">Yeni İlanlar</span>
+        <span class="dash-stat__value" id="statYeniIlan">—</span>
+        <span class="dash-stat__delta">sana uygun</span>
+      </a>
     </div>
 
     <!-- Tab nav -->
@@ -93,8 +126,110 @@
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    function switchTab(tabName) {
+      var btns = document.querySelectorAll('.dash__nav button');
+      var panels = document.querySelectorAll('.dash__panel');
+      btns.forEach(function(b) {
+        b.classList.toggle('is-active', b.dataset.tab === tabName);
+      });
+      panels.forEach(function(p) {
+        p.classList.toggle('is-active', p.id === 'panel-' + tabName);
+      });
+    }
+
+    function animateCount(el, target) {
+      var start = 0;
+      var duration = 900;
+      var t0 = performance.now();
+      function step(now) {
+        var p = Math.min((now - t0) / duration, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
       if (window.KBApp && KBApp.initPanel) KBApp.initPanel('kurye');
+
+      /* Welcome block */
+      try {
+        await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
+        var profile = window.SB && SB.isOn() ? await SB.myProfile() : null;
+        var greeting = document.getElementById('welcomeGreeting');
+        var sub = document.getElementById('welcomeSub');
+        var avatar = document.getElementById('welcomeAvatar');
+        var progFill = document.getElementById('welcomeProgFill');
+        var progLabel = document.getElementById('welcomeProgLabel');
+        var progLink = document.getElementById('welcomeProgLink');
+
+        if (profile) {
+          var ad = profile.ad || 'Kurye';
+          var firstName = ad.split(' ')[0];
+          var hour = new Date().getHours();
+          var gStr = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';
+          greeting.textContent = gStr + ', ' + firstName + ' 👋';
+
+          var guc = profile.profil_guc || 0;
+          var pct = Math.min(100, Math.round(guc));
+          progFill.style.width = pct + '%';
+          progLabel.textContent = 'Profil %' + pct + ' tamamlandı';
+          if (pct < 100) { progLink.style.display = ''; }
+
+          /* Subtitle: yeni ilan sayısı */
+          var ilanSayisi = 0;
+          try {
+            var offers = window.SB && SB.isOn() ? await SB.myOffers() : null;
+            ilanSayisi = offers ? offers.length : 0;
+          } catch(e) {}
+          sub.textContent = ilanSayisi > 0
+            ? 'Sana uygun ' + ilanSayisi + ' yeni ilan bekliyor.'
+            : 'Bugün sana uygun yeni ilanları keşfet.';
+
+          /* Avatar */
+          if (profile.avatar_url) {
+            var img = document.createElement('img');
+            img.src = profile.avatar_url;
+            img.alt = ad;
+            avatar.innerHTML = '';
+            avatar.appendChild(img);
+          } else {
+            var initials = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+            avatar.textContent = initials || ad[0].toUpperCase();
+          }
+        } else {
+          greeting.textContent = 'Merhaba!';
+          sub.textContent = 'Profil verisine ulaşılamadı.';
+          avatar.textContent = '?';
+          progFill.style.width = '0%';
+          progLabel.textContent = 'Profil yükleniyor';
+        }
+
+        /* Stat counts — mock için fallback */
+        var basvuruEl = document.getElementById('statBasvuru');
+        var gorEl = document.getElementById('statGoruntulenme');
+        var ilanEl = document.getElementById('statYeniIlan');
+        var basvuruSub = document.getElementById('statBasvuruSub');
+
+        var basvuruSayisi = 0;
+        var goruntulenme = profile && profile.goruntulenme ? profile.goruntulenme : 0;
+        var yeniIlan = 0;
+        try {
+          var myOff = window.SB && SB.isOn() ? await SB.myOffers() : null;
+          basvuruSayisi = myOff ? myOff.filter(function(o){ return o.sender_id === (profile && profile.id); }).length : 0;
+          yeniIlan = myOff ? myOff.filter(function(o){ return o.receiver_id === (profile && profile.id); }).length : 0;
+        } catch(e) {}
+
+        animateCount(basvuruEl, basvuruSayisi);
+        animateCount(gorEl, goruntulenme);
+        animateCount(ilanEl, yeniIlan);
+        basvuruSub.textContent = basvuruSayisi === 1 ? '1 aktif başvuru' : basvuruSayisi + ' aktif başvuru';
+        basvuruSub.className = 'dash-stat__delta' + (basvuruSayisi > 0 ? '' : ' is-neutral');
+
+      } catch(err) {
+        console.warn('Welcome block error:', err);
+      }
     });
   </script>
 </body>
