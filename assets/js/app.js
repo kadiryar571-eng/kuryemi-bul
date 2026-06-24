@@ -221,8 +221,17 @@
     else if (applied) action = '<span class="chip chip--ok">' + T("ilan.applied") + '</span>';
     else action = '<button class="btn btn--primary btn--sm" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '" data-company="' + KB.esc(l.sahip || "") + '" data-loc="' + KB.esc(loc) + '">' + T("ilan.apply") + '</button>';
     var tags = '<span class="chip chip--open">● ' + T("ilan.statusOpen") + '</span>' +
+      (l.oncelik === 'acil' ? '<span class="chip chip--urgent">🔥 ACİL</span>' : '') +
       (l.arac ? '<span class="chip">🛵 ' + KB.esc(l.arac) + '</span>' : '') +
+      (l.vardiya_tipi ? '<span class="chip">' + KB.esc(l.vardiya_tipi) + '</span>' : '') +
       (isFresh(l.tarih) ? '<span class="chip chip--new">' + T("ilan.new") + '</span>' : '');
+    var benefits2 = l.faydalar && l.faydalar.length
+      ? l.faydalar.slice(0, 3).map(function (f) { return '✓ ' + KB.esc(f); }).join(' &nbsp; ')
+      : '';
+    var deadlineStr = '';
+    if (l.son_basvuru) {
+      try { deadlineStr = ' · Son: ' + new Date(l.son_basvuru + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }); } catch (e) {}
+    }
     return '<article class="job-card" data-job="' + l.id + '">' +
       '<button type="button" class="job-fav' + (saved ? " is-on" : "") + '" data-savejob="' + l.id + '" aria-pressed="' + (saved ? "true" : "false") + '" aria-label="' + T(saved ? "ilan.saved" : "ilan.save") + '" title="' + T(saved ? "ilan.saved" : "ilan.save") + '">' + (saved ? "♥" : "♡") + '</button>' +
       '<div class="employer-badge">' +
@@ -230,12 +239,14 @@
         '<span class="employer-badge__name">' + KB.esc(l.sahip || T("ilan.unknown")) + '</span>' +
       '</div>' +
       '<a class="job-card__title" href="ilan.html?id=' + l.id + '">' + KB.esc(l.baslik) + '</a>' +
+      (l.maas_aralik ? '<div class="job-card__salary">💰 ' + KB.esc(l.maas_aralik) + (l.maas_modeli ? ' · ' + KB.esc(l.maas_modeli) : '') + '</div>' : '') +
       '<div class="job-card__tags">' + tags + '</div>' +
       (loc ? '<div class="job-card__meta">📍 ' + KB.esc(loc) + '</div>' : '') +
-      (l.aciklama ? '<p class="pcard__sub">' + KB.esc(l.aciklama) + '</p>' : '') +
+      (l.aciklama ? '<p class="pcard__sub">' + KB.esc(l.aciklama.length > 110 ? l.aciklama.slice(0, 110) + '…' : l.aciklama) + '</p>' : '') +
+      (benefits2 ? '<div class="job-card__benefits">' + benefits2 + '</div>' : '') +
       '<div class="job-card__foot">' +
         action +
-        '<div style="display:flex;align-items:center;gap:8px"><span class="match-score">%' + score + ' Uyum</span><span class="job-posted">' + timeAgo(l.tarih) + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:8px"><span class="match-score">%' + score + ' Uyum</span><span class="job-posted">' + timeAgo(l.tarih) + deadlineStr + '</span></div>' +
       '</div>' +
     '</article>';
   }
@@ -361,7 +372,20 @@
     var countEl = document.getElementById("listingsCount");
     if (window.KB && KB.ready) await KB.ready();
     grid.innerHTML = skeletonCards(6);
-    if (!online()) { grid.innerHTML = emptyState("📭", T("ilan.none"), "", false); if (countEl) countEl.textContent = ""; return; }
+    if (!online()) {
+      JOBS.list = (window.KB_DATA && KB_DATA.ilanlar) ? KB_DATA.ilanlar : [];
+      var citySel2 = document.getElementById("jobCity");
+      var vehSel2 = document.getElementById("jobVehicle");
+      fillFilterSelect(citySel2, uniqVals(JOBS.list, function (x) { return x.sehir; }), T("ilan.allCities"));
+      fillFilterSelect(vehSel2, uniqVals(JOBS.list, function (x) { return x.arac; }), T("ilan.allVehicles"));
+      if (countEl) countEl.textContent = JOBS.list.length ? T("ilan.count", { n: JOBS.list.length }) : "";
+      ["jobSearch", "jobCity", "jobVehicle", "jobSort"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && !el._wired) { el._wired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", applyJobFilters); }
+      });
+      applyJobFilters();
+      return;
+    }
     var list = await SB.openListings();
     var appliedSet = {}, myPid = null;
     if (canPool()) {
@@ -2016,10 +2040,15 @@
     var id = KB.getParam("id");
     if (window.KB && KB.ready) await KB.ready();
     host.innerHTML = jobDetailSkeleton();
-    if (!online() || !id) { host.innerHTML = jobNotFound(); return; }
+    if (!id) { host.innerHTML = jobNotFound(); return; }
     var l = null;
-    try { l = await SB.listingById(id); } catch (e) {}
-    if (!l) { host.innerHTML = jobNotFound(); return; }
+    if (!online()) {
+      l = (window.KB_DATA && KB_DATA.ilanlar || []).filter(function (x) { return x.id === id; })[0];
+      if (!l) { host.innerHTML = jobNotFound(); return; }
+    } else {
+      try { l = await SB.listingById(id); } catch (e) {}
+      if (!l) { host.innerHTML = jobNotFound(); return; }
+    }
 
     var applied = false, owner = false;
     if (canPool()) {
@@ -2059,15 +2088,28 @@
           '<div class="jd-section"><h2>' + T("jd.details") + '</h2><dl class="kv">' +
             '<dt>' + T("apl.position") + '</dt><dd>' + KB.esc(l.baslik) + '</dd>' +
             (loc ? '<dt>' + T("apl.location") + '</dt><dd>' + KB.esc(loc) + '</dd>' : "") +
-            (l.arac ? '<dt>' + T("kv.vehicle") + '</dt><dd>' + KB.esc(l.arac) + '</dd>' : "") +
+            (l.arac ? '<dt>Araç Tipi</dt><dd>' + KB.esc(l.arac) + '</dd>' : "") +
+            (l.maas_aralik ? '<dt>Maaş</dt><dd>' + KB.esc(l.maas_aralik) + (l.maas_modeli ? ' (' + KB.esc(l.maas_modeli) + ')' : '') + '</dd>' : "") +
+            (l.calisma_saatleri ? '<dt>Çalışma Saati</dt><dd>' + KB.esc(l.calisma_saatleri) + '</dd>' : "") +
+            (l.vardiya_tipi ? '<dt>Vardiya Tipi</dt><dd>' + KB.esc(l.vardiya_tipi) + '</dd>' : "") +
+            (l.sigorta ? '<dt>Sigorta</dt><dd>' + KB.esc(l.sigorta) + '</dd>' : "") +
+            (l.teslimat_bolge ? '<dt>Teslimat Bölgesi</dt><dd>' + KB.esc(l.teslimat_bolge) + '</dd>' : "") +
+            (l.bonus && l.bonus !== "Yok" ? '<dt>Prim / Bonus</dt><dd>' + KB.esc(l.bonus) + '</dd>' : "") +
+            (l.son_basvuru ? '<dt>Son Başvuru</dt><dd>' + KB.esc(l.son_basvuru) + '</dd>' : "") +
+            (l.kontenjan ? '<dt>Açık Pozisyon</dt><dd>' + l.kontenjan + ' kişi</dd>' : "") +
             '<dt>' + T("jd.postedOn") + '</dt><dd>' + KB.esc(l.tarih) + '</dd>' +
           '</dl></div>' +
+          (l.faydalar && l.faydalar.length ? '<div class="jd-section"><h2>Sağlanan Faydalar</h2><div class="prf-chips">' + l.faydalar.map(function (f) { return '<span class="chip chip--ok">✓ ' + KB.esc(f) + '</span>'; }).join("") + '</div></div>' : '') +
         '</div>' +
         '<aside class="jd-side">' +
-          '<div class="jd-apply-card"><div class="jd-apply-card__act">' + applyBtn(true) + favBtn + '</div></div>' +
+          '<div class="jd-apply-card">' +
+            (l.maas_aralik ? '<div class="jd-salary"><div class="jd-salary__val">💰 ' + KB.esc(l.maas_aralik) + '</div><div class="jd-salary__model">' + KB.esc(l.maas_modeli || "") + (l.sigorta ? ' · ' + KB.esc(l.sigorta) : '') + '</div></div>' : '') +
+            (l.kontenjan ? '<p style="font-size:0.8rem;color:var(--text-2);margin:0 0 12px">👥 ' + l.kontenjan + ' açık pozisyon</p>' : '') +
+            '<div class="jd-apply-card__act">' + applyBtn(true) + favBtn + '</div>' +
+          '</div>' +
           '<div class="jd-company">' +
             '<div class="jd-company__head">' + logo + '<div><div class="jd-company__name">' + KB.esc(l.sahip || T("ilan.unknown")) + ver + '</div><div class="jd-company__role">' + T("role." + (l.sahipRol || "isletme")) + '</div></div></div>' +
-            '<a class="jd-company__link" href="' + profilePage + '?id=' + l.owner_id + '">' + T("jd.viewCompany") + '</a>' +
+            '<a class="jd-company__link" href="' + profilePage + '?id=' + (l.owner_id || l.sahipId || "") + '">' + T("jd.viewCompany") + '</a>' +
           '</div>' +
         '</aside>' +
       '</div>' +
@@ -2133,8 +2175,58 @@
     if (!root) return;
     if (window.KB && KB.ready) await KB.ready();
     if (!(online() && KB.isAuthed && KB.isAuthed())) {
-      root.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.loginRequired") + '</div>' +
-        '<a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
+      var mockConvs = (window.KB_DATA && KB_DATA.konusmalar) || [];
+      if (!mockConvs.length) {
+        root.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.loginRequired") + '</div>' +
+          '<a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
+        return;
+      }
+      var listEl0 = document.getElementById("msgConvList");
+      var mainEl0 = document.getElementById("msgMain");
+      if (listEl0) {
+        listEl0.innerHTML = mockConvs.map(function (c) {
+          var unreadBadge = c.unread ? '<span class="msg-conv__badge">' + (c.unread > 99 ? "99+" : c.unread) + '</span>' : '';
+          return '<button type="button" class="msg-conv' + (c.unread ? " msg-conv--unread" : "") + '" data-mockconv="' + KB.esc(c.profileId) + '">' +
+            '<div class="msg-conv__av msg-conv__av--ph">' + KB.initials(c.ad) + '</div>' +
+            '<div class="msg-conv__body">' +
+              '<div class="msg-conv__top"><span class="msg-conv__name">' + KB.esc(c.ad) + '</span><span class="msg-conv__time">' + msgTimeConv(c.lastAt) + '</span></div>' +
+              '<div class="msg-conv__bottom"><span class="msg-conv__last">' + (c.lastMine ? "Siz: " : "") + KB.esc(c.lastBody || "") + '</span>' + unreadBadge + '</div>' +
+            '</div></button>';
+        }).join("");
+        listEl0.addEventListener("click", function (e) {
+          var b = e.target.closest("[data-mockconv]");
+          if (!b || !mainEl0) return;
+          var cid = b.getAttribute("data-mockconv");
+          var conv = mockConvs.filter(function (x) { return x.profileId === cid; })[0];
+          if (!conv) return;
+          listEl0.querySelectorAll(".msg-conv").forEach(function (x) { x.classList.toggle("is-active", x.getAttribute("data-mockconv") === cid); });
+          root.classList.add("msg--threadopen");
+          var bubbles = (conv.mesajlar || []).map(function (m) {
+            var mine = m.from_user === "me";
+            return '<div class="msg-bubble' + (mine ? " msg-bubble--mine" : "") + '">' + KB.esc(m.body) +
+              '<span class="msg-bubble__t">' + msgTimeShort(m.created_at) + '</span></div>';
+          }).join("");
+          mainEl0.innerHTML =
+            '<div class="msg-thread">' +
+              '<div class="msg-thread__head">' +
+                '<button type="button" class="msg-back" id="msgBack0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>' +
+                '<div class="msg-thread__who"><div class="msg-thread__av">' + KB.initials(conv.ad || "?") + '</div>' +
+                '<div class="msg-thread__info"><div class="msg-thread__name">' + KB.esc(conv.ad) + '</div></div></div>' +
+              '</div>' +
+              '<div class="msg-thread__scroll" id="msgScroll0">' + (bubbles || '<div class="msg-thread__empty">Henüz mesaj yok.</div>') + '</div>' +
+              '<div class="msg-compose"><form id="msgForm0"><input id="msgInput0" autocomplete="off" placeholder="Demo modda mesaj gönderilemez…" disabled>' +
+                '<button type="submit" class="msg-send-btn" disabled><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>' +
+              '</form></div>' +
+            '</div>';
+          var s = document.getElementById("msgScroll0"); if (s) s.scrollTop = s.scrollHeight;
+          var backBtn = document.getElementById("msgBack0");
+          if (backBtn) backBtn.addEventListener("click", function () {
+            root.classList.remove("msg--threadopen");
+            listEl0.querySelectorAll(".msg-conv").forEach(function (x) { x.classList.remove("is-active"); });
+          });
+        });
+      }
+      if (mainEl0) mainEl0.innerHTML = '<div class="msg-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">Bir konuşma seçin</div><div class="kb-empty__d">Soldaki listeden bir konuşma açın.</div></div>';
       return;
     }
     var listEl = document.getElementById("msgConvList");

@@ -60,7 +60,25 @@
       var host = document.getElementById('notifList');
       if (!host) return;
       if (!window.SB || !SB.isOn()) {
-        host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Bildirim bulunmuyor</div></div>';
+        var mockNotifs = (window.KB_DATA && KB_DATA.bildirimler) || [];
+        if (!mockNotifs.length) {
+          host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Bildirim bulunmuyor</div></div>';
+          return;
+        }
+        var icoMap = { offer: '✉️', message: '💬', apply: '📋', system: '⚙️' };
+        host.innerHTML = '<div class="notif-list">' + mockNotifs.map(function(n) {
+          var ico = icoMap[n.type] || '🔔';
+          var unread = !n.read_at;
+          var dateStr = '';
+          try { dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''; } catch(e) {}
+          return '<div class="notif-item' + (unread ? ' notif-item--unread' : '') + '"' +
+            (n.link ? ' style="cursor:pointer" onclick="location.href=\'' + n.link + '\'"' : '') + '>' +
+            '<div class="notif-ico">' + ico + '</div>' +
+            '<div class="notif-body">' +
+              '<div class="notif-title">' + (n.title ? '<strong>' + (window.KB ? KB.esc(n.title) : n.title) + '</strong> — ' : '') + (window.KB ? KB.esc(n.body || 'Yeni bildirim') : (n.body || 'Yeni bildirim')) + '</div>' +
+              '<div class="notif-time">' + dateStr + '</div>' +
+            '</div></div>';
+        }).join('') + '</div>';
         return;
       }
       try {

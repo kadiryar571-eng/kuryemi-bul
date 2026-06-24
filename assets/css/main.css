@@ -2870,7 +2870,15 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .ab-doc { padding: 8px 10px; }
 }
 
-/* ─── 49. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 49. İLAN ZENGİN İÇERİK ────────────────────────────────── */
+.job-card__salary { font-size: 0.875rem; font-weight: 600; color: #15803D; margin: 4px 0 6px; }
+.job-card__benefits { font-size: 0.78rem; color: var(--text-2); margin-top: 4px; }
+.chip--urgent { background: #FEF2F2; color: #DC2626; border-color: rgba(220,38,38,.3); font-weight: 600; }
+.jd-salary { padding: 14px 16px; background: #F0FDF4; border: 1px solid rgba(21,128,61,.2); border-radius: var(--radius); margin-bottom: 14px; }
+.jd-salary__val { font-size: 1.1rem; font-weight: 700; color: #15803D; line-height: 1.2; }
+.jd-salary__model { font-size: 0.8rem; color: var(--text-2); margin-top: 3px; }
+
+/* ─── 50. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);
