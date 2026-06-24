@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeni İlan Oluştur · KuryemiBul</title>
+  <meta name="description" content="Kurye ihtiyacınızı detaylı şekilde paylaşarak doğru adaylara ulaşın.">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1>Yeni İlan Oluştur</h1>
+        <p class="page-sub">Kurye ihtiyacınızı detaylı şekilde paylaşarak doğru adaylara ulaşın.</p>
+      </div>
+      <a href="panel-isletme.html" class="btn btn--ghost btn--sm">← Panele Dön</a>
+    </div>
+
+    <!-- Edit mode badge -->
+    <div class="jc-edit-badge" id="jcEditBadge" style="display:none">
+      <span class="jc-edit-badge__txt" id="jcEditBadgeTxt">Taslak düzenleniyor</span>
+      <button type="button" class="btn btn--ghost btn--sm" id="jcNewBtn">+ Yeni İlan</button>
+    </div>
+
+    <div class="jc-layout" id="jcLayout">
+
+      <!-- ═══ LEFT: Form ════════════════════════════════════════ -->
+      <div class="jc-form-col">
+
+        <!-- Completion bar -->
+        <div class="jc-completion-wrap">
+          <div class="jc-completion__bar-wrap">
+            <div class="jc-completion__label" id="jcCompLabel">Form doluluk oranı</div>
+            <div class="jc-completion__bar">
+              <div class="jc-completion__fill" id="jcCompFill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="jc-completion__pct" id="jcCompPct">0%</div>
+        </div>
+
+        <!-- 1. Temel Bilgiler -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">1 · Temel Bilgiler</div>
+              <div class="pi-sec-sub">İlan başlığı, kategori ve işletme adı</div>
+            </div>
+            <span class="jc-stat-chip jc-stat-chip--taslak" id="jcStatChip">Taslak</span>
+          </div>
+          <div class="form-grid">
+            <div class="jc-field field--full">
+              <label for="jcIsletme">İşletme / Firma Adı</label>
+              <input class="jc-input" id="jcIsletme" type="text" placeholder="İşletme adınız" readonly>
+            </div>
+            <div class="jc-field">
+              <label for="jcPozBaslik">Pozisyon Başlığı *</label>
+              <input class="jc-input" id="jcPozBaslik" type="text" placeholder="örn. Moto Kurye, Yaya Kurye, Gece Kuryesi" maxlength="80">
+              <span class="jc-err" id="errPozBaslik"></span>
+            </div>
+            <div class="jc-field">
+              <label for="jcKategori">Kategori *</label>
+              <select class="jc-select" id="jcKategori">
+                <option value="">Seçiniz</option>
+                <option value="Restoran">🍔 Restoran</option>
+                <option value="Market">🛒 Market</option>
+                <option value="E-Ticaret">📦 E-Ticaret</option>
+                <option value="Medikal">💊 Medikal / Eczane</option>
+                <option value="Evrak Dağıtım">📄 Evrak Dağıtım</option>
+                <option value="Genel">🚴 Genel Kurye</option>
+              </select>
+              <span class="jc-err" id="errKategori"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Konum -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">2 · Konum</div>
+              <div class="pi-sec-sub">Çalışma lokasyonu ve teslimat bölgesi</div>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="jc-field">
+              <label for="jcSehir">İl *</label>
+              <input class="jc-input" id="jcSehir" type="text" placeholder="İstanbul">
+              <span class="jc-err" id="errSehir"></span>
+            </div>
+            <div class="jc-field">
+              <label for="jcBolge">İlçe</label>
+              <input class="jc-input" id="jcBolge" type="text" placeholder="Kadıköy">
+            </div>
+            <div class="jc-field field--full">
+              <label for="jcMahalle">Mahalle / Teslimat Bölgesi</label>
+              <input class="jc-input" id="jcMahalle" type="text" placeholder="örn. Moda, Fenerbahçe, Bağdat Caddesi">
+              <span class="jc-hint">Kuryenin çalışacağı mahalle veya teslimat bölgesini belirtin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. İş Detayları -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">3 · İş Detayları</div>
+              <div class="pi-sec-sub">Çalışma koşulları, maaş ve araç bilgisi</div>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="jc-field">
+              <label for="jcCalismaSekli">Çalışma Şekli</label>
+              <select class="jc-select" id="jcCalismaSekli">
+                <option value="">Seçiniz</option>
+                <option value="Tam Zamanlı">Tam Zamanlı</option>
+                <option value="Part Time">Part Time</option>
+                <option value="Freelance">Freelance / Serbest</option>
+                <option value="Sezonluk">Sezonluk</option>
+              </select>
+            </div>
+            <div class="jc-field">
+              <label for="jcMaasModeli">Maaş Modeli</label>
+              <select class="jc-select" id="jcMaasModeli">
+                <option value="">Seçiniz</option>
+                <option value="Aylık Sabit">Maaşlı (Aylık Sabit)</option>
+                <option value="Teslimat Başına">Paket / Teslimat Başı</option>
+                <option value="Saatlik">Saatlik</option>
+                <option value="Aylık + Prim">Aylık Sabit + Prim</option>
+                <option value="Günlük">Günlük</option>
+              </select>
+            </div>
+            <div class="jc-field">
+              <label for="jcMaasMin">Maaş Minimum (TL)</label>
+              <input class="jc-input" id="jcMaasMin" type="text" inputmode="numeric" placeholder="14.000">
+            </div>
+            <div class="jc-field">
+              <label for="jcMaasMax">Maaş Maksimum (TL)</label>
+              <input class="jc-input" id="jcMaasMax" type="text" inputmode="numeric" placeholder="18.000">
+            </div>
+            <div class="jc-field">
+              <label for="jcCalisma">Çalışma Saatleri</label>
+              <input class="jc-input" id="jcCalisma" type="text" placeholder="09:00 – 18:00">
+            </div>
+            <div class="jc-field">
+              <label for="jcVardiya">Vardiya Tipi</label>
+              <select class="jc-select" id="jcVardiya">
+                <option value="">Seçiniz</option>
+                <option value="Tam Zamanlı">Tam Zamanlı</option>
+                <option value="Yarı Zamanlı">Yarı Zamanlı</option>
+                <option value="Sabah">Sabah Vardiyası</option>
+                <option value="Akşam">Akşam Vardiyası</option>
+                <option value="Gece">Gece Vardiyası</option>
+                <option value="Hafta Sonu">Hafta Sonu</option>
+                <option value="Esnek">Esnek</option>
+              </select>
+            </div>
+            <div class="jc-field">
+              <label for="jcArac">Araç Gereksinimi</label>
+              <select class="jc-select" id="jcArac">
+                <option value="">Araç Gerekmez</option>
+                <option value="Motosiklet">🛵 Motosiklet</option>
+                <option value="Bisiklet">🚲 Bisiklet</option>
+                <option value="Scooter">🛴 Scooter / E-Bisiklet</option>
+                <option value="Otomobil">🚗 Otomobil</option>
+                <option value="Kamyonet">🚐 Kamyonet</option>
+                <option value="Yaya">🚶 Yaya (Araçsız)</option>
+              </select>
+            </div>
+            <div class="jc-field">
+              <label for="jcDeneyim">Deneyim Gereksinimi</label>
+              <select class="jc-select" id="jcDeneyim">
+                <option value="">Deneyim Aranmıyor</option>
+                <option value="Deneyimsiz">Deneyimsiz Olabilir</option>
+                <option value="6 ay+">6 Ay Deneyim</option>
+                <option value="1 yıl+">1 Yıl Deneyim</option>
+                <option value="2 yıl+">2 Yıl Deneyim</option>
+                <option value="3+ yıl">3+ Yıl Deneyim</option>
+              </select>
+            </div>
+            <div class="jc-field">
+              <label for="jcSigorta">Sigorta Durumu</label>
+              <select class="jc-select" id="jcSigorta">
+                <option value="">Belirtilmedi</option>
+                <option value="SGK'lı">SGK Zorunlu</option>
+                <option value="Bağımsız">Bağımsız / Serbest</option>
+                <option value="İsteğe Bağlı">SGK İsteğe Bağlı</option>
+              </select>
+            </div>
+            <div class="jc-field">
+              <label for="jcPrim">Prim / Bonus</label>
+              <input class="jc-input" id="jcPrim" type="text" placeholder="örn. Teslimat başına +6 TL">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Faydalar -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">4 · Sağlanan Faydalar</div>
+              <div class="pi-sec-sub">Çalışana sunulan yan haklar ve imkânlar</div>
+            </div>
+          </div>
+          <div class="jc-check-grid">
+            <label class="jc-check"><input type="checkbox" id="jcfSigorta" value="SGK / Sigorta"><span>SGK / Sigorta</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfYemek" value="Yemek Kartı"><span>Yemek Kartı</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfPrim" value="Performans Primi"><span>Performans Primi</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfYakit" value="Yakıt Desteği"><span>Yakıt Desteği</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfHaftalik" value="Haftalık Ödeme"><span>Haftalık Ödeme</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfArac" value="Araç / Bisiklet"><span>Araç / Bisiklet Desteği</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfSaglik" value="Sağlık Sigortası"><span>Özel Sağlık Sigortası</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcfEgitim" value="Eğitim Desteği"><span>Eğitim Desteği</span></label>
+          </div>
+        </div>
+
+        <!-- 5. İş Tanımı -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">5 · İş Tanımı</div>
+              <div class="pi-sec-sub">Adayların ne yapacağını detaylı açıklayın</div>
+            </div>
+          </div>
+          <div class="jc-field" style="margin-bottom:14px">
+            <label for="jcGorev">Görev Tanımı *</label>
+            <textarea class="jc-textarea" id="jcGorev" rows="4" placeholder="Bu pozisyonda ne yapılacak? Teslimat bölgesi, yoğunluk, paket tipi, günlük teslimat adedi..."></textarea>
+            <span class="jc-err" id="errGorev"></span>
+          </div>
+          <div class="jc-field" style="margin-bottom:14px">
+            <label for="jcAkis">Günlük İş Akışı</label>
+            <textarea class="jc-textarea" id="jcAkis" rows="3" placeholder="Tipik bir iş günü nasıl geçiyor? Toplama noktası, rota planı, kaç teslimat bekleniyor..."></textarea>
+          </div>
+          <div class="jc-field">
+            <label for="jcBeklenti">Beklentiler</label>
+            <textarea class="jc-textarea" id="jcBeklenti" rows="3" placeholder="Aradığınız kurye profili: güvenilirlik, iletişim gücü, dakiklik beklentisi..."></textarea>
+          </div>
+        </div>
+
+        <!-- 6. Gereksinimler -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">6 · Gereksinimler</div>
+              <div class="pi-sec-sub">Aday için zorunlu koşullar</div>
+            </div>
+          </div>
+          <div class="jc-check-grid">
+            <label class="jc-check"><input type="checkbox" id="jcrEhliyet" value="Ehliyet zorunlu"><span>Ehliyet Gerekli</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcrKendiArac" value="Kendi aracı olmalı"><span>Kendi Aracı Olmalı</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcrBelge" value="Mesleki belge zorunlu"><span>Mesleki Belge Zorunlu</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcrBolge" value="Bölge bilgisi gerekli"><span>Bölge Bilgisi Gerekli</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcrSrc" value="SRC belgesi"><span>SRC Belgesi</span></label>
+            <label class="jc-check"><input type="checkbox" id="jcrAdli" value="Adli sicil temiz olmalı"><span>Adli Sicil Temiz</span></label>
+          </div>
+        </div>
+
+        <!-- 7. Başvuru Ayarları -->
+        <div class="pi-card">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">7 · Başvuru Ayarları</div>
+              <div class="pi-sec-sub">Kontenjan, son başvuru ve öncelik</div>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="jc-field">
+              <label for="jcSonBasvuru">Son Başvuru Tarihi</label>
+              <input class="jc-input" id="jcSonBasvuru" type="date">
+            </div>
+            <div class="jc-field">
+              <label for="jcKontenjan">Kaç Kişi Alınacak</label>
+              <input class="jc-input" id="jcKontenjan" type="number" min="1" max="99" value="1" placeholder="1">
+            </div>
+            <div class="jc-field field--full">
+              <label class="jc-check" style="display:inline-flex;border:none;padding:4px 0">
+                <input type="checkbox" id="jcAcil">
+                <span style="font-size:0.85rem;font-weight:500">🔥 Acil Alım — ilanda "ACİL" rozeti gösterilir, üstte listelenir</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="jc-form-actions">
+          <button type="button" class="btn btn--primary" id="jcPublishBtn">🚀 Yayınla</button>
+          <button type="button" class="btn btn--secondary" id="jcDraftBtn">💾 Taslak Kaydet</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="jcResetBtn" style="margin-left:auto;color:var(--text-3)">Formu Temizle</button>
+        </div>
+
+        <!-- Error summary -->
+        <div class="jc-err-summary" id="jcErrSummary" style="display:none">
+          <div class="jc-err-summary__title">⚠️ Lütfen aşağıdaki alanları düzeltin:</div>
+          <ul id="jcErrList"></ul>
+        </div>
+
+      </div><!-- /.jc-form-col -->
+
+      <!-- ═══ RIGHT: Preview + My Jobs ═══════════════════════════ -->
+      <div class="jc-side-col">
+
+        <!-- Live preview -->
+        <div class="jc-preview" id="jcPreviewPanel">
+          <div class="jc-preview__head">
+            <span class="jc-preview__label">👁 Önizleme</span>
+            <span class="jc-preview__hint">Adaylar bu şekilde görecek</span>
+          </div>
+          <div class="jc-preview__body" id="jcPreviewBody">
+            <div class="jc-preview-empty">
+              <div class="jc-preview-empty__ico">📋</div>
+              <div class="jc-preview-empty__txt">Pozisyon başlığını girdikten sonra önizleme burada görünür</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- My Listings -->
+        <div class="pi-card" id="jcMyJobsPanel">
+          <div class="pi-sec-head">
+            <div>
+              <div class="pi-sec-title">İlanlarım</div>
+              <div class="pi-sec-sub" id="jcMyJobsCount">Yükleniyor…</div>
+            </div>
+          </div>
+          <div id="jcMyJobsList">
+            <div class="jc-jobs-empty">İlan yükleniyor…</div>
+          </div>
+          <a href="ilanlar.html" class="btn btn--ghost btn--sm" style="margin-top:14px;display:block;text-align:center">Tüm İlanları Gör →</a>
+        </div>
+
+      </div><!-- /.jc-side-col -->
+
+    </div><!-- /.jc-layout -->
+
+  </div><!-- /.app-content -->
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+
+  <!-- ── İlan Oluşturma Modülü ─────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Sabitler ────────────────────────────────────────────── */
+    var BENEFIT_IDS = ['jcfSigorta','jcfYemek','jcfPrim','jcfYakit','jcfHaftalik','jcfArac','jcfSaglik','jcfEgitim'];
+    var REQ_IDS     = ['jcrEhliyet','jcrKendiArac','jcrBelge','jcrBolge','jcrSrc','jcrAdli'];
+    var editingId   = null;
+    var debTimer    = null;
+
+    /* ── Storage ─────────────────────────────────────────────── */
+    function uid() {
+      try {
+        var sess = window.KB && KB.session && KB.session();
+        if (sess && sess.user && sess.user.id) return sess.user.id;
+      } catch (e) {}
+      return 'demo';
+    }
+    function loadMyJobs() {
+      try { return JSON.parse(localStorage.getItem('kb_my_ilanlar_' + uid())) || []; } catch (e) { return []; }
+    }
+    function saveMyJobs(jobs) {
+      try { localStorage.setItem('kb_my_ilanlar_' + uid(), JSON.stringify(jobs)); } catch (e) {}
+    }
+
+    /* ── DOM helpers ──────────────────────────────────────────── */
+    function v(id) {
+      var el = document.getElementById(id);
+      return el ? el.value.trim() : '';
+    }
+    function sv(id, val) {
+      var el = document.getElementById(id);
+      if (el) el.value = val != null ? val : '';
+    }
+    function esc(s) {
+      return (s + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function parseTL(s) {
+      var n = parseInt((s + '').replace(/[^0-9]/g,''), 10);
+      return isNaN(n) ? '' : n;
+    }
+    function fmtTL(n) {
+      return n ? parseInt(n, 10).toLocaleString('tr-TR') : '';
+    }
+
+    /* ── Read form → job object ──────────────────────────────── */
+    function readForm() {
+      var faydalar = BENEFIT_IDS.map(function(id) {
+        var el = document.getElementById(id);
+        return (el && el.checked) ? el.value : null;
+      }).filter(Boolean);
+
+      var gereksinimler = REQ_IDS.map(function(id) {
+        var el = document.getElementById(id);
+        return (el && el.checked) ? el.value : null;
+      }).filter(Boolean);
+
+      var maasMin = parseTL(v('jcMaasMin'));
+      var maasMax = parseTL(v('jcMaasMax'));
+      var maasAralik = '';
+      if (maasMin && maasMax) maasAralik = fmtTL(maasMin) + ' – ' + fmtTL(maasMax) + ' TL/ay';
+      else if (maasMin)       maasAralik = fmtTL(maasMin) + '+ TL/ay';
+      else if (maasMax)       maasAralik = 'Maks. ' + fmtTL(maasMax) + ' TL/ay';
+
+      var gorev   = v('jcGorev');
+      var akis    = v('jcAkis');
+      var beklenti= v('jcBeklenti');
+      var parts   = [gorev];
+      if (akis)     parts.push('📋 Günlük İş Akışı:\n' + akis);
+      if (beklenti) parts.push('✅ Beklentiler:\n' + beklenti);
+      var aciklama = parts.filter(Boolean).join('\n\n');
+
+      var acilEl = document.getElementById('jcAcil');
+      var isAcil = acilEl && acilEl.checked;
+
+      return {
+        poz_baslik:      v('jcPozBaslik'),
+        baslik:          v('jcPozBaslik'),
+        kategori:        v('jcKategori'),
+        sahip:           v('jcIsletme'),
+        sehir:           v('jcSehir'),
+        bolge:           v('jcBolge'),
+        mahalle:         v('jcMahalle'),
+        teslimat_bolge:  v('jcMahalle') || v('jcBolge'),
+        calisma_sekli:   v('jcCalismaSekli'),
+        maas_modeli:     v('jcMaasModeli'),
+        maas_min:        maasMin,
+        maas_max:        maasMax,
+        maas_aralik:     maasAralik,
+        calisma_saatleri:v('jcCalisma'),
+        vardiya_tipi:    v('jcVardiya'),
+        arac:            v('jcArac'),
+        deneyim:         v('jcDeneyim'),
+        sigorta:         v('jcSigorta'),
+        bonus:           v('jcPrim') || 'Yok',
+        faydalar:        faydalar,
+        aciklama:        aciklama,
+        gorev_tanimi:    gorev,
+        gunluk_akis:     akis,
+        beklentiler:     beklenti,
+        gereksinimler:   gereksinimler,
+        son_basvuru:     v('jcSonBasvuru'),
+        kontenjan:       parseInt(v('jcKontenjan'), 10) || 1,
+        oncelik:         isAcil ? 'acil' : 'normal',
+        tip:             'kurye-ilani',
+      };
+    }
+
+    /* ── Fill form from job object ───────────────────────────── */
+    function fillForm(job) {
+      sv('jcPozBaslik', job.poz_baslik || job.baslik || '');
+      sv('jcKategori',  job.kategori || '');
+      sv('jcSehir',     job.sehir || '');
+      sv('jcBolge',     job.bolge || '');
+      sv('jcMahalle',   job.mahalle || job.teslimat_bolge || '');
+      sv('jcCalismaSekli', job.calisma_sekli || '');
+      sv('jcMaasModeli',job.maas_modeli || '');
+      sv('jcMaasMin',   job.maas_min ? fmtTL(job.maas_min) : '');
+      sv('jcMaasMax',   job.maas_max ? fmtTL(job.maas_max) : '');
+      sv('jcCalisma',   job.calisma_saatleri || '');
+      sv('jcVardiya',   job.vardiya_tipi || '');
+      sv('jcArac',      job.arac || '');
+      sv('jcDeneyim',   job.deneyim || '');
+      sv('jcSigorta',   job.sigorta || '');
+      sv('jcPrim',      job.bonus && job.bonus !== 'Yok' ? job.bonus : '');
+      sv('jcGorev',     job.gorev_tanimi || '');
+      sv('jcAkis',      job.gunluk_akis || '');
+      sv('jcBeklenti',  job.beklentiler || '');
+      sv('jcSonBasvuru',job.son_basvuru || '');
+      sv('jcKontenjan', job.kontenjan || 1);
+      var acilEl = document.getElementById('jcAcil');
+      if (acilEl) acilEl.checked = job.oncelik === 'acil';
+      BENEFIT_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.checked = (job.faydalar || []).indexOf(el.value) !== -1;
+      });
+      REQ_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.checked = (job.gereksinimler || []).indexOf(el.value) !== -1;
+      });
+      updatePreview();
+      updateCompletion();
+    }
+
+    /* ── Reset form ──────────────────────────────────────────── */
+    function resetForm() {
+      ['jcPozBaslik','jcKategori','jcSehir','jcBolge','jcMahalle','jcCalismaSekli',
+       'jcMaasModeli','jcMaasMin','jcMaasMax','jcCalisma','jcVardiya','jcArac',
+       'jcDeneyim','jcSigorta','jcPrim','jcGorev','jcAkis','jcBeklenti','jcSonBasvuru'].forEach(function(id) {
+        sv(id, '');
+      });
+      sv('jcKontenjan', 1);
+      var acilEl = document.getElementById('jcAcil');
+      if (acilEl) acilEl.checked = false;
+      BENEFIT_IDS.concat(REQ_IDS).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.checked = false;
+      });
+      editingId = null;
+      clearErrors();
+      updatePreview();
+      updateCompletion();
+      updateStatus('taslak');
+      updateEditBadge(null);
+    }
+
+    /* ── Validate ────────────────────────────────────────────── */
+    function validate() {
+      var errors = [];
+      var poz = v('jcPozBaslik');
+      if (!poz || poz.length < 2) errors.push({ field: 'errPozBaslik', el: 'jcPozBaslik', msg: 'Pozisyon başlığı giriniz (en az 2 karakter)' });
+      if (!v('jcKategori'))       errors.push({ field: 'errKategori',  el: 'jcKategori',  msg: 'Kategori seçiniz' });
+      if (!v('jcSehir'))          errors.push({ field: 'errSehir',     el: 'jcSehir',     msg: 'İl giriniz' });
+      var gorev = v('jcGorev');
+      if (!gorev || gorev.length < 10) errors.push({ field: 'errGorev', el: 'jcGorev', msg: 'Görev tanımı en az 10 karakter olmalı' });
+      return errors;
+    }
+
+    function showErrors(errors) {
+      errors.forEach(function(e) {
+        var errEl = document.getElementById(e.field);
+        var inputEl = document.getElementById(e.el);
+        if (errEl) errEl.textContent = e.msg;
+        if (inputEl) inputEl.classList.add('is-err');
+      });
+      var sumEl = document.getElementById('jcErrSummary');
+      var listEl = document.getElementById('jcErrList');
+      if (sumEl) sumEl.style.display = '';
+      if (listEl) listEl.innerHTML = errors.map(function(e) { return '<li>' + esc(e.msg) + '</li>'; }).join('');
+      /* scroll to first error */
+      var firstInput = document.getElementById(errors[0].el);
+      if (firstInput) firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function clearErrors() {
+      ['errPozBaslik','errKategori','errSehir','errGorev'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = '';
+      });
+      ['jcPozBaslik','jcKategori','jcSehir','jcGorev'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('is-err');
+      });
+      var sumEl = document.getElementById('jcErrSummary');
+      if (sumEl) sumEl.style.display = 'none';
+    }
+
+    /* ── Status chip & edit badge ────────────────────────────── */
+    function updateStatus(status) {
+      var chip = document.getElementById('jcStatChip');
+      if (!chip) return;
+      var labels = { yayinda: 'Yayında', taslak: 'Taslak', kapali: 'Kapalı' };
+      chip.className = 'jc-stat-chip jc-stat-chip--' + (status || 'taslak');
+      chip.textContent = labels[status] || 'Taslak';
+    }
+
+    function updateEditBadge(job) {
+      var badge = document.getElementById('jcEditBadge');
+      var txt   = document.getElementById('jcEditBadgeTxt');
+      if (!badge) return;
+      if (!job) { badge.style.display = 'none'; return; }
+      badge.style.display = '';
+      if (txt) txt.textContent = 'Düzenleniyor: "' + (job.baslik || 'Başlıksız') + '" · ' + statusLabel(job.durum);
+    }
+
+    function statusLabel(s) {
+      return { yayinda: 'Yayında', taslak: 'Taslak', kapali: 'Kapalı' }[s] || s;
+    }
+
+    /* ── Completion progress ─────────────────────────────────── */
+    function completionPct() {
+      var score = 0;
+      if (v('jcPozBaslik').length >= 2) score += 15;
+      if (v('jcKategori'))              score += 10;
+      if (v('jcSehir'))                 score += 10;
+      if (v('jcMaasMin') || v('jcMaasMax')) score += 15;
+      if (v('jcMaasModeli'))            score += 10;
+      if (v('jcVardiya') || v('jcCalismaSekli')) score += 10;
+      if (v('jcGorev').length >= 10)    score += 20;
+      var anyFayda = BENEFIT_IDS.some(function(id) {
+        var el = document.getElementById(id);
+        return el && el.checked;
+      });
+      if (anyFayda) score += 10;
+      return Math.min(100, score);
+    }
+
+    function updateCompletion() {
+      var pct  = completionPct();
+      var fill = document.getElementById('jcCompFill');
+      var pctEl= document.getElementById('jcCompPct');
+      var lbl  = document.getElementById('jcCompLabel');
+      if (fill)  fill.style.width = pct + '%';
+      if (pctEl) pctEl.textContent = pct + '%';
+      if (lbl) {
+        if (pct >= 80)       lbl.textContent = 'İlan yayınlamaya hazır!';
+        else if (pct >= 50)  lbl.textContent = 'İyi gidiyorsunuz, devam edin';
+        else                 lbl.textContent = 'Formu doldurun';
+      }
+    }
+
+    /* ── Live preview ────────────────────────────────────────── */
+    function updatePreview() {
+      var body = document.getElementById('jcPreviewBody');
+      if (!body) return;
+      var job = readForm();
+      if (!job.baslik) {
+        body.innerHTML = '<div class="jc-preview-empty"><div class="jc-preview-empty__ico">📋</div><div class="jc-preview-empty__txt">Pozisyon başlığını girdikten sonra önizleme burada görünür</div></div>';
+        return;
+      }
+      var loc = [job.sehir, job.bolge].filter(Boolean).join(' · ');
+      var chips = '<span class="chip chip--open">● Açık</span>' +
+        (job.oncelik === 'acil' ? '<span class="chip chip--urgent">🔥 ACİL</span>' : '') +
+        (job.arac ? '<span class="chip">🛵 ' + esc(job.arac) + '</span>' : '') +
+        (job.vardiya_tipi ? '<span class="chip">' + esc(job.vardiya_tipi) + '</span>' : '') +
+        (job.calisma_sekli ? '<span class="chip">' + esc(job.calisma_sekli) + '</span>' : '');
+      var bens = job.faydalar.slice(0, 3).map(function(f) { return '✓ ' + f; }).join(' &nbsp; ');
+      var initials = (job.sahip || '?').split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase() || '?';
+      body.innerHTML =
+        '<article class="job-card">' +
+          '<div class="employer-badge">' +
+            '<div class="employer-badge__av">' + esc(initials) + '</div>' +
+            '<span class="employer-badge__name">' + esc(job.sahip || 'İşletme') + '</span>' +
+          '</div>' +
+          '<div class="job-card__title">' + esc(job.baslik) + '</div>' +
+          (job.maas_aralik ? '<div class="job-card__salary">💰 ' + esc(job.maas_aralik) + (job.maas_modeli ? ' · ' + esc(job.maas_modeli) : '') + '</div>' : '') +
+          '<div class="job-card__tags" style="margin:10px 0">' + chips + '</div>' +
+          (loc ? '<div class="job-card__meta">📍 ' + esc(loc) + '</div>' : '') +
+          (job.aciklama ? '<p class="pcard__sub" style="margin:8px 0 6px;font-size:0.8rem">' + esc(job.aciklama.slice(0, 100) + (job.aciklama.length > 100 ? '…' : '')) + '</p>' : '') +
+          (bens ? '<div class="job-card__benefits" style="font-size:0.75rem;color:var(--text-2)">' + bens + '</div>' : '') +
+        '</article>';
+    }
+
+    /* ── My jobs list ────────────────────────────────────────── */
+    function renderMyJobs() {
+      var jobs  = loadMyJobs();
+      var list  = document.getElementById('jcMyJobsList');
+      var count = document.getElementById('jcMyJobsCount');
+      if (!list) return;
+      var active = jobs.filter(function(j) { return j.durum === 'yayinda'; }).length;
+      var draft  = jobs.filter(function(j) { return j.durum === 'taslak'; }).length;
+      if (count) count.textContent = active + ' yayında · ' + draft + ' taslak';
+      if (!jobs.length) {
+        list.innerHTML = '<div class="jc-jobs-empty">Henüz ilan oluşturmadınız.</div>';
+        return;
+      }
+      list.innerHTML = jobs.map(function(j) {
+        var date = j.tarih ? (' · ' + j.tarih) : '';
+        return '<div class="jc-my-job-item">' +
+          '<div class="jc-my-job-main">' +
+            '<div class="jc-my-job-title">' + esc(j.baslik || 'Başlıksız') + '</div>' +
+            '<div class="jc-my-job-meta">' + esc(j.sehir || '') + date + '</div>' +
+          '</div>' +
+          '<div class="jc-my-job-right">' +
+            '<span class="jc-job-status jc-job-status--' + (j.durum || 'taslak') + '">' + statusLabel(j.durum) + '</span>' +
+            '<div class="jc-my-job-acts">' +
+              '<button class="jc-my-job-btn" data-edit="' + j.id + '" title="Düzenle">✏️</button>' +
+              (j.durum === 'yayinda' ? '<button class="jc-my-job-btn" data-close="' + j.id + '" title="Kapat">⏸️</button>' : '') +
+              (j.durum === 'taslak'  ? '<button class="jc-my-job-btn" data-publish-id="' + j.id + '" title="Yayınla">🚀</button>' : '') +
+              '<button class="jc-my-job-btn jc-my-job-btn--del" data-delete="' + j.id + '" title="Sil">🗑️</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── Job operations ──────────────────────────────────────── */
+    function upsertJob(job, durum) {
+      var jobs = loadMyJobs();
+      job.durum = durum;
+      job.tarih = job.tarih || new Date().toISOString().split('T')[0];
+      if (editingId) {
+        var idx = -1;
+        for (var i = 0; i < jobs.length; i++) { if (jobs[i].id === editingId) { idx = i; break; } }
+        if (idx !== -1) { job.id = editingId; jobs[idx] = job; }
+        else { job.id = editingId; jobs.unshift(job); }
+      } else {
+        job.id = 'ilan_' + Date.now();
+        editingId = job.id;
+        jobs.unshift(job);
+      }
+      saveMyJobs(jobs);
+      return job;
+    }
+
+    function publishJob() {
+      clearErrors();
+      var errors = validate();
+      if (errors.length) { showErrors(errors); return; }
+      var job = upsertJob(readForm(), 'yayinda');
+      renderMyJobs();
+      updateStatus('yayinda');
+      updateEditBadge(job);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.KBMotion) KBMotion.showSuccess('İlan yayınlandı!', 'Kurye havuzunda görünmeye başladı.', 2600);
+    }
+
+    function saveDraftJob() {
+      var job = upsertJob(readForm(), 'taslak');
+      renderMyJobs();
+      updateStatus('taslak');
+      updateEditBadge(job);
+      if (window.KBMotion) KBMotion.showSuccess('Taslak kaydedildi', '', 1600);
+    }
+
+    function editJobById(id) {
+      var jobs = loadMyJobs();
+      var job = null;
+      for (var i = 0; i < jobs.length; i++) { if (jobs[i].id === id) { job = jobs[i]; break; } }
+      if (!job) return;
+      editingId = id;
+      fillForm(job);
+      updateStatus(job.durum);
+      updateEditBadge(job);
+      clearErrors();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeJobById(id) {
+      var jobs = loadMyJobs();
+      for (var i = 0; i < jobs.length; i++) {
+        if (jobs[i].id === id) { jobs[i].durum = 'kapali'; break; }
+      }
+      saveMyJobs(jobs);
+      renderMyJobs();
+      if (window.KBMotion) KBMotion.showSuccess('İlan kapatıldı', '', 1600);
+    }
+
+    function publishJobById(id) {
+      var jobs = loadMyJobs();
+      for (var i = 0; i < jobs.length; i++) {
+        if (jobs[i].id === id) { jobs[i].durum = 'yayinda'; break; }
+      }
+      saveMyJobs(jobs);
+      renderMyJobs();
+      if (window.KBMotion) KBMotion.showSuccess('İlan yayınlandı!', '', 1800);
+    }
+
+    function deleteJobById(id) {
+      if (!confirm('Bu ilan kalıcı olarak silinecek. Devam edilsin mi?')) return;
+      var jobs = loadMyJobs().filter(function(j) { return j.id !== id; });
+      saveMyJobs(jobs);
+      if (editingId === id) { editingId = null; resetForm(); }
+      renderMyJobs();
+      if (window.KBMotion) KBMotion.showSuccess('İlan silindi', '', 1500);
+    }
+
+    /* ── Auto-save (debounced) ───────────────────────────────── */
+    function autosaveDraft() {
+      if (!editingId) return;
+      var jobs = loadMyJobs();
+      var found = false;
+      for (var i = 0; i < jobs.length; i++) {
+        if (jobs[i].id === editingId) {
+          var job = readForm();
+          job.id    = editingId;
+          job.durum = jobs[i].durum;
+          job.tarih = jobs[i].tarih;
+          jobs[i]   = job;
+          found = true;
+          break;
+        }
+      }
+      if (found) saveMyJobs(jobs);
+    }
+
+    /* ── Wire form ───────────────────────────────────────────── */
+    function wireForm() {
+      var layout = document.getElementById('jcLayout');
+
+      /* Live preview + completion on any input */
+      if (layout) {
+        layout.addEventListener('input', function() {
+          clearTimeout(debTimer);
+          debTimer = setTimeout(function() {
+            updatePreview();
+            updateCompletion();
+            autosaveDraft();
+          }, 300);
+        });
+        layout.addEventListener('change', function() {
+          updatePreview();
+          updateCompletion();
+        });
+      }
+
+      /* Publish */
+      var pubBtn = document.getElementById('jcPublishBtn');
+      if (pubBtn) pubBtn.addEventListener('click', publishJob);
+
+      /* Draft */
+      var draftBtn = document.getElementById('jcDraftBtn');
+      if (draftBtn) draftBtn.addEventListener('click', saveDraftJob);
+
+      /* Reset / New */
+      var resetBtn = document.getElementById('jcResetBtn');
+      if (resetBtn) resetBtn.addEventListener('click', function() {
+        if (!confirm('Formu tamamen temizlemek istiyor musunuz?')) return;
+        resetForm();
+      });
+      var newBtn = document.getElementById('jcNewBtn');
+      if (newBtn) newBtn.addEventListener('click', function() {
+        if (!confirm('Yeni ilan oluşturmak için mevcut formu sıfırlayacaksınız. Devam?')) return;
+        resetForm();
+      });
+
+      /* My jobs list delegation */
+      var myJobsList = document.getElementById('jcMyJobsList');
+      if (myJobsList) {
+        myJobsList.addEventListener('click', function(e) {
+          var editBtn    = e.target.closest('[data-edit]');
+          var delBtn     = e.target.closest('[data-delete]');
+          var closeBtn   = e.target.closest('[data-close]');
+          var pubIdBtn   = e.target.closest('[data-publish-id]');
+          if (editBtn)  { editJobById(editBtn.getAttribute('data-edit'));        return; }
+          if (delBtn)   { deleteJobById(delBtn.getAttribute('data-delete'));     return; }
+          if (closeBtn) { closeJobById(closeBtn.getAttribute('data-close'));     return; }
+          if (pubIdBtn) { publishJobById(pubIdBtn.getAttribute('data-publish-id')); return; }
+        });
+      }
+
+      /* Salary formatting */
+      ['jcMaasMin','jcMaasMax'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el || el._jcFmt) return;
+        el._jcFmt = true;
+        el.addEventListener('blur',  function() { var n = parseTL(el.value); el.value = n ? fmtTL(n) : ''; });
+        el.addEventListener('focus', function() { var n = parseTL(el.value); el.value = n ? String(n) : ''; });
+      });
+    }
+
+    /* ── Init ────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.KB) return;
+      KB.ready().then(function() {
+
+        /* Auto-fill business name */
+        var isletmeEl = document.getElementById('jcIsletme');
+        if (isletmeEl) {
+          try {
+            var sess = KB.session && KB.session();
+            var prof = sess && sess.profile;
+            if (prof && prof.ad) isletmeEl.value = prof.ad;
+            else {
+              var stored = localStorage.getItem('kb_profile_name_' + (sess && sess.user && sess.user.id || 'demo'));
+              if (stored) isletmeEl.value = stored;
+            }
+          } catch (e) {}
+        }
+
+        /* Role guard: only isletme or firma can access this page */
+        try {
+          var role = KB.getRole && KB.getRole();
+          if (role && role !== 'isletme' && role !== 'firma' && role !== 'guest') {
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+              document.querySelector('.app-content').innerHTML = '<div class="card" style="padding:40px;text-align:center"><div style="font-size:2rem;margin-bottom:12px">🚫</div><h2>Erişim Kısıtlı</h2><p style="color:var(--text-2);margin:12px 0">Bu sayfa yalnızca işletme ve firma hesapları içindir.</p><a href="panel-kurye.html" class="btn btn--primary">Panele Dön</a></div>';
+              return;
+            }
+          }
+        } catch(e) {}
+
+        /* Check ?edit= URL param */
+        var editId = KB.getParam && KB.getParam('edit');
+        if (editId) {
+          var jobs = loadMyJobs();
+          for (var i = 0; i < jobs.length; i++) {
+            if (jobs[i].id === editId) {
+              editingId = editId;
+              fillForm(jobs[i]);
+              updateStatus(jobs[i].durum);
+              updateEditBadge(jobs[i]);
+              break;
+            }
+          }
+        }
+
+        wireForm();
+        renderMyJobs();
+        updatePreview();
+        updateCompletion();
+      });
+    });
+
+  })();
+  </script>
+
+</body>
+</html>

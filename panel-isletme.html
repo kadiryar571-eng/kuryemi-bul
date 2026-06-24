@@ -110,11 +110,14 @@
       <div class="panel-box">
         <div class="panel-box__head">
           <h3>İlanlarım</h3>
+          <a href="ilan-olustur.html" class="btn btn--primary btn--sm">+ Yeni İlan Oluştur</a>
         </div>
         <div class="panel-box__body">
           <div id="isletmeIlan">
             <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:70%"></span></span></div></div>
           </div>
+          <!-- localStorage jobs (offline / local mode) -->
+          <div id="isletmeIlanLocal" style="margin-top:16px"></div>
         </div>
       </div>
     </div>
@@ -282,6 +285,44 @@
       } catch(err) {
         console.warn('Welcome block error:', err);
       }
+
+      /* ── LocalStorage ilan listesi ── */
+      try {
+        var lsUid = 'demo';
+        try {
+          var lsSess = window.KB && KB.session && KB.session();
+          if (lsSess && lsSess.user && lsSess.user.id) lsUid = lsSess.user.id;
+        } catch(e) {}
+
+        var lsJobs = [];
+        try { lsJobs = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + lsUid)) || []; } catch(e) {}
+
+        var lsHost = document.getElementById('isletmeIlanLocal');
+        if (lsHost && lsJobs.length) {
+          function lsStatusBadge(s) {
+            var cls = s === 'yayinda' ? 'jc-job-status--yayinda' : s === 'kapali' ? 'jc-job-status--kapali' : 'jc-job-status--taslak';
+            var lbl = { yayinda: 'Yayında', taslak: 'Taslak', kapali: 'Kapalı' }[s] || s;
+            return '<span class="jc-job-status ' + cls + '">' + lbl + '</span>';
+          }
+          lsHost.innerHTML =
+            '<div style="font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:10px">📋 Oluşturduğunuz İlanlar (' + lsJobs.length + ')</div>' +
+            lsJobs.map(function(j) {
+              var loc = [j.sehir, j.bolge].filter(Boolean).join(' · ');
+              return '<div class="jc-ls-item">' +
+                '<div class="jc-ls-main">' +
+                  '<div class="jc-ls-title">' + (j.baslik || 'Başlıksız') + '</div>' +
+                  '<div class="jc-ls-meta">' + (loc || '') + (j.tarih ? ' · ' + j.tarih : '') + '</div>' +
+                '</div>' +
+                '<div class="jc-ls-right">' +
+                  lsStatusBadge(j.durum) +
+                  '<div class="jc-ls-acts">' +
+                    '<a href="ilan-olustur.html?edit=' + j.id + '" class="btn btn--ghost btn--sm">Düzenle</a>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            }).join('');
+        }
+      } catch(e) {}
     });
   </script>
 </body>

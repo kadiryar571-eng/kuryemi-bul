@@ -3121,7 +3121,112 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .pref-row__label { min-width:80px; }
 }
 
-/* ─── 53. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 53. İLAN OLUŞTURMA ─────────────────────────────────────── */
+
+/* Two-column layout */
+.jc-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+.jc-form-col { display: flex; flex-direction: column; gap: 20px; }
+.jc-side-col { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Completion bar */
+.jc-completion-wrap { display: flex; align-items: center; gap: 14px; padding: 11px 16px; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg); }
+.jc-completion__bar-wrap { flex: 1; }
+.jc-completion__label { font-size: 0.72rem; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+.jc-completion__bar { height: 5px; background: var(--border); border-radius: var(--radius-full); overflow: hidden; }
+.jc-completion__fill { height: 100%; background: var(--primary); border-radius: var(--radius-full); transition: width .4s ease; }
+.jc-completion__pct { font-size: 0.9rem; font-weight: 700; color: var(--primary); min-width: 34px; text-align: right; flex-shrink: 0; }
+
+/* Form inputs (jc namespace) */
+.jc-input, .jc-select, .jc-textarea { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 11px; font-size: 0.85rem; color: var(--text); background: var(--surface); font-family: inherit; transition: border-color .15s, box-shadow .15s; box-sizing: border-box; width: 100%; }
+.jc-input:focus, .jc-select:focus, .jc-textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(0,87,255,.07); }
+.jc-input.is-err, .jc-select.is-err, .jc-textarea.is-err { border-color: var(--error, #DC2626); }
+.jc-input[readonly] { background: var(--surface-2); color: var(--text-2); cursor: default; }
+.jc-textarea { resize: vertical; line-height: 1.5; min-height: 80px; }
+
+/* Field */
+.jc-field { display: flex; flex-direction: column; gap: 5px; }
+.jc-field > label { font-size: 0.76rem; font-weight: 500; color: var(--text-2); }
+.jc-field .jc-hint, .jc-hint { font-size: 0.7rem; color: var(--text-3); }
+.jc-err { font-size: 0.72rem; color: #DC2626; min-height: 15px; }
+
+/* Checkboxes */
+.jc-check-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.jc-check { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); transition: border-color .15s, background .15s; }
+.jc-check:hover { border-color: var(--primary); background: var(--primary-light); }
+.jc-check input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--primary); flex-shrink: 0; cursor: pointer; }
+.jc-check input[type=checkbox]:checked + span { color: var(--primary); font-weight: 500; }
+.jc-check span { font-size: 0.81rem; color: var(--text-2); line-height: 1.3; }
+
+/* Form actions bar */
+.jc-form-actions { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg); align-items: center; }
+
+/* Error summary */
+.jc-err-summary { padding: 12px 16px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius); }
+.jc-err-summary__title { font-size: 0.82rem; font-weight: 600; color: #DC2626; margin-bottom: 6px; }
+.jc-err-summary ul { margin: 0; padding-left: 16px; }
+.jc-err-summary li { font-size: 0.78rem; color: #DC2626; margin-bottom: 2px; }
+
+/* Preview panel */
+.jc-preview { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.jc-preview__head { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.jc-preview__label { font-size: 0.77rem; font-weight: 600; color: var(--text-2); }
+.jc-preview__hint { font-size: 0.68rem; color: var(--text-3); }
+.jc-preview__body { padding: 16px; }
+.jc-preview-empty { text-align: center; padding: 28px 12px; }
+.jc-preview-empty__ico { font-size: 1.8rem; margin-bottom: 8px; }
+.jc-preview-empty__txt { font-size: 0.78rem; color: var(--text-3); line-height: 1.5; }
+
+/* My jobs list (side panel) */
+.jc-my-job-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.jc-my-job-item:last-child { border-bottom: none; }
+.jc-my-job-main { flex: 1; min-width: 0; }
+.jc-my-job-title { font-size: 0.83rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jc-my-job-meta { font-size: 0.72rem; color: var(--text-3); margin-top: 2px; }
+.jc-my-job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.jc-my-job-acts { display: flex; gap: 3px; }
+.jc-my-job-btn { border: none; background: none; cursor: pointer; padding: 3px 6px; border-radius: var(--radius); font-size: 0.85rem; transition: background .12s; line-height: 1; }
+.jc-my-job-btn:hover { background: var(--surface-2); }
+.jc-my-job-btn--del:hover { background: #FEF2F2; }
+.jc-jobs-empty { text-align: center; padding: 20px; font-size: 0.8rem; color: var(--text-3); }
+
+/* Job status badges */
+.jc-job-status { display: inline-flex; padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.67rem; font-weight: 600; white-space: nowrap; }
+.jc-job-status--yayinda { background: #DCFCE7; color: #15803D; }
+.jc-job-status--taslak  { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+.jc-job-status--kapali  { background: #FEF2F2; color: #DC2626; }
+
+/* Edit banner */
+.jc-edit-badge { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #EFF6FF; border: 1px solid rgba(0,87,255,.2); border-radius: var(--radius); font-size: 0.8rem; color: var(--primary); margin-top: 10px; }
+.jc-edit-badge__txt { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Stat chip in section header */
+.jc-stat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.72rem; font-weight: 600; }
+.jc-stat-chip--yayinda { background: #DCFCE7; color: #15803D; }
+.jc-stat-chip--taslak  { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
+
+/* Panel-isletme: my jobs section header */
+.ilan-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.ilan-panel-head h3 { margin: 0; }
+.jc-ls-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; }
+.jc-ls-item:last-child { margin-bottom: 0; }
+.jc-ls-main { flex: 1; min-width: 0; }
+.jc-ls-title { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.jc-ls-meta { font-size: 0.76rem; color: var(--text-3); }
+.jc-ls-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.jc-ls-acts { display: flex; gap: 6px; }
+
+@media (max-width: 960px) {
+  .jc-layout { grid-template-columns: 1fr; }
+  .jc-side-col { position: static; order: -1; }
+  .jc-preview { display: none; }
+}
+@media (max-width: 640px) {
+  .jc-check-grid { grid-template-columns: 1fr; }
+  .jc-form-actions { flex-direction: column; }
+  .jc-form-actions > .btn { width: 100%; }
+}
+
+/* ─── 54. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);
