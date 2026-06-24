@@ -2192,7 +2192,192 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .ss-biz-card  { min-width: 175px; }
 }
 
-/* ─── 45. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 45. BİLDİRİMLER MERKEZİ ─────────────────────────────── */
+.notif-center {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.notif-center__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.notif-center__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.notif-center__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notif-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.notif-center__sub {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.notif-clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), color var(--transition);
+}
+.notif-clear-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.notif-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.nf-pill {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.nf-pill.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.nf-pill:not(.is-active):hover { background: var(--border); }
+
+.notif-list { display: flex; flex-direction: column; }
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+  position: relative;
+}
+.notif-item:not(:last-child) { border-bottom: 1px solid var(--border); }
+.notif-item.is-unread {
+  background: #F8F9FF;
+  border-left: 3px solid var(--primary);
+  padding-left: 7px;
+}
+.notif-item:not(.is-unread):hover { background: var(--surface-2); }
+
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+.notif-dot--ilan        { background: #0057FF; }
+.notif-dot--basvuru     { background: #16A34A; }
+.notif-dot--mesaj       { background: #7C3AED; }
+.notif-dot--profil      { background: #D97706; }
+.notif-dot--hatirlatma  { background: #DC2626; }
+
+.notif-body   { flex: 1; min-width: 0; }
+
+.notif-text {
+  font-size: 13.5px;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+
+.notif-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notif-time { font-size: 11.5px; color: var(--text-3); }
+
+.notif-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.notif-badge--ilan        { background: #EBF2FF; color: #0057FF; }
+.notif-badge--basvuru     { background: #DCFCE7; color: #16A34A; }
+.notif-badge--mesaj       { background: #EDE9FE; color: #7C3AED; }
+.notif-badge--profil      { background: #FEF3C7; color: #D97706; }
+.notif-badge--hatirlatma  { background: #FEE2E2; color: #DC2626; }
+
+.notif-dismiss {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  font-size: 16px;
+  color: var(--text-3);
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.notif-dismiss:hover { background: var(--border); color: var(--text); }
+
+.notif-empty {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+@media (max-width: 680px) {
+  .notif-center { padding: 14px; }
+  .notif-center__head { flex-direction: column; gap: 8px; }
+  .notif-clear-btn { align-self: flex-start; }
+}
+
+/* ─── 46. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);

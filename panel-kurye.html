@@ -219,6 +219,27 @@
       </div>
     </div>
 
+    <!-- Bildirimler Merkezi -->
+    <div class="notif-center" id="notifCenter">
+      <div class="notif-center__head">
+        <div>
+          <div class="notif-center__title-row">
+            <span class="notif-center__title">Bildirimler</span>
+            <span class="notif-count-badge" id="notifCountBadge" style="display:none">0</span>
+          </div>
+          <div class="notif-center__sub">Sana özel son güncellemeler burada.</div>
+        </div>
+        <button class="notif-clear-btn" id="notifClearBtn">Tümünü Okundu İşaretle</button>
+      </div>
+      <div class="notif-filters" id="notifFilters">
+        <button class="nf-pill is-active" data-nf="tumu">Tümü</button>
+        <button class="nf-pill" data-nf="basvurular">Başvurular</button>
+        <button class="nf-pill" data-nf="mesajlar">Mesajlar</button>
+        <button class="nf-pill" data-nf="sistem">Sistem</button>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+    </div>
+
     <!-- Tab nav -->
     <nav class="dash__nav">
       <button data-tab="ana">Genel Bakış</button>
@@ -664,6 +685,129 @@
     }
     /* ─── /Smart Suggestions ─────────────────────────────────── */
 
+    /* ─── Bildirimler Merkezi ─────────────────────────────────── */
+    var MOCK_NOTIFS = [
+      { id: 'n1', type: 'ilan',       text: 'Sana uygun yeni bir ilan yayınlandı: "İstanbul Avrupa Kurye"',             ts: Date.now() - 1000 * 60 * 8,    unread: true,  href: 'ilanlar.html' },
+      { id: 'n2', type: 'basvuru',    text: 'Başvurunuz görüntülendi: "Kadıköy Şube Kurye Pozisyonu"',                  ts: Date.now() - 1000 * 60 * 45,   unread: true,  href: 'eslesme.html' },
+      { id: 'n3', type: 'mesaj',      text: "Kurye Ekspres'ten yeni bir mesajınız var.",                                 ts: Date.now() - 1000 * 60 * 90,   unread: true,  href: 'mesajlar.html' },
+      { id: 'n4', type: 'profil',     text: 'Profilini tamamla: Araç bilgilerin eksik, görünürlüğünü artır.',           ts: Date.now() - 1000 * 3600 * 3,  unread: false, href: 'profil-duzenle.html' },
+      { id: 'n5', type: 'basvuru',    text: 'Teklif aldınız: Hızlı Lojistik A.Ş. profilinizi inceledi.',               ts: Date.now() - 1000 * 3600 * 6,  unread: false, href: 'eslesme.html' },
+      { id: 'n6', type: 'hatirlatma', text: 'Kaydettiğiniz "Üsküdar Motor Kurye" ilanı 2 gün içinde sona eriyor.',     ts: Date.now() - 1000 * 3600 * 12, unread: false, href: 'ilanlar.html' },
+      { id: 'n7', type: 'mesaj',      text: 'Ünlü Nakliyat\'tan yanıt bekliyorsunuz, mesajlarınızı kontrol edin.',     ts: Date.now() - 1000 * 3600 * 24, unread: false, href: 'mesajlar.html' },
+      { id: 'n8', type: 'ilan',       text: '"Beşiktaş Bölgesi Moto Kurye" ilanı — bölgen ile eşleşti.',               ts: Date.now() - 1000 * 3600 * 30, unread: false, href: 'ilanlar.html' },
+    ];
+    var NOTIF_CFG = {
+      ilan:       { label: 'Yeni İlan',    cat: 'sistem' },
+      basvuru:    { label: 'Başvuru',      cat: 'basvurular' },
+      mesaj:      { label: 'Mesaj',        cat: 'mesajlar' },
+      profil:     { label: 'Profil',       cat: 'sistem' },
+      hatirlatma: { label: 'Hatırlatma',  cat: 'sistem' },
+    };
+    var notifDismissed = [];
+    var notifActiveFilter = 'tumu';
+
+    function notifRelTime(ts) {
+      var diff = Date.now() - ts;
+      var m = Math.floor(diff / 60000);
+      if (m < 1)  return 'Az önce';
+      if (m < 60) return m + ' dk önce';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + ' sa önce';
+      var d = Math.floor(h / 24);
+      if (d === 1) return 'Dün';
+      return d + ' gün önce';
+    }
+
+    function buildNotifItem(n) {
+      var cfg = NOTIF_CFG[n.type] || { label: n.type, cat: 'sistem' };
+      var div = document.createElement('div');
+      div.className = 'notif-item' + (n.unread ? ' is-unread' : '');
+      div.dataset.id = n.id;
+      div.innerHTML =
+        '<span class="notif-dot notif-dot--' + n.type + '"></span>' +
+        '<div class="notif-body">' +
+          '<div class="notif-text">' + n.text + '</div>' +
+          '<div class="notif-meta">' +
+            '<span class="notif-time">' + notifRelTime(n.ts) + '</span>' +
+            '<span class="notif-badge notif-badge--' + n.type + '">' + cfg.label + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<button class="notif-dismiss" data-dismiss="' + n.id + '" aria-label="Kapat">×</button>';
+      return div;
+    }
+
+    function updateNotifBadge() {
+      var badge = document.getElementById('notifCountBadge');
+      if (!badge) return;
+      var unread = MOCK_NOTIFS.filter(function(n){ return n.unread && notifDismissed.indexOf(n.id) === -1; }).length;
+      badge.textContent = unread;
+      badge.style.display = unread > 0 ? '' : 'none';
+    }
+
+    function renderNotifList() {
+      var list = document.getElementById('notifList');
+      if (!list) return;
+      var items = MOCK_NOTIFS.filter(function(n) {
+        if (notifDismissed.indexOf(n.id) !== -1) return false;
+        if (notifActiveFilter === 'tumu') return true;
+        var cfg = NOTIF_CFG[n.type] || {};
+        return cfg.cat === notifActiveFilter;
+      });
+      items.sort(function(a, b) { return b.ts - a.ts; });
+      if (!items.length) {
+        list.innerHTML = '<div class="notif-empty">Bildirim yok.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      items.forEach(function(n) { list.appendChild(buildNotifItem(n)); });
+      updateNotifBadge();
+    }
+
+    function initNotifCenter() {
+      renderNotifList();
+      var filters = document.getElementById('notifFilters');
+      if (filters) {
+        filters.addEventListener('click', function(e) {
+          var pill = e.target.closest('.nf-pill');
+          if (!pill) return;
+          filters.querySelectorAll('.nf-pill').forEach(function(p){ p.classList.remove('is-active'); });
+          pill.classList.add('is-active');
+          notifActiveFilter = pill.dataset.nf;
+          renderNotifList();
+        });
+      }
+      var list = document.getElementById('notifList');
+      if (list) {
+        list.addEventListener('click', function(e) {
+          var dismissBtn = e.target.closest('.notif-dismiss');
+          if (dismissBtn) {
+            e.stopPropagation();
+            notifDismissed.push(dismissBtn.dataset.dismiss);
+            renderNotifList();
+            return;
+          }
+          var item = e.target.closest('.notif-item');
+          if (item) {
+            var id = item.dataset.id;
+            var n = MOCK_NOTIFS.filter(function(x){ return x.id === id; })[0];
+            if (n) { n.unread = false; }
+            item.classList.remove('is-unread');
+            updateNotifBadge();
+            if (n && n.href) { window.location.href = n.href; }
+          }
+        });
+      }
+      var clearBtn = document.getElementById('notifClearBtn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+          MOCK_NOTIFS.forEach(function(n){ n.unread = false; });
+          updateNotifBadge();
+          renderNotifList();
+        });
+      }
+    }
+    /* ─── /Bildirimler Merkezi ─────────────────────────────────── */
+
     function renderProfEngine(profile, role) {
       var el = document.getElementById('profEngine');
       if (!el || !profile) return;
@@ -817,12 +961,14 @@
         initJobFeed(profile ? profile.sehir : '');
         initTimeline();
         initSmartSugg(profile ? profile.sehir : '');
+        initNotifCenter();
 
       } catch(err) {
         console.warn('Welcome block error:', err);
         initJobFeed('');
         initTimeline();
         initSmartSugg('');
+        initNotifCenter();
       }
     });
   </script>
