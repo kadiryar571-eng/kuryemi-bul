@@ -59,11 +59,33 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/prefs.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderListings) KBApp.renderListings();
+
+      /* Tercih banner — kullanıcının tercihleri varsa filtre çubuğu üstünde göster */
+      if (window.KBPrefs && KBPrefs.hasPrefs()) {
+        var filterBar = document.querySelector('.filter-bar');
+        if (filterBar) {
+          var banner = document.createElement('div');
+          banner.className = 'pref-banner';
+          banner.innerHTML =
+            '<span class="pref-banner__ico">⚙️</span>' +
+            '<div class="pref-banner__body">' +
+              '<div class="pref-banner__title">Tercihleriniz aktif</div>' +
+              '<div class="pref-banner__sub">İlanlar çalışma tercihlerinize göre puanlanıyor</div>' +
+            '</div>' +
+            '<span class="pref-banner__btn">Uyuma Göre Sırala</span>';
+          banner.addEventListener('click', function () {
+            var sel = document.getElementById('jobSort');
+            if (sel) { sel.value = 'match'; sel.dispatchEvent(new Event('change')); }
+          });
+          filterBar.parentNode.insertBefore(banner, filterBar);
+        }
+      }
     });
   </script>
 </body>

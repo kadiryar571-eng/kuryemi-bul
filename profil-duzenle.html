@@ -786,6 +786,137 @@
       </div>
     </div>
 
+    <!-- Çalışma Tercihlerim -->
+    <div class="pi-card" id="prefCard" style="display:none">
+      <div class="pi-sec-head">
+        <div>
+          <div class="pi-sec-title">Çalışma Tercihlerim</div>
+          <div class="pi-sec-sub">İş eşleştirme ve ilan önerilerini etkiler</div>
+        </div>
+        <button class="btn btn--sm btn--ghost" id="prefEditBtn">Düzenle</button>
+      </div>
+
+      <!-- Tamamlanma çubuğu -->
+      <div class="pref-completion" id="prefCompletion">
+        <div class="pref-completion__bar-wrap">
+          <div class="pref-completion__label">Profil doluluk oranı</div>
+          <div class="pref-completion__bar"><div class="pref-completion__fill" id="prefBar" style="width:0%"></div></div>
+        </div>
+        <div class="pref-completion__pct" id="prefPct">0%</div>
+      </div>
+
+      <!-- Görünüm modu -->
+      <div id="prefView">
+        <!-- dolu hâl: pref-view, boş hâl: pref-empty -->
+      </div>
+
+      <!-- Düzenleme formu -->
+      <div class="pref-form" id="prefForm">
+
+        <!-- 1. Çalışma Tipi -->
+        <div class="pref-section">
+          <div class="pref-section-title">Çalışma Tipi</div>
+          <div class="pref-multi" id="prefTiplerWrap">
+            <button type="button" class="pref-toggle" data-pref-toggle="calisma_tipleri" data-val="Tam Zamanlı">Tam Zamanlı</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="calisma_tipleri" data-val="Yarı Zamanlı">Yarı Zamanlı</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="calisma_tipleri" data-val="Serbest">Serbest / Freelance</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="calisma_tipleri" data-val="Proje Bazlı">Proje Bazlı</button>
+          </div>
+        </div>
+
+        <!-- 2. Sektör Deneyimi -->
+        <div class="pref-section">
+          <div class="pref-section-title">Sektör Deneyimi</div>
+          <div class="pref-multi" id="prefSektorWrap">
+            <button type="button" class="pref-toggle" data-pref-toggle="sektorler" data-val="E-Ticaret">E-Ticaret</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="sektorler" data-val="Yemek">Yemek Dağıtım</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="sektorler" data-val="Lojistik">Lojistik / Kargo</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="sektorler" data-val="Market">Market / Şarküteri</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="sektorler" data-val="Eczane">Eczane</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="sektorler" data-val="Genel">Genel Kurye</button>
+          </div>
+        </div>
+
+        <!-- 3. Maaş Beklentisi -->
+        <div class="pref-section">
+          <div class="pref-section-title">Maaş Beklentisi</div>
+          <div class="pref-salary-row">
+            <div>
+              <label class="pref-form-label" for="prefMinMaas">Minimum (TL/ay)</label>
+              <input class="pref-form-input" id="prefMinMaas" type="text" inputmode="numeric" placeholder="örn. 18.000">
+            </div>
+            <div class="pref-salary-sep">—</div>
+            <div>
+              <label class="pref-form-label" for="prefMaxMaas">Maksimum (TL/ay)</label>
+              <input class="pref-form-input" id="prefMaxMaas" type="text" inputmode="numeric" placeholder="örn. 25.000">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Ödeme Modeli -->
+        <div class="pref-section">
+          <div class="pref-section-title">Tercih Edilen Ödeme Modeli</div>
+          <select class="pref-form-select" id="prefOdeme">
+            <option value="">Seçiniz</option>
+            <option value="Sabit Maaş">Sabit Maaş</option>
+            <option value="Sipariş Başı">Sipariş Başı</option>
+            <option value="Saatlik">Saatlik</option>
+            <option value="Karma">Sabit + Performans Primi</option>
+          </select>
+        </div>
+
+        <!-- 5. Vardiya Tercihi -->
+        <div class="pref-section">
+          <div class="pref-section-title">Vardiya Tercihi</div>
+          <div class="pref-multi">
+            <button type="button" class="pref-toggle" data-pref-toggle="vardiyalar" data-val="Sabah">Sabah (06-12)</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="vardiyalar" data-val="Öğlen">Öğlen (12-16)</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="vardiyalar" data-val="Akşam">Akşam (16-22)</button>
+            <button type="button" class="pref-toggle" data-pref-toggle="vardiyalar" data-val="Gece">Gece (22-06)</button>
+          </div>
+        </div>
+
+        <!-- 6. Çalışma Mesafesi -->
+        <div class="pref-section">
+          <div class="pref-section-title">Maksimum Çalışma Mesafesi</div>
+          <div class="pref-range-wrap">
+            <span class="pref-range-edge">1 km</span>
+            <input class="pref-range" type="range" id="prefMesafe" min="1" max="50" value="15">
+            <span class="pref-range-edge">50 km</span>
+            <span class="pref-range-val" id="prefMesafeVal">15 km</span>
+          </div>
+        </div>
+
+        <!-- 7. Çalışma Faydaları -->
+        <div class="pref-section">
+          <div class="pref-section-title">İstenen Çalışma Faydaları</div>
+          <div class="pref-checks">
+            <label class="pref-check"><input type="checkbox" id="pfSGK" value="SGK"> <span>SGK / Sigorta</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfYemek" value="Yemek Kartı"> <span>Yemek Kartı</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfYakıt" value="Yakıt Desteği"> <span>Yakıt Desteği</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfAraç" value="Araç Desteği"> <span>Araç / Bisiklet</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfPrim" value="Performans Primi"> <span>Performans Primi</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfEsnek" value="Esnek Saatler"> <span>Esnek Saatler</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfSaglik" value="Sağlık Sigortası"> <span>Özel Sağlık Sigortası</span></label>
+            <label class="pref-check"><input type="checkbox" id="pfEgitim" value="Eğitim Desteği"> <span>Eğitim / Kurs Desteği</span></label>
+          </div>
+        </div>
+
+        <!-- Form aksiyonları -->
+        <div class="pref-actions">
+          <button type="button" class="btn btn--primary btn--sm" id="prefSaveBtn">Kaydet</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="prefCancelBtn">İptal</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="prefResetBtn" style="margin-left:auto;color:var(--error)">Sıfırla</button>
+        </div>
+      </div>
+
+      <!-- Aktivite günlüğü -->
+      <div class="exp-activity-wrap" id="prefActivityWrap" style="display:none">
+        <div class="exp-activity-title">Son İşlemler</div>
+        <div id="prefActivityList"></div>
+      </div>
+    </div>
+
   </div><!-- /.app-content -->
 
   <div id="app-footer"></div>
@@ -795,6 +926,7 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/prefs.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
@@ -1027,6 +1159,8 @@
       if (belgeCard) belgeCard.style.display = role === 'kurye' ? '' : 'none';
       var expCard = document.getElementById('expCard');
       if (expCard) expCard.style.display = role === 'kurye' ? '' : 'none';
+      var prefCard = document.getElementById('prefCard');
+      if (prefCard) prefCard.style.display = role === 'kurye' ? '' : 'none';
     }
 
     document.querySelectorAll('.pi-role-pill').forEach(function(p) {
@@ -2243,6 +2377,291 @@
       if (!document.getElementById('expTimeline')) return;
       var ready = (window.KB && KB.ready) ? KB.ready() : Promise.resolve();
       ready.then(function() { wireForm(); render(); renderActivityLog(); }).catch(function() { wireForm(); render(); renderActivityLog(); });
+    });
+
+  })();
+  </script>
+
+  <!-- ── Çalışma Tercihlerim Modülü ─────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Sabitler ─────────────────────────────────────────── */
+    var DEFAULTS = { calisma_tipleri: [], sektorler: [], min_maas: '', max_maas: '', odeme_modeli: '', vardiyalar: [], mesafe_km: 15, faydalar: [] };
+    var FAYDA_IDS = ['pfSGK','pfYemek','pfYakıt','pfAraç','pfPrim','pfEsnek','pfSaglik','pfEgitim'];
+
+    /* ── Storage ──────────────────────────────────────────── */
+    function uid() {
+      try { if (window.KB && KB.SESSION && KB.SESSION.user) return KB.SESSION.user.id; } catch (e) {}
+      return 'demo';
+    }
+    function loadPrefs() {
+      try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('kb_prefs_' + uid()))) || DEFAULTS; } catch (e) { return Object.assign({}, DEFAULTS); }
+    }
+    function savePrefs(p) {
+      try { localStorage.setItem('kb_prefs_' + uid(), JSON.stringify(p)); } catch (e) {}
+      if (window.KBPrefs) KBPrefs.bust();
+    }
+    function loadLog() {
+      try { return JSON.parse(localStorage.getItem('kb_prefs_log_' + uid())) || []; } catch (e) { return []; }
+    }
+    function addLog(msg) {
+      var log = loadLog();
+      log.unshift({ msg: msg, ts: new Date().toISOString() });
+      if (log.length > 30) log.length = 30;
+      try { localStorage.setItem('kb_prefs_log_' + uid(), JSON.stringify(log)); } catch (e) {}
+    }
+
+    /* ── Tamamlanma skoru ─────────────────────────────────── */
+    function completionScore(p) {
+      var s = 0;
+      if (p.calisma_tipleri && p.calisma_tipleri.length) s += 20;
+      if (p.sektorler && p.sektorler.length) s += 20;
+      if (p.min_maas) s += 15;
+      if (p.odeme_modeli) s += 15;
+      if (p.vardiyalar && p.vardiyalar.length) s += 15;
+      if (p.faydalar && p.faydalar.length) s += 15;
+      return s;
+    }
+
+    /* ── Render ───────────────────────────────────────────── */
+    function renderCompletion(p) {
+      var pct = completionScore(p);
+      var bar = document.getElementById('prefBar');
+      var pctEl = document.getElementById('prefPct');
+      if (bar) bar.style.width = pct + '%';
+      if (pctEl) pctEl.textContent = pct + '%';
+    }
+
+    function chip(label, primary) {
+      return '<span class="pref-chip' + (primary ? ' pref-chip--primary' : '') + '">' + escHtml(label) + '</span>';
+    }
+
+    function escHtml(s) {
+      return (s + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function buildRow(ico, label, valHtml) {
+      return '<div class="pref-row"><span class="pref-row__label">' + ico + ' ' + escHtml(label) + '</span><div class="pref-row__val">' + valHtml + '</div></div>';
+    }
+
+    function fmtMaas(v) {
+      var n = parseInt((v + '').replace(/\D/g, ''), 10);
+      return isNaN(n) ? '' : n.toLocaleString('tr-TR') + ' TL';
+    }
+
+    function parseMaas(s) {
+      return parseInt((s + '').replace(/\D/g, ''), 10) || '';
+    }
+
+    function renderView(p) {
+      var host = document.getElementById('prefView');
+      if (!host) return;
+      var score = completionScore(p);
+      if (score === 0) {
+        host.innerHTML = '<div class="pref-empty"><div class="pref-empty__ico">⚙️</div><div class="pref-empty__title">Henüz tercih belirlenmedi</div><div class="pref-empty__sub">Çalışma tercihlerinizi girerek size uygun ilanları daha kolay bulun.</div></div>';
+        return;
+      }
+      var rows = [];
+      if (p.calisma_tipleri && p.calisma_tipleri.length)
+        rows.push(buildRow('💼','Çalışma Tipi', p.calisma_tipleri.map(function(t){return chip(t,true);}).join('')));
+      if (p.sektorler && p.sektorler.length)
+        rows.push(buildRow('🏷️','Sektör', p.sektorler.map(function(t){return chip(t,false);}).join('')));
+      var maasStr = '';
+      if (p.min_maas) { maasStr += fmtMaas(p.min_maas); }
+      if (p.max_maas) { maasStr += (maasStr ? ' — ' : '') + fmtMaas(p.max_maas); }
+      if (maasStr) rows.push(buildRow('💰','Maaş Beklenti', chip(maasStr, false)));
+      if (p.odeme_modeli) rows.push(buildRow('🧾','Ödeme Modeli', chip(p.odeme_modeli, false)));
+      if (p.vardiyalar && p.vardiyalar.length)
+        rows.push(buildRow('🕐','Vardiya', p.vardiyalar.map(function(t){return chip(t,false);}).join('')));
+      if (p.mesafe_km) rows.push(buildRow('📍','Mesafe', chip('Maks. ' + p.mesafe_km + ' km', false)));
+      if (p.faydalar && p.faydalar.length)
+        rows.push(buildRow('✅','Faydalar', p.faydalar.map(function(t){return chip(t,false);}).join('')));
+      host.innerHTML = '<div class="pref-view">' + rows.join('') + '</div>';
+    }
+
+    /* ── Form fill ────────────────────────────────────────── */
+    function fillFormFromPrefs(p) {
+      /* Multi-toggles */
+      document.querySelectorAll('[data-pref-toggle]').forEach(function(btn) {
+        var group = btn.getAttribute('data-pref-toggle');
+        var val   = btn.getAttribute('data-val');
+        var arr   = p[group] || [];
+        btn.classList.toggle('is-active', arr.indexOf(val) !== -1);
+      });
+      /* Salary */
+      var minEl = document.getElementById('prefMinMaas');
+      var maxEl = document.getElementById('prefMaxMaas');
+      if (minEl) minEl.value = p.min_maas ? p.min_maas.toLocaleString('tr-TR') : '';
+      if (maxEl) maxEl.value = p.max_maas ? p.max_maas.toLocaleString('tr-TR') : '';
+      /* Payment model */
+      var od = document.getElementById('prefOdeme');
+      if (od) od.value = p.odeme_modeli || '';
+      /* Slider */
+      var sl = document.getElementById('prefMesafe');
+      var sv = document.getElementById('prefMesafeVal');
+      if (sl) { sl.value = p.mesafe_km || 15; }
+      if (sv) sv.textContent = (p.mesafe_km || 15) + ' km';
+      /* Benefits */
+      FAYDA_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.checked = (p.faydalar || []).indexOf(el.value) !== -1;
+      });
+    }
+
+    function readFormToPrefs() {
+      var p = Object.assign({}, DEFAULTS);
+      /* Multi-toggles */
+      document.querySelectorAll('[data-pref-toggle]').forEach(function(btn) {
+        if (!btn.classList.contains('is-active')) return;
+        var group = btn.getAttribute('data-pref-toggle');
+        var val   = btn.getAttribute('data-val');
+        if (!p[group]) p[group] = [];
+        p[group].push(val);
+      });
+      /* Salary */
+      var minEl = document.getElementById('prefMinMaas');
+      var maxEl = document.getElementById('prefMaxMaas');
+      p.min_maas = minEl ? parseMaas(minEl.value) : '';
+      p.max_maas = maxEl ? parseMaas(maxEl.value) : '';
+      /* Payment model */
+      var od = document.getElementById('prefOdeme');
+      p.odeme_modeli = od ? od.value : '';
+      /* Slider */
+      var sl = document.getElementById('prefMesafe');
+      p.mesafe_km = sl ? parseInt(sl.value, 10) : 15;
+      /* Benefits */
+      p.faydalar = [];
+      FAYDA_IDS.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.checked) p.faydalar.push(el.value);
+      });
+      return p;
+    }
+
+    /* ── Open / close form ────────────────────────────────── */
+    function openForm() {
+      var form = document.getElementById('prefForm');
+      var view = document.getElementById('prefView');
+      var comp = document.getElementById('prefCompletion');
+      if (form) form.classList.add('is-open');
+      if (view) view.style.display = 'none';
+      if (comp) comp.style.display = 'none';
+      fillFormFromPrefs(loadPrefs());
+    }
+
+    function closeForm() {
+      var form = document.getElementById('prefForm');
+      var view = document.getElementById('prefView');
+      var comp = document.getElementById('prefCompletion');
+      if (form) form.classList.remove('is-open');
+      if (view) view.style.display = '';
+      if (comp) comp.style.display = '';
+    }
+
+    /* ── Save ─────────────────────────────────────────────── */
+    function savePrefsForm() {
+      var p = readFormToPrefs();
+      savePrefs(p);
+      addLog('Tercihler güncellendi');
+      closeForm();
+      renderCompletion(p);
+      renderView(p);
+      renderActivityLog();
+      if (window.KBMotion) KBMotion.showSuccess('Tercihler kaydedildi', '', 2000);
+    }
+
+    function resetPrefs() {
+      if (!confirm('Tüm çalışma tercihleriniz silinecek. Devam edilsin mi?')) return;
+      var p = Object.assign({}, DEFAULTS);
+      savePrefs(p);
+      addLog('Tercihler sıfırlandı');
+      closeForm();
+      renderCompletion(p);
+      renderView(p);
+      renderActivityLog();
+      if (window.KBMotion) KBMotion.showSuccess('Tercihler sıfırlandı', '', 2000);
+    }
+
+    /* ── Activity log ─────────────────────────────────────── */
+    function renderActivityLog() {
+      var log   = loadLog();
+      var wrap  = document.getElementById('prefActivityWrap');
+      var list  = document.getElementById('prefActivityList');
+      if (!wrap || !list) return;
+      wrap.style.display = log.length ? '' : 'none';
+      if (!log.length) return;
+      list.innerHTML = log.slice(0, 10).map(function(e) {
+        var d = '';
+        try { d = new Date(e.ts).toLocaleString('tr-TR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); } catch(_) {}
+        return '<div class="exp-activity-item"><span class="exp-activity-msg">' + escHtml(e.msg) + '</span><span class="exp-activity-date">' + d + '</span></div>';
+      }).join('');
+    }
+
+    /* ── Wire form ────────────────────────────────────────── */
+    function wireForm() {
+      var card = document.getElementById('prefCard');
+      if (!card || card._prefWired) return;
+      card._prefWired = true;
+
+      /* Edit button */
+      var editBtn = document.getElementById('prefEditBtn');
+      if (editBtn) editBtn.addEventListener('click', openForm);
+
+      /* Save / Cancel / Reset */
+      var saveBtn   = document.getElementById('prefSaveBtn');
+      var cancelBtn = document.getElementById('prefCancelBtn');
+      var resetBtn  = document.getElementById('prefResetBtn');
+      if (saveBtn)   saveBtn.addEventListener('click', savePrefsForm);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeForm);
+      if (resetBtn)  resetBtn.addEventListener('click', resetPrefs);
+
+      /* Toggle buttons — event delegation */
+      var form = document.getElementById('prefForm');
+      if (form) {
+        form.addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-pref-toggle]');
+          if (!btn) return;
+          btn.classList.toggle('is-active');
+        });
+      }
+
+      /* Salary formatter */
+      ['prefMinMaas','prefMaxMaas'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el || el._prefFmt) return;
+        el._prefFmt = true;
+        el.addEventListener('blur', function() {
+          var n = parseMaas(el.value);
+          el.value = n ? n.toLocaleString('tr-TR') : '';
+        });
+        el.addEventListener('focus', function() {
+          var n = parseMaas(el.value);
+          el.value = n ? String(n) : '';
+        });
+      });
+
+      /* Slider live update */
+      var slider = document.getElementById('prefMesafe');
+      var slVal  = document.getElementById('prefMesafeVal');
+      if (slider && slVal) {
+        slider.addEventListener('input', function() {
+          slVal.textContent = slider.value + ' km';
+        });
+      }
+    }
+
+    /* ── Init ─────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.KB) return;
+      KB.ready().then(function() {
+        var p = loadPrefs();
+        wireForm();
+        renderCompletion(p);
+        renderView(p);
+        renderActivityLog();
+      });
     });
 
   })();

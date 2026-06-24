@@ -213,7 +213,9 @@
     var owner = l.owner_id === myPid;
     var applied = appliedSet[l.id];
     var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
-    var score = talentScore(l.id);
+    var prefScore = (window.KBPrefs && KBPrefs.hasPrefs()) ? KBPrefs.matchScore(l) : null;
+    var score = prefScore !== null ? prefScore : talentScore(l.id);
+    var scoreClass = prefScore !== null ? (prefScore >= 70 ? ' is-match-high' : prefScore < 40 ? ' is-match-low' : '') : '';
     var saved = isSavedJob(l.id);
     var action;
     if (!canPool()) action = '<a class="btn btn--light btn--sm" href="giris.html">' + T("cta.signin") + '</a>';
@@ -246,7 +248,7 @@
       (benefits2 ? '<div class="job-card__benefits">' + benefits2 + '</div>' : '') +
       '<div class="job-card__foot">' +
         action +
-        '<div style="display:flex;align-items:center;gap:8px"><span class="match-score">%' + score + ' Uyum</span><span class="job-posted">' + timeAgo(l.tarih) + deadlineStr + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:8px"><span class="match-score' + scoreClass + '">%' + score + ' Uyum</span><span class="job-posted">' + timeAgo(l.tarih) + deadlineStr + '</span></div>' +
       '</div>' +
     '</article>';
   }
@@ -347,7 +349,10 @@
       return true;
     });
     out.sort(function (a, b) {
-      if (sort === "match") return talentScore(b.id) - talentScore(a.id);
+      if (sort === "match") {
+        var usePrefs = window.KBPrefs && KBPrefs.hasPrefs();
+        return (usePrefs ? KBPrefs.matchScore(b) : talentScore(b.id)) - (usePrefs ? KBPrefs.matchScore(a) : talentScore(a.id));
+      }
       var da = a.tarih || "", db = b.tarih || "";
       return sort === "old" ? (da < db ? -1 : da > db ? 1 : 0) : (da < db ? 1 : da > db ? -1 : 0);
     });
