@@ -584,25 +584,137 @@
       .rs-card__btn { width: auto; align-self: flex-start; }
     }
 
-    /* CTA section */
-    .lp-cta-sec {
-      padding: 72px 0;
+    /* ── FINAL CTA ───────────────────────────────────────── */
+    .fin-cta {
+      padding: 100px 0 88px;
+      background: #F0F4FF;
+      border-top: 1px solid #D8E3FF;
       text-align: center;
-      background: var(--primary);
     }
-    .lp-cta-sec h2  { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 10px; letter-spacing: -0.02em; }
-    .lp-cta-sec p   { font-size: 0.95rem; color: rgba(255,255,255,.8); margin-bottom: 28px; }
-    .lp-cta-sec .btn--primary { background: #fff; color: var(--primary); }
-    .lp-cta-sec .btn--primary:hover { background: #EEF3FF; }
-    .lp-cta-sec .btn--ghost { border-color: rgba(255,255,255,.4); color: #fff; }
-    .lp-cta-sec .btn--ghost:hover { background: rgba(255,255,255,.1); }
+    .fin-cta__inner {
+      max-width: 580px;
+      margin: 0 auto;
+    }
+    .fin-cta__title {
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+    .fin-cta__sub {
+      font-size: 1rem;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin: 0 0 36px;
+    }
+    .fin-cta__btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .fin-cta__trust {
+      font-size: 0.8rem;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .fin-cta__trust-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--text-2);
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
 
-    /* Footer */
-    .lp-foot { background: #111827; color: rgba(255,255,255,.6); padding: 28px 0; font-size: 0.85rem; }
-    .lp-foot a { color: rgba(255,255,255,.6); text-decoration: none; }
-    .lp-foot a:hover { color: #fff; }
-    .lp-foot__row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .lp-foot__links { display: flex; gap: 20px; }
+    /* Entry fade */
+    .fin-cta__inner > * {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .fin-cta.is-visible .fin-cta__inner > *:nth-child(1) { opacity:1; transform:translateY(0); transition-delay:0.05s; }
+    .fin-cta.is-visible .fin-cta__inner > *:nth-child(2) { opacity:1; transform:translateY(0); transition-delay:0.15s; }
+    .fin-cta.is-visible .fin-cta__inner > *:nth-child(3) { opacity:1; transform:translateY(0); transition-delay:0.25s; }
+    .fin-cta.is-visible .fin-cta__inner > *:nth-child(4) { opacity:1; transform:translateY(0); transition-delay:0.35s; }
+
+    /* ── FOOTER ─────────────────────────────────────────── */
+    .fin-foot {
+      background: #111827;
+      color: rgba(255,255,255,.55);
+      padding-top: 56px;
+      font-size: 0.875rem;
+      line-height: 1.7;
+    }
+    .fin-foot__grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 48px 40px;
+      padding-bottom: 48px;
+    }
+
+    /* Brand column */
+    .fin-foot__brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 12px;
+      display: block;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+    .fin-foot__desc {
+      font-size: 0.8375rem;
+      color: rgba(255,255,255,.45);
+      line-height: 1.75;
+      max-width: 220px;
+    }
+
+    /* Link columns */
+    .fin-foot__col-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,.3);
+      margin-bottom: 16px;
+    }
+    .fin-foot__links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .fin-foot__links a {
+      color: rgba(255,255,255,.55);
+      text-decoration: none;
+      transition: color 0.15s ease;
+      font-size: 0.875rem;
+    }
+    .fin-foot__links a:hover { color: #fff; }
+
+    /* Bottom bar */
+    .fin-foot__bar {
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 20px 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,.28);
+    }
+
+    @media (max-width: 860px) {
+      .fin-foot__grid { grid-template-columns: 1fr 1fr; gap: 32px 24px; }
+      .fin-foot__desc { max-width: 100%; }
+    }
+    @media (max-width: 480px) {
+      .fin-foot__grid { grid-template-columns: 1fr; gap: 28px; }
+      .fin-cta { padding: 72px 0 64px; }
+    }
 
     /* ── TRUST / STATS SECTION ──────────────────────── */
     .lp-stats-sec {
@@ -1550,29 +1662,78 @@
     </div>
   </section>
 
-  <!-- ── CTA ──────────────────────────────────────────── -->
-  <section class="lp-cta-sec">
-    <div class="container container--sm">
-      <h2>Hemen başla, ücretsiz</h2>
-      <p>Hesap oluşturmak 2 dakika alır. Kredi kartı gerekmez.</p>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hesap Oluştur</a>
-        <a href="giris.html" class="btn btn--ghost btn--lg">Giriş Yap</a>
+  <!-- ── FINAL CTA ────────────────────────────────────── -->
+  <section class="fin-cta" id="finCta">
+    <div class="container">
+      <div class="fin-cta__inner">
+        <h2 class="fin-cta__title">Hazırsan başlayalım.</h2>
+        <p class="fin-cta__sub">KuryemiBul ile bulunduğun bölgedeki iş fırsatlarını keşfet, başvur ve yeni işine daha hızlı ulaş.</p>
+        <div class="fin-cta__btns">
+          <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hemen Kayıt Ol</a>
+          <a href="giris.html" class="btn btn--ghost btn--lg">Giriş Yap</a>
+        </div>
+        <div class="fin-cta__trust">
+          <span>Gerçek işletmeler</span>
+          <div class="fin-cta__trust-dot"></div>
+          <span>Aktif iş ilanları</span>
+          <div class="fin-cta__trust-dot"></div>
+          <span>Hızlı başvuru</span>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ── FOOTER ────────────────────────────────────────── -->
-  <footer class="lp-foot">
+  <footer class="fin-foot">
     <div class="container">
-      <div class="lp-foot__row">
-        <span>© 2025 KuryemiBul</span>
-        <div class="lp-foot__links">
-          <a href="kvkk.html">KVKK</a>
-          <a href="gizlilik.html">Gizlilik</a>
-          <a href="sartlar.html">Şartlar</a>
-          <a href="cerez.html">Çerez</a>
+      <div class="fin-foot__grid">
+
+        <!-- Sütun 1: Marka -->
+        <div>
+          <a class="fin-foot__brand" href="index.html">KuryemiBul</a>
+          <p class="fin-foot__desc">KuryemiBul, kurye ve işletmeleri buluşturan iş platformudur.</p>
         </div>
+
+        <!-- Sütun 2: Platform -->
+        <div>
+          <div class="fin-foot__col-label">Platform</div>
+          <div class="fin-foot__links">
+            <a href="index.html">Ana Sayfa</a>
+            <a href="ilanlar.html">İlanlar</a>
+            <a href="#finHiw">Nasıl Çalışır</a>
+            <a href="giris.html">Giriş Yap</a>
+          </div>
+        </div>
+
+        <!-- Sütun 3: Şirket -->
+        <div>
+          <div class="fin-foot__col-label">Şirket</div>
+          <div class="fin-foot__links">
+            <a href="#">Hakkımızda</a>
+            <a href="#">İletişim</a>
+            <a href="#">Sık Sorulan Sorular</a>
+            <a href="#">Destek</a>
+          </div>
+        </div>
+
+        <!-- Sütun 4: Yasal -->
+        <div>
+          <div class="fin-foot__col-label">Yasal</div>
+          <div class="fin-foot__links">
+            <a href="gizlilik.html">Gizlilik Politikası</a>
+            <a href="sartlar.html">Kullanım Şartları</a>
+            <a href="kvkk.html">KVKK</a>
+            <a href="cerez.html">Çerez Politikası</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Alt çubuk -->
+    <div class="fin-foot__bar">
+      <div class="container">
+        © 2026 KuryemiBul. Tüm hakları saklıdır.
       </div>
     </div>
   </footer>
@@ -1594,6 +1755,14 @@
         else el.textContent = target.toLocaleString('tr-TR') + suffix;
       }
       requestAnimationFrame(step);
+    }
+
+    /* Final CTA fade */
+    var finCta = document.getElementById('finCta');
+    if (finCta) {
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) finCta.classList.add('is-visible');
+      }, { threshold: 0.25 }).observe(finCta);
     }
 
     /* Role selection kartları */
