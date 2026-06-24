@@ -2878,7 +2878,77 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .jd-salary__val { font-size: 1.1rem; font-weight: 700; color: #15803D; line-height: 1.2; }
 .jd-salary__model { font-size: 0.8rem; color: var(--text-2); margin-top: 3px; }
 
-/* ─── 50. RESPONSIVE ─────────────────────────────────────────── */
+/* ─── 50. BELGELER ──────────────────────────────────────────── */
+.doc-progress { display:flex; align-items:center; gap:14px; background:var(--surface-2); border-radius:var(--radius-lg); padding:12px 16px; margin-bottom:18px; }
+.doc-progress__bar-wrap { flex:1; }
+.doc-progress__label { display:flex; justify-content:space-between; font-size:0.76rem; color:var(--text-2); margin-bottom:5px; font-weight:500; }
+.doc-progress__bar { height:7px; background:var(--border); border-radius:var(--radius-full); overflow:hidden; }
+.doc-progress__fill { height:100%; background:var(--primary); border-radius:var(--radius-full); transition:width .5s ease; }
+.doc-progress__pct { font-size:1.05rem; font-weight:700; color:var(--primary); min-width:38px; text-align:right; }
+.doc-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.doc-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); display:flex; flex-direction:column; overflow:hidden; transition:border-color .2s; }
+.doc-card--onaylandi         { border-color:rgba(21,128,61,.3); }
+.doc-card--yuklendi          { border-color:rgba(59,130,246,.3); }
+.doc-card--inceleniyor       { border-color:rgba(245,158,11,.3); }
+.doc-card--reddedildi        { border-color:rgba(220,38,38,.3); }
+.doc-card--suresi_yaklasiyor { border-color:rgba(234,88,12,.35); }
+.doc-card__head { display:flex; align-items:center; justify-content:space-between; padding:10px 12px 8px; border-bottom:1px solid var(--border); gap:6px; flex-wrap:wrap; }
+.doc-card__title { font-size:0.82rem; font-weight:600; color:var(--text); display:flex; align-items:center; gap:5px; }
+.doc-card__ico { font-size:0.9rem; }
+.doc-required { color:#DC2626; font-size:0.72rem; margin-left:1px; }
+.doc-status { display:inline-flex; align-items:center; padding:2px 7px; border-radius:var(--radius-full); font-size:0.68rem; font-weight:600; white-space:nowrap; border:1px solid transparent; }
+.doc-status--eksik             { background:var(--surface-2); color:var(--text-3); border-color:var(--border); }
+.doc-status--yuklendi          { background:#EFF6FF; color:#1D4ED8; border-color:rgba(59,130,246,.3); }
+.doc-status--inceleniyor       { background:#FFFBEB; color:#B45309; border-color:rgba(245,158,11,.3); }
+.doc-status--onaylandi         { background:#DCFCE7; color:#15803D; border-color:rgba(21,128,61,.25); }
+.doc-status--reddedildi        { background:#FEF2F2; color:#DC2626; border-color:rgba(220,38,38,.25); }
+.doc-status--suresi_yaklasiyor { background:#FFF7ED; color:#EA580C; border-color:rgba(234,88,12,.3); }
+.doc-card__body { padding:11px 12px; flex:1; display:flex; flex-direction:column; gap:9px; }
+.doc-preview { width:100%; height:100px; background:var(--surface-2); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.doc-preview--img img { width:100%; height:100%; object-fit:cover; }
+.doc-preview--pdf,.doc-preview--placeholder { flex-direction:column; gap:4px; color:var(--text-2); font-size:0.75rem; }
+.doc-preview__ico { font-size:1.7rem; }
+.doc-preview__name { font-size:0.7rem; color:var(--text-3); max-width:88%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.doc-upload-zone { display:flex; width:100%; height:100px; border:2px dashed var(--border); border-radius:var(--radius); cursor:pointer; transition:border-color .15s,background .15s; }
+.doc-upload-zone:hover,.doc-upload-zone.is-drag { border-color:var(--primary); background:var(--primary-light); }
+.doc-upload-zone__inner { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; width:100%; pointer-events:none; }
+.doc-upload-zone__ico { font-size:1.3rem; }
+.doc-upload-zone__text { font-size:0.78rem; font-weight:600; color:var(--primary); }
+.doc-upload-zone__sub { font-size:0.67rem; color:var(--text-3); }
+.doc-expiry-inline { padding:10px 12px; background:var(--surface-2); border-top:1px solid var(--border); }
+.doc-expiry-label { font-size:0.74rem; font-weight:500; color:var(--text-2); display:block; margin-bottom:5px; }
+.doc-expiry-input { border:1px solid var(--border); border-radius:var(--radius); padding:5px 9px; font-size:0.82rem; color:var(--text); background:var(--surface); box-sizing:border-box; }
+.doc-expiry-input:focus { border-color:var(--primary); outline:none; box-shadow:0 0 0 3px rgba(0,87,255,.07); }
+.doc-meta { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; font-size:0.74rem; margin:0; }
+.doc-meta dt { color:var(--text-3); font-weight:500; white-space:nowrap; }
+.doc-meta dd { color:var(--text-2); margin:0; }
+.doc-meta__warn { color:#EA580C; font-weight:600; }
+.doc-desc { font-size:0.76rem; color:var(--text-3); margin:0; line-height:1.5; }
+.doc-actions { display:flex; gap:5px; padding:8px 12px; border-top:1px solid var(--border); flex-wrap:wrap; }
+.doc-hint { padding:6px 12px; font-size:0.72rem; line-height:1.45; border-top:1px solid transparent; }
+.doc-hint--reddedildi        { background:#FEF2F2; color:#B91C1C; border-color:rgba(220,38,38,.12); }
+.doc-hint--suresi_yaklasiyor { background:#FFF7ED; color:#C2410C; border-color:rgba(234,88,12,.12); }
+.doc-hint--inceleniyor       { background:#FFFBEB; color:#92400E; border-color:rgba(245,158,11,.12); }
+.doc-hint--yuklendi          { background:#EFF6FF; color:#1E40AF; border-color:rgba(59,130,246,.12); }
+.doc-err { padding:6px 12px; font-size:0.74rem; color:#DC2626; background:#FEF2F2; }
+.doc-activity-wrap { margin-top:20px; border-top:1px solid var(--border); padding-top:14px; }
+.doc-activity-title { font-size:0.8rem; font-weight:600; color:var(--text-2); margin-bottom:9px; }
+.doc-activity-item { display:flex; align-items:flex-start; gap:9px; padding:6px 0; border-bottom:1px solid var(--border); }
+.doc-activity-item:last-child { border-bottom:none; }
+.doc-activity__ico { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.72rem; flex-shrink:0; background:var(--surface-2); border:1px solid var(--border); }
+.doc-activity__body { flex:1; }
+.doc-activity__text { font-size:0.76rem; color:var(--text); line-height:1.4; }
+.doc-activity__meta { font-size:0.69rem; color:var(--text-3); margin-top:1px; }
+.doc-lightbox { position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:600; display:flex; align-items:center; justify-content:center; padding:16px; }
+.doc-lightbox__inner { max-width:860px; width:100%; position:relative; }
+.doc-lightbox__close { position:absolute; top:-42px; right:0; color:#fff; font-size:1.5rem; background:none; border:none; cursor:pointer; padding:4px 8px; line-height:1; }
+.doc-lightbox img { max-width:100%; max-height:80vh; border-radius:var(--radius); display:block; margin:auto; }
+@media (max-width:640px) {
+  .doc-grid { grid-template-columns:1fr; }
+  .doc-progress { flex-wrap:wrap; }
+}
+
+/* ─── 51. RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   #app-sidebar {
     transform: translateX(-100%);

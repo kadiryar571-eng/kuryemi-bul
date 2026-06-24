@@ -647,6 +647,34 @@
       </div>
     </div>
 
+    <!-- Belgelerim -->
+    <div class="pi-card" id="belgeCard" style="display:none">
+      <div class="pi-sec-head">
+        <div>
+          <div class="pi-sec-title">Belgelerim</div>
+          <div class="pi-sec-sub">İş başvurularında kullanılacak belgelerini buradan yönet. <span class="doc-required" title="Zorunlu">*</span> ile işaretliler zorunludur.</div>
+        </div>
+      </div>
+
+      <div class="doc-progress" id="docProgress">
+        <div class="doc-progress__bar-wrap">
+          <div class="doc-progress__label">
+            <span>Zorunlu Belgeler</span>
+            <span id="docProgressCount">—</span>
+          </div>
+          <div class="doc-progress__bar"><div class="doc-progress__fill" id="docProgressFill" style="width:0%"></div></div>
+        </div>
+        <div class="doc-progress__pct" id="docProgressPct">%0</div>
+      </div>
+
+      <div class="doc-grid" id="docGrid"></div>
+
+      <div class="doc-activity-wrap" id="docActivityWrap" style="display:none">
+        <div class="doc-activity-title">Son İşlemler</div>
+        <div class="doc-activity-list" id="docActivityList"></div>
+      </div>
+    </div>
+
   </div><!-- /.app-content -->
 
   <div id="app-footer"></div>
@@ -884,6 +912,8 @@
       if (wiCard) wiCard.style.display = role === 'kurye' ? '' : 'none';
       var abCard = document.getElementById('abCard');
       if (abCard) abCard.style.display = role === 'kurye' ? '' : 'none';
+      var belgeCard = document.getElementById('belgeCard');
+      if (belgeCard) belgeCard.style.display = role === 'kurye' ? '' : 'none';
     }
 
     document.querySelectorAll('.pi-role-pill').forEach(function(p) {
@@ -1275,6 +1305,428 @@
       document.getElementById('editTur').value      = profile.tur      || '';
       document.getElementById('editKapasite').value = profile.kapasite || '';
     }
+  })();
+  </script>
+
+  <!-- ─── Belgelerim Modülü ───────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    var DOC_TYPES = [
+      { id: 'kimlik',  icon: '🪪', title: 'Kimlik Belgesi',   required: true,  hasExpiry: false, desc: 'TC Kimlik Kartı veya Pasaport' },
+      { id: 'ehliyet', icon: '🚗', title: 'Ehliyet',          required: true,  hasExpiry: true,  desc: 'Sürücü belgesi (A veya B sınıfı)' },
+      { id: 'ruhsat',  icon: '📋', title: 'Araç Ruhsatı',     required: false, hasExpiry: true,  desc: 'Araç tescil belgesi' },
+      { id: 'sigorta', icon: '🛡️', title: 'Sigorta Belgesi',  required: true,  hasExpiry: true,  desc: 'Zorunlu trafik sigortası' },
+      { id: 'src',     icon: '📜', title: 'SRC Belgesi',      required: false, hasExpiry: true,  desc: 'Mesleki yeterlilik belgesi' },
+      { id: 'adli',    icon: '⚖️', title: 'Adli Sicil Kaydı', required: true,  hasExpiry: false, maxAgeDays: 90, desc: 'Sabıka kaydı (son 90 gün geçerli)' }
+    ];
+
+    var STATUS_MAP = {
+      eksik:             { badge: '● Eksik',               hint: '' },
+      yuklendi:          { badge: '↑ Yüklendi',            hint: 'Belgeniz alındı, admin incelemesi bekleniyor.' },
+      inceleniyor:       { badge: '🔍 İnceleniyor',        hint: 'Belgeniz inceleme sürecindedir.' },
+      onaylandi:         { badge: '✓ Onaylandı',           hint: '' },
+      reddedildi:        { badge: '✗ Reddedildi',          hint: 'Belge reddedildi. Lütfen geçerli bir belge yeniden yükleyin.' },
+      suresi_yaklasiyor: { badge: '⚠️ Süresi Yaklaşıyor',  hint: 'Bu belgenin süresi 30 gün içinde doluyor. Yenilemeniz önerilir.' }
+    };
+
+    var MAX_SIZE  = 5 * 1024 * 1024;
+    var ALLOWED   = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+    var WARN_DAYS = 30;
+
+    /* ── Depolama ── */
+    function getUid() {
+      try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch(e) {}
+      return 'demo';
+    }
+    function docsKey() { return 'kb_docs_' + getUid(); }
+    function logKey()  { return 'kb_docs_log_' + getUid(); }
+    function loadDocs() { try { return JSON.parse(localStorage.getItem(docsKey())) || {}; } catch(e) { return {}; } }
+    function saveDocs(d) { try { localStorage.setItem(docsKey(), JSON.stringify(d)); } catch(e) { showToast('Depolama alanı dolu!', 'error'); } }
+    function loadLog()  { try { return JSON.parse(localStorage.getItem(logKey())) || []; } catch(e) { return []; } }
+    function addLog(docId, action, note) {
+      var log = loadLog();
+      log.unshift({ docId: docId, action: action, note: note || '', ts: new Date().toISOString() });
+      try { localStorage.setItem(logKey(), JSON.stringify(log.slice(0, 30))); } catch(e) {}
+      renderActivityLog();
+    }
+
+    /* ── Durum ── */
+    function effectiveStatus(doc, cfg) {
+      if (!doc || !doc.status || doc.status === 'eksik') return 'eksik';
+      if ((doc.status === 'onaylandi' || doc.status === 'yuklendi') && cfg.hasExpiry && doc.expiryDate) {
+        var diff = (new Date(doc.expiryDate) - Date.now()) / 86400000;
+        if (diff < 0)          return 'reddedildi';
+        if (diff <= WARN_DAYS) return 'suresi_yaklasiyor';
+      }
+      if (cfg.maxAgeDays && doc.uploadDate && doc.status !== 'onaylandi') {
+        var age = (Date.now() - new Date(doc.uploadDate)) / 86400000;
+        if (age > cfg.maxAgeDays) return 'reddedildi';
+      }
+      return doc.status;
+    }
+
+    /* ── Yardımcılar ── */
+    function esc(s) {
+      return (window.KB && KB.esc) ? KB.esc(s)
+        : String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; });
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try { return new Date(iso).toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric'}); } catch(e) { return iso; }
+    }
+    function fmtSize(b) {
+      if (!b) return '—';
+      return b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+    }
+    function mimeLabel(m) {
+      return {'image/jpeg':'JPEG','image/jpg':'JPEG','image/png':'PNG','image/webp':'WebP','application/pdf':'PDF'}[m] || m;
+    }
+    function showToast(msg, type) {
+      if (window.KBMotion) {
+        if (type === 'success') { KBMotion.showSuccess(msg, '', 2200); return; }
+        KBMotion.showErrorToast(msg); return;
+      }
+    }
+    function showCardErr(docId, msg) {
+      var el = document.getElementById('docErr_' + docId);
+      if (!el) return;
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(function(){ el.style.display = 'none'; }, 5000);
+    }
+    function cfgById(id) { return DOC_TYPES.filter(function(d){ return d.id === id; })[0]; }
+
+    /* ── Render ── */
+    function renderDocGrid() {
+      var grid = document.getElementById('docGrid');
+      if (!grid) return;
+      var docs = loadDocs();
+      grid.innerHTML = DOC_TYPES.map(function(cfg){ return buildCard(cfg, docs[cfg.id] || null); }).join('');
+      updateProgress(docs);
+      renderActivityLog();
+      wireGrid();
+      checkNotifications(docs);
+    }
+
+    function buildCard(cfg, doc) {
+      var status = effectiveStatus(doc, cfg);
+      var sm     = STATUS_MAP[status] || STATUS_MAP['eksik'];
+      var hasFile = doc && doc.status && doc.status !== 'eksik';
+
+      var bodyHtml;
+      if (hasFile) {
+        var previewHtml;
+        if (doc.thumbUrl && doc.fileType !== 'application/pdf') {
+          previewHtml = '<div class="doc-preview doc-preview--img"><img src="' + doc.thumbUrl + '" alt="" loading="lazy"></div>';
+        } else if (doc.fileType === 'application/pdf') {
+          previewHtml = '<div class="doc-preview doc-preview--pdf"><span class="doc-preview__ico">📄</span><span class="doc-preview__name">' + esc(doc.fileName || 'belge.pdf') + '</span></div>';
+        } else {
+          previewHtml = '<div class="doc-preview doc-preview--placeholder"><span class="doc-preview__ico">' + cfg.icon + '</span><span class="doc-preview__name">' + esc(doc.fileName || 'Belge yüklendi') + '</span></div>';
+        }
+        var meta = '<dl class="doc-meta">' +
+          (doc.uploadDate ? '<dt>Yükleme</dt><dd>' + fmtDate(doc.uploadDate) + '</dd>' : '') +
+          (cfg.hasExpiry && doc.expiryDate ? '<dt>Son Geçerlilik</dt><dd' + (status === 'suresi_yaklasiyor' ? ' class="doc-meta__warn"' : '') + '>' + fmtDate(doc.expiryDate) + '</dd>' : '') +
+          (doc.fileType ? '<dt>Tür</dt><dd>' + mimeLabel(doc.fileType) + '</dd>' : '') +
+          (doc.fileSize ? '<dt>Boyut</dt><dd>' + fmtSize(doc.fileSize) + '</dd>' : '') +
+          (doc.verificationNote ? '<dt>Not</dt><dd>' + esc(doc.verificationNote) + '</dd>' : '') +
+          '</dl>';
+        bodyHtml = previewHtml + meta;
+      } else {
+        bodyHtml =
+          '<label class="doc-upload-zone" for="docFile_' + cfg.id + '">' +
+            '<input type="file" id="docFile_' + cfg.id + '" class="doc-file-input" data-doctype="' + cfg.id + '" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none">' +
+            '<div class="doc-upload-zone__inner">' +
+              '<span class="doc-upload-zone__ico">📎</span>' +
+              '<span class="doc-upload-zone__text">Belge Yükle</span>' +
+              '<span class="doc-upload-zone__sub">JPG · PNG · PDF · Maks 5 MB</span>' +
+            '</div>' +
+          '</label>' +
+          '<p class="doc-desc">' + esc(cfg.desc) + (cfg.maxAgeDays ? ' (Son ' + cfg.maxAgeDays + ' gün içinde alınmış olmalı.)' : '') + '</p>';
+      }
+
+      var actionsHtml = hasFile ? '<div class="doc-actions">' +
+        (doc.thumbUrl || doc.fileType === 'application/pdf' ? '<button class="btn btn--ghost btn--sm" data-act="preview" data-doctype="' + cfg.id + '">👁 Görüntüle</button>' : '') +
+        '<label class="btn btn--light btn--sm" style="cursor:pointer">' +
+          '<input type="file" class="doc-file-input" data-doctype="' + cfg.id + '" data-replace="1" accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none">' +
+          (status === 'reddedildi' ? '🔄 Yeniden Yükle' : '🔄 Güncelle') +
+        '</label>' +
+        '<button class="btn btn--ghost btn--sm" data-act="delete" data-doctype="' + cfg.id + '" style="color:#DC2626">🗑 Sil</button>' +
+        '</div>' : '';
+
+      var hintHtml = sm.hint ? '<div class="doc-hint doc-hint--' + status + '">' + sm.hint + '</div>' : '';
+
+      return '<div class="doc-card doc-card--' + status + '" id="docCard_' + cfg.id + '">' +
+        '<div class="doc-card__head">' +
+          '<span class="doc-card__title"><span class="doc-card__ico">' + cfg.icon + '</span>' + esc(cfg.title) + (cfg.required ? '<span class="doc-required" title="Zorunlu">*</span>' : '') + '</span>' +
+          '<span class="doc-status doc-status--' + status + '">' + sm.badge + '</span>' +
+        '</div>' +
+        '<div class="doc-card__body">' + bodyHtml + '</div>' +
+        actionsHtml + hintHtml +
+        '<div class="doc-err" id="docErr_' + cfg.id + '" style="display:none"></div>' +
+        '</div>';
+    }
+
+    /* ── Progress ── */
+    function updateProgress(docs) {
+      var required = DOC_TYPES.filter(function(d){ return d.required; });
+      var done = required.filter(function(d){
+        var st = effectiveStatus(docs[d.id] || null, d);
+        return st === 'yuklendi' || st === 'inceleniyor' || st === 'onaylandi';
+      });
+      var pct = required.length ? Math.round(done.length / required.length * 100) : 0;
+      var fillEl = document.getElementById('docProgressFill');
+      var pctEl  = document.getElementById('docProgressPct');
+      var cntEl  = document.getElementById('docProgressCount');
+      if (fillEl) fillEl.style.width = pct + '%';
+      if (pctEl)  pctEl.textContent  = '%' + pct;
+      if (cntEl)  cntEl.textContent  = done.length + ' / ' + required.length + ' zorunlu belge';
+    }
+
+    /* ── Aktivite Günlüğü ── */
+    function renderActivityLog() {
+      var wrap = document.getElementById('docActivityWrap');
+      var list = document.getElementById('docActivityList');
+      if (!wrap || !list) return;
+      var log = loadLog();
+      if (!log.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+      var docMap = {};
+      DOC_TYPES.forEach(function(d){ docMap[d.id] = d.title; });
+      var icos = { upload:'↑', replace:'🔄', delete:'🗑', viewed:'👁', approved:'✓', rejected:'✗', expiry_warn:'⚠️' };
+      list.innerHTML = log.slice(0, 10).map(function(e){
+        return '<div class="doc-activity-item">' +
+          '<div class="doc-activity__ico">' + (icos[e.action] || '•') + '</div>' +
+          '<div class="doc-activity__body">' +
+            '<div class="doc-activity__text">' + esc(docMap[e.docId] || e.docId) + ' — ' + esc(e.note) + '</div>' +
+            '<div class="doc-activity__meta">' + fmtDate(e.ts) + '</div>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    /* ── Bildirimler ── */
+    function checkNotifications(docs) {
+      var issues = [];
+      DOC_TYPES.forEach(function(cfg){
+        var st = effectiveStatus(docs[cfg.id] || null, cfg);
+        if (cfg.required && st === 'eksik') issues.push(cfg.title + ' eksik');
+        if (st === 'reddedildi')            issues.push(cfg.title + ' reddedildi');
+        if (st === 'suresi_yaklasiyor')     issues.push(cfg.title + ' süresi dolmak üzere');
+      });
+      if (issues.length && window.KBMotion && KBMotion.showInAppNotif) {
+        KBMotion.showInAppNotif('Belge Uyarısı',
+          issues[0] + (issues.length > 1 ? ' ve ' + (issues.length - 1) + ' sorun daha' : ''),
+          function(){ var c = document.getElementById('belgeCard'); if (c) c.scrollIntoView({ behavior:'smooth' }); });
+      }
+    }
+
+    /* ── Dosya doğrulama ── */
+    function validateFile(file) {
+      if (ALLOWED.indexOf(file.type) === -1) return 'Geçersiz tür. JPG, PNG, WebP veya PDF yükleyin.';
+      if (file.size > MAX_SIZE) return 'Dosya çok büyük. Maksimum 5 MB.';
+      return null;
+    }
+
+    function genThumb(file) {
+      return new Promise(function(resolve) {
+        if (file.type === 'application/pdf') { resolve(null); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var img = new Image();
+          img.onload = function() {
+            var W = 320, H = 200, ratio = Math.min(W / img.width, H / img.height, 1);
+            var canvas = document.createElement('canvas');
+            canvas.width  = Math.round(img.width  * ratio);
+            canvas.height = Math.round(img.height * ratio);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
+          };
+          img.onerror = function(){ resolve(null); };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function checkBlur(file) {
+      return new Promise(function(resolve) {
+        if (file.type === 'application/pdf') { resolve(false); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var img = new Image();
+          img.onload = function() {
+            var sz = 64, canvas = document.createElement('canvas');
+            canvas.width = canvas.height = sz;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, sz, sz);
+            var data = ctx.getImageData(0, 0, sz, sz).data, variance = 0, prev = data[0];
+            for (var i = 4; i < data.length; i += 4) { variance += Math.abs(data[i] - prev); prev = data[i]; }
+            resolve(variance / (sz * sz) < 1.8);
+          };
+          img.onerror = function(){ resolve(false); };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ── Upload akışı ── */
+    function onFilePicked(file, docId, isReplace) {
+      var err = validateFile(file);
+      if (err) { showCardErr(docId, err); return; }
+      var cfg = cfgById(docId);
+      if (!cfg) return;
+      checkBlur(file).then(function(blurry) {
+        if (blurry && !confirm('Görsel bulanık görünüyor. Yine de yüklemek istiyor musunuz?')) return;
+        if (cfg.hasExpiry && !isReplace) {
+          showExpiryForm(docId, file, false);
+        } else {
+          processUpload(file, docId, isReplace, null);
+        }
+      });
+    }
+
+    function showExpiryForm(docId, file, isReplace) {
+      var card = document.getElementById('docCard_' + docId);
+      if (!card) { processUpload(file, docId, isReplace, null); return; }
+      var existing = card.querySelector('.doc-expiry-inline');
+      if (existing) existing.remove();
+      var div = document.createElement('div');
+      div.className = 'doc-expiry-inline';
+      var today = new Date().toISOString().slice(0, 10);
+      div.innerHTML =
+        '<label class="doc-expiry-label" for="expiryDt_' + docId + '">Son Geçerlilik Tarihi</label>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">' +
+          '<input type="date" id="expiryDt_' + docId + '" class="doc-expiry-input" min="' + today + '" style="flex:1;min-width:120px">' +
+          '<button type="button" id="doUpload_' + docId + '" class="btn btn--primary btn--sm">↑ Yükle</button>' +
+          '<button type="button" id="doCancel_' + docId + '" class="btn btn--ghost btn--sm">İptal</button>' +
+        '</div>';
+      card.appendChild(div);
+      div.querySelector('#doUpload_' + docId).addEventListener('click', function() {
+        var dateVal = div.querySelector('#expiryDt_' + docId).value;
+        div.remove();
+        processUpload(file, docId, isReplace, dateVal || null);
+      });
+      div.querySelector('#doCancel_' + docId).addEventListener('click', function() { div.remove(); });
+      div.querySelector('#expiryDt_' + docId).focus();
+    }
+
+    function processUpload(file, docId, isReplace, expiryDate) {
+      var cfg = cfgById(docId);
+      if (!cfg) return;
+      var card = document.getElementById('docCard_' + docId);
+      if (card) card.style.opacity = '0.6';
+      genThumb(file).then(function(thumbUrl) {
+        var storageP = (window.SB && SB.isOn())
+          ? SB.uploadKycDoc(file).catch(function(){ return null; })
+          : Promise.resolve(null);
+        storageP.then(function(storageUrl) {
+          var docs = loadDocs();
+          var now  = new Date().toISOString();
+          docs[docId] = {
+            status:           'yuklendi',
+            fileName:         file.name,
+            fileType:         file.type,
+            fileSize:         file.size,
+            uploadDate:       isReplace && docs[docId] ? docs[docId].uploadDate : now,
+            expiryDate:       expiryDate,
+            lastUpdate:       now,
+            thumbUrl:         thumbUrl,
+            storageUrl:       storageUrl,
+            verificationNote: ''
+          };
+          saveDocs(docs);
+          addLog(docId, isReplace ? 'replace' : 'upload', isReplace ? 'Belge güncellendi.' : 'Belge yüklendi.');
+          renderDocGrid();
+          showToast(cfg.title + (isReplace ? ' güncellendi.' : ' yüklendi.'), 'success');
+        });
+      });
+    }
+
+    /* ── Silme ── */
+    function deleteDoc(docId) {
+      var cfg = cfgById(docId);
+      if (!cfg || !confirm(cfg.title + ' silinsin mi?')) return;
+      var docs = loadDocs();
+      delete docs[docId];
+      saveDocs(docs);
+      addLog(docId, 'delete', 'Belge silindi.');
+      renderDocGrid();
+      showToast(cfg.title + ' silindi.', 'success');
+    }
+
+    /* ── Önizleme (lightbox) ── */
+    function previewDoc(docId) {
+      var docs = loadDocs();
+      var doc  = docs[docId];
+      if (!doc) return;
+      addLog(docId, 'viewed', 'Belge görüntülendi.');
+      var lb = document.createElement('div');
+      lb.className = 'doc-lightbox';
+      lb.innerHTML = '<div class="doc-lightbox__inner">' +
+        '<button class="doc-lightbox__close" aria-label="Kapat">✕</button>' +
+        (doc.fileType === 'application/pdf'
+          ? '<div style="text-align:center;padding:40px;color:#fff"><div style="font-size:4rem">📄</div><p style="margin-top:12px">' + esc(doc.fileName || 'belge.pdf') + '</p></div>'
+          : (doc.thumbUrl ? '<img src="' + doc.thumbUrl + '" alt="">'
+                          : '<div style="padding:40px;color:#fff;text-align:center">Önizleme mevcut değil.</div>')) +
+        '</div>';
+      document.body.appendChild(lb);
+      lb.addEventListener('click', function(e) {
+        if (e.target === lb || e.target.classList.contains('doc-lightbox__close')) lb.remove();
+      });
+    }
+
+    /* ── Event delegation ── */
+    function wireGrid() {
+      var grid = document.getElementById('docGrid');
+      if (!grid || grid._docWired) return;
+      grid._docWired = true;
+
+      grid.addEventListener('change', function(e) {
+        var inp = e.target;
+        if (!inp.classList.contains('doc-file-input')) return;
+        var file    = inp.files && inp.files[0];
+        if (!file) return;
+        var docId   = inp.getAttribute('data-doctype');
+        var replace = inp.getAttribute('data-replace') === '1';
+        inp.value = '';
+        onFilePicked(file, docId, replace);
+      });
+
+      grid.addEventListener('dragover', function(e) {
+        var zone = e.target.closest && e.target.closest('.doc-upload-zone');
+        if (zone) { e.preventDefault(); zone.classList.add('is-drag'); }
+      });
+      grid.addEventListener('dragleave', function(e) {
+        var zone = e.target.closest && e.target.closest('.doc-upload-zone');
+        if (zone) zone.classList.remove('is-drag');
+      });
+      grid.addEventListener('drop', function(e) {
+        var zone = e.target.closest && e.target.closest('.doc-upload-zone');
+        if (!zone) return;
+        e.preventDefault(); zone.classList.remove('is-drag');
+        var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        var inp  = zone.querySelector('.doc-file-input');
+        if (file && inp) onFilePicked(file, inp.getAttribute('data-doctype'), false);
+      });
+
+      grid.addEventListener('click', function(e) {
+        var btn = e.target.closest && e.target.closest('[data-act]');
+        if (!btn) return;
+        var act   = btn.getAttribute('data-act');
+        var docId = btn.getAttribute('data-doctype');
+        if (act === 'preview') previewDoc(docId);
+        if (act === 'delete')  deleteDoc(docId);
+      });
+    }
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!document.getElementById('docGrid')) return;
+      var ready = (window.KB && KB.ready) ? KB.ready() : Promise.resolve();
+      ready.then(renderDocGrid).catch(renderDocGrid);
+    });
+
   })();
   </script>
 </body>
