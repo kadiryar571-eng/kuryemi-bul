@@ -14,7 +14,6 @@
   <nav id="app-sidebar"></nav>
 
   <div class="app-content">
-    <!-- renderJobDetail() buraya yazar: .jd-back + .jd grid -->
     <div id="jobDetailRoot">
       <!-- skeleton: JS yüklenene kadar -->
       <span class="skel skel--line" style="width:120px;display:block;margin-bottom:20px"></span>
@@ -45,80 +44,38 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/prefs.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      /* localStorage preview for user-created jobs (id starts with "ilan_") */
       var id = new URLSearchParams(location.search).get('id') || '';
+
+      /* localStorage preview for jobs created via ilan-olustur.html */
       if (id && id.indexOf('ilan_') === 0) {
         var uid = 'demo';
-        try {
-          if (window.KB && KB.session) {
-            var s = KB.session();
-            if (s && s.user && s.user.id) uid = s.user.id;
-          }
-        } catch(e) {}
+        try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) uid = s.user.id; } } catch(e) {}
         var jobs = [];
         try { jobs = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + uid)) || []; } catch(e) {}
         var job = null;
         for (var i = 0; i < jobs.length; i++) { if (jobs[i].id === id) { job = jobs[i]; break; } }
-        if (job) {
+        if (job && window.KBApp && KBApp.buildJobDetailHtml) {
           var root = document.getElementById('jobDetailRoot');
           if (root) {
-            function esc(s) { return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-            var loc = [job.sehir, job.bolge].filter(Boolean).join(' · ');
-            var chips = '<span class="chip chip--open">● Açık</span>' +
-              (job.oncelik === 'acil' ? '<span class="chip chip--urgent">🔥 ACİL</span>' : '') +
-              (job.arac ? '<span class="chip">🛵 ' + esc(job.arac) + '</span>' : '') +
-              (job.vardiya_tipi ? '<span class="chip">' + esc(job.vardiya_tipi) + '</span>' : '');
-            var initials = (job.sahip || '?').split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase() || '?';
-            var fays = (job.faydalar || []).map(function(f){ return '<span class="chip chip--ok">✓ ' + esc(f) + '</span>'; }).join('');
-            var reqs = (job.gereksinimler || []).map(function(r){ return '<span class="chip">' + esc(r) + '</span>'; }).join('');
+            var r = KBApp.buildJobDetailHtml(job, { owner: true, applied: false, saved: false, myProfile: null });
             root.innerHTML =
-              '<a class="jd-back" href="ilan-olustur.html?edit=' + esc(id) + '">← İlanı Düzenle</a>' +
-              '<div class="jd">' +
-                '<div class="jd-main">' +
-                  '<div class="jd-head">' +
-                    '<div class="employer-badge"><div class="employer-badge__av">' + esc(initials) + '</div><span class="employer-badge__name">' + esc(job.sahip || 'İşletme') + '</span></div>' +
-                    '<h1 class="jd-title">' + esc(job.baslik || 'Başlıksız İlan') + '</h1>' +
-                    '<div class="jd-meta">' + (loc ? '<span>📍 ' + esc(loc) + '</span>' : '') + '<span>📅 ' + (job.tarih || '') + '</span></div>' +
-                    '<div class="job-card__tags" style="margin-top:14px">' + chips + '</div>' +
-                  '</div>' +
-                  (job.aciklama ? '<div class="jd-section"><h2>Görev Tanımı</h2><p class="jd-desc" style="white-space:pre-line">' + esc(job.aciklama) + '</p></div>' : '') +
-                  '<div class="jd-section"><h2>İş Detayları</h2><dl class="kv">' +
-                    '<dt>Pozisyon</dt><dd>' + esc(job.baslik) + '</dd>' +
-                    (job.kategori ? '<dt>Kategori</dt><dd>' + esc(job.kategori) + '</dd>' : '') +
-                    (loc ? '<dt>Lokasyon</dt><dd>' + esc(loc) + '</dd>' : '') +
-                    (job.calisma_sekli ? '<dt>Çalışma Şekli</dt><dd>' + esc(job.calisma_sekli) + '</dd>' : '') +
-                    (job.maas_aralik ? '<dt>Maaş</dt><dd>' + esc(job.maas_aralik) + (job.maas_modeli ? ' (' + esc(job.maas_modeli) + ')' : '') + '</dd>' : '') +
-                    (job.calisma_saatleri ? '<dt>Çalışma Saati</dt><dd>' + esc(job.calisma_saatleri) + '</dd>' : '') +
-                    (job.vardiya_tipi ? '<dt>Vardiya</dt><dd>' + esc(job.vardiya_tipi) + '</dd>' : '') +
-                    (job.arac ? '<dt>Araç</dt><dd>' + esc(job.arac) + '</dd>' : '') +
-                    (job.deneyim ? '<dt>Deneyim</dt><dd>' + esc(job.deneyim) + '</dd>' : '') +
-                    (job.sigorta ? '<dt>Sigorta</dt><dd>' + esc(job.sigorta) + '</dd>' : '') +
-                    (job.bonus && job.bonus !== 'Yok' ? '<dt>Prim / Bonus</dt><dd>' + esc(job.bonus) + '</dd>' : '') +
-                    (job.son_basvuru ? '<dt>Son Başvuru</dt><dd>' + esc(job.son_basvuru) + '</dd>' : '') +
-                    (job.kontenjan ? '<dt>Kontenjan</dt><dd>' + job.kontenjan + ' kişi</dd>' : '') +
-                  '</dl></div>' +
-                  (fays ? '<div class="jd-section"><h2>Sağlanan Faydalar</h2><div class="prf-chips">' + fays + '</div></div>' : '') +
-                  (reqs ? '<div class="jd-section"><h2>Gereksinimler</h2><div class="prf-chips">' + reqs + '</div></div>' : '') +
-                '</div>' +
-                '<aside class="jd-side">' +
-                  '<div class="jd-apply-card">' +
-                    (job.maas_aralik ? '<div class="jd-salary"><div class="jd-salary__val">💰 ' + esc(job.maas_aralik) + '</div><div class="jd-salary__model">' + esc(job.maas_modeli || '') + '</div></div>' : '') +
-                    (job.kontenjan ? '<p style="font-size:0.8rem;color:var(--text-2);margin:0 0 12px">👥 ' + job.kontenjan + ' açık pozisyon</p>' : '') +
-                    '<div class="jc-edit-badge" style="background:#EFF6FF;border:1px solid rgba(0,87,255,.2);border-radius:8px;padding:10px 14px;font-size:0.8rem;color:#0057FF">' +
-                      '✏️ Bu ilan sizin tarafınızdan oluşturuldu. <a href="ilan-olustur.html?edit=' + esc(id) + '" style="font-weight:600;color:#0057FF">Düzenle →</a>' +
-                    '</div>' +
-                  '</div>' +
-                '</aside>' +
-              '</div>';
-            document.title = (job.baslik || 'İlan') + ' · KuryemiBul';
+              '<a class="jd-back" href="ilan-olustur.html?edit=' + job.id + '">← İlanı Düzenle</a>' +
+              '<div style="background:#EFF6FF;border:1px solid rgba(0,87,255,.2);border-radius:8px;padding:10px 16px;font-size:0.82rem;color:#0057FF;margin-bottom:16px">' +
+                '✏️ Bu ilan sizin tarafınızdan oluşturuldu. ' +
+                '<a href="ilan-olustur.html?edit=' + job.id + '" style="font-weight:600;color:#0057FF">Düzenle →</a>' +
+              '</div>' +
+              r.html;
+            document.title = r.title;
           }
           return;
         }
       }
+
       if (window.KBApp && KBApp.renderJobDetail) KBApp.renderJobDetail();
     });
   </script>

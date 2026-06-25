@@ -2172,6 +2172,238 @@
       '<div class="kb-empty__d">' + T("jd.notFoundSub") + '</div>' +
       '<a class="btn btn--primary btn--sm mt-24" href="ilanlar.html">' + T("jd.back") + '</a></div>';
   }
+  /* ============ İLAN DETAY HTML BUILDER ============ */
+  function buildJobDetailHtml(l, opts) {
+    opts = opts || {};
+    var applied = !!opts.applied, owner = !!opts.owner, saved = !!opts.saved, myProfile = opts.myProfile || null;
+
+    var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
+    var inits = KB.initials(l.sahip || "?");
+    var pPage = l.sahipRol === "firma" ? "profil-firma.html" : "profil-isletme.html";
+    var pUrl = pPage + "?id=" + (l.owner_id || l.sahipId || "");
+    var verBadge = l.sahipDogrulama === "verified" ? ' <span class="ver-badge">✓ Doğrulandı</span>' : "";
+
+    var logoHtml = l.sahipAvatar
+      ? '<img class="jd-hero__logo" src="' + KB.esc(l.sahipAvatar) + '" alt="">'
+      : '<div class="jd-hero__logo--ph">' + inits + '</div>';
+
+    var tagHtml = '<span class="chip chip--open">● Açık</span>' +
+      (l.oncelik === "acil" ? '<span class="chip chip--urgent">🔥 ACİL</span>' : "") +
+      (isFresh(l.tarih) ? '<span class="chip chip--new">✦ Yeni</span>' : "") +
+      (l.vardiya_tipi ? '<span class="chip">' + KB.esc(l.vardiya_tipi) + '</span>' : "") +
+      (l.calisma_sekli ? '<span class="chip">' + KB.esc(l.calisma_sekli) + '</span>' : "") +
+      (l.kategori ? '<span class="chip">' + KB.esc(l.kategori) + '</span>' : "");
+
+    var deadlineMeta = "", deadlineRow = "";
+    if (l.son_basvuru) {
+      var dLeft = -daysSince(l.son_basvuru);
+      var dMetaCls = dLeft > 7 ? "jd-hero__deadline--ok" : dLeft > 3 ? "jd-hero__deadline--soon" : "jd-hero__deadline--urgent";
+      var dMetaTxt = dLeft > 0 ? "Son " + dLeft + " gün" : dLeft === 0 ? "Bugün son gün!" : "Başvuru kapandı";
+      deadlineMeta = '<span class="' + dMetaCls + '">⏳ ' + dMetaTxt + '</span>';
+      var dRowCls = dLeft > 7 ? "jd-deadline-row--ok" : dLeft > 3 ? "jd-deadline-row--soon" : "jd-deadline-row--urgent";
+      var dRowTxt = dLeft > 0 ? "Son başvuru: " + dLeft + " gün kaldı · " + KB.esc(l.son_basvuru) : dLeft === 0 ? "Bugün son gün!" : "Başvuru süresi doldu";
+      deadlineRow = '<div class="jd-deadline-row ' + dRowCls + '">⏳ ' + dRowTxt + '</div>';
+    }
+
+    function applyBtn(block) {
+      var cls = "btn btn--primary" + (block ? " btn--lg btn--block" : " btn--sm");
+      if (owner) return '<a class="btn btn--secondary btn--sm" href="ilan-olustur.html?edit=' + l.id + '">✏️ Düzenle</a>';
+      if (!canPool()) return '<a class="' + cls + '" href="giris.html">Giriş Yap &amp; Başvur</a>';
+      if (applied) return '<span class="chip chip--ok" style="padding:8px 14px">✓ Başvuruldu</span>';
+      return '<button class="' + cls + '" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '" data-company="' + KB.esc(l.sahip || "") + '" data-loc="' + KB.esc(loc) + '">Başvur</button>';
+    }
+    var favSmall = '<button type="button" class="btn btn--ghost btn--sm' + (saved ? " is-on" : "") + '" data-savejob="' + l.id + '" aria-pressed="' + saved + '">' + (saved ? "♥ Kaydedildi" : "♡ Kaydet") + '</button>';
+    var favLarge = '<button type="button" class="btn btn--ghost btn--lg btn--block mt-8' + (saved ? " is-on" : "") + '" data-savejob="' + l.id + '" aria-pressed="' + saved + '">' + (saved ? "♥ Kaydedildi" : "♡ Kaydet") + '</button>';
+    var shareBtn = '<button type="button" class="btn btn--ghost btn--sm" onclick="(navigator.share?navigator.share({title:this.dataset.t,url:location.href}):navigator.clipboard&&navigator.clipboard.writeText(location.href))" data-t="' + KB.esc(l.baslik) + '">📤 Paylaş</button>';
+
+    var qiItems = [
+      { ico: "💰", lbl: "Maaş",           val: l.maas_aralik || "Belirtilmedi",                               cls: l.maas_aralik ? " jd-qi__val--green" : "" },
+      { ico: "⏰", lbl: "Çalışma Saati",  val: l.calisma_saatleri || "Belirtilmedi",                          cls: "" },
+      { ico: "🛵", lbl: "Araç",           val: l.arac || "Belirtilmedi",                                      cls: "" },
+      { ico: "📋", lbl: "Çalışma Şekli", val: l.calisma_sekli || l.vardiya_tipi || "Belirtilmedi",           cls: "" },
+      { ico: "🛡️", lbl: "Sigorta",        val: l.sigorta || "Belirtilmedi",                                   cls: (l.sigorta && l.sigorta.indexOf("SGK") !== -1) ? " jd-qi__val--green" : "" },
+      { ico: "💵", lbl: "Ödeme Modeli",  val: l.maas_modeli || "Belirtilmedi",                               cls: "" },
+      { ico: "📍", lbl: "Çalışma Bölgesi", val: l.teslimat_bolge || loc || "Belirtilmedi",                   cls: "" },
+      { ico: "👥", lbl: "Kontenjan",      val: l.kontenjan ? l.kontenjan + " kişi" : "Belirtilmedi",         cls: "" }
+    ];
+
+    function richPara(text) {
+      if (!text) return "";
+      return text.split(/\n\n+/).map(function(p) { var t = p.trim(); return t ? '<p>' + KB.esc(t) + '</p>' : ""; }).join("");
+    }
+
+    var BICO = { "Yakıt": "⛽", "yemek": "🍽️", "Kaza": "🛡️", "SGK": "🛡️", "Yol": "🚌", "İkramiye": "🎁", "Telefon": "📱", "Sağlık": "🏥", "Prim": "💰", "Esnek": "🕐", "servis": "🚌" };
+    function bIco(f) { var fl = f.toLowerCase(); for (var k in BICO) { if (fl.indexOf(k.toLowerCase()) !== -1) return BICO[k]; } return "✓"; }
+    var benefitHtml = (l.faydalar || []).map(function(f) {
+      var isSgk = f.toLowerCase().indexOf("sgk") !== -1 || (f.indexOf("sigorta") !== -1 && f.indexOf("Kaza") === -1);
+      return '<span class="jc-benefit-tag' + (isSgk ? " jc-benefit-tag--sgk" : "") + '">' + bIco(f) + " " + KB.esc(f) + '</span>';
+    }).join("");
+
+    var reqHtml = (l.gereksinimler || []).map(function(r) {
+      var met = "neutral";
+      if (myProfile) {
+        var rl = r.toLowerCase();
+        if ((rl.indexOf("ehliyet") !== -1 || rl.indexOf("motosiklet") !== -1 || rl.indexOf("bisiklet") !== -1) && myProfile.arac) met = "met";
+        else if (rl.indexOf("deneyim") !== -1 && myProfile.deneyim) met = "met";
+        else if (rl.indexOf("telefon") !== -1 || rl.indexOf("iletişim") !== -1) met = "met";
+      }
+      return '<li class="jd-req jd-req--' + met + '"><span class="jd-req__ic">' + (met === "met" ? "✓" : "·") + '</span><span class="jd-req__text">' + KB.esc(r) + '</span></li>';
+    }).join("");
+
+    var locFields = [
+      { lbl: "Şehir", val: l.sehir }, { lbl: "Bölge / İlçe", val: l.bolge },
+      { lbl: "Mahalle / Adres", val: l.adres }, { lbl: "Teslimat Bölgesi", val: l.teslimat_bolge },
+      { lbl: "Yakın Metro / Durak", val: l.yakin_metro }
+    ].filter(function(f) { return f.val; });
+
+    var compDesc = l.sahipRol === "firma"
+      ? "Kurye firması — platform üzerinden kurye istihdamı sağlar."
+      : "Kayıtlı işletme — platformumuz üzerinden kurye çalıştırır.";
+    if (l.sahipId && window.KB_DATA) {
+      var cArr = l.sahipRol === "firma" ? (KB_DATA.firmalar || []) : (KB_DATA.isletmeler || []);
+      for (var ci = 0; ci < cArr.length; ci++) {
+        if (cArr[ci].id === l.sahipId) { compDesc = cArr[ci].hakkinda || cArr[ci].bio || compDesc; break; }
+      }
+    }
+
+    var relJobs = [];
+    if (window.KB_DATA && KB_DATA.ilanlar) {
+      for (var ri = 0; ri < KB_DATA.ilanlar.length && relJobs.length < 3; ri++) {
+        var rj = KB_DATA.ilanlar[ri];
+        if (rj.id !== l.id && rj.durum !== "kapali" && (rj.sehir === l.sehir || rj.kategori === l.kategori)) relJobs.push(rj);
+      }
+    }
+
+    var score = 0;
+    if (window.KBPrefs && canPool()) { score = KBPrefs.matchScore(l); }
+    else { score = talentScore(l.id); }
+    score = Math.max(0, Math.min(100, score));
+    var scoreColor = score >= 70 ? "#16A34A" : score >= 45 ? "#D97706" : "#DC2626";
+    var scoreLbl = score >= 70 ? "Yüksek uyum — başvurabilirsiniz" : score >= 45 ? "Orta uyum — denemeye değer" : "Düşük uyum — tercihleri güncelleyin";
+
+    var eligHtml = "";
+    if (canPool() && myProfile && myProfile.role === "kurye") {
+      var eligChecks = [
+        { ok: !!(myProfile.arac),                lbl: "Araç: " + (myProfile.arac || "Profilde belirtilmedi") },
+        { ok: !!(myProfile.deneyim),             lbl: "Deneyim: " + (myProfile.deneyim || "Profilde belirtilmedi") },
+        { ok: myProfile.sehir === l.sehir,       lbl: "Şehir: " + (myProfile.sehir === l.sehir ? "Eşleşiyor (" + (l.sehir || "") + ")" : "Farklı şehir") },
+        { ok: !!(myProfile.yayinda),             lbl: "Profil durumu: " + (myProfile.yayinda ? "Yayında" : "Yayında değil — havuzda görünmüyorsunuz") }
+      ];
+      eligHtml = '<div class="jd-section"><h2>Başvuru Uygunluğum</h2><div class="jd-match-items">' +
+        eligChecks.map(function(c) {
+          return '<div class="jd-match-item' + (c.ok ? " jd-match-item--ok" : "") + '"><span class="jd-match-item__ic">' + (c.ok ? "✅" : "⚪") + '</span><span class="jd-match-item__text">' + KB.esc(c.lbl) + '</span></div>';
+        }).join("") +
+        '</div>' + (eligChecks.some(function(c) { return !c.ok; }) ? '<a href="profil-duzenle.html" class="btn btn--ghost btn--sm" style="display:inline-flex;margin-top:12px">Profili Tamamla →</a>' : '') + '</div>';
+    }
+
+    var html =
+      '<div class="jd-hero">' +
+        '<div class="jd-hero__co">' + logoHtml +
+          '<div class="jd-hero__co-info">' +
+            '<div class="jd-hero__co-name"><a href="' + pUrl + '" style="color:inherit;text-decoration:none">' + KB.esc(l.sahip || "İşletme") + '</a>' + verBadge + '</div>' +
+            '<div class="jd-hero__co-role">' + (l.sahipRol === "firma" ? "Kurye Firması" : "İşletme") + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<h1 class="jd-hero__title">' + KB.esc(l.baslik) + '</h1>' +
+        '<div class="jd-hero__meta">' +
+          (loc ? '<span>📍 ' + KB.esc(loc) + '</span>' : '') +
+          '<span>📅 ' + timeAgo(l.tarih) + ' yayınlandı</span>' +
+          deadlineMeta +
+          '<span>👥 ' + appCount(l.id) + ' başvuru</span>' +
+        '</div>' +
+        '<div class="jd-hero__tags">' + tagHtml + '</div>' +
+        '<div class="jd-hero__actions">' + applyBtn(false) + favSmall + shareBtn + '</div>' +
+      '</div>' +
+
+      '<div class="jd">' +
+        '<div class="jd-main">' +
+
+          '<div class="jd-quickinfo">' +
+            qiItems.map(function(q) {
+              return '<div class="jd-qi"><div class="jd-qi__ico">' + q.ico + '</div><div class="jd-qi__label">' + q.lbl + '</div><div class="jd-qi__val' + q.cls + '">' + KB.esc(q.val) + '</div></div>';
+            }).join("") +
+          '</div>' +
+
+          (l.aciklama || l.gorev_tanimi || l.gunluk_akis || l.beklentiler ?
+            '<div class="jd-section"><h2>Görev Tanımı</h2><div class="jd-desc-rich">' +
+              richPara(l.aciklama || l.gorev_tanimi) +
+              (l.gunluk_akis ? '<div class="jd-desc-sub-h">Günlük Akış</div>' + richPara(l.gunluk_akis) : '') +
+              (l.beklentiler ? '<div class="jd-desc-sub-h">Beklentiler</div>' + richPara(l.beklentiler) : '') +
+            '</div></div>' : '') +
+
+          (benefitHtml ?
+            '<div class="jd-section"><h2>Sağlanan Faydalar</h2><div class="jc-benefit-tags">' + benefitHtml + '</div>' +
+            (l.bonus && l.bonus !== "Yok" ? '<div style="margin-top:10px;font-size:0.8rem;color:var(--text-2)">🎁 Prim/Bonus: ' + KB.esc(l.bonus) + '</div>' : '') +
+            '</div>' : '') +
+
+          (reqHtml ? '<div class="jd-section"><h2>Aranan Nitelikler</h2><ul class="jd-reqs">' + reqHtml + '</ul></div>' : '') +
+
+          (locFields.length ?
+            '<div class="jd-section"><h2>Çalışma Yeri</h2><div class="jd-loc-grid">' +
+              locFields.map(function(f) {
+                return '<div class="jd-loc-item"><div class="jd-loc-item__label">' + f.lbl + '</div><div class="jd-loc-item__val">' + KB.esc(f.val) + '</div></div>';
+              }).join("") +
+            '</div></div>' : '') +
+
+          '<div class="jd-section"><h2>Şirket Hakkında</h2><div class="jd-co-main">' +
+            '<div class="jd-co-main__logo">' + inits + '</div>' +
+            '<div class="jd-co-main__body">' +
+              '<div class="jd-co-main__name">' + KB.esc(l.sahip || "—") + verBadge + '</div>' +
+              '<div class="jd-co-main__meta">' + KB.esc(compDesc) + '</div>' +
+              '<a href="' + pUrl + '" class="btn btn--ghost btn--sm" style="display:inline-flex;margin-top:10px">Profili Görüntüle →</a>' +
+            '</div>' +
+          '</div></div>' +
+
+          eligHtml +
+
+          (relJobs.length ?
+            '<div class="jd-related"><div class="jd-related__title">Benzer İlanlar</div><div class="jd-related__grid">' +
+              relJobs.map(function(r) {
+                return '<a class="jd-rel-item" href="ilan.html?id=' + r.id + '">' +
+                  '<div class="jd-rel-item__av">' + KB.initials(r.sahip || "?") + '</div>' +
+                  '<div class="jd-rel-item__body">' +
+                    '<div class="jd-rel-item__title">' + KB.esc(r.baslik) + '</div>' +
+                    '<div class="jd-rel-item__meta">' + KB.esc(r.sahip || "") + (r.sehir ? " · " + KB.esc(r.sehir) : '') + '</div>' +
+                    (r.maas_aralik ? '<div class="jd-rel-item__salary">💰 ' + KB.esc(r.maas_aralik) + '</div>' : '') +
+                  '</div>' +
+                '</a>';
+              }).join("") +
+            '</div></div>' : '') +
+
+        '</div>' +
+
+        '<aside class="jd-side">' +
+          '<div class="jd-apply-card">' +
+            (l.maas_aralik ? '<div class="jd-salary"><div class="jd-salary__val">💰 ' + KB.esc(l.maas_aralik) + '</div><div class="jd-salary__model">' + KB.esc(l.maas_modeli || "") + (l.sigorta ? " · " + KB.esc(l.sigorta) : '') + '</div></div>' : '') +
+            deadlineRow +
+            (l.kontenjan ? '<p style="font-size:0.8rem;color:var(--text-2);margin:0 0 12px">👥 ' + l.kontenjan + ' açık pozisyon</p>' : '') +
+            '<div class="jd-apply-card__act">' + applyBtn(true) + favLarge + '</div>' +
+          '</div>' +
+
+          '<div class="jd-match-card">' +
+            '<div class="jd-match-card__head"><span class="jd-match-card__title">Uyum Skoru</span></div>' +
+            '<div class="jd-match-ring" style="background:conic-gradient(' + scoreColor + ' ' + (score * 3.6).toFixed(1) + 'deg,var(--border) 0%)">' +
+              '<div class="jd-match-ring__inner">%' + score + '</div>' +
+            '</div>' +
+            '<div style="text-align:center;font-size:0.78rem;color:var(--text-2);margin-bottom:12px">' + scoreLbl + '</div>' +
+            (!canPool() ? '<a href="profil-duzenle.html" class="btn btn--ghost btn--sm btn--block">Tercihlerimi Güncelle</a>' : '') +
+          '</div>' +
+
+          '<div class="jd-company">' +
+            '<div class="jd-company__head">' +
+              (l.sahipAvatar ? '<img class="jd-company__logo" src="' + KB.esc(l.sahipAvatar) + '" alt="">' : '<div class="jd-company__logo--ph">' + inits + '</div>') +
+              '<div><div class="jd-company__name">' + KB.esc(l.sahip || "—") + '</div><div class="jd-company__role">' + (l.sahipRol === "firma" ? "Kurye Firması" : "İşletme") + '</div></div>' +
+            '</div>' +
+            '<a class="jd-company__link" href="' + pUrl + '">Profili Görüntüle →</a>' +
+          '</div>' +
+        '</aside>' +
+      '</div>' +
+
+      '<div class="jd-mobilebar">' + applyBtn(false) + favSmall + '</div>';
+
+    return { html: html, title: (l.baslik || "İlan") + " · Kuryemi Bul" };
+  }
+
   async function renderJobDetail() {
     var host = document.getElementById("jobDetailRoot");
     if (!host) return;
@@ -2181,78 +2413,25 @@
     if (!id) { host.innerHTML = jobNotFound(); return; }
     var l = null;
     if (!online()) {
-      l = (window.KB_DATA && KB_DATA.ilanlar || []).filter(function (x) { return x.id === id; })[0];
+      l = (window.KB_DATA && KB_DATA.ilanlar || []).filter(function(x) { return x.id === id; })[0];
       if (!l) { host.innerHTML = jobNotFound(); return; }
     } else {
-      try { l = await SB.listingById(id); } catch (e) {}
+      try { l = await SB.listingById(id); } catch(e) {}
       if (!l) { host.innerHTML = jobNotFound(); return; }
     }
-
-    var applied = false, owner = false;
+    var applied = false, owner = false, myProfile = null;
     if (canPool()) {
-      try { (await SB.appliedListingIds()).forEach(function (x) { if (String(x) === String(id)) applied = true; }); } catch (e) {}
-      var mp = KB.session() && KB.session().profile; owner = !!(mp && mp.id === l.owner_id);
+      try { (await SB.appliedListingIds()).forEach(function(x) { if (String(x) === String(id)) applied = true; }); } catch(e) {}
+      myProfile = KB.session() && KB.session().profile;
+      owner = !!(myProfile && myProfile.id === l.owner_id);
     }
-    var saved = isSavedJob(l.id);
-    var loc = [l.sehir, l.bolge].filter(Boolean).join(" · ");
-    var profilePage = l.sahipRol === "firma" ? "profil-firma.html" : "profil-isletme.html";
-    var ver = l.sahipDogrulama === "verified" ? ' <span class="ver-badge" title="' + T("kyc.verified") + '">✓ ' + T("kyc.verifiedShort") + '</span>' : "";
-    var logo = l.sahipAvatar
-      ? '<img class="jd-company__logo" src="' + KB.esc(l.sahipAvatar) + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'jd-company__logo jd-company__logo--ph\',textContent:\'' + KB.esc(KB.initials(l.sahip || "?")) + '\'}))">'
-      : '<div class="jd-company__logo jd-company__logo--ph">' + KB.initials(l.sahip || "?") + '</div>';
-    function applyBtn(block) {
-      var cls = "btn btn--primary " + (block ? "btn--lg btn--block" : "btn--sm");
-      if (!canPool()) return '<a class="' + cls + '" href="giris.html">' + T("cta.signin") + '</a>';
-      if (owner) return '<span class="chip">' + T("ilan.own") + '</span>';
-      if (applied) return '<span class="chip chip--ok">✓ ' + T("ilan.applied") + '</span>';
-      return '<button class="' + cls + '" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '" data-company="' + KB.esc(l.sahip || "") + '" data-loc="' + KB.esc(loc) + '">' + T("ilan.apply") + '</button>';
-    }
-    var favBtn = '<button type="button" class="job-fav' + (saved ? " is-on" : "") + '" data-savejob="' + l.id + '" aria-pressed="' + (saved ? "true" : "false") + '" aria-label="' + T(saved ? "ilan.saved" : "ilan.save") + '" title="' + T(saved ? "ilan.saved" : "ilan.save") + '">' + (saved ? "♥" : "♡") + '</button>';
-    var tags = '<span class="chip chip--open">● ' + T("ilan.statusOpen") + '</span>' +
-      (l.arac ? '<span class="chip">🛵 ' + KB.esc(l.arac) + '</span>' : '') +
-      (isFresh(l.tarih) ? '<span class="chip chip--new">' + T("ilan.new") + '</span>' : '');
-
-    host.innerHTML =
-      '<a class="jd-back" href="ilanlar.html">← ' + T("jd.back") + '</a>' +
-      '<div class="jd">' +
-        '<div class="jd-main">' +
-          '<div class="jd-head">' +
-            '<div class="employer-badge"><div class="employer-badge__av">' + KB.initials(l.sahip || "?") + '</div><span class="employer-badge__name">' + KB.esc(l.sahip || T("ilan.unknown")) + '</span></div>' +
-            '<h1 class="jd-title">' + KB.esc(l.baslik) + '</h1>' +
-            '<div class="jd-meta">' + (loc ? '<span>📍 ' + KB.esc(loc) + '</span>' : "") + '<span>🕐 ' + T("jd.postedOn") + ': ' + timeAgo(l.tarih) + '</span></div>' +
-            '<div class="job-card__tags" style="margin-top:14px">' + tags + '</div>' +
-          '</div>' +
-          '<div class="jd-section"><h2>' + T("jd.about") + '</h2><p class="jd-desc">' + (l.aciklama ? KB.esc(l.aciklama) : T("jd.noDesc")) + '</p></div>' +
-          '<div class="jd-section"><h2>' + T("jd.details") + '</h2><dl class="kv">' +
-            '<dt>' + T("apl.position") + '</dt><dd>' + KB.esc(l.baslik) + '</dd>' +
-            (loc ? '<dt>' + T("apl.location") + '</dt><dd>' + KB.esc(loc) + '</dd>' : "") +
-            (l.arac ? '<dt>Araç Tipi</dt><dd>' + KB.esc(l.arac) + '</dd>' : "") +
-            (l.maas_aralik ? '<dt>Maaş</dt><dd>' + KB.esc(l.maas_aralik) + (l.maas_modeli ? ' (' + KB.esc(l.maas_modeli) + ')' : '') + '</dd>' : "") +
-            (l.calisma_saatleri ? '<dt>Çalışma Saati</dt><dd>' + KB.esc(l.calisma_saatleri) + '</dd>' : "") +
-            (l.vardiya_tipi ? '<dt>Vardiya Tipi</dt><dd>' + KB.esc(l.vardiya_tipi) + '</dd>' : "") +
-            (l.sigorta ? '<dt>Sigorta</dt><dd>' + KB.esc(l.sigorta) + '</dd>' : "") +
-            (l.teslimat_bolge ? '<dt>Teslimat Bölgesi</dt><dd>' + KB.esc(l.teslimat_bolge) + '</dd>' : "") +
-            (l.bonus && l.bonus !== "Yok" ? '<dt>Prim / Bonus</dt><dd>' + KB.esc(l.bonus) + '</dd>' : "") +
-            (l.son_basvuru ? '<dt>Son Başvuru</dt><dd>' + KB.esc(l.son_basvuru) + '</dd>' : "") +
-            (l.kontenjan ? '<dt>Açık Pozisyon</dt><dd>' + l.kontenjan + ' kişi</dd>' : "") +
-            '<dt>' + T("jd.postedOn") + '</dt><dd>' + KB.esc(l.tarih) + '</dd>' +
-          '</dl></div>' +
-          (l.faydalar && l.faydalar.length ? '<div class="jd-section"><h2>Sağlanan Faydalar</h2><div class="prf-chips">' + l.faydalar.map(function (f) { return '<span class="chip chip--ok">✓ ' + KB.esc(f) + '</span>'; }).join("") + '</div></div>' : '') +
-        '</div>' +
-        '<aside class="jd-side">' +
-          '<div class="jd-apply-card">' +
-            (l.maas_aralik ? '<div class="jd-salary"><div class="jd-salary__val">💰 ' + KB.esc(l.maas_aralik) + '</div><div class="jd-salary__model">' + KB.esc(l.maas_modeli || "") + (l.sigorta ? ' · ' + KB.esc(l.sigorta) : '') + '</div></div>' : '') +
-            (l.kontenjan ? '<p style="font-size:0.8rem;color:var(--text-2);margin:0 0 12px">👥 ' + l.kontenjan + ' açık pozisyon</p>' : '') +
-            '<div class="jd-apply-card__act">' + applyBtn(true) + favBtn + '</div>' +
-          '</div>' +
-          '<div class="jd-company">' +
-            '<div class="jd-company__head">' + logo + '<div><div class="jd-company__name">' + KB.esc(l.sahip || T("ilan.unknown")) + ver + '</div><div class="jd-company__role">' + T("role." + (l.sahipRol || "isletme")) + '</div></div></div>' +
-            '<a class="jd-company__link" href="' + profilePage + '?id=' + (l.owner_id || l.sahipId || "") + '">' + T("jd.viewCompany") + '</a>' +
-          '</div>' +
-        '</aside>' +
-      '</div>' +
-      '<div class="jd-mobilebar">' + applyBtn(true) + favBtn + '</div>';
-    document.title = (l.baslik || "İlan") + " · Kuryemi Bul";
+    var result = buildJobDetailHtml(l, { applied: applied, owner: owner, saved: isSavedJob(l.id), myProfile: myProfile });
+    host.innerHTML = '<a class="jd-back" href="ilanlar.html">← İlanlara Dön</a>' + result.html;
+    document.title = result.title;
+    try {
+      var vk = "kb_job_views_" + l.id;
+      localStorage.setItem(vk, (parseInt(localStorage.getItem(vk) || "0", 10) + 1));
+    } catch(e) {}
   }
 
   /* ============ KAYITLI İLANLAR (favoriler) ============ */
@@ -2554,7 +2733,7 @@
     renderPool: renderPool, renderProfile: renderProfile,
     initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initMapExperience: initMapExperience, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings,
-    renderJobDetail: renderJobDetail, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages,
+    renderJobDetail: renderJobDetail, buildJobDetailHtml: buildJobDetailHtml, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages,
     renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials
   };
 })();
