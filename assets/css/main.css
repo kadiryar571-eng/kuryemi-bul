@@ -48,6 +48,37 @@
   --topbar-h:       56px;
 }
 
+/* ─── 2b. DARK TEMA ──────────────────────────────────────────── */
+[data-theme="dark"] {
+  --primary:        #5B9EFF;
+  --primary-dark:   #4080FF;
+  --primary-light:  #192A50;
+
+  --bg:             #111318;
+  --surface:        #1C1F2A;
+  --surface-2:      #232736;
+
+  --border:         #2E3348;
+  --border-focus:   #5B9EFF;
+
+  --text:           #E6E8F0;
+  --text-2:         #9BA4B8;
+  --text-3:         #5C6478;
+
+  --success:        #34D399;
+  --success-bg:     #0A2818;
+  --error:          #F87171;
+  --error-bg:       #2A0C0C;
+  --warning:        #FBBF24;
+  --warning-bg:     #261700;
+  --info:           #60C8F8;
+  --info-bg:        #071B2C;
+
+  --shadow-sm:      0 1px 3px rgba(0,0,0,.40);
+  --shadow:         0 2px 8px rgba(0,0,0,.50);
+  --shadow-lg:      0 8px 24px rgba(0,0,0,.65);
+}
+
 /* ─── 3. RESET & BASE ────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -5405,3 +5436,124 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   .fb-crit-label { min-width: unset; }
   .fb-rep-big { font-size: 2.2rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK TEMA — Hardcode renk override'ları
+   CSS değişkeni kullanmayan spesifik sınıflar için
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Tema toggle butonu */
+.theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-2);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* Durum badge'leri */
+[data-theme="dark"] .level-badge--standart    { background: #2D2006; color: #FCD34D; }
+[data-theme="dark"] .level-badge--profesyonel { background: #0A1F2E; color: #7DD3F8; }
+[data-theme="dark"] .level-badge--premium     { background: #1E0A2E; color: #C084FC; }
+
+[data-theme="dark"] .job-badge--new    { background: #0D1F3C; color: #93C5FD; }
+[data-theme="dark"] .job-badge--match  { background: #0A2818; color: #6EE7B7; }
+[data-theme="dark"] .job-badge--urgent { background: #2A0C0C; color: #FCA5A5; }
+
+/* Chip renkleri */
+[data-theme="dark"] .chip--urgent { background: #2A0C0C; color: #FCA5A5; border-color: rgba(248,113,113,.3); }
+[data-theme="dark"] .chip--apc-incel   { background: #261700; color: #FCD34D; border-color: #4A3000; }
+[data-theme="dark"] .chip--apc-mulakat { background: #2A1500; color: #FDBA74; border-color: #4A2800; }
+[data-theme="dark"] .chip--apc-red     { background: #2A0C0C; color: #FCA5A5; border-color: #4A1818; }
+
+/* Match score */
+[data-theme="dark"] .match-score.is-match-high { background: #0A2818; color: #34D399; }
+[data-theme="dark"] .match-score.is-match-low  { background: #2A0C0C; color: #F87171; }
+
+/* Benefit tags */
+[data-theme="dark"] .jc-benefit-tag--sgk { background: #0A2818; border-color: rgba(52,211,153,.2); color: #34D399; }
+
+/* Mesaj baloncukları */
+[data-theme="dark"] .msg-conv.is-active { background: #192A50; }
+
+/* Profil adımları */
+[data-theme="dark"] .prof-step.is-done        { background: #0A2818; border-color: #1B4D30; }
+[data-theme="dark"] .prof-step.is-done:hover  { background: #0D3320; border-color: #34D399; }
+[data-theme="dark"] .prof-step__ic--done      { background: #0A2818; color: #34D399; }
+[data-theme="dark"] .prof-step__ic--pending   { background: #232736; color: #5C6478; }
+
+/* Belge durumları */
+[data-theme="dark"] .doc-status--yuklendi          { background: #0A1A2E; color: #93C5FD; border-color: rgba(147,197,253,.2); }
+[data-theme="dark"] .doc-status--inceleniyor       { background: #261700; color: #FCD34D; border-color: rgba(252,211,77,.2); }
+[data-theme="dark"] .doc-status--onaylandi         { background: #0A2818; color: #34D399; border-color: rgba(52,211,153,.2); }
+[data-theme="dark"] .doc-status--reddedildi        { background: #2A0C0C; color: #F87171; border-color: rgba(248,113,113,.2); }
+[data-theme="dark"] .doc-status--suresi_yaklasiyor { background: #2A1500; color: #FDBA74; border-color: rgba(253,186,116,.2); }
+
+[data-theme="dark"] .doc-hint--reddedildi        { background: #2A0C0C; color: #FCA5A5; border-color: rgba(248,113,113,.12); }
+[data-theme="dark"] .doc-hint--suresi_yaklasiyor { background: #2A1500; color: #FDBA74; border-color: rgba(253,186,116,.12); }
+[data-theme="dark"] .doc-hint--inceleniyor       { background: #261700; color: #FCD34D; border-color: rgba(252,211,77,.12); }
+
+/* Ab doc onay */
+[data-theme="dark"] .ab-doc.is-checked { border-color: rgba(52,211,153,.3); background: #0A2818; }
+[data-theme="dark"] .ab-doc-row__ic--ok { background: #0A2818; color: #34D399; }
+
+/* Doğrulama chip */
+[data-theme="dark"] .wi-val-chip--ok   { background: #0A2818; color: #34D399; border-color: rgba(52,211,153,.15); }
+[data-theme="dark"] .wi-val-chip--warn { background: #2A0C0C; color: #F87171; border-color: rgba(248,113,113,.15); }
+
+/* İlan durum badge'leri */
+[data-theme="dark"] .ilds-badge--durdu   { background: #2A1500; color: #FDBA74; border-color: #4A2800; }
+[data-theme="dark"] .ilds-badge--suresi  { background: #261700; color: #FCD34D; border-color: #4A3000; }
+[data-theme="dark"] .ilds-badge--iptal   { background: #2A0C0C; color: #FCA5A5; border-color: #4A1818; }
+
+[data-theme="dark"] .ilds-pipe-ico--warn   { background: #261700; border-color: var(--warning); }
+[data-theme="dark"] .ilds-pipe-ico--danger { background: #2A0C0C; border-color: var(--error); }
+
+[data-theme="dark"] .ilds-alert--closed  { background: #2A0C0C; border-color: #4A1818; color: #FCA5A5; }
+[data-theme="dark"] .ilds-alert--paused  { background: #261700; border-color: #4A3000; color: #FCD34D; }
+[data-theme="dark"] .ilds-alert--expired { background: #261700; border-color: #4A3000; color: #FCD34D; }
+
+/* Aktivite dot'lar */
+[data-theme="dark"] .atl-dot--view    { background: #2A1500; color: #FDBA74; }
+[data-theme="dark"] .atl-dot--msg     { background: #0A2818; color: #34D399; }
+[data-theme="dark"] .atl-dot--profile { background: #1E0A2E; color: #C084FC; }
+[data-theme="dark"] .atl-dot--save    { background: #232736; color: #9BA4B8; }
+[data-theme="dark"] .atl-badge--view    { background: #2A1500; color: #FDBA74; }
+[data-theme="dark"] .atl-badge--msg     { background: #0A2818; color: #34D399; }
+[data-theme="dark"] .atl-badge--profile { background: #1E0A2E; color: #C084FC; }
+[data-theme="dark"] .atl-badge--save    { background: #232736; color: #9BA4B8; }
+
+/* Kalite kontrol */
+[data-theme="dark"] .ilq-vis--1        { background: #2A0C0C; color: #FCA5A5; }
+[data-theme="dark"] .ilq-title-sugg    { background: #261700; border-color: #4A3000; }
+[data-theme="dark"] .ilq-check-full--warn { background: #261700; }
+[data-theme="dark"] .ilq-check-full--crit { background: #2A0C0C; }
+
+/* Hover rengi override */
+[data-theme="dark"] .active-chip:hover  { background: #192A50; }
+[data-theme="dark"] .btn--light:hover   { background: #192A50; }
+
+/* Bildirim renkleri */
+[data-theme="dark"] .notif-badge--ilan      { background: #0D1F3C; color: #5B9EFF; }
+[data-theme="dark"] .notif-badge--basvuru   { background: #0A2818; color: #34D399; }
+[data-theme="dark"] .notif-badge--mesaj     { background: #1E0A2E; color: #C084FC; }
+[data-theme="dark"] .notif-badge--profil    { background: #261700; color: #FBBF24; }
+[data-theme="dark"] .notif-badge--hatirlatma { background: #2A0C0C; color: #F87171; }
+
+/* Deneyim badge */
+[data-theme="dark"] .exp-badge--gold { background: #261700; color: #FCD34D; border-color: rgba(252,211,77,.25); }
+
+/* Genel yüzey yedek renk (bazı inline style ile yazılmış bloklar) */
+[data-theme="dark"] .pi-card,
+[data-theme="dark"] .card         { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea      { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder { color: var(--text-3); }

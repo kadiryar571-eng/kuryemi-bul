@@ -740,7 +740,7 @@
   if (!DICT[lang]) lang = "tr";
 
   // Arka plan renk temasını olabildiğince erken uygula (parlama olmasın)
-  document.documentElement.setAttribute("data-theme", localStorage.getItem("kb_theme") === "light" ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", localStorage.getItem("kb_theme") === "dark" ? "dark" : "light");
   // Erişilebilirlik tercihleri (yazı boyutu + kontrast) — parlama olmasın diye erken uygula
   (function () {
     var fs = localStorage.getItem("kb_fontscale");

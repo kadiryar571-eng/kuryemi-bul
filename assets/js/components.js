@@ -43,8 +43,20 @@
   function session() { return SESSION; }
 
   /* ─── THEME ────────────────────────────────────────────────── */
-  function getTheme() { return 'light'; }
-  function setTheme()  {}
+  function getTheme() {
+    return localStorage.getItem('kb_theme') === 'dark' ? 'dark' : 'light';
+  }
+  function setTheme(theme) {
+    var t = theme === 'dark' ? 'dark' : 'light';
+    localStorage.setItem('kb_theme', t);
+    document.documentElement.setAttribute('data-theme', t);
+    /* Sync tüm tema toggle butonlarını güncelle */
+    document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
+      btn.textContent = t === 'dark' ? '☀️' : '🌙';
+      btn.title = t === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç';
+    });
+  }
+  function toggleTheme() { setTheme(getTheme() === 'dark' ? 'light' : 'dark'); }
 
   /* ─── ROLE / PANEL ─────────────────────────────────────────── */
   var ROLE_LABELS = { guest: 'Ziyaretçi', ziyaretci: 'Ziyaretçi', kurye: 'Kurye', isletme: 'İşletme', firma: 'Kurye Firması', admin: 'Admin' };
@@ -199,6 +211,7 @@
       '</div>' +
       '<div class="topbar-spacer"></div>' +
       '<div class="topbar-actions">' +
+        '<button class="theme-toggle-btn" id="topbarThemeToggle" title="' + (getTheme() === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç') + '">' + (getTheme() === 'dark' ? '☀️' : '🌙') + '</button>' +
         '<a class="topbar-ico-btn" href="bildirimler.html" title="Bildirimler" style="position:relative">' + SIC.bell + '<span id="kbNotifBadge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:99px;background:var(--error);color:#fff;font-size:0.65rem;font-weight:700;align-items:center;justify-content:center;padding:0 3px;pointer-events:none"></span></a>' +
         '<a class="topbar-ico-btn" href="mesajlar.html" title="Mesajlar">' + SIC.messages + '</a>' +
         '<a class="topbar-ico-btn" href="profil-' + (role !== 'guest' ? role : 'kurye') + '.html" title="' + esc(name) + '" style="width:auto;padding:0 8px;gap:6px;font-size:.85rem;font-weight:600;color:var(--text-2)">' +
@@ -216,6 +229,12 @@
         if (sb) sb.classList.toggle('is-open');
         if (ov) ov.classList.toggle('is-open');
       });
+    }
+
+    /* Tema toggle */
+    var themeBtn = el.querySelector('#topbarThemeToggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () { toggleTheme(); });
     }
 
     /* Notification badge */
@@ -299,7 +318,8 @@
 
   /* ─── HEADER DISPATCH ──────────────────────────────────────── */
   function renderHeader() {
-    document.documentElement.setAttribute('data-theme', 'light');
+    /* Kullanıcı tercihini uygula (i18n.js zaten erken apply eder, bu sadece garanti) */
+    document.documentElement.setAttribute('data-theme', getTheme());
 
     if (isAuthPage() || isLandingPage()) return;
 
@@ -435,6 +455,11 @@
     /* offline teklif */
     getTeklifler:   getTeklifler,
     addTeklif:      addTeklif,
+
+    /* tema */
+    getTheme:       getTheme,
+    setTheme:       setTheme,
+    toggleTheme:    toggleTheme,
 
     /* render (dahili, ihtiyaç halinde yeniden tetiklemek için) */
     renderTopbar:   renderTopbar,
