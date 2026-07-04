@@ -16,16 +16,21 @@ window.IsletmeScreens = (function () {
     { id: '1', name: 'Ayşe Demir', preview: 'Merhaba, ilanınızı gördüm...', time: '14:30', unread: 1 }
   ];
 
+  var _basCache = [];
+
   function _adayCard(a) {
+    var name  = a.ad || a.name || 'Kurye';
+    var score = a.puan != null && a.puan > 0 ? Number(a.puan).toFixed(1) : (a.score || '—');
+    var sub   = a.sehir || a.loc || 'Başvurdu';
+    var badge = a.durum === 'reviewed' ? '<span class="kb-chip kb-chip--success" style="font-size:.7rem;padding:2px 8px">İncelendi</span>' :
+                a.durum === 'accepted' ? '<span class="kb-chip kb-chip--accent" style="font-size:.7rem;padding:2px 8px">Kabul</span>' :
+                a.ilanBaslik ? '<span style="font-size:.7rem;color:var(--muted)">' + a.ilanBaslik + '</span>' : '';
     return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/isletme/aday/' + a.id + '\')">' +
-      '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(a.name) + '</div>' +
+      '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
       '<div class="person-card__info">' +
-        '<div class="person-card__name">' + a.name + '</div>' +
-        '<div class="person-card__sub">' + a.exp + '</div>' +
-        '<div class="person-card__meta">' +
-          '<span class="kb-stars">' + ICON.star + a.score + '</span>' +
-          '<span class="person-card__time">' + a.time + '</span>' +
-        '</div>' +
+        '<div class="person-card__name">' + name + '</div>' +
+        '<div class="person-card__sub">' + sub + '</div>' +
+        '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + score + '</span>' + badge + '</div>' +
       '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
     '</div>';
@@ -106,20 +111,6 @@ window.IsletmeScreens = (function () {
       '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
       '<div class="metric-card__val">' + val + '</div>' +
       '<div class="metric-card__lbl">' + lbl + '</div>' +
-    '</div>';
-  }
-
-  function _iAppCard(ico, title, desc, statusLbl, statusCls, time) {
-    return '<div class="actapp-card" onclick="Router.go(\'/isletme/basvurular\')">' +
-      '<div class="actapp-card__top">' +
-        '<div class="actapp-card__ico">' + ico + '</div>' +
-        '<div class="actapp-card__info">' +
-          '<div class="actapp-card__title">' + title + '</div>' +
-          '<div class="actapp-card__company">' + desc + '</div>' +
-        '</div>' +
-        '<div class="actapp-card__time">' + time + '</div>' +
-      '</div>' +
-      '<div class="actapp-card__bottom"><span class="app-status app-status--' + statusCls + '">' + statusLbl + '</span></div>' +
     '</div>';
   }
 
@@ -360,50 +351,96 @@ window.IsletmeScreens = (function () {
         '<div class="kb-tabs" id="isletme-bas-tabs">' +
           '<button class="kb-tab active" onclick="IsletmeScreens._basFilter(\'tumu\',this)">Tümü</button>' +
           '<button class="kb-tab"        onclick="IsletmeScreens._basFilter(\'yeni\',this)">Yeni</button>' +
-          '<button class="kb-tab"        onclick="IsletmeScreens._basFilter(\'deger\',this)">Değerlendirilen</button>' +
+          '<button class="kb-tab"        onclick="IsletmeScreens._basFilter(\'deger\',this)">İncelendi</button>' +
         '</div>' +
-        '<div id="isletme-bas-list">' + MOCK_ADAYLAR.map(_adayCard).join('') + '</div>' +
+        '<div id="isletme-bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
       '</div>'
     );
+
+    setTimeout(function () { _loadBasvurularAsync(); }, 130);
+  }
+
+  async function _loadBasvurularAsync() {
+    var el = document.getElementById('isletme-bas-list');
+    if (!el) return;
+
+    if (!window.SB || !SB.isOn()) {
+      el.innerHTML = MOCK_ADAYLAR.map(_adayCard).join('');
+      return;
+    }
+
+    try {
+      var apps = await SB.allMyListingApplications();
+      _basCache = apps || [];
+      el.innerHTML = _basCache.length
+        ? _basCache.map(_adayCard).join('')
+        : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Henüz başvuru yok</div><div class="kb-empty__sub">İlan oluşturun, başvurular burada görünür.</div></div>';
+    } catch(e) {
+      console.warn('_loadBasvurularAsync:', e);
+      el.innerHTML = MOCK_ADAYLAR.map(_adayCard).join('');
+    }
   }
 
   function _basFilter(type, btn) {
     document.querySelectorAll('#isletme-bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
+
+    var list = _basCache.length ? _basCache : MOCK_ADAYLAR;
+    var filtered = list;
+    if (type === 'yeni')  filtered = list.filter(function (a) { return (a.durum || a.status) === 'pending' || !(a.durum || a.status); });
+    if (type === 'deger') filtered = list.filter(function (a) { return (a.durum || a.status) === 'reviewed'; });
+
+    var el = document.getElementById('isletme-bas-list');
+    if (el) el.innerHTML = filtered.length
+      ? filtered.map(_adayCard).join('')
+      : '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">Bu filtrede sonuç yok</div></div>';
   }
 
   /* ── 5. ADAY DETAY ──────────────────────────────────────── */
   function adayDetay(ctx) {
     var id = ctx.params.id;
-    var a  = MOCK_ADAYLAR.find(function (x) { return x.id === id; }) || MOCK_ADAYLAR[0];
+    var a  = _basCache.find(function(x) { return x.id === id; }) ||
+             MOCK_ADAYLAR.find(function(x) { return x.id === id; }) ||
+             MOCK_ADAYLAR[0];
 
-    showAppBar(a.name, true);
+    var name  = a.ad || a.name || 'Kurye';
+    var score = a.puan != null && a.puan > 0 ? Number(a.puan).toFixed(1) : (a.score || '—');
+    var sub   = a.sehir || a.loc || '';
+    var durum = a.durum || a.status || '';
+
+    showAppBar(name, true);
     showBottomNav();
+
+    var durumBadge = durum === 'reviewed' ?
+      '<span class="kb-chip kb-chip--success">✓ İncelendi</span>' :
+      durum === 'accepted' ?
+      '<span class="kb-chip kb-chip--accent">✓ Kabul Edildi</span>' :
+      '<span class="kb-chip">⏳ Değerlendiriliyor</span>';
 
     renderScreen(
       '<div>' +
         '<div class="detail-hero">' +
           '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">' +
-            '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(a.name) + '</div>' +
+            '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
             '<div>' +
-              '<div style="font-size:1.1rem;font-weight:800">' + a.name + '</div>' +
-              '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + a.score + '</div>' +
-              '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' +
+              '<div style="font-size:1.1rem;font-weight:800">' + name + '</div>' +
+              '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + score + '</div>' +
+              durumBadge +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        '<div class="detail-section">' +
-          '<div class="detail-section__title">Deneyim & Konum</div>' +
-          '<div class="detail-row">' + ICON.briefcase + a.exp + '</div>' +
-          '<div class="detail-row">' + ICON.pin + a.loc + '</div>' +
-          '<div class="detail-row">' + ICON.clock + 'Müsaitlik: 13:00 – 18:00</div>' +
-        '</div>' +
+        (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + sub + '</div></div>' : '') +
 
-        '<div class="detail-section">' +
-          '<div class="detail-section__title">Maaş Beklentisi</div>' +
-          '<div style="font-size:1rem;font-weight:700;color:var(--c-isletme)">15.000 – 20.000 ₺/ay</div>' +
-        '</div>' +
+        (a.ilanBaslik ? '<div class="detail-section"><div class="detail-section__title">Başvurulan İlan</div>' +
+          '<div class="detail-row">' + ICON.briefcase + a.ilanBaslik + '</div></div>' : '') +
+
+        (a.mesaj ? '<div class="detail-section"><div class="detail-section__title">Başvuru Mesajı</div>' +
+          '<div style="font-size:.88rem;color:var(--text);line-height:1.6;padding:4px 0">' + a.mesaj + '</div></div>' : '') +
+
+        (a.tarih ? '<div class="detail-section"><div class="detail-row" style="color:var(--muted)">' + ICON.clock + 'Başvuru tarihi: ' + a.tarih + '</div></div>' : '') +
+
+        '<div id="aday-profil-extra"></div>' +
 
         '<div class="detail-cta" style="display:flex;gap:10px">' +
           '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/mesajlar\')" style="flex:1;--c-accent:var(--c-isletme)">Mesaj Gönder</button>' +
@@ -411,10 +448,30 @@ window.IsletmeScreens = (function () {
         '</div>' +
       '</div>'
     );
+
+    if (a.applicantId && window.SB && SB.isOn()) {
+      SB.profileById(a.applicantId).then(function(p) {
+        if (!p) return;
+        var el = document.getElementById('aday-profil-extra');
+        if (!el) return;
+        var rows = [];
+        if (p.experience || p.exp) rows.push('<div class="detail-row">' + ICON.briefcase + (p.experience || p.exp) + '</div>');
+        if (p.vehicle)   rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + p.vehicle + '</div>');
+        if (p.bio)       rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + p.bio + '</div>');
+        if (rows.length) {
+          el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
+        }
+      }).catch(function() {});
+    }
   }
 
   function _kabul(id) {
-    toast('Aday kabul edildi!');
+    if (window.SB && SB.isOn()) {
+      SB.updateApplication(id, 'reviewed').catch(function() {});
+      var idx = _basCache.findIndex(function(x) { return x.id === id; });
+      if (idx >= 0) _basCache[idx].durum = 'reviewed';
+    }
+    toast('Aday kabul edildi! ✓');
     setTimeout(function () { Router.back(); }, 700);
   }
 

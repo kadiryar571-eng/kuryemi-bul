@@ -542,6 +542,25 @@
   async function updateApplication(id, durum) {
     return client.from("applications").update({ durum: durum }).eq("id", id);
   }
+  async function allMyListingApplications() {
+    var u = await getUser();
+    if (!u) return [];
+    var lr = await client.from("listings").select("id,baslik").eq("owner_user", u.id);
+    if (lr.error || !lr.data || !lr.data.length) return [];
+    var listingMap = {};
+    lr.data.forEach(function (l) { listingMap[l.id] = l.baslik; });
+    var ids = lr.data.map(function (l) { return l.id; });
+    var ar = await client.from("applications")
+      .select("*, applicant:applicant_id(id,ad,role,puan,sehir)")
+      .in("listing_id", ids).order("created_at", { ascending: false });
+    if (ar.error) { console.warn("allMyListingApplications:", ar.error); return []; }
+    return (ar.data || []).map(function (a) {
+      return { id: a.id, durum: a.durum, mesaj: a.mesaj, tarih: (a.created_at || "").slice(0, 10),
+        listingId: a.listing_id, ilanBaslik: listingMap[a.listing_id] || "",
+        applicantId: a.applicant && a.applicant.id, ad: (a.applicant && a.applicant.ad) || "Kurye",
+        puan: (a.applicant && Number(a.applicant.puan)) || 0, sehir: a.applicant && a.applicant.sehir };
+    });
+  }
 
 
   /* ---------- KYC / KİMLİK DOĞRULAMA ---------- */
@@ -807,7 +826,7 @@
     createListing: createListing, myListings: myListings, openListings: openListings, listingById: listingById,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
-    listingApplications: listingApplications, updateApplication: updateApplication,
+    listingApplications: listingApplications, updateApplication: updateApplication, allMyListingApplications: allMyListingApplications,
     applyWithConv: applyWithConv, myConvs: myConvs, getConvDetail: getConvDetail,
     sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,

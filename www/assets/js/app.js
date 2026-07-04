@@ -401,11 +401,48 @@
     Router.define('/admin/ayarlar',      AdminScreens.ayarlar);
   }
 
+  /* ── Native push notifications (Capacitor) ───────────────── */
+  function initNativePush() {
+    try {
+      if (!window.Capacitor || !Capacitor.isNativePlatform()) return;
+      var PushNotifications = Capacitor.Plugins.PushNotifications;
+      if (!PushNotifications) return;
+
+      PushNotifications.requestPermissions().then(function (result) {
+        if (result.receive !== 'granted') return;
+        PushNotifications.register();
+      }).catch(function () {});
+
+      PushNotifications.addListener('registration', function (token) {
+        if (!token || !token.value) return;
+        if (window.SB && SB.isOn()) {
+          SB.getUser().then(function (u) {
+            if (!u) return;
+            return SB.savePushToken(token.value);
+          }).catch(function () {});
+        }
+      });
+
+      PushNotifications.addListener('pushNotificationReceived', function (notif) {
+        var title = (notif.title || 'KuryemiBul');
+        var body  = (notif.body  || '');
+        toast(title + (body ? ' — ' + body : ''), 4000);
+      });
+
+      PushNotifications.addListener('pushNotificationActionPerformed', function (action) {
+        var data = action.notification && action.notification.data;
+        if (data && data.route) Router.go(data.route);
+      });
+    } catch (e) {
+      /* Firebase henüz yapılandırılmamış — sessizce geç */
+    }
+  }
+
   /* ── DOMContentLoaded ─────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
     window.renderNav = renderNav; /* demo mode için expose */
     registerRoutes();
-    boot();
+    boot().then(function () { initNativePush(); });
   });
 
 })();
