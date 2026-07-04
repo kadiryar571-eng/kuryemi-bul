@@ -82,7 +82,7 @@ window.IsletmeScreens = (function () {
       )
     }));
 
-    _loadIsletmePanelStats();
+    setTimeout(function () { _loadIsletmePanelStats(); }, 130);
   }
 
   async function _loadIsletmePanelStats() {
@@ -169,6 +169,22 @@ window.IsletmeScreens = (function () {
   }
 
   /* ── 3. İLAN OLUŞTUR ────────────────────────────────────── */
+  var FAYDA_LIST = ['SGK / Sigorta','Yemek Kartı','Servis / Ulaşım','Araç Yakıtı','Aidat Desteği','Ekipman'];
+  var GEREK_LIST = ['Ehliyet (B)','Motorsiklet','Araç Sahibi','Akıllı Telefon','App Kullanımı'];
+
+  function _sectionTitle(t) {
+    return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-isletme,#FF6B35);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(255,107,53,.2)">' + t + '</div>';
+  }
+  function _chipChecks(ids, list, prefix) {
+    return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">' +
+      list.map(function(item, i) {
+        var id = prefix + i;
+        return '<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1.5px solid rgba(255,107,53,.35);background:var(--surface2,rgba(255,107,53,.08));font-size:.82rem;cursor:pointer;color:inherit">' +
+          '<input type="checkbox" id="' + id + '" value="' + item + '" style="accent-color:var(--c-isletme,#FF6B35);width:15px;height:15px;flex-shrink:0"> ' + item + '</label>';
+      }).join('') +
+    '</div>';
+  }
+
   function ilanYeni() {
     showAppBar('İlan Oluştur', true);
     showBottomNav();
@@ -176,72 +192,155 @@ window.IsletmeScreens = (function () {
 
     renderScreen(
       '<div class="kb-screen-inner">' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">Pozisyon</label>' +
-          '<select class="kb-select" id="il-poz">' +
-            '<option>Yaya Kurye</option>' +
-            '<option>Motorlu Kurye</option>' +
-            '<option>Araçlı Kurye</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">Çalışma Türü</label>' +
-          '<select class="kb-select" id="il-tur">' +
-            '<option>Part Time</option>' +
-            '<option>Tam Zamanlı</option>' +
-            '<option>Sözleşmeli</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">Maaş (₺/ay)</label>' +
-          '<div class="flex" style="gap:8px">' +
-            '<input class="kb-input" type="number" placeholder="15.000">' +
-            '<input class="kb-input" type="number" placeholder="20.000">' +
-          '</div>' +
-        '</div>' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">Çalışma Saatleri</label>' +
-          '<div class="flex" style="gap:8px">' +
-            '<input class="kb-input" type="time" value="13:00">' +
-            '<input class="kb-input" type="time" value="18:00">' +
-          '</div>' +
-        '</div>' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">Konum</label>' +
-          '<input class="kb-input" id="il-konum" type="text" placeholder="Kadıköy, İstanbul">' +
-        '</div>' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">Açıklama (Opsiyonel)</label>' +
-          '<textarea class="kb-input" id="il-aciklama" rows="3" placeholder="Ek bilgi..."></textarea>' +
-        '</div>' +
-        '<button id="il-yayinla-btn" class="btn btn--primary" style="background:var(--c-isletme)" onclick="IsletmeScreens._yayinla()">İlan Yayınla</button>' +
-        '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+
+      _sectionTitle('Temel Bilgiler') +
+      '<div class="kb-form-group"><label class="kb-label">Pozisyon *</label>' +
+        '<select class="kb-select" id="il-poz">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Yaya Kurye</option><option>Bisiklet Kurye</option>' +
+          '<option>Motorlu Kurye</option><option>Araçlı Kurye</option><option>Cargo Kurye</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Kategori</label>' +
+        '<select class="kb-select" id="il-kat">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Yemek Teslimatı</option><option>Kargo / Paket</option>' +
+          '<option>Market / Alışveriş</option><option>Motokurye</option><option>Genel Kurye</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Şehir *</label>' +
+        '<input class="kb-input" id="il-sehir" type="text" placeholder="İstanbul"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">İlçe / Bölge</label>' +
+        '<input class="kb-input" id="il-bolge" type="text" placeholder="Kadıköy"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Mahalle / Teslimat Bölgesi</label>' +
+        '<input class="kb-input" id="il-mahalle" type="text" placeholder="Moda, Caddebostan..."></div>' +
+
+      _sectionTitle('Çalışma Detayları') +
+      '<div class="kb-form-group"><label class="kb-label">Çalışma Şekli</label>' +
+        '<select class="kb-select" id="il-sekli">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Tam Zamanlı</option><option>Yarı Zamanlı</option>' +
+          '<option>Sözleşmeli</option><option>Freelance</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Vardiya Tipi</label>' +
+        '<select class="kb-select" id="il-vardiya">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Gündüz (08-18)</option><option>Akşam (16-24)</option>' +
+          '<option>Gece (22-08)</option><option>Esnek</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Maaş Modeli</label>' +
+        '<select class="kb-select" id="il-maas-model">' +
+          '<option value="aylık">Aylık (₺/ay)</option>' +
+          '<option value="günlük">Günlük (₺/gün)</option>' +
+          '<option value="saatlik">Saatlik (₺/sa)</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Maaş Aralığı (₺)</label>' +
+        '<div class="flex" style="gap:8px">' +
+          '<input class="kb-input" id="il-maas-min" type="number" placeholder="Min (25.000)">' +
+          '<input class="kb-input" id="il-maas-max" type="number" placeholder="Max (35.000)">' +
+        '</div></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Çalışma Saatleri</label>' +
+        '<input class="kb-input" id="il-saat" type="text" placeholder="09:00 - 18:00"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Araç Tipi</label>' +
+        '<select class="kb-select" id="il-arac">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Yaya</option><option>Bisiklet</option>' +
+          '<option>Motorsiklet</option><option>Otomobil</option><option>Van / Minibüs</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Deneyim</label>' +
+        '<select class="kb-select" id="il-deneyim">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Tecrübesiz (Kabul)</option><option>0-6 ay</option>' +
+          '<option>6-12 ay</option><option>1-2 yıl</option><option>2+ yıl</option>' +
+        '</select></div>' +
+
+      _sectionTitle('İş Tanımı') +
+      '<div class="kb-form-group"><label class="kb-label">Görev Tanımı</label>' +
+        '<textarea class="kb-input" id="il-gorev" rows="4" placeholder="Kurye görev ve sorumlulukları..."></textarea></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Beklentiler</label>' +
+        '<textarea class="kb-input" id="il-beklenti" rows="3" placeholder="Adaydan beklentiler, aranan özellikler..."></textarea></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Ek Açıklama</label>' +
+        '<textarea class="kb-input" id="il-aciklama" rows="3" placeholder="Diğer bilgiler..."></textarea></div>' +
+
+      _sectionTitle('Faydalar & Haklar') +
+      '<div class="kb-form-group"><label class="kb-label">Sigorta</label>' +
+        '<select class="kb-select" id="il-sigorta">' +
+          '<option value="">Seçiniz</option>' +
+          '<option value="SGK">SGK Sigortalı</option>' +
+          '<option value="Bağkur">Bağkur</option>' +
+          '<option value="Yok">Sigortasız</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Prim / Bonus</label>' +
+        '<input class="kb-input" id="il-prim" type="text" placeholder="Haftalık performans primi..."></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Sağlanan Faydalar</label>' +
+        _chipChecks(FAYDA_LIST, FAYDA_LIST, 'il-fayda-') +
+      '</div>' +
+      '<div class="kb-form-group"><label class="kb-label">Gereksinimler</label>' +
+        _chipChecks(GEREK_LIST, GEREK_LIST, 'il-gerek-') +
+      '</div>' +
+
+      _sectionTitle('Ek Bilgiler') +
+      '<div class="kb-form-group"><label class="kb-label">Kontenjan (Kişi Sayısı)</label>' +
+        '<input class="kb-input" id="il-kontenjan" type="number" placeholder="1" min="1"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Son Başvuru Tarihi</label>' +
+        '<input class="kb-input" id="il-sonbas" type="date"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Öncelik</label>' +
+        '<select class="kb-select" id="il-oncelik">' +
+          '<option value="normal">Normal</option>' +
+          '<option value="acil">🔥 Acil</option>' +
+        '</select></div>' +
+
+      '<div style="height:16px"></div>' +
+      '<button id="il-yayinla-btn" class="btn btn--primary" style="background:var(--c-isletme,#FF6B35);width:100%" onclick="IsletmeScreens._yayinla()">İlan Yayınla</button>' +
+      '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+      '<div style="height:32px"></div>' +
       '</div>'
     );
   }
 
   async function _yayinla() {
-    var btn   = document.getElementById('il-yayinla-btn');
-    var hata  = document.getElementById('il-hata');
+    var btn  = document.getElementById('il-yayinla-btn');
+    var hata = document.getElementById('il-hata');
     if (btn)  { btn.disabled = true; btn.textContent = 'Yayınlanıyor…'; }
     if (hata) hata.style.display = 'none';
 
-    var pozEl  = document.getElementById('il-poz');
-    var konEl  = document.getElementById('il-konum');
-    var acEl   = document.getElementById('il-aciklama');
+    function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+    function checks(prefix, count) {
+      var out = [];
+      for (var i = 0; i < count; i++) {
+        var el = document.getElementById(prefix + i);
+        if (el && el.checked) out.push(el.value);
+      }
+      return out;
+    }
 
-    var baslik   = pozEl ? pozEl.value.trim() : '';
-    var sehir    = konEl ? konEl.value.trim() : '';
-    var aciklama = acEl  ? acEl.value.trim()  : '';
+    var baslik = v('il-poz');
+    var sehir  = v('il-sehir');
 
     if (!baslik) {
       if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
       if (hata) { hata.textContent = 'Pozisyon seçiniz.'; hata.style.display = 'block'; }
       return;
     }
+    if (!sehir) {
+      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (hata) { hata.textContent = 'Şehir giriniz.'; hata.style.display = 'block'; }
+      return;
+    }
 
     try {
-      await SB.createListing({ baslik: baslik, sehir: sehir, aciklama: aciklama });
+      await SB.createListing({
+        baslik: baslik, kategori: v('il-kat'),
+        sehir: sehir, bolge: v('il-bolge'), mahalle: v('il-mahalle'),
+        calisma_sekli: v('il-sekli'), vardiya_tipi: v('il-vardiya'),
+        maas_modeli: v('il-maas-model'), maas_min: v('il-maas-min'), maas_max: v('il-maas-max'),
+        calisma_saatleri: v('il-saat'), arac: v('il-arac'), deneyim: v('il-deneyim'),
+        gorev_tanimi: v('il-gorev'), beklentiler: v('il-beklenti'), aciklama: v('il-aciklama'),
+        sigorta: v('il-sigorta'), bonus: v('il-prim'),
+        faydalar: checks('il-fayda-', FAYDA_LIST.length),
+        gereksinimler: checks('il-gerek-', GEREK_LIST.length),
+        kontenjan: parseInt(v('il-kontenjan'), 10) || 1,
+        son_basvuru: v('il-sonbas') || null, oncelik: v('il-oncelik') || 'normal',
+        tip: 'kurye-ilani'
+      });
       toast('İlanınız yayınlandı! ✓');
       setTimeout(function () { Router.go('/isletme/basvurular'); }, 800);
     } catch(e) {

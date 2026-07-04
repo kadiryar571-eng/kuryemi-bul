@@ -122,7 +122,7 @@ window.KuryeScreens = (function () {
       '</div>'
     );
 
-    _loadPanelStats();
+    setTimeout(function () { _loadPanelStats(); }, 130);
   }
 
   async function _loadPanelStats() {
@@ -673,7 +673,7 @@ window.KuryeScreens = (function () {
     );
 
     _ilRender();
-    _loadRealIlanlar(); // DB'den gerçek ilanları async yükle
+    setTimeout(function () { _loadRealIlanlar(); }, 130);
   }
 
   function _dbListingToIlan(l) {
@@ -968,7 +968,7 @@ window.KuryeScreens = (function () {
       '</div>'
     );
 
-    _loadBasvurular();
+    setTimeout(function () { _loadBasvurular(); }, 130);
   }
 
   function _basLabel(durum) {
@@ -1252,8 +1252,7 @@ window.KuryeScreens = (function () {
       '</div>'
     );
 
-    // SB'den gerçek konuşmaları async yükle (varsa MOCK'un üzerine yazar)
-    _loadConvsAsync();
+    setTimeout(function () { _loadConvsAsync(); }, 130);
   }
 
   function _msgTab(btn, tab) {
@@ -1493,7 +1492,7 @@ window.KuryeScreens = (function () {
           _chatFooterHTML() +
         '</div>'
       );
-      _loadRealChat(id);
+      setTimeout(function () { _loadRealChat(id); }, 130);
     } else {
       // MOCK: mevcut demo konuşması
       var k    = MOCK_KONUSMALAR.find(function (x) { return x.id === id; }) || MOCK_KONUSMALAR[0];

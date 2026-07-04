@@ -225,7 +225,8 @@ window.LoginScreens = (function () {
       if (result && result.error) throw result.error;
       await _afterLogin();
     } catch (e) {
-      _showErr(errEl, 'Giriş başarısız. Bilgileri kontrol et.');
+      var msg = (e && (e.message || e.msg || e.error_description || JSON.stringify(e))) || 'Bilinmeyen hata';
+      _showErr(errEl, msg);
       btn.disabled = false;
       btn.textContent = 'Giriş Yap';
     }

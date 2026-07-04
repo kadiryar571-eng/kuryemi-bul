@@ -428,13 +428,20 @@
       sehir: l.sehir, bolge: l.bolge, arac: l.arac, durum: l.durum,
       tarih: (l.created_at || "").slice(0, 10),
       sahip: (l.owner && l.owner.ad) || "",
-      // Harita için: ilanın konumu = sahibi olan işletmenin koordinatı
       lat: (l.owner && l.owner.lat != null) ? l.owner.lat : null,
       lng: (l.owner && l.owner.lng != null) ? l.owner.lng : null,
-      // İlan detayı / firma bölümü için (yalnız listingById join'inde dolu)
       sahipAvatar: (l.owner && l.owner.avatar_url) || "",
       sahipDogrulama: (l.owner && l.owner.dogrulama) || "none",
-      sahipRol: (l.owner && l.owner.role) || "isletme"
+      sahipRol: (l.owner && l.owner.role) || "isletme",
+      kategori: l.kategori || "", mahalle: l.mahalle || "", teslimat_bolge: l.teslimat_bolge || "",
+      calisma_sekli: l.calisma_sekli || "", vardiya_tipi: l.vardiya_tipi || "",
+      maas_min: l.maas_min || null, maas_max: l.maas_max || null, maas_modeli: l.maas_modeli || "aylık", maas_aralik: l.maas_aralik || "",
+      calisma_saatleri: l.calisma_saatleri || "", deneyim: l.deneyim || "",
+      sigorta: l.sigorta || "", bonus: l.bonus || "",
+      faydalar: l.faydalar || [], gereksinimler: l.gereksinimler || [],
+      gorev_tanimi: l.gorev_tanimi || "", gunluk_akis: l.gunluk_akis || "", beklentiler: l.beklentiler || "",
+      kontenjan: l.kontenjan || 1, son_basvuru: l.son_basvuru || "", oncelik: l.oncelik || "normal",
+      tip: l.tip || ""
     };
   }
   async function listingById(id) {
@@ -450,10 +457,22 @@
     if (!u) throw new Error("oturum yok");
     var me = await myProfile();
     if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    var maasMin = fields.maas_min ? parseInt(fields.maas_min, 10) : null;
+    var maasMax = fields.maas_max ? parseInt(fields.maas_max, 10) : null;
+    var maasAralik = (maasMin && maasMax) ? (maasMin.toLocaleString('tr') + ' – ' + maasMax.toLocaleString('tr') + ' ₺/' + (fields.maas_modeli || 'ay')) : (maasMin ? maasMin.toLocaleString('tr') + ' ₺+' : '');
     var row = {
-      owner_id: me.id, owner_user: u.id, role: me.role,
-      baslik: fields.baslik, aciklama: fields.aciklama || "", sehir: fields.sehir || "",
-      bolge: fields.bolge || "", arac: fields.arac || ""
+      owner_id: me.id, owner_user: u.id, role: me.role, tip: fields.tip || "kurye-ilani",
+      baslik: fields.baslik, aciklama: fields.aciklama || "",
+      sehir: fields.sehir || "", bolge: fields.bolge || "", mahalle: fields.mahalle || "",
+      teslimat_bolge: fields.teslimat_bolge || fields.mahalle || fields.bolge || "",
+      arac: fields.arac || "", kategori: fields.kategori || "",
+      calisma_sekli: fields.calisma_sekli || "", vardiya_tipi: fields.vardiya_tipi || "",
+      maas_min: maasMin, maas_max: maasMax, maas_modeli: fields.maas_modeli || "aylık", maas_aralik: maasAralik,
+      calisma_saatleri: fields.calisma_saatleri || "", deneyim: fields.deneyim || "",
+      sigorta: fields.sigorta || "", bonus: fields.bonus || "",
+      faydalar: fields.faydalar || [], gereksinimler: fields.gereksinimler || [],
+      gorev_tanimi: fields.gorev_tanimi || "", gunluk_akis: fields.gunluk_akis || "", beklentiler: fields.beklentiler || "",
+      kontenjan: fields.kontenjan || 1, son_basvuru: fields.son_basvuru || null, oncelik: fields.oncelik || "normal"
     };
     var r = await client.from("listings").insert(row).select().maybeSingle();
     if (r.error) throw r.error;

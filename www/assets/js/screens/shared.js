@@ -18,7 +18,7 @@ window.SharedScreens = (function () {
       '</div>'
     );
 
-    _loadNotifs();
+    setTimeout(function () { _loadNotifs(); }, 130);
   }
 
   function _notifRelTime(iso) {
