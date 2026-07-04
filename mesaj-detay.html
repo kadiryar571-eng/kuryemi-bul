@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Görüşme Detayı · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<div id="app-topbar"></div>
+<div id="sidebar-overlay"></div>
+<nav id="app-sidebar"></nav>
+
+<div class="app-content" style="padding:0;overflow:hidden;">
+  <div class="mdt-layout" id="mdtLayout">
+
+    <!-- ── Left: message thread ── -->
+    <div class="mdt-main" id="mdtMain">
+
+      <!-- Mobile tabs -->
+      <div class="mdt-tabs" id="mdtTabs">
+        <button class="mdt-tab is-active" data-tab="messages">💬 Mesajlar</button>
+        <button class="mdt-tab" data-tab="details">📋 Detaylar</button>
+      </div>
+
+      <!-- Header -->
+      <div class="mdt-hdr" id="mdtHdr">
+        <div style="padding:20px;color:var(--text-3)">Yükleniyor…</div>
+      </div>
+
+      <!-- Messages -->
+      <div class="msg-bubbles" id="mdtBubbles"></div>
+
+      <!-- Typing indicator -->
+      <div class="mdt-typing" id="mdtTyping" style="display:none">
+        <div class="mdt-typing-dots">
+          <div class="mdt-typing-dot"></div>
+          <div class="mdt-typing-dot"></div>
+          <div class="mdt-typing-dot"></div>
+        </div>
+        <span id="mdtTypingLabel">Yazıyor…</span>
+      </div>
+
+      <!-- Quick replies -->
+      <div class="msg-quick-replies" id="mdtQuickReplies"></div>
+
+      <!-- Composer -->
+      <div class="msg-composer">
+        <button class="msg-attach-btn" data-mdt-action="attach" title="Dosya ekle">📎</button>
+        <button class="msg-loc-btn"    data-mdt-action="location" title="Konum paylaş">📍</button>
+        <textarea class="msg-input" id="mdtInput" placeholder="Mesajınızı yazın…" rows="1"></textarea>
+        <button class="msg-send-btn btn btn--primary btn--sm" data-mdt-action="send">Gönder</button>
+      </div>
+
+    </div>
+
+    <!-- ── Right: context sidebar ── -->
+    <aside class="mdt-sidebar" id="mdtSidebar">
+      <div id="mdtAppSummary"></div>
+      <div id="mdtQuickActions"></div>
+      <div id="mdtCommStatus"></div>
+      <div id="mdtInterview"></div>
+      <div id="mdtDecision"></div>
+      <div id="mdtFeedback"></div>
+    </aside>
+
+  </div>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/ilan-status.js"></script>
+<script src="assets/js/chat.js"></script>
+<script src="assets/js/interview.js"></script>
+<script src="assets/js/hiring.js"></script>
+<script src="assets/js/comm-status.js"></script>
+<script src="assets/js/feedback.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── State ─────────────────────────────────────────────────── */
+  var TID, uid, role, thread, job;
+  var showIvForm  = false;
+  var activeTab   = 'messages';
+  var typingTimer = null;
+
+  /* ─── Status definitions ────────────────────────────────────── */
+  var STATUS_STEPS = [
+    { key: 'beklemede',   lbl: 'Yeni',       ico: '🆕' },
+    { key: 'inceleniyor', lbl: 'İnceleniyor', ico: '👁' },
+    { key: 'gorusme',     lbl: 'Görüşme',     ico: '💬' },
+    { key: 'mulakat',     lbl: 'Mülakat',     ico: '📅' },
+    { key: 'kabul',       lbl: 'Kabul',        ico: '✅' }
+  ];
+  var STATUS_FULL = {
+    beklemede:   { lbl: 'Yeni Başvuru',     ico: '🆕', cls: 'beklemede' },
+    inceleniyor: { lbl: 'İnceleniyor',       ico: '👁', cls: 'inceleniyor' },
+    gorusme:     { lbl: 'Görüşme Süreci',   ico: '💬', cls: 'gorusme' },
+    mulakat:     { lbl: 'Mülakat Planlandı', ico: '📅', cls: 'mulakat' },
+    kabul:       { lbl: 'Kabul Edildi',      ico: '✅', cls: 'kabul' },
+    red:         { lbl: 'Reddedildi',        ico: '❌', cls: 'red' }
+  };
+  var DEC_DEFS = {
+    beklemede:          { lbl: 'Beklemede',         ico: '⏳', cls: 'beklemede' },
+    degerlendiriliyor:  { lbl: 'Değerlendiriliyor', ico: '🔍', cls: 'degerlendiriliyor' },
+    kabul:              { lbl: 'Kabul Edildi',       ico: '✅', cls: 'kabul' },
+    red:                { lbl: 'Reddedildi',         ico: '❌', cls: 'red' }
+  };
+
+  /* ─── Helpers ───────────────────────────────────────────────── */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function initials(n) {
+    return String(n||'?').split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0].toUpperCase();}).join('');
+  }
+  function timeAgo(iso) {
+    var d = Date.now() - new Date(iso).getTime(), min = Math.floor(d/60000);
+    if (min<1) return 'şimdi';
+    if (min<60) return min+'d önce';
+    var hr = Math.floor(min/60); if (hr<24) return hr+'sa önce';
+    return Math.floor(hr/24)+'g önce';
+  }
+  function formatTime(iso) {
+    var d = new Date(iso);
+    return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  }
+  function formatDatetime(dateStr, timeStr) {
+    if (!dateStr) return '—';
+    try {
+      var d = new Date(dateStr + 'T' + (timeStr||'00:00'));
+      var MO = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+      return d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear()+(timeStr?' — '+timeStr:'');
+    } catch(e) { return dateStr+(timeStr?' '+timeStr:''); }
+  }
+  function isBusinessRole() { return role === 'isletme' || role === 'firma'; }
+  function myRole()         { return isBusinessRole() ? 'isletme' : 'kurye'; }
+
+  /* ─── Data ──────────────────────────────────────────────────── */
+  function loadData() {
+    var threads = KBChat.getThreads(uid);
+    thread = threads.find(function(t) { return t.id === TID; });
+    if (!thread) { window.location.href = 'mesajlar.html'; return false; }
+
+    var demoJobs = (window.KB_DATA && KB_DATA.ilanlar) || [];
+    var lsJobs   = [];
+    try { lsJobs = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + (thread.isletmeId||uid)) || '[]'); } catch(e) {}
+    job = demoJobs.concat(lsJobs).find(function(j) { return j.id === thread.jobId; }) || null;
+    return true;
+  }
+
+  /* ─── Render: Header ────────────────────────────────────────── */
+  function renderHeader() {
+    var el = document.getElementById('mdtHdr');
+    if (!el || !thread) return;
+
+    var isBiz  = isBusinessRole();
+    var other  = isBiz ? thread.kurye.ad : thread.isletme.ad;
+    var status = thread.appStatus || 'beklemede';
+    var sdef   = STATUS_FULL[status] || STATUS_FULL.beklemede;
+
+    el.innerHTML =
+      '<div class="mdt-hdr-top">' +
+        '<button class="mdt-hdr-back" data-mdt-action="back">← Geri</button>' +
+        '<div class="mdt-hdr-av">' + esc(initials(thread.isletme.ad)) + '</div>' +
+        '<div class="mdt-hdr-info">' +
+          '<div class="mdt-hdr-company">' + esc(thread.isletme.ad) +
+            '<span class="mdt-hdr-verified">✓ Onaylı</span>' +
+          '</div>' +
+          '<div class="mdt-hdr-job">' + esc(thread.jobTitle) + '</div>' +
+          '<div class="mdt-hdr-meta">📅 Başvuru: ' + timeAgo(thread.createdAt) + '</div>' +
+        '</div>' +
+        '<div class="mdt-hdr-right">' +
+          '<span class="mdt-app-status mdt-app-status--' + esc(sdef.cls) + '">' + sdef.ico + ' ' + esc(sdef.lbl) + '</span>' +
+          (isBiz
+            ? '<a href="profil-kurye.html?id=' + esc(thread.kuryeId) + '" class="btn btn--sm btn--ghost" style="font-size:0.7rem">👤 ' + esc(other) + '</a>'
+            : '<a href="mesajlar.html" class="btn btn--sm btn--ghost" style="font-size:0.7rem">← Tüm Mesajlar</a>') +
+        '</div>' +
+      '</div>' +
+      '<div class="mdt-progress" id="mdtProgress">' + buildProgress(status) + '</div>';
+  }
+
+  function buildProgress(curStatus) {
+    var isRed  = curStatus === 'red';
+    var curIdx = STATUS_STEPS.findIndex(function(s) { return s.key === curStatus; });
+    if (curIdx === -1 && !isRed) curIdx = 0;
+
+    var html = STATUS_STEPS.map(function(step, i) {
+      var done   = !isRed && i < curIdx;
+      var active = !isRed && i === curIdx;
+      var dotCls = done ? 'done' : active ? 'active' : '';
+      var lblCls = dotCls;
+      return '<div class="mdt-progress-step">' +
+        (i > 0 ? '<div class="mdt-progress-line' + (done ? ' done' : '') + '"></div>' : '') +
+        '<div class="mdt-progress-node">' +
+          '<div class="mdt-progress-dot ' + dotCls + '">' + (done ? '✓' : step.ico) + '</div>' +
+          '<div class="mdt-progress-lbl ' + lblCls + '">' + step.lbl + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    if (isRed) {
+      html += '<div class="mdt-progress-step"><div class="mdt-progress-line"></div>' +
+        '<div class="mdt-progress-node"><div class="mdt-progress-dot fail">✗</div>' +
+        '<div class="mdt-progress-lbl fail">Reddedildi</div></div></div>';
+    }
+    return html;
+  }
+
+  /* ─── Render: Messages ──────────────────────────────────────── */
+  function renderMessages() {
+    var el = document.getElementById('mdtBubbles');
+    if (!el) return;
+    var msgs = KBChat.getMsgs(TID);
+
+    if (!msgs.length) {
+      el.innerHTML = '<div class="msg-no-msgs">Henüz mesaj yok. İlk mesajı gönderin.</div>';
+      scrollBottom();
+      return;
+    }
+
+    el.innerHTML = msgs.map(function(m, idx) {
+      if (m.type === 'system') {
+        return '<div class="msg-bubble msg-bubble--system">' + esc(m.content) + '</div>';
+      }
+      var isOut  = isBusinessRole() ? m.from === 'isletme' : m.from === 'kurye';
+      var cls    = 'msg-bubble ' + (isOut ? 'msg-bubble--out' : 'msg-bubble--in');
+      var icon   = m.type === 'file' ? '📎 ' : m.type === 'location' ? '📍 ' : m.type === 'image' ? '🖼 ' : '';
+      var isLast = idx === msgs.length - 1;
+      var receipt = (isOut && isLast)
+        ? '<div class="mdt-read ' + (m.read ? 'mdt-read--read' : 'mdt-read--delivered') + '">' +
+            (m.read ? '✓✓ Görüldü' : '✓ İletildi') + '</div>'
+        : '';
+      return '<div class="' + cls + '">' +
+        '<div class="msg-bubble-text">' + icon + esc(m.content) + '</div>' +
+        '<div class="msg-bubble-time">' + formatTime(m.ts) + '</div>' +
+        receipt +
+      '</div>';
+    }).join('');
+
+    scrollBottom();
+  }
+
+  /* ─── Render: Quick replies ─────────────────────────────────── */
+  function renderQuickReplies() {
+    var el = document.getElementById('mdtQuickReplies');
+    if (!el) return;
+    var list = isBusinessRole() ? KBChat.QUICK_REPLIES_ISLETME : KBChat.QUICK_REPLIES_KURYE;
+    el.innerHTML = list.map(function(r) {
+      return '<button class="msg-qr-chip" data-mdt-action="quick-reply" data-text="' + esc(r) + '">' + esc(r) + '</button>';
+    }).join('');
+  }
+
+  /* ─── Render: Application summary ──────────────────────────── */
+  function renderAppSummary() {
+    var el = document.getElementById('mdtAppSummary');
+    if (!el || !thread) return;
+
+    var j = job;
+    var salary  = j ? ((j.maas_min||j.maas) ? (j.maas_min||j.maas) + (j.maas_max ? '–'+j.maas_max : '') + ' ₺' : '—') : '—';
+    var bolge   = j ? (j.bolge || j.sehir || '—') : '—';
+    var sekil   = j ? (j.calisma_sekli || j.calismaSekli || '—') : '—';
+    var vardiya = j ? (j.vardiya_tipi || '—') : '—';
+    var basl    = j ? (j.baslangic_tarihi || j.ise_baslama || '') : '';
+
+    el.innerHTML =
+      '<div class="mdt-card">' +
+        '<div class="mdt-card-hdr">' +
+          '<span class="mdt-card-title">📄 Başvuru Özeti</span>' +
+          (j ? '<a href="ilanlar.html" class="mdt-card-action">İlanı Gör →</a>' : '') +
+        '</div>' +
+        '<div class="mdt-field-grid">' +
+          '<div class="mdt-field"><div class="mdt-field__lbl">Pozisyon</div><div class="mdt-field__val">' + esc(thread.jobTitle) + '</div></div>' +
+          '<div class="mdt-field"><div class="mdt-field__lbl">Maaş</div><div class="mdt-field__val">' + esc(salary) + '</div></div>' +
+          '<div class="mdt-field"><div class="mdt-field__lbl">Çalışma Modeli</div><div class="mdt-field__val">' + esc(sekil) + '</div></div>' +
+          '<div class="mdt-field"><div class="mdt-field__lbl">Bölge</div><div class="mdt-field__val">' + esc(bolge) + '</div></div>' +
+          '<div class="mdt-field"><div class="mdt-field__lbl">Vardiya</div><div class="mdt-field__val">' + esc(vardiya) + '</div></div>' +
+          (basl ? '<div class="mdt-field"><div class="mdt-field__lbl">Başlangıç</div><div class="mdt-field__val">' + esc(basl) + '</div></div>' : '') +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ─── Render: Quick actions ─────────────────────────────────── */
+  function renderQuickActions() {
+    var el = document.getElementById('mdtQuickActions');
+    if (!el || !thread) return;
+
+    var isBiz  = isBusinessRole();
+    var appSt  = thread.appStatus || 'beklemede';
+    var isDone = appSt === 'kabul' || appSt === 'red';
+    var iv     = KBChat.getInterview(TID);
+
+    var btns;
+    if (isBiz) {
+      btns = [
+        { ico:'👤', lbl:'Kurye Profilini Gör',  href:'profil-kurye.html?id='+esc(thread.kuryeId) },
+        { ico:'📂', lbl:'Belgeleri Kontrol Et',  action:'check-docs' },
+        { ico:'📅', lbl:'Mülakata Çağır',        action:'show-iv-form', cls:'--primary', dis: isDone || (iv && iv.status==='pending') },
+        { ico:'⭐', lbl:'Kısa Listeye Ekle',     action:'shortlist' },
+        { ico:'✅', lbl:'Kabul Et',              action:'accept',    cls:'--success', dis: appSt==='kabul' },
+        { ico:'❌', lbl:'Reddet',                action:'reject',    cls:'--danger',  dis: appSt==='red'   }
+      ];
+    } else {
+      btns = [
+        { ico:'✏️', lbl:'Profilimi Güncelle',         href:'profil-duzenle.html' },
+        { ico:'📂', lbl:'Belgelerimi Görüntüle',       action:'view-docs' },
+        { ico:'🗓', lbl:'Müsaitlik Bilgisi Paylaş',   action:'share-availability' },
+        { ico:'❓', lbl:'Sorularımı Gönder',           action:'send-questions' }
+      ];
+    }
+
+    el.innerHTML =
+      '<div class="mdt-card">' +
+        '<div class="mdt-card-hdr"><span class="mdt-card-title">⚡ Hızlı İşlemler</span></div>' +
+        '<div class="mdt-qa-list">' +
+          btns.map(function(b) {
+            var cls = 'mdt-qa-btn' + (b.cls ? ' mdt-qa-btn' + b.cls : '');
+            if (b.href) {
+              return '<a class="' + cls + '" href="' + esc(b.href) + '">' + b.ico + ' ' + esc(b.lbl) + '</a>';
+            }
+            return '<button class="' + cls + '" data-mdt-action="' + esc(b.action) + '"' +
+              (b.dis ? ' disabled' : '') + '>' + b.ico + ' ' + esc(b.lbl) + '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ─── Render: Interview block ───────────────────────────────── */
+  function renderInterview() {
+    var el = document.getElementById('mdtInterview');
+    if (!el) return;
+
+    var isBiz = isBusinessRole();
+    var iv    = KBChat.getInterview(TID);
+
+    var badgeCls = iv
+      ? (iv.status === 'confirmed' ? 'confirmed' : iv.status === 'cancelled' ? 'cancelled' : 'pending')
+      : 'none';
+    var badgeLbl = iv
+      ? (iv.status === 'confirmed' ? '✓ Onaylandı' : iv.status === 'cancelled' ? '✗ İptal' : '⏳ Beklemede')
+      : 'Planlanmadı';
+
+    var infoHtml = '';
+    if (iv && !showIvForm) {
+      infoHtml =
+        '<div class="mdt-iv-info">' +
+          '<div class="mdt-iv-row"><span class="mdt-iv-row-ico">📅</span>' + esc(formatDatetime(iv.date, iv.time)) + '</div>' +
+          '<div class="mdt-iv-row"><span class="mdt-iv-row-ico">' + (iv.type === 'online' ? '💻' : '📍') + '</span>' + esc(iv.type||'—') + '</div>' +
+          (iv.location ? '<div class="mdt-iv-row"><span class="mdt-iv-row-ico">📌</span>' + esc(iv.location) + '</div>' : '') +
+          (iv.notes    ? '<div class="mdt-iv-row"><span class="mdt-iv-row-ico">📝</span>' + esc(iv.notes)    + '</div>' : '') +
+        '</div>' +
+        '<div class="mdt-iv-acts">' +
+          (!isBiz && iv.status === 'pending'
+            ? '<button class="btn btn--sm btn--success" data-mdt-action="confirm-interview">✓ Onayla</button>' : '') +
+          (iv.status !== 'cancelled'
+            ? '<button class="btn btn--sm btn--ghost" data-mdt-action="cancel-interview">✗ İptal</button>' : '') +
+          (isBiz
+            ? '<button class="btn btn--sm btn--ghost" data-mdt-action="reschedule-interview">🔄 Yeniden Planla</button>' : '') +
+        '</div>';
+    }
+
+    var formHtml = '';
+    if (showIvForm && isBiz) {
+      var today = new Date().toISOString().slice(0,10);
+      formHtml =
+        '<div class="mdt-iv-form" id="mdtIvForm">' +
+          '<div class="mdt-iv-form-row">' +
+            '<div><label>Tarih</label><input type="date" id="ivDate" min="' + today + '" value="' + esc(iv&&iv.date||today) + '"></div>' +
+            '<div><label>Saat</label><input type="time" id="ivTime" value="' + esc(iv&&iv.time||'10:00') + '"></div>' +
+          '</div>' +
+          '<div><label>Tür</label><select id="ivType">' +
+            '<option value="online"' + (!iv||iv.type==='online'?' selected':'') + '>Online (Video/Telefon)</option>' +
+            '<option value="yüz yüze"' + (iv&&iv.type==='yüz yüze'?' selected':'') + '>Yüz Yüze</option>' +
+          '</select></div>' +
+          '<div><label>Yer / Link</label><input type="text" id="ivLocation" placeholder="Adres veya toplantı linki…" value="' + esc(iv&&iv.location||'') + '"></div>' +
+          '<div><label>Notlar</label><textarea id="ivNotes" rows="2" placeholder="Adaya iletilecek bilgiler…">' + esc(iv&&iv.notes||'') + '</textarea></div>' +
+          '<div class="mdt-iv-form-acts">' +
+            '<button class="btn btn--sm btn--ghost" data-mdt-action="cancel-iv-form">Vazgeç</button>' +
+            '<button class="btn btn--sm btn--primary" data-mdt-action="save-interview">📅 Planla</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    var emptyLine = (!iv && !showIvForm)
+      ? '<div style="font-size:0.78rem;color:var(--text-3);margin-top:2px">Henüz mülakat planlanmadı.</div>'
+      : '';
+    var planBtn = (isBiz && !showIvForm && (!iv || iv.status === 'cancelled'))
+      ? '<button class="btn btn--sm btn--ghost" style="margin-top:10px;width:100%;justify-content:center" data-mdt-action="show-iv-form">📅 Mülakat Planla</button>'
+      : '';
+
+    el.innerHTML =
+      '<div class="mdt-card">' +
+        '<div class="mdt-card-hdr">' +
+          '<span class="mdt-card-title">📅 Mülakat</span>' +
+          '<span class="mdt-iv-badge mdt-iv-badge--' + badgeCls + '">' + badgeLbl + '</span>' +
+        '</div>' +
+        emptyLine + infoHtml + formHtml + planBtn +
+      '</div>';
+  }
+
+  /* ─── Render: Decision block (delegates to KBHiring) ─────────── */
+  function renderDecision() {
+    var el = document.getElementById('mdtDecision');
+    if (!el) return;
+
+    if (window.KBHiring && thread.jobId && thread.kuryeId) {
+      var hdDec = KBHiring.getDecision(thread.jobId, thread.kuryeId);
+      var hdOb  = KBHiring.getOnboarding(thread.jobId, thread.kuryeId);
+      el.innerHTML = KBHiring.renderDecisionCard(hdDec, hdOb, role, thread.jobId, thread.kuryeId);
+      return;
+    }
+
+    var isBiz     = isBusinessRole();
+    var dec       = KBChat.getDecision(TID);
+    var decStatus = dec ? dec.status : 'beklemede';
+    var def       = DEC_DEFS[decStatus] || DEC_DEFS.beklemede;
+
+    var optsHtml = '';
+    if (isBiz) {
+      var opts = [
+        { key:'beklemede',         lbl:'⏳ Beklemede' },
+        { key:'degerlendiriliyor', lbl:'🔍 Değerlendirme' },
+        { key:'kabul',             lbl:'✅ Kabul Et' },
+        { key:'red',               lbl:'❌ Reddet' }
+      ];
+      optsHtml = '<div class="mdt-dec-opts">' +
+        opts.map(function(o) {
+          return '<button class="mdt-dec-opt' + (decStatus===o.key?' is-active--'+o.key:'') + '" data-mdt-action="set-decision" data-dec="' + o.key + '">' + o.lbl + '</button>';
+        }).join('') +
+      '</div>';
+    }
+    var noteHtml = (dec && dec.note) ? '<div style="font-size:0.78rem;color:var(--text-2);margin-bottom:8px;font-style:italic">"' + esc(dec.note) + '"</div>' : '';
+    var onboard  = (decStatus === 'kabul') ? '<div class="mdt-dec-onboard">🎉 <strong>Kabul Edildi!</strong> <a href="karar.html?job=' + esc(thread.jobId||'') + '&kid=' + esc(thread.kuryeId||'') + '">İşe başlangıç bilgilerini buradan doldurun →</a></div>' : '';
+    var rejMsg   = (decStatus === 'red' && !isBiz) ? '<div style="font-size:0.78rem;color:var(--error);margin-top:8px;padding:8px 10px;background:#FEF2F2;border-radius:var(--radius)">Başvurunuz değerlendirildi. Başarılar dileriz.</div>' : '';
+
+    el.innerHTML =
+      '<div class="mdt-card">' +
+        '<div class="mdt-card-hdr"><span class="mdt-card-title">⚖️ İşe Alım Kararı</span></div>' +
+        '<div class="mdt-dec-bar"><div class="mdt-dec-ico">' + def.ico + '</div><div class="mdt-dec-lbl mdt-dec-lbl--' + esc(def.cls) + '">' + esc(def.lbl) + '</div></div>' +
+        noteHtml + optsHtml + onboard + rejMsg +
+      '</div>';
+  }
+
+  /* ─── Render: Feedback mini card ────────────────────────────── */
+  function renderFeedback() {
+    var el = document.getElementById('mdtFeedback');
+    if (!el || !thread || !window.KBFeedback) return;
+
+    var jobId     = thread.jobId     || '';
+    var kuryeId   = thread.kuryeId   || '';
+    var isletmeId = thread.isletmeId || uid;
+
+    if (!jobId || !kuryeId) { el.innerHTML = ''; return; }
+
+    var canSubmit = KBFeedback.canSubmit(jobId, kuryeId);
+    if (!canSubmit) { el.innerHTML = ''; return; }
+
+    var miniCard = KBFeedback.renderMiniCard(jobId, kuryeId, isletmeId, myRole());
+    if (!miniCard) { el.innerHTML = ''; return; }
+
+    el.innerHTML =
+      '<div class="mdt-card">' +
+        '<div class="mdt-card-hdr">' +
+          '<span class="mdt-card-title">⭐ Geri Bildirim</span>' +
+          '<a href="geri-bildirim.html?job=' + esc(jobId) + '&kid=' + esc(kuryeId) + '&iid=' + esc(isletmeId) + '" class="mdt-card-action">Tümü →</a>' +
+        '</div>' +
+        miniCard +
+      '</div>';
+  }
+
+  /* ─── Scroll ────────────────────────────────────────────────── */
+  function scrollBottom() {
+    setTimeout(function() {
+      var el = document.getElementById('mdtBubbles');
+      if (el) el.scrollTop = el.scrollHeight;
+    }, 40);
+  }
+
+  /* ─── Typing indicator ──────────────────────────────────────── */
+  function showTyping(name, ms) {
+    var el  = document.getElementById('mdtTyping');
+    var lbl = document.getElementById('mdtTypingLabel');
+    if (!el) return;
+    if (lbl) lbl.textContent = esc(name) + ' yazıyor…';
+    el.style.display = 'flex';
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(function() { el.style.display = 'none'; }, ms || 2000);
+  }
+
+  /* ─── Send message ──────────────────────────────────────────── */
+  function sendMsg() {
+    var inp = document.getElementById('mdtInput');
+    if (!inp) return;
+    var text = inp.value.trim();
+    if (!text) return;
+
+    var from = myRole();
+    KBChat.sendMessage(uid, TID, from, 'text', text);
+    inp.value = '';
+    inp.style.height = '';
+
+    var toUid = (from === 'isletme') ? thread.kuryeId : thread.isletmeId;
+    KBChat.notify(toUid, 'new_message', {
+      from: from === 'isletme' ? thread.isletme.ad : thread.kurye.ad,
+      job:  thread.jobTitle
+    });
+
+    var otherName = (from === 'isletme') ? thread.kurye.ad : thread.isletme.ad;
+    setTimeout(function() { showTyping(otherName, 1800); }, 600);
+
+    renderMessages();
+
+    var threads = KBChat.getThreads(uid);
+    thread = threads.find(function(t) { return t.id === TID; }) || thread;
+
+    if (window.KBCommStatus) {
+      var allMsgs = KBChat.getMsgs(TID) || [];
+      var realCount = allMsgs.filter(function(m) { return m.type !== 'system'; }).length;
+      var target = realCount >= 3 ? 'aktif_gorusme' : 'ilk_mesaj';
+      syncCommStatus(target);
+    }
+  }
+
+  function sendSpecial(type, content) {
+    KBChat.sendMessage(uid, TID, myRole(), type, content);
+    renderMessages();
+  }
+
+  /* ─── Schedule interview (delegates to KBInterview) ─────────── */
+  function scheduleInterview() {
+    var date = (document.getElementById('ivDate')||{}).value;
+    var time = (document.getElementById('ivTime')||{}).value;
+    var type = (document.getElementById('ivType')||{}).value || 'online';
+    var loc  = ((document.getElementById('ivLocation')||{}).value || '').trim();
+    var note = ((document.getElementById('ivNotes')||{}).value    || '').trim();
+
+    if (!date || !time) {
+      if (window.KBMotion) KBMotion.showErrorToast('Lütfen tarih ve saat girin.');
+      return;
+    }
+
+    var newIv = window.KBInterview
+      ? KBInterview.create(uid, {
+          threadId: TID, jobId: thread.jobId, jobTitle: thread.jobTitle,
+          kuryeId: thread.kuryeId, kurye: thread.kurye, isletme: thread.isletme,
+          date: date, time: time, type: type, location: loc, note: note
+        })
+      : null;
+
+    var legacyIv = { tid:TID, date:date, time:time, type:type, location:loc, notes:note,
+                     ivId: newIv ? newIv.id : '',
+                     status:'pending', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+    KBChat.saveInterview(TID, legacyIv);
+    showIvForm = false;
+
+    var sysMsg = '📅 Mülakat planlandı: ' + formatDatetime(date, time) + ' — ' + type + (loc ? ' / ' + loc : '');
+    KBChat.sendMessage(uid, TID, 'system', 'system', sysMsg);
+    KBChat.appendLog(TID, 'interview_scheduled', date + ' ' + time);
+    KBChat.updateThread(uid, TID, { appStatus: 'mulakat', chatStatus: 'gorusme' });
+
+    var threads = KBChat.getThreads(uid);
+    thread = threads.find(function(t) { return t.id === TID; }) || thread;
+
+    KBChat.notify(thread.kuryeId, 'interview_request', { isletme: thread.isletme.ad, job: thread.jobTitle });
+    syncCommStatus('mulakat_planlandi');
+
+    renderAll();
+    if (window.KBMotion) KBMotion.showSuccess('Mülakat planlandı!', '', 2000);
+  }
+
+  /* ─── Interview: confirm / cancel / reschedule ──────────────── */
+  function confirmInterview() {
+    var legacyIv = KBChat.getInterview(TID);
+    if (!legacyIv) return;
+    if (window.KBInterview && legacyIv.ivId) KBInterview.respond(uid, legacyIv.ivId, 'onayla');
+    legacyIv.status = 'confirmed'; legacyIv.updatedAt = new Date().toISOString();
+    KBChat.saveInterview(TID, legacyIv);
+    KBChat.sendMessage(uid, TID, 'system', 'system', '✅ Mülakat onaylandı: ' + formatDatetime(legacyIv.date, legacyIv.time));
+    KBChat.appendLog(TID, 'interview_confirmed', '');
+    KBChat.notify(thread.isletmeId, 'interview_request', { isletme: thread.isletme.ad, job: thread.jobTitle });
+    renderInterview(); renderMessages();
+    if (window.KBMotion) KBMotion.showSuccess('Mülakat onaylandı!', '', 2000);
+  }
+
+  function cancelInterview() {
+    if (!confirm('Mülakatı iptal etmek istiyor musunuz?')) return;
+    var legacyIv = KBChat.getInterview(TID);
+    if (!legacyIv) return;
+    if (window.KBInterview && legacyIv.ivId) KBInterview.cancelInterview(uid, legacyIv.ivId);
+    legacyIv.status = 'cancelled'; legacyIv.updatedAt = new Date().toISOString();
+    KBChat.saveInterview(TID, legacyIv);
+    KBChat.sendMessage(uid, TID, 'system', 'system', '❌ Mülakat iptal edildi.');
+    KBChat.appendLog(TID, 'interview_cancelled', '');
+    if (thread.appStatus === 'mulakat') {
+      KBChat.updateThread(uid, TID, { appStatus: 'gorusme' });
+      var threads = KBChat.getThreads(uid);
+      thread = threads.find(function(t) { return t.id === TID; }) || thread;
+    }
+    syncCommStatus('aktif_gorusme');
+    renderAll();
+    if (window.KBMotion) KBMotion.showErrorToast('Mülakat iptal edildi.');
+  }
+
+  /* ─── Decision ──────────────────────────────────────────────── */
+  function setDecision(status) {
+    var noteVal = '';
+    if (status === 'red') {
+      var n = prompt('Reddetme sebebi (isteğe bağlı):');
+      if (n !== null) noteVal = n;
+    }
+
+    var hiringStatus = { beklemede: 'beklemede', degerlendiriliyor: 'kisa_listede', kabul: 'kabul', red: 'reddedildi' }[status] || status;
+
+    if (window.KBHiring && thread.jobId && thread.kuryeId) {
+      KBHiring.makeDecision(uid, thread.jobId, thread.kuryeId, hiringStatus, {
+        jobTitle: thread.jobTitle,
+        kuryeAd:  thread.kurye  && thread.kurye.ad,
+        isletmeAd: thread.isletme && thread.isletme.ad,
+        threadId: TID,
+        reason: noteVal
+      });
+    }
+
+    var dec = { tid:TID, status:status, note:noteVal, updatedAt:new Date().toISOString() };
+    KBChat.saveDecision(TID, dec);
+    KBChat.appendLog(TID, 'decision_' + status, status);
+
+    var sysMap = {
+      degerlendiriliyor: '🔍 Başvurunuz değerlendirme aşamasına alındı.',
+      kabul: '🎉 Tebrikler! Başvurunuz kabul edildi.',
+      red:   '❌ Başvurunuz değerlendirildi, bu sefer uygun görülmedi.'
+    };
+    if (sysMap[status]) {
+      KBChat.sendMessage(uid, TID, 'system', 'system', sysMap[status]);
+    }
+
+    if (status === 'kabul' || status === 'red') {
+      KBChat.updateThread(uid, TID, { appStatus: status, chatStatus: 'sonuclandi' });
+      KBChat.notify(thread.kuryeId, 'hiring_decision', { isletme:thread.isletme.ad, job:thread.jobTitle, actionKey:status });
+
+      try {
+        var appKey = 'kb_apps_' + thread.jobId;
+        var apps   = JSON.parse(localStorage.getItem(appKey) || '{}');
+        if (apps[thread.kuryeId]) {
+          apps[thread.kuryeId].status = status;
+          apps[thread.kuryeId].updatedAt = new Date().toISOString();
+          localStorage.setItem(appKey, JSON.stringify(apps));
+        }
+      } catch(e) {}
+
+      var threads = KBChat.getThreads(uid);
+      thread = threads.find(function(t) { return t.id === TID; }) || thread;
+    }
+
+    var csMap = { beklemede: 'karar_bekleniyor', degerlendiriliyor: 'karar_bekleniyor', kabul: 'ise_alindi', red: 'olumsuz' };
+    if (csMap[status]) syncCommStatus(csMap[status]);
+
+    renderAll();
+    if (window.KBMotion) KBMotion.showSuccess('Karar güncellendi.', '', 1800);
+  }
+
+  /* ─── Quick action dispatch ─────────────────────────────────── */
+  function doAction(action) {
+    switch (action) {
+      case 'back': window.history.back(); break;
+      case 'focus-input': { var fi = document.getElementById('mdtInput'); if (fi) fi.focus(); break; }
+      case 'attach': sendSpecial('file', '📎 Dosya paylaşıldı (demo)'); break;
+      case 'location': sendSpecial('location', '📍 Konum paylaşıldı (demo)'); break;
+      case 'show-iv-form':
+        showIvForm = true; renderInterview();
+        var sb = document.getElementById('mdtSidebar');
+        if (sb) setTimeout(function() { sb.scrollTop = sb.scrollHeight; }, 60);
+        break;
+      case 'cancel-iv-form': showIvForm = false; renderInterview(); break;
+      case 'save-interview':  scheduleInterview(); break;
+      case 'confirm-interview': confirmInterview(); break;
+      case 'cancel-interview':  cancelInterview(); break;
+      case 'reschedule-interview': showIvForm = true; renderInterview(); break;
+      case 'accept':
+        if (confirm('Bu kurye adayını kabul etmek istiyor musunuz?')) setDecision('kabul');
+        break;
+      case 'reject':
+        if (confirm('Bu başvuruyu reddetmek istiyor musunuz?')) setDecision('red');
+        break;
+      case 'shortlist':
+        try {
+          var appKey = 'kb_apps_' + thread.jobId;
+          var apps   = JSON.parse(localStorage.getItem(appKey) || '{}');
+          if (apps[thread.kuryeId]) {
+            apps[thread.kuryeId].shortlisted = !apps[thread.kuryeId].shortlisted;
+            localStorage.setItem(appKey, JSON.stringify(apps));
+          }
+        } catch(e) {}
+        KBChat.sendMessage(uid, TID, 'system', 'system', '⭐ Kısa listeye eklendi.');
+        renderMessages();
+        if (window.KBMotion) KBMotion.showSuccess('Kısa listeye eklendi!', '', 1500);
+        break;
+      case 'check-docs': {
+        var inp = document.getElementById('mdtInput');
+        if (inp) { inp.value = '📂 Lütfen belgelerinizi paylaşır mısınız? (kimlik, ehliyet, sertifikalar)'; inp.focus(); }
+        break;
+      }
+      case 'view-docs': {
+        var inp2 = document.getElementById('mdtInput');
+        if (inp2) { inp2.value = '📂 Belgelerimi inceleyebilirsiniz. Ek belge gerekirse bildirin.'; inp2.focus(); }
+        break;
+      }
+      case 'share-availability': {
+        var avail = prompt('Müsaitliğinizi girin (örn: Pzt–Cum 09:00–18:00):');
+        if (avail) { KBChat.sendMessage(uid, TID, myRole(), 'text', '🗓 Müsaitliğim: ' + avail); renderMessages(); }
+        break;
+      }
+      case 'send-questions': {
+        var qs = prompt('Sormak istediğiniz soruları girin:');
+        if (qs) { KBChat.sendMessage(uid, TID, myRole(), 'text', '❓ ' + qs); renderMessages(); }
+        break;
+      }
+    }
+  }
+
+  /* ─── Render: Communication Status ─────────────────────────── */
+  function renderCommStatus() {
+    var el = document.getElementById('mdtCommStatus');
+    if (!el || !window.KBCommStatus) return;
+    var cs = KBCommStatus.get(TID);
+    var status = cs ? cs.status : KBCommStatus.autoDetect(uid, TID, thread);
+    el.innerHTML = KBCommStatus.renderStatusCard(status, role, TID, { jobId: thread.jobId, kuryeId: thread.kuryeId });
+  }
+
+  function syncCommStatus(newStatus) {
+    if (!window.KBCommStatus || !thread) return;
+    KBCommStatus.set(uid, TID, newStatus, { jobId: thread.jobId, kuryeId: thread.kuryeId });
+    renderCommStatus();
+  }
+
+  /* ─── Render all ────────────────────────────────────────────── */
+  function renderAll() {
+    renderHeader();
+    renderMessages();
+    renderQuickReplies();
+    renderAppSummary();
+    renderQuickActions();
+    renderCommStatus();
+    renderInterview();
+    renderDecision();
+    renderFeedback();
+  }
+
+  /* ─── Wire events ───────────────────────────────────────────── */
+  function wire() {
+    document.addEventListener('click', function(e) {
+      var hdBtn = e.target.closest('[data-hd-action]');
+      if (!hdBtn || !window.KBHiring) return;
+      var act = hdBtn.dataset.hdAction;
+      var jobId = hdBtn.dataset.job || (thread && thread.jobId) || '';
+      var kuryeId = hdBtn.dataset.kid || (thread && thread.kuryeId) || '';
+      var hdStatus = { shortlist: 'kisa_listede', accept: 'kabul', reject: 'reddedildi' }[act];
+      if (hdStatus) {
+        if (act === 'reject' && !confirm('Bu başvuruyu reddetmek istiyor musunuz?')) return;
+        KBHiring.makeDecision(uid, jobId, kuryeId, hdStatus, {
+          jobTitle: thread && thread.jobTitle, kuryeAd: thread && thread.kurye && thread.kurye.ad,
+          isletmeAd: thread && thread.isletme && thread.isletme.ad, threadId: TID
+        });
+        renderDecision(); renderMessages();
+        if (window.KBMotion) KBMotion.showSuccess('Karar güncellendi.', '', 1800);
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('[data-mdt-action]');
+      if (!el) return;
+      var action = el.dataset.mdtAction;
+
+      if (action === 'send')        { sendMsg(); return; }
+      if (action === 'quick-reply') {
+        var inp = document.getElementById('mdtInput');
+        if (inp) { inp.value = el.dataset.text; inp.focus(); }
+        return;
+      }
+      if (action === 'set-decision') { setDecision(el.dataset.dec); return; }
+      doAction(action);
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.target.id === 'mdtInput' && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault(); sendMsg();
+      }
+    });
+    document.addEventListener('input', function(e) {
+      if (e.target.id === 'mdtInput') {
+        e.target.style.height = 'auto';
+        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+      }
+    });
+
+    var tabBar = document.getElementById('mdtTabs');
+    if (tabBar) {
+      tabBar.addEventListener('click', function(e) {
+        var tab = e.target.closest('[data-tab]');
+        if (!tab) return;
+        activeTab = tab.dataset.tab;
+        tabBar.querySelectorAll('[data-tab]').forEach(function(b) {
+          b.classList.toggle('is-active', b.dataset.tab === activeTab);
+        });
+        var sb = document.getElementById('mdtSidebar');
+        if (activeTab === 'details') {
+          if (sb) sb.classList.add('is-open');
+          var bubbles = document.getElementById('mdtBubbles');
+          var qr = document.getElementById('mdtQuickReplies');
+          var comp = document.querySelector('.msg-composer');
+          var typing = document.getElementById('mdtTyping');
+          [bubbles, qr, comp, typing].forEach(function(x) { if (x) x.style.display = 'none'; });
+        } else {
+          if (sb) sb.classList.remove('is-open');
+          var bubbles2 = document.getElementById('mdtBubbles');
+          var qr2 = document.getElementById('mdtQuickReplies');
+          var comp2 = document.querySelector('.msg-composer');
+          [bubbles2, qr2, comp2].forEach(function(x) { if (x) x.style.display = ''; });
+          scrollBottom();
+        }
+      });
+    }
+  }
+
+  /* ─── Boot ──────────────────────────────────────────────────── */
+  function boot() {
+    var params = new URLSearchParams(window.location.search);
+    TID = params.get('tid');
+    if (!TID) { window.location.href = 'mesajlar.html'; return; }
+
+    role = (window.KB && KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme';
+    var user = window.KB && KB.STATE && KB.STATE.user;
+    uid  = user ? user.id : ('demo_' + role);
+
+    KBChat.seedDemoThreads(uid);
+
+    if (window.KBCommStatus) {
+      try { KBCommStatus.seedDemoData(uid); } catch(e) {}
+    }
+
+    if (window.KBFeedback) {
+      try { KBFeedback.seedDemoData(); } catch(e) {}
+    }
+
+    if (!loadData()) return;
+
+    KBChat.markRead(uid, TID, myRole());
+    renderAll();
+    wire();
+  }
+
+  if (window.KB && KB.ready) {
+    KB.ready.then(boot);
+  } else {
+    document.addEventListener('DOMContentLoaded', boot);
+  }
+
+})();
+</script>
+</body>
+</html>

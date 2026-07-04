@@ -109,7 +109,6 @@
         </div>
       </div>
       <div class="atl-list" id="atlList">
-        <!-- skeleton while loading -->
         <div class="atl-item" style="pointer-events:none">
           <div class="atl-dot atl-dot--apply"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
           <div class="atl-body"><span class="skel skel--line" style="width:65%;margin-bottom:8px"></span><span class="skel skel--line" style="width:35%"></span></div>
@@ -198,6 +197,17 @@
           </div>
         </a>
 
+        <a href="geri-bildirim.html" class="qa-card">
+          <div class="qa-card__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <span class="qa-badge" id="qaFbBadge" style="display:none">0</span>
+          <div>
+            <div class="qa-card__title">Geri Bildirim</div>
+            <div class="qa-card__desc">Tamamlanan işe alım değerlendirmelerin.</div>
+          </div>
+        </a>
+
       </div>
     </div>
 
@@ -268,7 +278,19 @@
           <a href="ilanlar.html" class="btn btn--primary">İlanları Gör</a>
           <a href="havuzum.html" class="btn btn--secondary">Havuzum</a>
           <a href="mesajlar.html" class="btn btn--ghost">Mesajlar</a>
+          <a href="geri-bildirim.html" class="btn btn--ghost">Geri Bildirim</a>
           <a href="profil-duzenle.html" class="btn btn--ghost">Profili Düzenle</a>
+        </div>
+      </div>
+      <div class="panel-box" style="margin-top:16px">
+        <div class="iv-upcoming__header" style="padding:14px 16px 6px;">
+          <span class="iv-upcoming__title">📅 Yaklaşan Görüşmeler</span>
+          <a href="gorusmeler.html" class="iv-upcoming__link">Tümü →</a>
+        </div>
+        <div class="panel-box__body">
+          <div class="iv-upcoming" id="kuryeIvUpcoming">
+            <p style="color:var(--text-3);font-size:0.82rem;">Yükleniyor…</p>
+          </div>
         </div>
       </div>
     </div>
@@ -311,6 +333,12 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/ilan-status.js"></script>
+  <script src="assets/js/chat.js"></script>
+  <script src="assets/js/interview.js"></script>
+  <script src="assets/js/hiring.js"></script>
+  <script src="assets/js/comm-status.js"></script>
+  <script src="assets/js/feedback.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
@@ -484,7 +512,6 @@
         }
       });
     }
-    /* ─── /Job Feed ─────────────────────────────────────────── */
 
     /* ─── Activity Timeline ─────────────────────────────────── */
     var MOCK_TIMELINE = [
@@ -574,7 +601,6 @@
         });
       }
     }
-    /* ─── /Activity Timeline ─────────────────────────────────── */
 
     /* ─── Smart Suggestions ─────────────────────────────────── */
     var SUGG_ILANLAR = [
@@ -683,7 +709,6 @@
         });
       });
     }
-    /* ─── /Smart Suggestions ─────────────────────────────────── */
 
     /* ─── Bildirimler Merkezi ─────────────────────────────────── */
     var MOCK_NOTIFS = [
@@ -806,7 +831,6 @@
         });
       }
     }
-    /* ─── /Bildirimler Merkezi ─────────────────────────────────── */
 
     function renderProfEngine(profile, role) {
       var el = document.getElementById('profEngine');
@@ -878,6 +902,54 @@
     document.addEventListener('DOMContentLoaded', async function () {
       if (window.KBApp && KBApp.initPanel) KBApp.initPanel('kurye');
 
+      /* Seed feedback demo data */
+      if (window.KBFeedback) {
+        try {
+          KBFeedback.seedDemoData();
+          var fbUid = 'demo';
+          try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
+          var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'kurye').length;
+          var fbBadge = document.getElementById('qaFbBadge');
+          if (fbBadge && pendingFb > 0) { fbBadge.textContent = pendingFb; fbBadge.style.display = 'flex'; }
+        } catch(e) {}
+      }
+
+      /* Show unread message count on quick-access card */
+      if (window.KBChat) {
+        try {
+          var msgUid = 'demo_kurye';
+          try { var ms = window.KB && KB.session && KB.session(); if (ms && ms.user && ms.user.id) msgUid = ms.user.id; } catch(e) {}
+          var unreadCount = KBChat.getUnreadCount(msgUid, 'kurye');
+          var badge = document.getElementById('qaMsgBadge');
+          if (badge && unreadCount > 0) { badge.textContent = unreadCount; badge.style.display = 'flex'; }
+        } catch(e) {}
+      }
+
+      /* Upcoming interviews widget */
+      if (window.KBInterview) {
+        try {
+          var ivUid = 'demo_kurye';
+          try { var ivS = window.KB && KB.session && KB.session(); if (ivS && ivS.user && ivS.user.id) ivUid = ivS.user.id; } catch(e) {}
+          KBInterview.seedDemoData(ivUid);
+          KBInterview.checkReminders(ivUid);
+          var ivEl = document.getElementById('kuryeIvUpcoming');
+          if (ivEl) ivEl.innerHTML = KBInterview.renderUpcomingWidget(ivUid, 'kurye', 3);
+          ivEl && ivEl.addEventListener('click', function(e) {
+            var card = e.target.closest('.iv-mini-card');
+            if (card) window.location.href = 'gorusmeler.html';
+          });
+        } catch(e) {}
+      }
+
+      /* Sync comm statuses */
+      if (window.KBCommStatus && window.KBChat) {
+        try {
+          var csUid = 'demo_kurye';
+          try { var csS = window.KB && KB.session && KB.session(); if (csS && csS.user && csS.user.id) csUid = csS.user.id; } catch(e) {}
+          KBCommStatus.observe(csUid);
+        } catch(e) {}
+      }
+
       /* Welcome block */
       try {
         await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
@@ -904,7 +976,6 @@
 
           renderProfEngine(profile, 'kurye');
 
-          /* Subtitle: yeni ilan sayısı */
           var ilanSayisi = 0;
           try {
             var offers = window.SB && SB.isOn() ? await SB.myOffers() : null;
@@ -914,7 +985,6 @@
             ? 'Sana uygun ' + ilanSayisi + ' yeni ilan bekliyor.'
             : 'Bugün sana uygun yeni ilanları keşfet.';
 
-          /* Avatar */
           if (profile.avatar_url) {
             var img = document.createElement('img');
             img.src = profile.avatar_url;
@@ -922,8 +992,8 @@
             avatar.innerHTML = '';
             avatar.appendChild(img);
           } else {
-            var initials = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
-            avatar.textContent = initials || ad[0].toUpperCase();
+            var inits = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+            avatar.textContent = inits || ad[0].toUpperCase();
           }
         } else {
           greeting.textContent = 'Merhaba!';
@@ -933,7 +1003,6 @@
           progLabel.textContent = 'Profil yükleniyor';
         }
 
-        /* Stat counts — mock için fallback */
         var basvuruEl = document.getElementById('statBasvuru');
         var gorEl = document.getElementById('statGoruntulenme');
         var ilanEl = document.getElementById('statYeniIlan');
@@ -954,7 +1023,6 @@
         basvuruSub.textContent = basvuruSayisi === 1 ? '1 aktif başvuru' : basvuruSayisi + ' aktif başvuru';
         basvuruSub.className = 'dash-stat__delta' + (basvuruSayisi > 0 ? '' : ' is-neutral');
 
-        /* Quick action badges */
         var qaApply = document.getElementById('qaApplyBadge');
         if (qaApply && basvuruSayisi > 0) { qaApply.textContent = basvuruSayisi; qaApply.style.display = ''; }
 
@@ -962,6 +1030,7 @@
         initTimeline();
         initSmartSugg(profile ? profile.sehir : '');
         initNotifCenter();
+        renderAppliedJobs(profile);
 
       } catch(err) {
         console.warn('Welcome block error:', err);
@@ -969,8 +1038,73 @@
         initTimeline();
         initSmartSugg('');
         initNotifCenter();
+        renderAppliedJobs(null);
       }
     });
+
+    function renderAppliedJobs(profile) {
+      var el = document.getElementById('kuryeBasvuru');
+      if (!el || !window.IlanStatus) return;
+
+      var IS  = window.IlanStatus;
+      var uid = 'demo';
+      try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) uid = s.user.id; } } catch(e) {}
+
+      var applied = IS.findAppliedJobs(uid);
+
+      if (!applied.length) {
+        var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
+        var sample = demo.slice(0, 3);
+        if (!sample.length) {
+          el.innerHTML = '<div class="empty">Henüz başvurulan ilan yok. <a href="ilanlar.html">İlanları İncele →</a></div>';
+          return;
+        }
+        el.innerHTML = '<div class="ilds-alert ilds-alert--paused" style="margin-bottom:14px">Demo mod — gerçek başvurular Supabase üzerinden gösterilir.</div>' +
+          sample.map(function(job) {
+            var d = IS.getDef(job.durum || 'yayinda');
+            return '<div class="ilds-applied-item">' +
+              '<div class="ilds-applied-ico">🛵</div>' +
+              '<div class="ilds-applied-body">' +
+                '<div class="ilds-applied-title">' + (job.baslik || 'İsimsiz İlan') + '</div>' +
+                '<div class="ilds-applied-meta">' +
+                  (job.sehir ? '📍 ' + job.sehir + ' · ' : '') +
+                  IS.renderBadge(job.durum || 'yayinda') +
+                  (d.accepting ? '' : '<span class="ilds-alert ilds-alert--closed" style="margin:0;padding:4px 8px;font-size:0.75rem">' + IS.courierLabel(job.durum) + '</span>') +
+                '</div>' +
+              '</div>' +
+              '<a href="ilan.html?id=' + job.id + '" class="btn btn--ghost btn--sm">İncele</a>' +
+            '</div>';
+          }).join('');
+        return;
+      }
+
+      var allJobs = IS.getJobs(uid).concat((window.KB_DATA && KB_DATA.ilanlar) || []);
+      function findJob(id) { for (var i = 0; i < allJobs.length; i++) { if (allJobs[i].id === id) return allJobs[i]; } return null; }
+      var STATUS_KURYE_LBLS = { yeni:'Başvurunuz inceleniyor', inceleniyor:'İnceleniyor', mesaj_gonderildi:'İşveren mesaj gönderdi', mulakat:'Mülakat daveti', kabul:'✅ Başvurunuz kabul edildi', red:'Başvurunuz reddedildi' };
+
+      el.innerHTML = applied.slice(0, 8).map(function(item) {
+        var job = findJob(item.jobId);
+        if (!job) return '';
+        var jStatus  = job.durum || 'yayinda';
+        var jd       = IS.getDef(jStatus);
+        var appSt    = item.app.status || 'yeni';
+        var appLbl   = STATUS_KURYE_LBLS[appSt] || appSt;
+        var alertCls = jStatus === 'doldu' ? 'ilds-alert--filled' : jStatus === 'durduruldu' ? 'ilds-alert--paused' : jStatus === 'iptal' || jStatus === 'suresi_doldu' ? 'ilds-alert--closed' : '';
+        return '<div class="ilds-applied-item">' +
+          '<div class="ilds-applied-ico">🛵</div>' +
+          '<div class="ilds-applied-body">' +
+            '<div class="ilds-applied-title">' + (job.baslik || 'İsimsiz İlan') + '</div>' +
+            '<div class="ilds-applied-meta">' +
+              (job.sehir ? '<span>📍 ' + job.sehir + '</span>' : '') +
+              IS.renderBadge(jStatus) +
+              (alertCls ? '<span class="ilds-alert ' + alertCls + '" style="margin:0;padding:3px 8px;font-size:0.73rem">' + IS.courierLabel(jStatus) + '</span>' : '') +
+            '</div>' +
+            '<div style="font-size:0.78rem;color:var(--text-2);margin-top:4px">' + appLbl + '</div>' +
+          '</div>' +
+          '<a href="ilan.html?id=' + job.id + '" class="btn btn--ghost btn--sm">İncele</a>' +
+        '</div>';
+      }).filter(Boolean).join('') || '<div class="empty">Başvurular yükleniyor...</div>';
+    }
   </script>
 </body>
 </html>

@@ -321,6 +321,9 @@
           </div>
         </div>
 
+        <!-- Quality Widget -->
+        <div id="ilqWidgetHost"></div>
+
         <!-- My Listings -->
         <div class="pi-card" id="jcMyJobsPanel">
           <div class="pi-sec-head">
@@ -348,6 +351,8 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/ilan-status.js"></script>
+  <script src="assets/js/ilan-quality.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
 
@@ -666,11 +671,12 @@
             '<div class="jc-my-job-meta">' + esc(j.sehir || '') + date + '</div>' +
           '</div>' +
           '<div class="jc-my-job-right">' +
-            '<span class="jc-job-status jc-job-status--' + (j.durum || 'taslak') + '">' + statusLabel(j.durum) + '</span>' +
+            (window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'taslak') : '<span class="jc-job-status jc-job-status--' + (j.durum || 'taslak') + '">' + statusLabel(j.durum) + '</span>') +
             '<div class="jc-my-job-acts">' +
+              '<a class="jc-my-job-btn" href="ilan-durum.html?job=' + j.id + '" title="Durum Yönet">📊</a>' +
               '<button class="jc-my-job-btn" data-edit="' + j.id + '" title="Düzenle">✏️</button>' +
-              (j.durum === 'yayinda' ? '<button class="jc-my-job-btn" data-close="' + j.id + '" title="Kapat">⏸️</button>' : '') +
-              (j.durum === 'taslak'  ? '<button class="jc-my-job-btn" data-publish-id="' + j.id + '" title="Yayınla">🚀</button>' : '') +
+              (j.durum === 'yayinda' || j.durum === 'durduruldu' || j.durum === 'doldu' || j.durum === 'suresi_doldu' ? '' :
+               j.durum === 'taslak'  ? '<button class="jc-my-job-btn" data-publish-id="' + j.id + '" title="Yayınla">🚀</button>' : '') +
               '<button class="jc-my-job-btn jc-my-job-btn--del" data-delete="' + j.id + '" title="Sil">🗑️</button>' +
             '</div>' +
           '</div>' +
@@ -680,20 +686,33 @@
 
     /* ── Job operations ──────────────────────────────────────── */
     function upsertJob(job, durum) {
-      var jobs = loadMyJobs();
-      job.durum = durum;
-      job.tarih = job.tarih || new Date().toISOString().split('T')[0];
+      var jobs    = loadMyJobs();
+      var prevDur = null;
+      job.durum   = durum;
+      job.tarih   = job.tarih || new Date().toISOString().split('T')[0];
+      var isNew   = !editingId;
       if (editingId) {
         var idx = -1;
-        for (var i = 0; i < jobs.length; i++) { if (jobs[i].id === editingId) { idx = i; break; } }
+        for (var i = 0; i < jobs.length; i++) {
+          if (jobs[i].id === editingId) {
+            idx = i; prevDur = jobs[i].durum;
+            break;
+          }
+        }
         if (idx !== -1) { job.id = editingId; jobs[idx] = job; }
         else { job.id = editingId; jobs.unshift(job); }
       } else {
-        job.id = 'ilan_' + Date.now();
+        job.id    = 'ilan_' + Date.now();
         editingId = job.id;
         jobs.unshift(job);
       }
       saveMyJobs(jobs);
+      /* ── Status activity log ── */
+      if (window.IlanStatus) {
+        if (isNew) IlanStatus.logActivity(job.id, 'created', '');
+        if (durum === 'yayinda' && prevDur !== 'yayinda') IlanStatus.logActivity(job.id, 'published', '');
+        else if (durum === 'taslak' && prevDur === 'yayinda') IlanStatus.logActivity(job.id, 'drafted', '');
+      }
       return job;
     }
 
@@ -701,6 +720,52 @@
       clearErrors();
       var errors = validate();
       if (errors.length) { showErrors(errors); return; }
+
+      /* Quality check before publish */
+      if (window.IlanQuality) {
+        var IQ        = window.IlanQuality;
+        var draft     = readForm();
+        var score     = IQ.calcScore(draft);
+        var warnHtml  = IQ.publishWarningHtml(draft);
+        if (warnHtml) {
+          /* Show warning modal */
+          var overlay = document.getElementById('ilqWarnOverlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'ilqWarnOverlay';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = 'display:none;z-index:9999';
+            overlay.innerHTML =
+              '<div class="modal ilq-warn-modal">' +
+                '<div class="ilq-warn-modal__ico">⚠️</div>' +
+                '<div class="ilq-warn-modal__h">İlan Yayınlanmadan Önce</div>' +
+                '<div class="ilq-warn-modal__sub">İlan kalitesi <strong>%' + score + '</strong>. Aşağıdaki eksikler başvuru sayını etkileyebilir:</div>' +
+                '<ul class="ilq-warn-list" id="ilqWarnList"></ul>' +
+                '<div class="ilq-warn-acts">' +
+                  '<button class="btn btn--ghost" id="ilqWarnFix">Düzelt</button>' +
+                  '<button class="btn btn--primary" id="ilqWarnOk">Yine de Yayınla</button>' +
+                '</div>' +
+              '</div>';
+            document.body.appendChild(overlay);
+          }
+          var listEl = overlay.querySelector('#ilqWarnList');
+          if (listEl) listEl.innerHTML = warnHtml;
+          overlay.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+          overlay.querySelector('#ilqWarnFix').onclick = function() {
+            overlay.style.display = 'none'; document.body.style.overflow = '';
+          };
+          overlay.querySelector('#ilqWarnOk').onclick  = function() {
+            overlay.style.display = 'none'; document.body.style.overflow = '';
+            doPublish();
+          };
+          return;
+        }
+      }
+      doPublish();
+    }
+
+    function doPublish() {
       var job = upsertJob(readForm(), 'yayinda');
       renderMyJobs();
       updateStatus('yayinda');
@@ -733,19 +798,21 @@
     function closeJobById(id) {
       var jobs = loadMyJobs();
       for (var i = 0; i < jobs.length; i++) {
-        if (jobs[i].id === id) { jobs[i].durum = 'kapali'; break; }
+        if (jobs[i].id === id) { jobs[i].durum = 'durduruldu'; jobs[i].updated_at = new Date().toISOString(); break; }
       }
       saveMyJobs(jobs);
+      if (window.IlanStatus) IlanStatus.logActivity(id, 'paused', '');
       renderMyJobs();
-      if (window.KBMotion) KBMotion.showSuccess('İlan kapatıldı', '', 1600);
+      if (window.KBMotion) KBMotion.showSuccess('İlan durduruldu', 'Durum yönetimi için İlan Durumu sayfasını kullan.', 2200);
     }
 
     function publishJobById(id) {
       var jobs = loadMyJobs();
       for (var i = 0; i < jobs.length; i++) {
-        if (jobs[i].id === id) { jobs[i].durum = 'yayinda'; break; }
+        if (jobs[i].id === id) { jobs[i].durum = 'yayinda'; jobs[i].updated_at = new Date().toISOString(); break; }
       }
       saveMyJobs(jobs);
+      if (window.IlanStatus) IlanStatus.logActivity(id, 'published', '');
       renderMyJobs();
       if (window.KBMotion) KBMotion.showSuccess('İlan yayınlandı!', '', 1800);
     }
@@ -892,6 +959,47 @@
         renderMyJobs();
         updatePreview();
         updateCompletion();
+
+        /* ── Quality Widget Init ───────────────────────────────── */
+        if (window.IlanQuality) {
+          var IQ          = window.IlanQuality;
+          var ilqHost     = document.getElementById('ilqWidgetHost');
+          var ilqTimer    = null;
+          var ILQ_FIELDS  = ['jcPozBaslik','jcSehir','jcBolge','jcMahalle','jcMaasMin','jcMaasMax',
+                             'jcArac','jcDeneyim','jcGorev','jcAkis','jcBeklenti','jcCalisma',
+                             'jcVardiya','jcSonBasvuru','jcMaasModeli','jcCalismaSekli'];
+
+          function updateQuality() {
+            if (!ilqHost) return;
+            var job = readForm();
+            ilqHost.innerHTML = IQ.renderWidget(job);
+            /* Update full-link to include current editing ID */
+            var fullLink = document.getElementById('ilqFullLink');
+            if (fullLink && editingId) fullLink.href = 'ilan-kalite.html?job=' + editingId;
+          }
+
+          function debounceQuality() {
+            clearTimeout(ilqTimer);
+            ilqTimer = setTimeout(updateQuality, 350);
+          }
+
+          /* Wire all form inputs */
+          ILQ_FIELDS.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el && !el._ilqWired) {
+              el._ilqWired = true;
+              el.addEventListener('input',  debounceQuality);
+              el.addEventListener('change', debounceQuality);
+            }
+          });
+          /* Checkboxes (benefits, requirements) */
+          document.querySelectorAll('.jc-form input[type="checkbox"]').forEach(function(el) {
+            if (!el._ilqWired) { el._ilqWired = true; el.addEventListener('change', debounceQuality); }
+          });
+
+          updateQuality(); /* initial render */
+        }
+
       });
     });
 

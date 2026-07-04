@@ -329,7 +329,7 @@
     } else if (owner) {
       actionHtml = '<div class="jc-card-actions">' +
         '<a class="btn btn--ghost btn--sm" href="ilan-olustur.html?edit=' + l.id + '">✏️ Düzenle</a>' +
-        '<a class="btn btn--light btn--sm" href="panel-isletme.html">📋 Başvurular</a>' +
+        '<a class="btn btn--light btn--sm" href="basvurular.html?job=' + l.id + '">📋 Başvurular</a>' +
       '</div>';
     } else if (applied) {
       actionHtml = '<div class="jc-card-actions">' +
@@ -2312,7 +2312,7 @@
           '<span>👥 ' + appCount(l.id) + ' başvuru</span>' +
         '</div>' +
         '<div class="jd-hero__tags">' + tagHtml + '</div>' +
-        '<div class="jd-hero__actions">' + applyBtn(false) + favSmall + shareBtn + '</div>' +
+        '<div class="jd-hero__actions">' + applyBtn(false) + (owner ? '<a class="btn btn--primary btn--sm" href="basvurular.html?job=' + l.id + '">📋 Başvuruları Yönet</a>' : '') + favSmall + shareBtn + '</div>' +
       '</div>' +
 
       '<div class="jd">' +

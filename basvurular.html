@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Başvurular · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+
+    <div class="page-header" style="margin-bottom:20px">
+      <div>
+        <h1>Başvurular</h1>
+        <p class="page-sub">İlanına gelen adayları burada yönet.</p>
+      </div>
+      <a href="ilan-olustur.html" class="btn btn--primary btn--sm">+ Yeni İlan Oluştur</a>
+    </div>
+
+    <!-- Job selector -->
+    <div id="apcJobBar" class="apc-job-bar">
+      <div class="skel skel--line" style="width:200px;height:56px;border-radius:12px"></div>
+      <div class="skel skel--line" style="width:180px;height:56px;border-radius:12px"></div>
+    </div>
+
+    <!-- Stats -->
+    <div id="apcStats" class="apc-stats" style="display:none"></div>
+
+    <!-- Controls -->
+    <div id="apcControls" style="display:none;margin-bottom:12px">
+      <div class="filter-bar">
+        <input type="search" id="apcSearch" placeholder="Aday adı ara…" style="min-width:170px;flex:1">
+        <select id="fBolge"><option value="">Tüm Bölgeler</option></select>
+        <select id="fArac"><option value="">Tüm Araçlar</option></select>
+        <select id="fDeneyim">
+          <option value="">Tüm Deneyimler</option>
+          <option value="1">1+ yıl</option>
+          <option value="3">3+ yıl</option>
+          <option value="5">5+ yıl</option>
+        </select>
+        <select id="fBelge">
+          <option value="">Tüm Belgeler</option>
+          <option value="onaylandi">Belgeler Onaylı</option>
+          <option value="tam">Belgeler Var</option>
+          <option value="eksik">Belgeler Eksik</option>
+        </select>
+        <select id="fSort">
+          <option value="match">En Uyumlu</option>
+          <option value="yeni">En Yeni</option>
+          <option value="deneyim">En Deneyimli</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar" id="apcTabBar" style="display:none;margin-bottom:16px">
+      <button data-apctab="all" class="is-active">Tüm Başvurular <span id="apcAllBadge" style="background:var(--primary);color:#fff;border-radius:99px;padding:1px 7px;font-size:0.72rem;font-weight:700;margin-left:4px">0</span></button>
+      <button data-apctab="shortlist">⭐ Kısa Liste <span id="apcSlBadge" style="background:var(--warning);color:#fff;border-radius:99px;padding:1px 7px;font-size:0.72rem;font-weight:700;margin-left:4px">0</span></button>
+    </div>
+
+    <!-- Applicant grid -->
+    <div id="apcGrid" class="apc-grid">
+      <div class="apc-empty">
+        <div class="apc-empty__ico">👆</div>
+        <div class="apc-empty__t">Yukarıdan bir ilan seçin</div>
+        <div class="apc-empty__s">Başvuruları yönetmek için bir ilanınızı seçin</div>
+      </div>
+    </div>
+
+  </div><!-- /.app-content -->
+
+  <div id="app-footer"></div>
+
+  <!-- Profile detail modal -->
+  <div class="modal-overlay" id="apcModalOverlay" style="display:none">
+    <div class="modal apc-modal" id="apcModal"></div>
+  </div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/ilan-status.js"></script>
+  <script src="assets/js/chat.js"></script>
+  <script src="assets/js/hiring.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function() {
+    'use strict';
+
+    /* ── State ── */
+    var SEL_JOB_ID = (new URLSearchParams(location.search).get('job') || '');
+    var CUR_TAB    = 'all';
+    var FILTERS    = { bolge:'', arac:'', deneyim:'', belge:'', sort:'match', q:'' };
+    var ALL_JOBS   = [];
+    var CUR_APPS   = [];
+
+    /* ── Helpers ── */
+    function simpleHash(s) {
+      var h = 0, str = String(s);
+      for (var i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+      return Math.abs(h);
+    }
+    function normStr(s) {
+      s = String(s || '').normalize('NFD'); var o = '';
+      for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c >= 0x300 && c <= 0x36f) continue; o += s.charAt(i); }
+      return o.toLowerCase().trim();
+    }
+    function esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function getUid() {
+      try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
+      return 'demo';
+    }
+    function relTime(dateStr) {
+      if (!dateStr) return '';
+      var n = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+      if (n === 0) return 'Bugün';
+      if (n === 1) return 'Dün';
+      return n + ' gün önce';
+    }
+
+    /* ── Status map ── */
+    var STATUS = {
+      yeni:             { lbl:'Yeni Başvuru',     cls:'chip--apc-yeni',    ico:'🆕' },
+      inceleniyor:      { lbl:'İnceleniyor',      cls:'chip--apc-incel',   ico:'👁' },
+      mesaj_gonderildi: { lbl:'Mesaj Gönderildi', cls:'chip--apc-msg',     ico:'💬' },
+      mulakat:          { lbl:'Mülakat Aşaması',  cls:'chip--apc-mulakat', ico:'📞' },
+      kabul:            { lbl:'Kabul Edildi',      cls:'chip--apc-kabul',   ico:'✓'  },
+      red:              { lbl:'Reddedildi',        cls:'chip--apc-red',     ico:'✗'  }
+    };
+    function statusChip(st) {
+      var s = STATUS[st] || STATUS.yeni;
+      return '<span class="chip ' + s.cls + '">' + s.ico + ' ' + s.lbl + '</span>';
+    }
+    function matchCls(score) {
+      return score >= 70 ? 'match-high' : score >= 45 ? 'match-mid' : 'match-low';
+    }
+
+    /* ── Data helpers ── */
+    function loadJobs() {
+      var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
+      var ls = [];
+      try { ls = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + getUid())) || []; } catch(e) {}
+      ALL_JOBS = demo.concat(ls.filter(function(j) { return j.durum === 'yayinda'; }));
+    }
+
+    function getJob(id) {
+      for (var i = 0; i < ALL_JOBS.length; i++) { if (ALL_JOBS[i].id === id) return ALL_JOBS[i]; }
+      return null;
+    }
+
+    function jobApplicants(jobId) {
+      var pool = (window.KB_DATA && KB_DATA.kuryeler) || [];
+      if (!pool.length) return [];
+      var h = simpleHash(jobId);
+      var count = (h % 4) + 4;
+      var result = [], used = {};
+      for (var i = 0; result.length < count && i < pool.length * 4; i++) {
+        var idx = (h + i * 7 + 3) % pool.length;
+        if (!used[idx]) { used[idx] = 1; result.push(pool[idx]); }
+      }
+      return result;
+    }
+
+    function mockDate(jobId, kId) {
+      var h = simpleHash(jobId + kId);
+      return new Date(Date.now() - ((h % 12) + 1) * 86400000).toISOString().slice(0, 10);
+    }
+
+    function profilePct(k) {
+      var pts = 0;
+      if (k.ad) pts += 15; if (k.sehir) pts += 15; if (k.arac) pts += 15;
+      if (k.deneyim > 0) pts += 15; if (k.aciklama) pts += 15;
+      if (k.sertifikalar && k.sertifikalar.length) pts += 15;
+      if (k.referanslar && k.referanslar.length) pts += 10;
+      return Math.min(100, pts);
+    }
+
+    function docStatus(k) {
+      if (!k.sertifikalar || !k.sertifikalar.length)
+        return { lbl:'Belgeler Eksik', cls:'chip--apc-incel', key:'eksik' };
+      if (k.sertifikalar.some(function(c) { return c.indexOf('MYK') !== -1; }))
+        return { lbl:'✓ Belgeler Onaylı', cls:'chip--apc-kabul', key:'onaylandi' };
+      return { lbl:'Belgeler Var', cls:'chip--apc-yeni', key:'tam' };
+    }
+
+    function calcMatch(k, job) {
+      if (!job) return 50;
+      var s = 0;
+      if (k.sehir && job.sehir && normStr(k.sehir) === normStr(job.sehir)) s += 30;
+      if (k.arac && job.arac) {
+        var ka = normStr(k.arac).split(' ')[0], ja = normStr(job.arac).split(' ')[0];
+        if (ka === ja || ka.indexOf(ja) !== -1 || ja.indexOf(ka) !== -1) s += 25;
+      }
+      if (k.deneyim >= 2) s += 15;
+      if (k.sertifikalar && k.sertifikalar.length) s += 15;
+      if (k.seviye === 'premium' || k.seviye === 'profesyonel') s += 15;
+      return Math.min(100, s);
+    }
+
+    function loadApps(jobId) {
+      var job   = getJob(jobId);
+      var pool  = jobApplicants(jobId);
+      var saved = {};
+      try { saved = JSON.parse(localStorage.getItem('kb_apps_' + jobId)) || {}; } catch(e) {}
+      return pool.map(function(k) {
+        var sv = saved[k.id] || {};
+        return {
+          k:          k,
+          jobId:      jobId,
+          status:     sv.status     || 'yeni',
+          shortlisted:!!sv.shortlisted,
+          date:       sv.date       || mockDate(jobId, k.id),
+          viewed:     !!sv.viewed,
+          match:      calcMatch(k, job),
+          pct:        profilePct(k),
+          doc:        docStatus(k)
+        };
+      });
+    }
+
+    function saveApp(jobId, kId, patch) {
+      var key = 'kb_apps_' + jobId, saved = {};
+      try { saved = JSON.parse(localStorage.getItem(key)) || {}; } catch(e) {}
+      saved[kId] = Object.assign(saved[kId] || {}, patch);
+      try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e) {}
+    }
+
+    function logActivity(jobId, kId, event, note) {
+      var key = 'kb_apc_log_' + jobId, log = [];
+      try { log = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
+      log.unshift({ event:event, kId:kId, note:note||'', date:new Date().toISOString() });
+      try { localStorage.setItem(key, JSON.stringify(log.slice(0, 200))); } catch(e) {}
+    }
+
+    function notifyApplicant(kId, event, jobTitle) {
+      var key = 'kb_notifications_' + kId, notes = [];
+      try { notes = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
+      var MSGS = {
+        viewed:     'başvurunuzu inceledi',
+        shortlisted:'sizi kısa listeye aldı',
+        kabul:      'başvurunuzu kabul etti',
+        red:        'başvurunuzu reddetti',
+        mulakat:    'sizi mülakata davet etti'
+      };
+      if (MSGS[event]) {
+        notes.unshift({ msg:'"' + jobTitle + '" ilanı için işveren ' + MSGS[event] + '.', date:new Date().toISOString(), read:false });
+        try { localStorage.setItem(key, JSON.stringify(notes.slice(0, 100))); } catch(e) {}
+      }
+    }
+
+    /* ── Filters ── */
+    function applyFilters(apps) {
+      var f = FILTERS;
+      return apps.filter(function(a) {
+        if (CUR_TAB === 'shortlist' && !a.shortlisted) return false;
+        if (f.q) {
+          var q = normStr(f.q);
+          if (normStr(a.k.ad).indexOf(q) === -1) return false;
+        }
+        if (f.bolge) {
+          var bMatch = (a.k.bolgeler || []).some(function(b) { return normStr(b).indexOf(normStr(f.bolge)) !== -1; });
+          if (!bMatch) return false;
+        }
+        if (f.arac && normStr(a.k.arac) !== normStr(f.arac)) return false;
+        if (f.deneyim) {
+          var min = parseInt(f.deneyim, 10) || 0;
+          if ((a.k.deneyim || 0) < min) return false;
+        }
+        if (f.belge && a.doc.key !== f.belge) return false;
+        return true;
+      }).sort(function(a, b) {
+        if (f.sort === 'match')   return b.match - a.match;
+        if (f.sort === 'deneyim') return (b.k.deneyim || 0) - (a.k.deneyim || 0);
+        if (f.sort === 'yeni')    return b.date > a.date ? 1 : -1;
+        return 0;
+      });
+    }
+
+    /* ── Render: job bar ── */
+    function renderJobBar() {
+      var el = document.getElementById('apcJobBar');
+      if (!el) return;
+      if (!ALL_JOBS.length) {
+        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">📋</div>' +
+          '<div class="apc-empty__t">Henüz yayında ilanınız yok</div>' +
+          '<a href="ilan-olustur.html" class="btn btn--primary btn--sm" style="margin-top:12px">+ İlan Oluştur</a></div>';
+        return;
+      }
+      el.innerHTML = ALL_JOBS.map(function(j) {
+        var h       = simpleHash(j.id);
+        var count   = (h % 4) + 4;
+        var saved   = {};
+        try { saved = JSON.parse(localStorage.getItem('kb_apps_' + j.id)) || {}; } catch(e) {}
+        var newCnt  = 0;
+        Object.keys(saved).forEach(function(kid) { if (!saved[kid].status || saved[kid].status === 'yeni') newCnt++; });
+        var statusBadge = window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'yayinda') : '';
+        return '<button class="apc-job-btn' + (SEL_JOB_ID === j.id ? ' is-active' : '') + '" data-jobid="' + esc(j.id) + '">' +
+          '<div>' +
+            '<div class="apc-job-btn__name">' + esc(j.baslik || 'İsimsiz İlan') + '</div>' +
+            '<div style="margin-top:5px;display:flex;align-items:center;gap:6px">' +
+              statusBadge +
+              (j.sehir ? '<span style="font-size:0.71rem;color:var(--text-3)">📍 ' + esc(j.sehir) + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<span class="apc-job-btn__count">' + count + ' aday</span>' +
+          (newCnt > 0 ? '<span style="position:absolute;top:-7px;right:-7px;background:var(--error);color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px">' + newCnt + '</span>' : '') +
+        '</button>';
+      }).join('');
+    }
+
+    /* ── Render: stats ── */
+    function renderStats() {
+      var el = document.getElementById('apcStats');
+      if (!el) return;
+      var apps = CUR_APPS;
+      var total = apps.length;
+      var newC  = apps.filter(function(a) { return a.status === 'yeni'; }).length;
+      var sl    = apps.filter(function(a) { return a.shortlisted; }).length;
+      var acc   = apps.filter(function(a) { return a.status === 'kabul'; }).length;
+      var rej   = apps.filter(function(a) { return a.status === 'red'; }).length;
+      el.style.display = '';
+      el.innerHTML =
+        '<div class="apc-stat"><div class="apc-stat__val">' + total + '</div><div class="apc-stat__lbl">Toplam</div></div>' +
+        '<div class="apc-stat apc-stat--blue"><div class="apc-stat__val">' + newC + '</div><div class="apc-stat__lbl">Yeni</div></div>' +
+        '<div class="apc-stat apc-stat--yellow"><div class="apc-stat__val">' + sl + '</div><div class="apc-stat__lbl">Kısa Liste</div></div>' +
+        '<div class="apc-stat apc-stat--green"><div class="apc-stat__val">' + acc + '</div><div class="apc-stat__lbl">Kabul</div></div>' +
+        '<div class="apc-stat apc-stat--red"><div class="apc-stat__val">' + rej + '</div><div class="apc-stat__lbl">Red</div></div>';
+      var allBadge = document.getElementById('apcAllBadge');
+      var slBadge  = document.getElementById('apcSlBadge');
+      if (allBadge) allBadge.textContent = total;
+      if (slBadge)  slBadge.textContent  = sl;
+    }
+
+    /* ── Render: single card ── */
+    function renderCard(a) {
+      var k     = a.k;
+      var inits = (k.ad || '?').split(' ').map(function(w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || '?';
+      var bTxt  = (k.bolgeler || []).slice(0, 2).join(', ');
+      var mCls  = matchCls(a.match);
+      var sevB  = k.seviye === 'premium'      ? '<span class="ver-badge">★ Premium</span>'
+                : k.seviye === 'profesyonel'  ? '<span class="ver-badge">Pro</span>' : '';
+      var cardCls = 'apc-card' + (a.shortlisted ? ' is-shortlisted' : '') +
+                    (a.status === 'kabul' ? ' is-accepted' : a.status === 'red' ? ' is-rejected' : '');
+
+      return '<div class="' + cardCls + '" data-kid="' + esc(k.id) + '" data-jobid="' + esc(a.jobId) + '">' +
+
+        '<div class="apc-card__head">' +
+          '<div class="apc-card__av">' +
+            (k.avatar_url ? '<img src="' + esc(k.avatar_url) + '" alt="">' : inits) +
+            (k.seviye === 'premium' ? '<div class="apc-card__av-badge">★</div>' : '') +
+          '</div>' +
+          '<div class="apc-card__info">' +
+            '<div class="apc-card__name">' + esc(k.ad || '—') + sevB + '</div>' +
+            '<div class="apc-card__sub">📍 ' + esc(k.sehir || '') + (bTxt ? ' · ' + esc(bTxt) : '') +
+              ' · ' + (k.deneyim ? k.deneyim + ' yıl deneyim' : 'Yeni başlayan') + '</div>' +
+            '<div class="apc-card__comp">' +
+              '<div class="apc-card__comp-bar"><div class="apc-card__comp-fill" style="width:' + a.pct + '%"></div></div>' +
+              '<span class="apc-card__comp-pct">%' + a.pct + ' profil tamamlandı</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="apc-card__match">' +
+            '<div class="apc-card__match-val ' + mCls + '">%' + a.match + '</div>' +
+            '<div class="apc-card__match-lbl">Uyum</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="apc-card__details">' +
+          (k.arac      ? '<div class="apc-detail">🛵 <span>' + esc(k.arac) + '</span></div>' : '') +
+          (bTxt        ? '<div class="apc-detail">📍 <span>' + esc(bTxt) + '</span></div>' : '') +
+          (k.deneyim   ? '<div class="apc-detail">⏱ <span>' + k.deneyim + ' yıl deneyim</span></div>' : '') +
+          (k.seviye    ? '<div class="apc-detail">🏅 <span>' + esc(k.seviye.charAt(0).toUpperCase() + k.seviye.slice(1)) + '</span></div>' : '') +
+          (k.tamamlanan? '<div class="apc-detail">📦 <span>' + k.tamamlanan + ' teslimat</span></div>' : '') +
+          (k.puan      ? '<div class="apc-detail">⭐ <span>' + k.puan + ' puan</span></div>' : '') +
+        '</div>' +
+
+        '<div class="apc-card__status">' +
+          statusChip(a.status) +
+          '<span class="chip ' + a.doc.cls + '">' + a.doc.lbl + '</span>' +
+          '<span class="apc-card__date">' + relTime(a.date) + ' başvurdu</span>' +
+        '</div>' +
+
+        '<div class="apc-card__acts">' +
+          '<button class="btn btn--ghost btn--sm" data-apc-action="profile">👤 Profili Gör</button>' +
+          '<button class="btn btn--ghost btn--sm" data-apc-action="message">💬 Mesaj</button>' +
+          '<button class="btn btn--ghost btn--sm" data-apc-action="shortlist">' + (a.shortlisted ? '★ Listeden Çıkar' : '☆ Kısa Liste') + '</button>' +
+          '<button class="btn btn--primary btn--sm" data-apc-action="decide">⚖️ Karar Ver</button>' +
+          (a.status !== 'kabul' && a.status !== 'red' ?
+            '<button class="btn btn--success btn--sm" data-apc-action="accept">✓ Kabul</button>' +
+            '<button class="btn btn--danger btn--sm" data-apc-action="reject">✗ Reddet</button>' : '') +
+          '<select class="apc-status-sel" data-apc-action="setstatus">' +
+            Object.keys(STATUS).map(function(sk) {
+              return '<option value="' + sk + '"' + (a.status === sk ? ' selected' : '') + '>' + STATUS[sk].ico + ' ' + STATUS[sk].lbl + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+
+      '</div>';
+    }
+
+    /* ── Render: grid ── */
+    function renderGrid() {
+      var el = document.getElementById('apcGrid');
+      if (!el) return;
+      if (!SEL_JOB_ID) {
+        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">👆</div>' +
+          '<div class="apc-empty__t">Yukarıdan bir ilan seçin</div>' +
+          '<div class="apc-empty__s">Başvuruları görmek için ilanınızı seçin</div></div>';
+        return;
+      }
+      var filtered = applyFilters(CUR_APPS);
+      if (!filtered.length) {
+        var emptyMsg = CUR_TAB === 'shortlist'
+          ? '<div class="apc-empty__ico">⭐</div><div class="apc-empty__t">Kısa liste boş</div><div class="apc-empty__s">Adayları kısa listeye eklemek için ☆ Kısa Liste butonunu kullanın</div>'
+          : '<div class="apc-empty__ico">🔍</div><div class="apc-empty__t">Başvuru bulunamadı</div><div class="apc-empty__s">Filtre kriterlerinizi değiştirin</div>';
+        el.innerHTML = '<div class="apc-empty">' + emptyMsg + '</div>';
+        return;
+      }
+      el.innerHTML = filtered.map(renderCard).join('');
+    }
+
+    /* ── Profile modal ── */
+    function openModal(kid, jobId) {
+      var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
+      if (!app) return;
+      var k   = app.k;
+      var job = getJob(jobId);
+      var inits = (k.ad || '?').split(' ').map(function(w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || '?';
+      var mCls  = matchCls(app.match);
+      var mColor = app.match >= 70 ? '#15803D' : app.match >= 45 ? 'var(--warning)' : 'var(--error)';
+
+      /* mark viewed & auto-update status */
+      if (!app.viewed) {
+        app.viewed = true;
+        saveApp(jobId, k.id, { viewed:true });
+        if (app.status === 'yeni') {
+          app.status = 'inceleniyor';
+          saveApp(jobId, k.id, { status:'inceleniyor' });
+          logActivity(jobId, k.id, 'viewed', k.ad + ' profili incelendi');
+          notifyApplicant(k.id, 'viewed', job ? (job.baslik || '') : '');
+          renderGrid();
+          renderStats();
+        }
+      }
+
+      var certsHtml = (k.sertifikalar || []).length
+        ? (k.sertifikalar.map(function(c) {
+            return '<span class="apc-cert' + (c.indexOf('MYK') !== -1 ? ' apc-cert--mkv' : '') + '">📜 ' + esc(c) + '</span>';
+          }).join(''))
+        : '<span style="font-size:0.85rem;color:var(--text-3)">Sertifika bulunmuyor</span>';
+
+      var expHtml = (k.calistigi || []).length
+        ? (k.calistigi.map(function(c) {
+            return '<div style="padding:8px 12px;background:var(--surface-2);border-radius:var(--radius);margin-bottom:6px;font-size:0.875rem">🏢 ' + esc(c) + '</div>';
+          }).join(''))
+        : '<span style="font-size:0.85rem;color:var(--text-3)">Geçmiş iş bilgisi yok</span>';
+
+      var refHtml = (k.referanslar || []).length
+        ? (k.referanslar.map(function(r) {
+            return '<div style="padding:10px 14px;background:var(--surface-2);border-radius:var(--radius);margin-bottom:8px">' +
+              '<div style="font-weight:600;font-size:0.875rem">' + esc(r.ad) + ' <span style="font-size:0.75rem;color:var(--text-3)">· ' + esc(r.rol) + '</span></div>' +
+              '<div style="font-size:0.82rem;color:var(--text-2);margin-top:4px;font-style:italic">"' + esc(r.not) + '"</div></div>';
+          }).join(''))
+        : '<span style="font-size:0.85rem;color:var(--text-3)">Referans bulunmuyor</span>';
+
+      var modalEl = document.getElementById('apcModal');
+      if (!modalEl) return;
+
+      modalEl.innerHTML =
+        /* ─ Head ─ */
+        '<div class="apc-mhead">' +
+          '<div class="apc-mhead__av">' + (k.avatar_url ? '<img src="' + esc(k.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover">' : inits) + '</div>' +
+          '<div class="apc-mhead__body">' +
+            '<div class="apc-mhead__name">' + esc(k.ad || '—') + (k.seviye === 'premium' ? '<span class="ver-badge">★ Premium</span>' : '') + '</div>' +
+            '<div class="apc-mhead__meta">📍 ' + esc(k.sehir || '') + ((k.bolgeler || []).length ? ' · ' + k.bolgeler.slice(0, 2).map(esc).join(', ') : '') + '</div>' +
+            '<div class="apc-mhead__stats">' +
+              (k.deneyim ? '<div class="apc-mhead__stat"><div class="apc-mhead__stat-val">' + k.deneyim + '</div><div class="apc-mhead__stat-lbl">Yıl Deneyim</div></div>' : '') +
+              (k.tamamlanan ? '<div class="apc-mhead__stat"><div class="apc-mhead__stat-val">' + k.tamamlanan + '</div><div class="apc-mhead__stat-lbl">Teslimat</div></div>' : '') +
+              (k.puan ? '<div class="apc-mhead__stat"><div class="apc-mhead__stat-val">⭐ ' + k.puan + '</div><div class="apc-mhead__stat-lbl">Puan</div></div>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="apc-mhead__match">' +
+            '<div style="font-size:1.5rem;font-weight:700;color:' + mColor + '">%' + app.match + '</div>' +
+            '<div style="font-size:0.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em">Uyum</div>' +
+            '<div style="font-size:0.75rem;color:var(--text-2);margin-top:4px">' + statusChip(app.status) + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        /* ─ Sections ─ */
+        '<div class="apc-msec"><h3>Kişisel Bilgiler</h3><dl class="apc-mkv">' +
+          '<dt>Şehir</dt><dd>' + esc(k.sehir || '—') + '</dd>' +
+          ((k.bolgeler || []).length ? '<dt>Çalışma Bölgeleri</dt><dd>' + k.bolgeler.map(esc).join(', ') + '</dd>' : '') +
+          '<dt>Profil Tamamlama</dt><dd>%' + app.pct + '</dd>' +
+          '<dt>Belge Durumu</dt><dd>' + app.doc.lbl + '</dd>' +
+        '</dl></div>' +
+
+        '<div class="apc-msec"><h3>Çalışma Bilgileri</h3><dl class="apc-mkv">' +
+          '<dt>Araç</dt><dd>' + esc(k.arac || '—') + '</dd>' +
+          '<dt>Deneyim</dt><dd>' + (k.deneyim ? k.deneyim + ' yıl' : '—') + '</dd>' +
+          '<dt>Seviye</dt><dd>' + esc(k.seviye ? k.seviye.charAt(0).toUpperCase() + k.seviye.slice(1) : '—') + '</dd>' +
+          '<dt>Tamamlanan Teslimat</dt><dd>' + (k.tamamlanan || '—') + '</dd>' +
+          '<dt>Ortalama Puan</dt><dd>' + (k.puan ? '⭐ ' + k.puan : '—') + '</dd>' +
+        '</dl></div>' +
+
+        '<div class="apc-msec"><h3>Sertifikalar &amp; Belgeler</h3>' + certsHtml + '</div>' +
+        '<div class="apc-msec"><h3>Geçmiş İş Deneyimi</h3>' + expHtml + '</div>' +
+        '<div class="apc-msec"><h3>Referanslar</h3>' + refHtml + '</div>' +
+        (k.aciklama ? '<div class="apc-msec"><h3>Hakkında</h3><p style="font-size:0.875rem;color:var(--text-2);line-height:1.7">' + esc(k.aciklama) + '</p></div>' : '') +
+
+        /* ─ Footer ─ */
+        '<div class="apc-mfoot">' +
+          '<a class="btn btn--ghost btn--sm" href="profil-kurye.html?id=' + esc(k.id) + '" target="_blank">🔗 Profil Sayfası</a>' +
+          '<button class="btn btn--ghost btn--sm" data-modal-action="message" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">💬 Mesaj Gönder</button>' +
+          '<button class="btn btn--ghost btn--sm" data-modal-action="shortlist" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">' + (app.shortlisted ? '★ Listeden Çıkar' : '☆ Kısa Listeye Ekle') + '</button>' +
+          (app.status !== 'kabul' && app.status !== 'red' ?
+            '<button class="btn btn--primary btn--sm" data-modal-action="accept" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">✓ Kabul Et</button>' +
+            '<button class="btn btn--danger btn--sm" data-modal-action="reject" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">✗ Reddet</button>'
+            : statusChip(app.status)) +
+          '<button class="btn btn--ghost btn--sm" data-modal-action="close" style="margin-left:auto">✕ Kapat</button>' +
+        '</div>';
+
+      var overlay = document.getElementById('apcModalOverlay');
+      if (overlay) { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    }
+
+    function closeModal() {
+      var ov = document.getElementById('apcModalOverlay');
+      if (ov) { ov.style.display = 'none'; document.body.style.overflow = ''; }
+    }
+
+    /* Open (or create) a chat thread for this applicant, then navigate */
+    function openChat(kid, jobId) {
+      if (!window.KBChat) { window.location.href = 'mesajlar.html'; return; }
+      var job  = getJob(jobId);
+      var app  = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
+      var k    = app ? app.k : { id: kid, ad: 'Kurye', avatar: '' };
+      var uid  = getUid();
+      var thread = KBChat.ensureThread(uid, jobId, kid, {
+        jobTitle:  job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
+        kurye:     { id: kid, ad: k.ad || 'Kurye', avatar: '' },
+        isletmeId: uid,
+        isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'İşletme', avatar: '' },
+        appStatus: app ? (app.status || 'inceleniyor') : 'inceleniyor',
+        createdAt: app ? (app.date || new Date().toISOString()) : new Date().toISOString()
+      });
+      /* also update app status to "mesaj_gonderildi" if still new */
+      if (app && app.status === 'yeni') {
+        saveApp(jobId, kid, { status: 'mesaj_gonderildi' });
+        app.status = 'mesaj_gonderildi';
+      }
+      window.location.href = 'mesajlar.html?tid=' + encodeURIComponent(thread.id);
+    }
+
+    /* Navigate to hiring decision page for this applicant */
+    function openDecision(kid, jobId) {
+      var job = getJob(jobId);
+      var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
+      var k   = app ? app.k : { id: kid, ad: 'Kurye', avatar: '' };
+      var uid = getUid();
+
+      /* Pre-create decision record so karar.html has data */
+      if (window.KBHiring && !KBHiring.getDecision(jobId, kid)) {
+        var thread = window.KBChat
+          ? KBChat.ensureThread(uid, jobId, kid, {
+              jobTitle: job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
+              kurye:     { id: kid, ad: k.ad || 'Kurye', avatar: '' },
+              isletmeId: uid,
+              isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'İşletme', avatar: '' },
+              appStatus: app ? (app.status || 'inceleniyor') : 'inceleniyor',
+              createdAt: app ? (app.date || new Date().toISOString()) : new Date().toISOString()
+            })
+          : null;
+
+        KBHiring.makeDecision(uid, jobId, kid, 'beklemede', {
+          jobTitle:  job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
+          kuryeAd:   k.ad || 'Kurye',
+          isletmeAd: (job && (job.isletme_adi || job.firma_adi)) || 'İşletme',
+          threadId:  thread ? thread.id : null
+        });
+      }
+
+      var params = '?job=' + encodeURIComponent(jobId) + '&kid=' + encodeURIComponent(kid);
+      if (job) params += '&title=' + encodeURIComponent(job.baslik || job.poz_baslik || '');
+      window.location.href = 'karar.html' + params;
+    }
+
+    /* ── Actions ── */
+    function setStatus(jobId, kid, status) {
+      var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
+      if (!app) return;
+      app.status = status;
+      saveApp(jobId, kid, { status:status });
+      logActivity(jobId, kid, status, '');
+      var job = getJob(jobId);
+      if (['kabul','red','mulakat'].indexOf(status) !== -1)
+        notifyApplicant(kid, status, job ? (job.baslik || '') : '');
+      renderStats();
+      renderGrid();
+      if (window.KBMotion) {
+        var M = { kabul:'✓ Kabul edildi — aday bilgilendirildi', red:'Başvuru reddedildi', mulakat:'Mülakat daveti gönderildi', inceleniyor:'İnceleniyor olarak işaretlendi', mesaj_gonderildi:'Mesaj durumu güncellendi' };
+        KBMotion.showSuccess(M[status] || 'Durum güncellendi', '', 2000);
+      }
+    }
+
+    function toggleShortlist(jobId, kid) {
+      var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
+      if (!app) return;
+      app.shortlisted = !app.shortlisted;
+      saveApp(jobId, kid, { shortlisted:app.shortlisted });
+      if (app.shortlisted) {
+        logActivity(jobId, kid, 'shortlist', app.k.ad + ' kısa listeye eklendi');
+        var job = getJob(jobId);
+        notifyApplicant(kid, 'shortlisted', job ? (job.baslik || '') : '');
+        if (window.KBMotion) KBMotion.showSuccess('⭐ Kısa listeye eklendi', '', 1600);
+      }
+      renderStats();
+      renderGrid();
+    }
+
+    /* ── Populate filter selects ── */
+    function populateFilters(apps) {
+      var bolgeSel = document.getElementById('fBolge');
+      var aracSel  = document.getElementById('fArac');
+      if (!bolgeSel || !aracSel) return;
+
+      var bolges = {}, aracs = {};
+      apps.forEach(function(a) {
+        (a.k.bolgeler || []).forEach(function(b) { bolges[b] = 1; });
+        if (a.k.arac) aracs[a.k.arac] = 1;
+      });
+
+      bolgeSel.innerHTML = '<option value="">Tüm Bölgeler</option>' +
+        Object.keys(bolges).sort().map(function(b) { return '<option value="' + esc(b) + '">' + esc(b) + '</option>'; }).join('');
+      aracSel.innerHTML  = '<option value="">Tüm Araçlar</option>' +
+        Object.keys(aracs).sort().map(function(a) { return '<option value="' + esc(a) + '">' + esc(a) + '</option>'; }).join('');
+    }
+
+    /* ── Select job ── */
+    function selectJob(jobId) {
+      SEL_JOB_ID = jobId;
+      try {
+        var url = new URL(location.href);
+        url.searchParams.set('job', jobId);
+        history.replaceState({}, '', url.toString());
+      } catch(e) {}
+      CUR_APPS = loadApps(jobId);
+      renderJobBar();
+      renderStats();
+      populateFilters(CUR_APPS);
+      var ctrl   = document.getElementById('apcControls');
+      var tabBar = document.getElementById('apcTabBar');
+      if (ctrl)   ctrl.style.display   = '';
+      if (tabBar) tabBar.style.display = '';
+      renderGrid();
+    }
+
+    /* ── Wire events ── */
+    function wire() {
+      /* job bar */
+      document.getElementById('apcJobBar').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-jobid]');
+        if (btn) selectJob(btn.dataset.jobid);
+      });
+
+      /* grid delegation */
+      document.getElementById('apcGrid').addEventListener('click', function(e) {
+        var card   = e.target.closest('[data-kid]');
+        if (!card) return;
+        var kid    = card.dataset.kid;
+        var jobId  = card.dataset.jobid;
+        var action = e.target.closest('[data-apc-action]');
+        if (!action) return;
+        var act    = action.dataset.apcAction;
+        if (act === 'profile')   openModal(kid, jobId);
+        else if (act === 'message')   openChat(kid, jobId);
+        else if (act === 'shortlist') toggleShortlist(jobId, kid);
+        else if (act === 'decide')    openDecision(kid, jobId);
+        else if (act === 'accept')    setStatus(jobId, kid, 'kabul');
+        else if (act === 'reject')    setStatus(jobId, kid, 'red');
+        else if (act === 'setstatus') setStatus(jobId, kid, action.value);
+      });
+
+      /* grid – prevent select change from bubbling as a click */
+      document.getElementById('apcGrid').addEventListener('change', function(e) {
+        var sel = e.target.closest('[data-apc-action="setstatus"]');
+        if (!sel) return;
+        var card  = sel.closest('[data-kid]');
+        if (!card) return;
+        setStatus(card.dataset.jobid, card.dataset.kid, sel.value);
+      });
+
+      /* modal overlay */
+      document.getElementById('apcModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) { closeModal(); return; }
+        var btn = e.target.closest('[data-modal-action]');
+        if (!btn) return;
+        var act   = btn.dataset.modalAction;
+        var kid   = btn.dataset.kid;
+        var jobId = btn.dataset.jobid;
+        if (act === 'close')      closeModal();
+        else if (act === 'message')   { closeModal(); openChat(kid, jobId); }
+        else if (act === 'shortlist') { toggleShortlist(jobId, kid); closeModal(); }
+        else if (act === 'accept')    { setStatus(jobId, kid, 'kabul'); closeModal(); }
+        else if (act === 'reject')    { setStatus(jobId, kid, 'red');   closeModal(); }
+      });
+
+      /* tab bar */
+      document.getElementById('apcTabBar').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-apctab]');
+        if (!btn) return;
+        CUR_TAB = btn.dataset.apctab;
+        document.querySelectorAll('[data-apctab]').forEach(function(b) {
+          b.classList.toggle('is-active', b.dataset.apctab === CUR_TAB);
+        });
+        renderGrid();
+      });
+
+      /* filter selects */
+      [['fBolge','bolge'],['fArac','arac'],['fDeneyim','deneyim'],['fBelge','belge'],['fSort','sort']].forEach(function(pair) {
+        var el = document.getElementById(pair[0]);
+        if (!el) return;
+        el.addEventListener('change', function() { FILTERS[pair[1]] = this.value; renderGrid(); });
+      });
+
+      /* search */
+      var searchEl = document.getElementById('apcSearch');
+      if (searchEl) searchEl.addEventListener('input', function() { FILTERS.q = this.value; renderGrid(); });
+
+      /* ESC */
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+    }
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.KB && KB.ready) {
+        KB.ready().then(function() { boot(); });
+      } else {
+        boot();
+      }
+    });
+
+    function boot() {
+      if (window.IlanStatus) IlanStatus.autoCheck(getUid());
+      loadJobs();
+      renderJobBar();
+      renderGrid();
+      wire();
+      if (SEL_JOB_ID) { selectJob(SEL_JOB_ID); }
+    }
+
+  })();
+  </script>
+</body>
+</html>

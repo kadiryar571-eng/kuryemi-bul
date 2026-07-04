@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İlan Kalite Analizi · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+
+    <div class="page-header" style="margin-bottom:20px">
+      <div>
+        <h1>İlan Kalite Analizi</h1>
+        <p class="page-sub">İlanını optimize ederek daha fazla uygun başvuru al.</p>
+      </div>
+      <a href="ilan-olustur.html" class="btn btn--primary btn--sm">+ Yeni İlan Oluştur</a>
+    </div>
+
+    <!-- Job selector -->
+    <div id="ilqJobBar" class="apc-job-bar">
+      <div class="skel skel--line" style="width:200px;height:56px;border-radius:12px"></div>
+      <div class="skel skel--line" style="width:180px;height:56px;border-radius:12px"></div>
+    </div>
+
+    <!-- Empty/prompt state -->
+    <div id="ilqEmpty">
+      <div class="apc-empty">
+        <div class="apc-empty__ico">📊</div>
+        <div class="apc-empty__t">Yukarıdan bir ilan seçin</div>
+        <div class="apc-empty__s">İlan kalite analizini görmek için seç</div>
+      </div>
+    </div>
+
+    <!-- Main content grid -->
+    <div id="ilqMain" style="display:none" class="ilq-main-grid">
+
+      <!-- ── Left column ── -->
+      <div class="ilq-left">
+
+        <!-- Score hero -->
+        <div class="ilq-hero" id="ilqHero">
+          <div class="ilq-hero__top">
+            <div id="ilqScoreRing"></div>
+            <div class="ilq-hero__info">
+              <div class="ilq-hero__h" id="ilqHeroTitle">—</div>
+              <div class="ilq-hero__sub" id="ilqHeroSub"></div>
+              <div class="ilq-hero__meta" id="ilqHeroMeta"></div>
+            </div>
+            <div>
+              <div id="ilqVisTier"></div>
+              <a class="btn btn--ghost btn--sm" id="ilqEditLink" href="#" style="margin-top:8px;display:block;text-align:center">✏️ İlanı Düzenle</a>
+            </div>
+          </div>
+          <!-- Dimension bars -->
+          <div class="ilq-dims" id="ilqDims"></div>
+        </div>
+
+        <!-- Quality checklist -->
+        <div class="ilq-check-list">
+          <h3>Kalite Kontrol Listesi</h3>
+          <div id="ilqChecklist"></div>
+        </div>
+
+        <!-- Title optimization -->
+        <div class="ilq-title-opt" id="ilqTitleOpt" style="display:none">
+          <h3>✍️ Başlık Optimizasyonu</h3>
+          <div class="ilq-title-cmp" id="ilqTitleCmp"></div>
+          <button class="btn btn--primary btn--sm" id="ilqApplyTitle" style="margin-top:12px">Önerilen Başlığı Uygula</button>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="ilq-sugg-list" id="ilqSuggList">
+          <h3>💡 Optimizasyon Önerileri</h3>
+          <div id="ilqSuggs"></div>
+        </div>
+
+      </div><!-- /.ilq-left -->
+
+      <!-- ── Right column ── -->
+      <div class="ilq-right">
+
+        <!-- Analytics -->
+        <div class="ilq-analytics">
+          <h3>📈 Performans Analizi</h3>
+          <div class="ilq-an-grid" id="ilqAnalytics"></div>
+          <div id="ilqConvNote" style="font-size:0.75rem;color:var(--text-3);margin-top:10px;line-height:1.5"></div>
+        </div>
+
+        <!-- Visibility impact -->
+        <div class="ilq-vis-panel">
+          <h3>👁 Görünürlük Etkisi</h3>
+          <div id="ilqVisInfo" style="margin-bottom:12px"></div>
+          <div class="ilq-vis-bars" id="ilqVisBars"></div>
+        </div>
+
+        <!-- Applicant quality impact -->
+        <div class="ilds-box">
+          <h3>Başvuru Kalitesi Etkisi</h3>
+          <div id="ilqApplicantImpact"></div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="ilds-box">
+          <h3>Hızlı Eylemler</h3>
+          <div id="ilqActions" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+      </div><!-- /.ilq-right -->
+
+    </div><!-- /#ilqMain -->
+
+  </div><!-- /.app-content -->
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/ilan-status.js"></script>
+  <script src="assets/js/ilan-quality.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var IQ = window.IlanQuality;
+    var IS = window.IlanStatus;
+    var SEL_JOB_ID = new URLSearchParams(location.search).get('job') || '';
+    var ALL_JOBS   = [];
+    var CURRENT_JOB = null;
+
+    /* ── Helpers ── */
+    function esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function getUid() {
+      try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
+      return 'demo';
+    }
+
+    function loadJobs() {
+      var ls   = IS ? IS.getJobs(getUid()) : [];
+      var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
+      ALL_JOBS  = ls.concat(demo.filter(function(j) { return !ls.some(function(l){ return l.id === j.id; }); }));
+    }
+    function getJob(id) {
+      for (var i = 0; i < ALL_JOBS.length; i++) { if (ALL_JOBS[i].id === id) return ALL_JOBS[i]; }
+      return null;
+    }
+
+    /* ── Job bar ── */
+    function renderJobBar() {
+      var el = document.getElementById('ilqJobBar');
+      if (!el) return;
+      loadJobs();
+      if (!ALL_JOBS.length) {
+        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">📋</div>' +
+          '<div class="apc-empty__t">Henüz ilanınız yok</div>' +
+          '<a href="ilan-olustur.html" class="btn btn--primary btn--sm" style="margin-top:12px">+ İlan Oluştur</a></div>';
+        return;
+      }
+      el.innerHTML = ALL_JOBS.map(function(j) {
+        var score    = IQ.calcScore(j);
+        var color    = IQ.scoreColor(score);
+        var statusBadge = IS ? IS.renderBadge(j.durum || 'yayinda') : '';
+        return '<button class="apc-job-btn' + (SEL_JOB_ID === j.id ? ' is-active' : '') + '" data-jobid="' + esc(j.id) + '" style="position:relative">' +
+          '<div>' +
+            '<div class="apc-job-btn__name">' + esc(j.baslik || 'İsimsiz İlan') + '</div>' +
+            '<div style="display:flex;gap:6px;align-items:center;margin-top:5px">' +
+              statusBadge +
+              '<span style="font-size:0.68rem;font-weight:700;color:' + color + '">%' + score + ' Kalite</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="text-align:center;flex-shrink:0">' +
+            IQ.renderScoreRing(score, 44) +
+          '</div>' +
+        '</button>';
+      }).join('');
+    }
+
+    /* ── Hero ── */
+    function renderHero(job, score) {
+      var ringEl   = document.getElementById('ilqScoreRing');
+      var titleEl  = document.getElementById('ilqHeroTitle');
+      var subEl    = document.getElementById('ilqHeroSub');
+      var metaEl   = document.getElementById('ilqHeroMeta');
+      var visTier  = document.getElementById('ilqVisTier');
+      var editLink = document.getElementById('ilqEditLink');
+
+      if (ringEl)   ringEl.innerHTML  = IQ.renderScoreRing(score, 100);
+      if (titleEl)  titleEl.textContent = job.baslik || 'İsimsiz İlan';
+      if (subEl)    subEl.textContent  = IQ.scoreLabel(score) + ' · ' + (IS ? IS.getDef(job.durum || 'yayinda').lbl : '');
+      if (metaEl)   metaEl.innerHTML   =
+        (job.sehir  ? '<span>📍 ' + esc(job.sehir) + '</span>' : '') +
+        (job.bolge  ? '<span>· ' + esc(job.bolge) + '</span>' : '') +
+        (job.arac   ? '<span>🛵 ' + esc(job.arac) + '</span>' : '') +
+        (job.tarih  ? '<span>📅 ' + esc(job.tarih) + '</span>' : '');
+      if (visTier && IS) {
+        var vt = IQ.visibilityTier(score);
+        visTier.innerHTML = '<div class="ilq-vis-tag ' + vt.cls + '" style="font-size:0.8rem;padding:6px 12px">' + vt.ico + ' ' + vt.lbl + ' Görünürlük</div>' +
+          '<div style="font-size:0.73rem;color:var(--text-3);margin-top:6px;max-width:160px;line-height:1.4">' + vt.desc + '</div>';
+      }
+      if (editLink) editLink.href = 'ilan-olustur.html?edit=' + job.id;
+    }
+
+    /* ── Dimension bars ── */
+    function renderDims(job) {
+      var el = document.getElementById('ilqDims');
+      if (!el) return;
+      var dimScores = IQ.calcDimScores(job);
+      el.innerHTML = IQ.DIMS.map(function(d) {
+        var got = dimScores[d.id] || 0;
+        var pct = Math.round((got / d.max) * 100);
+        return '<div class="ilq-dim">' +
+          '<div class="ilq-dim__lbl">' + esc(d.lbl) + '</div>' +
+          '<div class="ilq-dim__bar"><div class="ilq-dim__fill" style="width:' + pct + '%;background:' + d.color + '"></div></div>' +
+          '<div class="ilq-dim__pts">' + got + '/' + d.max + ' puan</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── Checklist ── */
+    function renderChecklist(job) {
+      var el = document.getElementById('ilqChecklist');
+      if (!el) return;
+      var checks  = IQ.runChecks(job);
+      var failed  = checks.filter(function(c) { return !c.pass; });
+      var passed  = checks.filter(function(c) { return c.pass; });
+      var GAINS = {
+        has_salary:'+40% başvuru', has_city:'Zorunlu', has_vehicle:'+35% kalite',
+        has_desc:'+60% başvuru', good_desc:'+20% güven', has_benefits:'+25% kalite',
+        good_benefits:'+15% oran', has_district:'+25% uyum', good_title:'+30% tıklama',
+        has_schedule:'+20% uyum', has_shifts:'+15% uyum', has_deadline:'+30% dönüşüm',
+        has_experience:'+20% kalite'
+      };
+
+      var failHtml = '<div style="margin-bottom:14px">' +
+        (failed.length ? '' : '<div style="font-size:0.875rem;color:var(--success);padding:8px 0">🎉 Tüm kontroller geçildi!</div>') +
+        failed.map(function(c) {
+          var icoClass = c.critical ? 'ilq-check-full__ico--crit' : 'ilq-check-full__ico--warn';
+          var rowClass = c.critical ? 'ilq-check-full--crit' : 'ilq-check-full--warn';
+          var gain     = GAINS[c.id] || '';
+          return '<a class="ilq-check-full ' + rowClass + '" href="ilan-olustur.html?edit=' + esc(job.id) + '#' + c.anchor + '">' +
+            '<div class="ilq-check-full__ico ' + icoClass + '">' + (c.critical ? '❌' : '⚠') + '</div>' +
+            '<div class="ilq-check-full__body">' +
+              '<div class="ilq-check-full__lbl">' + esc(c.lbl) + '</div>' +
+              '<div class="ilq-check-full__tip">' + esc(c.tip) + '</div>' +
+            '</div>' +
+            (gain ? '<span class="ilq-check-full__gain">' + gain + '</span>' : '') +
+          '</a>';
+        }).join('') +
+      '</div>';
+
+      var passHtml = passed.length > 0 ? '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">' +
+        '<div style="font-size:0.75rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Tamamlanan</div>' +
+        passed.map(function(c) {
+          return '<div class="ilq-check-full ilq-check-full--pass">' +
+            '<div class="ilq-check-full__ico ilq-check-full__ico--pass">✅</div>' +
+            '<div class="ilq-check-full__body">' +
+              '<div class="ilq-check-full__lbl">' + esc(c.lbl) + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>' : '';
+
+      el.innerHTML = failHtml + passHtml;
+    }
+
+    /* ── Title optimization ── */
+    function renderTitleOpt(job) {
+      var optEl = document.getElementById('ilqTitleOpt');
+      var cmpEl = document.getElementById('ilqTitleCmp');
+      var applyBtn = document.getElementById('ilqApplyTitle');
+      if (!optEl || !cmpEl) return;
+
+      var suggested = IQ.suggestTitle(job);
+      if (!suggested) { optEl.style.display = 'none'; return; }
+      optEl.style.display = '';
+
+      var current = job.baslik || job.poz_baslik || '—';
+      cmpEl.innerHTML =
+        '<div class="ilq-title-cmp__box">' +
+          '<div class="ilq-title-cmp__lbl">Mevcut Başlık</div>' +
+          '<div class="ilq-title-cmp__val">' + esc(current) + '</div>' +
+          '<div style="font-size:0.7rem;color:var(--text-3);margin-top:4px">' + current.length + ' karakter</div>' +
+        '</div>' +
+        '<div class="ilq-title-cmp__box" style="border:1.5px solid var(--success)">' +
+          '<div class="ilq-title-cmp__lbl" style="color:var(--success)">Önerilen Başlık</div>' +
+          '<div class="ilq-title-cmp__val ilq-title-cmp__val--after">' + esc(suggested) + '</div>' +
+          '<div style="font-size:0.7rem;color:var(--success);margin-top:4px">+%30 daha fazla tıklanma bekleniyor</div>' +
+        '</div>';
+
+      if (applyBtn) {
+        applyBtn.onclick = function() {
+          if (!job.id) return;
+          var jobs = IS ? IS.getJobs(getUid()) : [];
+          for (var i = 0; i < jobs.length; i++) {
+            if (jobs[i].id === job.id) {
+              jobs[i].baslik = suggested;
+              jobs[i].poz_baslik = suggested;
+              break;
+            }
+          }
+          try { localStorage.setItem('kb_my_ilanlar_' + getUid(), JSON.stringify(jobs)); } catch(e) {}
+          CURRENT_JOB.baslik = suggested;
+          CURRENT_JOB.poz_baslik = suggested;
+          if (window.KBMotion) KBMotion.showSuccess('✅ Başlık güncellendi!', suggested, 2400);
+          selectJob(job.id);
+        };
+      }
+    }
+
+    /* ── Suggestions ── */
+    function renderSuggs(job) {
+      var el = document.getElementById('ilqSuggs');
+      if (!el) return;
+      var suggs = IQ.getSuggestions(job);
+      if (!suggs.length) {
+        el.innerHTML = '<div style="font-size:0.875rem;color:var(--success);padding:8px 0">🎉 Tebrikler! İlanınız tam optimize edilmiş.</div>';
+        return;
+      }
+      el.innerHTML = suggs.map(function(s) {
+        return '<div class="ilq-sugg-card">' +
+          '<div class="ilq-sugg-card__ico">' + s.ico + '</div>' +
+          '<div class="ilq-sugg-card__body">' +
+            '<div class="ilq-sugg-card__lbl">' + esc(s.lbl) + '</div>' +
+            (s.gain ? '<span class="ilq-sugg-card__gain">' + s.gain + '</span>' : '') +
+            '<div><a class="ilq-sugg-card__act" href="ilan-olustur.html?edit=' + esc(job.id) + '#' + (s.anchor||'') + '">Düzelt →</a></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── Analytics ── */
+    function renderAnalytics(job) {
+      var el       = document.getElementById('ilqAnalytics');
+      var noteEl   = document.getElementById('ilqConvNote');
+      if (!el) return;
+      var an = IQ.getAnalytics(job.id);
+      var convColor = an.conv >= 20 ? 'green' : an.conv >= 10 ? 'orange' : '';
+      el.innerHTML =
+        '<div class="ilq-an-item ilq-an-item--blue"><div class="ilq-an-val">' + an.views + '</div><div class="ilq-an-lbl">👁 Görüntülenme</div></div>' +
+        '<div class="ilq-an-item"><div class="ilq-an-val">' + an.applies + '</div><div class="ilq-an-lbl">📋 Başvuru</div></div>' +
+        '<div class="ilq-an-item"><div class="ilq-an-val">' + an.saves + '</div><div class="ilq-an-lbl">⭐ Kayıt</div></div>' +
+        '<div class="ilq-an-item ilq-an-item--' + (convColor||'') + '"><div class="ilq-an-val">%' + an.conv + '</div><div class="ilq-an-lbl">🔄 Dönüşüm</div></div>';
+      if (noteEl) {
+        var score = IQ.calcScore(job);
+        var potConv = Math.min(35, an.conv + Math.round((100 - score) * 0.3));
+        noteEl.innerHTML = an.conv < potConv
+          ? 'Bu ilanın kalitesi %' + score + '. Optimize ederek dönüşüm oranını <strong>%' + potConv + '\'e</strong> çıkarabilirsin.'
+          : 'Bu ilan zaten iyi optimize edilmiş. 🎉';
+      }
+    }
+
+    /* ── Visibility bars ── */
+    function renderVisibility(score) {
+      var visel   = document.getElementById('ilqVisInfo');
+      var barsEl  = document.getElementById('ilqVisBars');
+      var vt      = IQ.visibilityTier(score);
+      if (visel) visel.innerHTML = '<div class="ilq-vis-tag ' + vt.cls + '" style="font-size:0.8rem;padding:6px 12px">' + vt.ico + ' ' + vt.lbl + ' Görünürlük</div>' +
+        '<p style="font-size:0.82rem;color:var(--text-2);margin-top:8px;line-height:1.5">' + esc(vt.desc) + '</p>';
+      if (!barsEl) return;
+      var bars = [
+        { lbl:'Arama Sırası',    pct: Math.min(100, Math.round(score * 1.1)), color:'var(--primary)' },
+        { lbl:'Öneri Olasılığı', pct: Math.min(100, score >= 70 ? score : Math.round(score * 0.6)), color:'#8B5CF6' },
+        { lbl:'Eşleşme Puanı',  pct: Math.min(100, score >= 50 ? score + 10 : Math.round(score * 0.7)), color:'#10B981' },
+        { lbl:'Akıllı Öneri',   pct: score >= 85 ? 95 : score >= 70 ? 70 : score >= 50 ? 40 : 10, color:'#F59E0B' }
+      ];
+      barsEl.innerHTML = bars.map(function(b) {
+        return '<div class="ilq-vis-bar">' +
+          '<div class="ilq-vis-bar__lbl">' + esc(b.lbl) + '</div>' +
+          '<div class="ilq-vis-bar__track"><div class="ilq-vis-bar__fill" style="width:' + b.pct + '%;background:' + b.color + '"></div></div>' +
+          '<div class="ilq-vis-bar__pct">%' + b.pct + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── Applicant quality impact ── */
+    function renderApplicantImpact(score) {
+      var el = document.getElementById('ilqApplicantImpact');
+      if (!el) return;
+      var profComp = score >= 85 ? 90 : score >= 70 ? 75 : score >= 50 ? 60 : 40;
+      var matchPct  = score >= 85 ? 85 : score >= 70 ? 70 : score >= 50 ? 55 : 35;
+      el.innerHTML =
+        '<div style="display:flex;flex-direction:column;gap:10px">' +
+          '<div>' +
+            '<div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">' +
+              '<span style="color:var(--text-2)">Beklenen Profil Tamamlama</span>' +
+              '<span style="font-weight:700">%' + profComp + '+</span>' +
+            '</div>' +
+            '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:' + profComp + '%;height:100%;background:var(--primary);border-radius:3px"></div></div>' +
+          '</div>' +
+          '<div>' +
+            '<div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px">' +
+              '<span style="color:var(--text-2)">Ortalama Uyum Skoru</span>' +
+              '<span style="font-weight:700">%' + matchPct + '+</span>' +
+            '</div>' +
+            '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:' + matchPct + '%;height:100%;background:#8B5CF6;border-radius:3px"></div></div>' +
+          '</div>' +
+          '<p style="font-size:0.75rem;color:var(--text-3);margin-top:4px;line-height:1.5">' +
+            (score >= 70 ? 'Bu ilan iyi optimize edilmiş. Yüksek profilli adaylar çekme olasılığı yüksek.' :
+              'Optimizasyon yapıldığında daha nitelikli ve profili tamamlanmış adaylar başvuracak.') +
+          '</p>' +
+        '</div>';
+    }
+
+    /* ── Quick actions ── */
+    function renderActions(job, score) {
+      var el = document.getElementById('ilqActions');
+      if (!el) return;
+      el.innerHTML =
+        '<a href="ilan-olustur.html?edit=' + esc(job.id) + '" class="btn btn--primary btn--sm">✏️ İlanı Düzenle ve Optimize Et</a>' +
+        '<a href="basvurular.html?job=' + esc(job.id) + '" class="btn btn--ghost btn--sm">📋 Başvuruları Yönet</a>' +
+        '<a href="ilan-durum.html?job=' + esc(job.id) + '" class="btn btn--ghost btn--sm">📊 Durum Yönetimi</a>' +
+        (score < 50 ? '<div class="ilds-alert ilds-alert--closed" style="margin:0;font-size:0.8rem">⚠️ Kalite %50\'nin altında. Yayınlamadan önce optimize etmeni öneririz.</div>' : '');
+    }
+
+    /* ── Full render ── */
+    function renderJob(job) {
+      CURRENT_JOB = job;
+      var score = IQ.calcScore(job);
+      renderHero(job, score);
+      renderDims(job);
+      renderChecklist(job);
+      renderTitleOpt(job);
+      renderSuggs(job);
+      renderAnalytics(job);
+      renderVisibility(score);
+      renderApplicantImpact(score);
+      renderActions(job, score);
+      document.title = 'Kalite: %' + score + ' · ' + (job.baslik || 'İlan') + ' · KuryemiBul';
+    }
+
+    /* ── Select job ── */
+    function selectJob(jobId) {
+      SEL_JOB_ID = jobId;
+      try { var url = new URL(location.href); url.searchParams.set('job', jobId); history.replaceState({}, '', url.toString()); } catch(e) {}
+      loadJobs();
+      var job = getJob(jobId);
+      document.getElementById('ilqEmpty').style.display  = 'none';
+      document.getElementById('ilqMain').style.display   = 'none';
+      if (!job) {
+        document.getElementById('ilqEmpty').style.display = '';
+        return;
+      }
+      document.getElementById('ilqMain').style.display = '';
+      renderJob(job);
+      renderJobBar();
+    }
+
+    /* ── Wire ── */
+    function wire() {
+      document.getElementById('ilqJobBar').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-jobid]');
+        if (btn) selectJob(btn.dataset.jobid);
+      });
+    }
+
+    /* ── Boot ── */
+    function boot() {
+      loadJobs();
+      renderJobBar();
+      wire();
+      if (SEL_JOB_ID) selectJob(SEL_JOB_ID);
+    }
+
+    if (window.KB && KB.ready) KB.ready().then(boot).catch(boot);
+    else document.addEventListener('DOMContentLoaded', boot);
+
+  })();
+  </script>
+</body>
+</html>

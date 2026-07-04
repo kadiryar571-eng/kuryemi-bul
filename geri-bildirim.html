@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geri Bildirim — KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<div id="app-topbar"></div>
+<div id="sidebar-overlay"></div>
+<nav id="app-sidebar"></nav>
+
+<div class="app-content">
+  <div class="container" style="padding-top:24px;padding-bottom:60px;max-width:960px;">
+
+    <div class="hd-page-header">
+      <h1>Geri Bildirim</h1>
+      <p>Tamamlanan işe alımlar sonrası değerlendirmeleri yönet.</p>
+    </div>
+
+    <div class="fb-layout" id="fbLayout">
+
+      <!-- Left -->
+      <div class="fb-main">
+
+        <!-- Completed hires list -->
+        <div class="panel-box">
+          <div class="panel-box__head"><h3>Tamamlanan İşe Alımlar</h3></div>
+          <div class="panel-box__body">
+            <div id="fbHireList" class="fb-hire-list">
+              <p class="fb-empty">Yükleniyor…</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forms (shown when a hire is selected) -->
+        <div id="fbForms" style="display:none;display:flex;flex-direction:column;gap:16px;">
+
+          <!-- Employer/courier feedback form -->
+          <div class="panel-box" id="fbFormSection">
+            <div class="panel-box__head">
+              <h3 id="fbFormTitle">Değerlendirme</h3>
+              <span id="fbFormSub" style="font-size:0.78rem;color:var(--text-3);"></span>
+            </div>
+            <div class="panel-box__body">
+              <div id="fbFormContent"></div>
+            </div>
+          </div>
+
+          <!-- Received feedback (the other party's rating of you) -->
+          <div class="panel-box" id="fbReceivedSection" style="display:none;">
+            <div class="panel-box__head"><h3 id="fbReceivedTitle">Hakkınızdaki Değerlendirme</h3></div>
+            <div class="panel-box__body">
+              <div id="fbReceivedContent"></div>
+            </div>
+          </div>
+
+          <!-- Activity log -->
+          <div class="panel-box">
+            <div class="panel-box__head"><h3>Aktivite Geçmişi</h3></div>
+            <div class="panel-box__body">
+              <div id="fbActivityLog"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right sidebar -->
+      <div class="fb-sidebar">
+
+        <!-- My reputation -->
+        <div class="panel-box">
+          <div class="panel-box__head"><h3>İtibar Puanım</h3></div>
+          <div class="panel-box__body">
+            <div id="fbMyRep"></div>
+          </div>
+        </div>
+
+        <!-- Other party's reputation (shown when hire selected) -->
+        <div class="panel-box" id="fbOtherRepSection" style="display:none;">
+          <div class="panel-box__head"><h3 id="fbOtherRepTitle">Karşı Taraf</h3></div>
+          <div class="panel-box__body">
+            <div id="fbOtherRepContent"></div>
+          </div>
+        </div>
+
+        <!-- Quick links -->
+        <div class="panel-box">
+          <div class="panel-box__head"><h3>Hızlı Bağlantılar</h3></div>
+          <div class="panel-box__body" style="display:flex;flex-direction:column;gap:7px;">
+            <a href="karar.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">⚖️ İşe Alım Kararları</a>
+            <a href="gorusmeler.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📅 Görüşmeler</a>
+            <a href="mesajlar.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">💬 Mesajlar</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dispute modal -->
+<div class="fb-dispute-overlay" id="fbDisputeOverlay">
+  <div class="fb-dispute-box">
+    <div class="fb-dispute-title">Şikayet Et</div>
+    <div class="fb-dispute-sub">Bu değerlendirmeyi neden şikayet etmek istediğinizi belirtin. Admin ekibi inceleyecektir.</div>
+    <textarea class="fb-text" id="fbDisputeReason" rows="4" placeholder="Şikayet nedeninizi yazın…"></textarea>
+    <div class="fb-dispute-acts">
+      <button class="btn btn--ghost" id="fbDisputeCancel">İptal</button>
+      <button class="btn btn--primary" id="fbDisputeSubmit">Gönder</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/ilan-status.js"></script>
+<script src="assets/js/chat.js"></script>
+<script src="assets/js/interview.js"></script>
+<script src="assets/js/hiring.js"></script>
+<script src="assets/js/comm-status.js"></script>
+<script src="assets/js/feedback.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  var CUR_JOB = null, CUR_KID = null, CUR_IID = null;
+  var PENDING_REPORT_ROLE = null;
+
+  function getUid() {
+    try { var s = window.KB && KB.STATE && KB.STATE.user; if (s && s.id) return s.id; } catch(e) {}
+    try { var s2 = JSON.parse(localStorage.getItem('kb_session')||'null'); if (s2&&s2.user&&s2.user.id) return s2.user.id; } catch(e) {}
+    return localStorage.getItem('kb_demo_uid') || ('demo_' + (localStorage.getItem('kb_rol')||'isletme'));
+  }
+  function getRole() { return (window.KB && KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme'; }
+  function isBiz()  { var r = getRole(); return r === 'isletme' || r === 'firma'; }
+
+  /* ── Hire list ── */
+  function getCompletedHires(uid, role) {
+    var result = [];
+    var biz = (role === 'isletme' || role === 'firma');
+    for (var k in localStorage) {
+      if (!k.startsWith('kb_hiring_') || k.includes('_ob_') || k.includes('_log_')) continue;
+      try {
+        var dec = JSON.parse(localStorage.getItem(k));
+        if (!dec || (dec.status !== 'kabul' && dec.status !== 'tamamlandi')) continue;
+        if (biz  && dec.isletmeId !== uid) continue;
+        if (!biz && dec.kuryeId   !== uid) continue;
+        result.push(dec);
+      } catch(e) {}
+    }
+    return result;
+  }
+
+  function renderHireList() {
+    var uid  = getUid();
+    var role = getRole();
+    var biz  = isBiz();
+    var hires = getCompletedHires(uid, role);
+    var el    = document.getElementById('fbHireList');
+
+    if (!hires.length) {
+      el.innerHTML = '<p class="fb-empty">Tamamlanmış işe alım bulunamadı. Yalnızca kabul edilen işe alımlar değerlendirilebilir.</p>';
+      return;
+    }
+
+    el.innerHTML = hires.map(function(dec) {
+      var myRole = biz ? 'isletme' : 'kurye';
+      var myFb   = KBFeedback.getFeedback(dec.jobId, dec.kuryeId, myRole);
+      var name   = biz ? (dec.kuryeAd || 'Kurye') : (dec.isletmeAd || 'İşletme');
+      var statusHtml = myFb
+        ? '<span class="fb-status-done">✓ Değerlendirildi</span>'
+        : '<span class="fb-status-pending">● Bekliyor</span>';
+      var active = (dec.jobId === CUR_JOB && dec.kuryeId === CUR_KID);
+      return '<div class="fb-hire-item' + (active ? ' active' : '') + '" ' +
+        'data-job="' + dec.jobId + '" data-kid="' + dec.kuryeId + '" data-iid="' + (dec.isletmeId||uid) + '">' +
+        '<div class="fb-hire-item-info">' +
+          '<div class="fb-hire-item-name">' + (dec.jobTitle||'İş İlanı') + '</div>' +
+          '<div class="fb-hire-item-sub">' + name + '</div>' +
+        '</div>' +
+        statusHtml + '</div>';
+    }).join('');
+
+    /* Auto-select first if nothing selected */
+    if (!CUR_JOB && hires.length) {
+      var first = hires[0];
+      selectHire(first.jobId, first.kuryeId, first.isletmeId || uid);
+    }
+  }
+
+  /* ── Select hire ── */
+  function selectHire(jobId, kuryeId, isletmeId) {
+    CUR_JOB = jobId; CUR_KID = kuryeId; CUR_IID = isletmeId;
+
+    document.querySelectorAll('.fb-hire-item').forEach(function(el) {
+      el.classList.toggle('active', el.dataset.job === jobId && el.dataset.kid === kuryeId);
+    });
+
+    var uid  = getUid();
+    var role = getRole();
+    var biz  = isBiz();
+    var myFbRole    = biz ? 'isletme' : 'kurye';
+    var otherFbRole = biz ? 'kurye'   : 'isletme';
+    var myFb    = KBFeedback.getFeedback(jobId, kuryeId, myFbRole);
+    var otherFb = KBFeedback.getFeedback(jobId, kuryeId, otherFbRole);
+
+    /* Show forms section */
+    var formsEl = document.getElementById('fbForms');
+    formsEl.style.display = 'flex';
+
+    /* Form section: own feedback */
+    var formTitle = biz ? 'Kurye Değerlendirmesi' : 'İşletme Değerlendirmesi';
+    var formSub   = biz ? 'İşe aldığın kurye için puan ver' : 'Çalıştığın işletme için puan ver';
+    document.getElementById('fbFormTitle').textContent = formTitle;
+    document.getElementById('fbFormSub').textContent   = formSub;
+
+    var formContent = document.getElementById('fbFormContent');
+    if (myFb) {
+      var editId  = 'fbEditForm_' + Date.now();
+      var cardHtml = KBFeedback.renderCard(myFb, { canEdit: true, canReport: false });
+      var editHtml = KBFeedback.isEditable(myFb)
+        ? '<div id="' + editId + '" style="margin-top:12px;display:none;">' +
+            KBFeedback.renderForm(jobId, kuryeId, isletmeId, myFbRole, myFb) + '</div>'
+        : '';
+      formContent.innerHTML = cardHtml + editHtml;
+    } else {
+      formContent.innerHTML = KBFeedback.renderForm(jobId, kuryeId, isletmeId, myFbRole, null);
+    }
+
+    /* Received section: the other party's feedback about you */
+    var receivedSection = document.getElementById('fbReceivedSection');
+    if (otherFb) {
+      receivedSection.style.display = '';
+      document.getElementById('fbReceivedTitle').textContent = biz
+        ? 'Kurye\'nin Sizi Değerlendirmesi'
+        : 'İşletme\'nin Sizi Değerlendirmesi';
+      document.getElementById('fbReceivedContent').innerHTML =
+        KBFeedback.renderCard(otherFb, { canEdit: false, canReport: true });
+    } else {
+      receivedSection.style.display = 'none';
+    }
+
+    /* Activity log */
+    document.getElementById('fbActivityLog').innerHTML = KBFeedback.renderLog(jobId, kuryeId);
+
+    /* Other party's reputation in sidebar */
+    var otherProfileId   = biz ? kuryeId  : isletmeId;
+    var otherProfileRole = biz ? 'kurye'  : 'isletme';
+    var otherRepSection  = document.getElementById('fbOtherRepSection');
+    otherRepSection.style.display = '';
+    document.getElementById('fbOtherRepTitle').textContent = biz ? 'Kurye İtibarı' : 'İşletme İtibarı';
+    document.getElementById('fbOtherRepContent').innerHTML =
+      KBFeedback.renderReputationBlock(otherProfileId, otherProfileRole);
+  }
+
+  /* ── Collect ratings from a form ── */
+  function collectRatings(formEl) {
+    var ratings = {};
+    formEl.querySelectorAll('.fb-star-input').forEach(function(si) {
+      var name   = si.dataset.name;
+      var active = si.querySelector('.fb-star.active:last-of-type') ||
+                   Array.from(si.querySelectorAll('.fb-star.active')).slice(-1)[0];
+      ratings[name] = active ? parseInt(active.dataset.val, 10) : 0;
+    });
+    return ratings;
+  }
+
+  /* ── Wire ── */
+  function wire() {
+    /* Hire list click */
+    document.getElementById('fbHireList').addEventListener('click', function(e) {
+      var item = e.target.closest('.fb-hire-item');
+      if (!item) return;
+      selectHire(item.dataset.job, item.dataset.kid, item.dataset.iid);
+    });
+
+    /* Star click */
+    document.body.addEventListener('click', function(e) {
+      var star = e.target.closest('.fb-star');
+      if (!star) return;
+      var input = star.closest('.fb-star-input');
+      if (!input) return;
+      var val = parseInt(star.dataset.val, 10);
+      input.querySelectorAll('.fb-star').forEach(function(s, i) {
+        s.classList.toggle('active', i < val);
+      });
+    });
+
+    /* Form submit */
+    document.body.addEventListener('click', function(e) {
+      if (!e.target.classList.contains('fb-submit')) return;
+      var form = e.target.closest('.fb-form');
+      if (!form) return;
+      var jobId     = form.dataset.job;
+      var kuryeId   = form.dataset.kid;
+      var isletmeId = form.dataset.iid;
+      var role      = form.dataset.role;
+      var uid       = getUid();
+      var ratings   = collectRatings(form);
+      var text      = (form.querySelector('.fb-text')||{}).value || '';
+      var result    = KBFeedback.submitFeedback(uid, jobId, kuryeId, isletmeId, role, ratings, text);
+      if (result.error) {
+        if (window.KBMotion) KBMotion.showErrorToast(result.error);
+        return;
+      }
+      if (window.KBMotion) KBMotion.showSuccess('Değerlendirme Gönderildi!', '', 2000);
+      setTimeout(function() {
+        renderHireList();
+        selectHire(jobId, kuryeId, isletmeId);
+      }, 500);
+    });
+
+    /* Edit button */
+    document.body.addEventListener('click', function(e) {
+      if (!e.target.matches('[data-fb-action="edit"]')) return;
+      var card    = e.target.closest('.fb-card');
+      var editDiv = card && card.nextElementSibling;
+      if (editDiv) {
+        var open = editDiv.style.display !== 'none';
+        editDiv.style.display = open ? 'none' : '';
+        e.target.textContent  = open ? 'Düzenle' : 'İptal';
+      }
+    });
+
+    /* Report button */
+    document.body.addEventListener('click', function(e) {
+      if (!e.target.matches('[data-fb-action="report"]')) return;
+      PENDING_REPORT_ROLE = isBiz() ? 'kurye' : 'isletme';
+      document.getElementById('fbDisputeOverlay').classList.add('is-open');
+      document.getElementById('fbDisputeReason').value = '';
+    });
+
+    /* Dispute modal */
+    document.getElementById('fbDisputeCancel').addEventListener('click', function() {
+      document.getElementById('fbDisputeOverlay').classList.remove('is-open');
+    });
+    document.getElementById('fbDisputeOverlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('is-open');
+    });
+    document.getElementById('fbDisputeSubmit').addEventListener('click', function() {
+      var reason = document.getElementById('fbDisputeReason').value.trim();
+      if (!reason) { if (window.KBMotion) KBMotion.showErrorToast('Lütfen şikayet nedeninizi yazın.'); return; }
+      KBFeedback.reportFeedback(CUR_JOB, CUR_KID, PENDING_REPORT_ROLE, reason);
+      document.getElementById('fbDisputeOverlay').classList.remove('is-open');
+      if (window.KBMotion) KBMotion.showSuccess('Şikayet İletildi', 'Admin ekibi inceleyecektir.', 2400);
+      setTimeout(function() { selectHire(CUR_JOB, CUR_KID, CUR_IID); }, 700);
+    });
+  }
+
+  /* ── Boot ── */
+  function boot() {
+    var uid  = getUid();
+    var role = getRole();
+
+    /* Seed demo data */
+    if (window.KBHiring)   KBHiring.seedDemoData(uid);
+    if (window.KBFeedback) KBFeedback.seedDemoData();
+
+    /* URL params: direct link to a specific hire */
+    var params = new URLSearchParams(window.location.search);
+    var pJob = params.get('job'), pKid = params.get('kid'), pIid = params.get('iid');
+    if (pJob && pKid) { CUR_JOB = pJob; CUR_KID = pKid; CUR_IID = pIid || uid; }
+
+    /* My reputation */
+    var myProfileRole = (role === 'kurye') ? 'kurye' : 'isletme';
+    document.getElementById('fbMyRep').innerHTML =
+      KBFeedback.renderReputationBlock(uid, myProfileRole);
+
+    renderHireList();
+    wire();
+
+    /* If URL had params, also directly show the forms */
+    if (CUR_JOB) {
+      document.getElementById('fbForms').style.display = 'flex';
+      selectHire(CUR_JOB, CUR_KID, CUR_IID || uid);
+    }
+  }
+
+  if (window.KB && KB.ready && KB.ready.then) {
+    KB.ready.then(boot);
+  } else {
+    document.addEventListener('DOMContentLoaded', boot);
+  }
+})();
+</script>
+</body>
+</html>

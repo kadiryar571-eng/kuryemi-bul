@@ -9,68 +9,565 @@
 </head>
 <body>
 
-  <div id="app-topbar"></div>
-  <div id="sidebar-overlay"></div>
-  <nav id="app-sidebar"></nav>
+<div id="app-topbar"></div>
+<div id="sidebar-overlay"></div>
+<nav id="app-sidebar"></nav>
 
-  <div class="app-content">
-    <div class="page-header">
-      <h1>Mesajlar</h1>
-      <p class="page-sub">Bağlantılarınızla özel mesajlaşın.</p>
-    </div>
+<div class="app-content" style="padding:0;overflow:hidden;">
+  <div class="msg-layout">
 
-    <!-- renderMessages() bu 3 elementi bekliyor -->
-    <div class="msg-wrap">
-      <div class="msg" id="msgRoot">
-
-        <!-- Sol panel: arama + konuşma listesi -->
-        <div class="msg__sidebar">
-          <div class="msg__search">
-            <input type="search" id="msgSearchInput" placeholder="Konuşmalarda ara…" autocomplete="off">
-          </div>
-          <div class="msg__convlist" id="msgConvList">
-            <!-- Skeleton yükleyici -->
-            <div class="msg-conv" style="pointer-events:none">
-              <span class="skel" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"></span>
-              <div style="flex:1"><span class="skel skel--line" style="width:60%"></span><span class="skel skel--line" style="width:80%;margin-top:6px;display:block"></span></div>
-            </div>
-            <div class="msg-conv" style="pointer-events:none">
-              <span class="skel" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"></span>
-              <div style="flex:1"><span class="skel skel--line" style="width:55%"></span><span class="skel skel--line" style="width:75%;margin-top:6px;display:block"></span></div>
-            </div>
-            <div class="msg-conv" style="pointer-events:none">
-              <span class="skel" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"></span>
-              <div style="flex:1"><span class="skel skel--line" style="width:65%"></span><span class="skel skel--line" style="width:50%;margin-top:6px;display:block"></span></div>
-            </div>
-          </div>
+    <!-- ── Left: Thread list ── -->
+    <aside class="msg-sidebar" id="msgSidebar">
+      <div class="msg-sidebar-head">
+        <div class="msg-sidebar-title">
+          <h2>Mesajlar</h2>
+          <p>Başvurularına bağlı görüşmeler burada görünür.</p>
         </div>
 
-        <!-- Sağ panel: aktif sohbet -->
-        <div class="msg__main" id="msgMain">
-          <div class="msg-empty">
-            <div class="kb-empty__ic">💬</div>
-            <div class="kb-empty__t">Bir konuşma seçin</div>
-            <div class="kb-empty__d">Soldaki listeden mesajlaşmak istediğiniz kişiyi seçin.</div>
-          </div>
+        <div class="msg-stats-row" id="msgStatsRow">
+          <div class="msg-stat"><span class="msg-stat-val" data-stat="total">0</span><span class="msg-stat-lbl">Toplam</span></div>
+          <div class="msg-stat"><span class="msg-stat-val" data-stat="active">0</span><span class="msg-stat-lbl">Aktif</span></div>
+          <div class="msg-stat"><span class="msg-stat-val" data-stat="gorusme">0</span><span class="msg-stat-lbl">Görüşme</span></div>
+          <div class="msg-stat"><span class="msg-stat-val" data-stat="unread">0</span><span class="msg-stat-lbl">Okunmamış</span></div>
         </div>
 
+        <input type="search" class="msg-search" id="msgSearch" placeholder="İsim, ilan veya mesaj ara…" autocomplete="off">
+
+        <div class="msg-filter-bar" id="msgFilterBar">
+          <button class="msg-filter-pill is-active" data-filter="all">Tümü</button>
+          <button class="msg-filter-pill" data-filter="yeni">Yeni</button>
+          <button class="msg-filter-pill" data-filter="aktif">Aktif</button>
+          <button class="msg-filter-pill" data-filter="gorusme">Görüşme</button>
+          <button class="msg-filter-pill" data-filter="sonuclandi">Sonuçlandı</button>
+        </div>
+
+        <div class="msg-archive-row">
+          <button class="btn btn--sm btn--ghost" id="msgArchiveToggle">🗄 Arşiv</button>
+        </div>
       </div>
-    </div>
+
+      <div class="msg-thread-list" id="msgThreadList">
+        <div class="msg-no-threads">Yükleniyor…</div>
+      </div>
+    </aside>
+
+    <!-- ── Right: Chat detail ── -->
+    <main class="msg-detail msg-detail--empty" id="msgDetail">
+      <div class="msg-empty">
+        <div class="msg-empty-ico">💬</div>
+        <div class="msg-empty-title">Bir görüşme seçin</div>
+        <div class="msg-empty-sub">Başvurularınıza bağlı görüşmeler sol panelde listelenir.</div>
+      </div>
+    </main>
+
   </div>
+</div>
 
-  <div id="app-footer"></div>
+<div id="app-footer"></div>
 
-  <script src="assets/js/i18n.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/components.js"></script>
-  <script src="assets/js/app.js"></script>
-  <script src="assets/js/motion.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      if (window.KBApp && KBApp.renderMessages) KBApp.renderMessages();
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/ilan-status.js"></script>
+<script src="assets/js/chat.js"></script>
+<script src="assets/js/interview.js"></script>
+<script src="assets/js/hiring.js"></script>
+<script src="assets/js/comm-status.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── State ─────────────────────────────────────────────────── */
+  var uid, role;
+  var currentTid   = null;
+  var showArchive  = false;
+  var filterStatus = 'all';
+  var searchQ      = '';
+
+  /* ─── Helpers ───────────────────────────────────────────────── */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function initials(name) {
+    return String(name || '?').split(' ').filter(Boolean).slice(0, 2)
+      .map(function (w) { return w[0].toUpperCase(); }).join('');
+  }
+  function timeAgo(isoStr) {
+    var diff = Date.now() - new Date(isoStr).getTime();
+    var min  = Math.floor(diff / 60000);
+    if (min < 1)  return 'şimdi';
+    if (min < 60) return min + 'd';
+    var hr = Math.floor(min / 60);
+    if (hr < 24)  return hr + 'sa';
+    return Math.floor(hr / 24) + 'g';
+  }
+  function formatTime(isoStr) {
+    var d = new Date(isoStr);
+    return d.getHours().toString().padStart(2,'0') + ':' +
+           d.getMinutes().toString().padStart(2,'0');
+  }
+  function scrollBottom() {
+    setTimeout(function () {
+      var el = document.getElementById('msgBubbles');
+      if (el) el.scrollTop = el.scrollHeight;
+    }, 40);
+  }
+  function isBusinessRole() { return role === 'isletme' || role === 'firma'; }
+  function myRole()         { return isBusinessRole() ? 'isletme' : 'kurye'; }
+
+  /* ─── Filtered thread list ──────────────────────────────────── */
+  function filteredThreads() {
+    return KBChat.getThreads(uid).filter(function (t) {
+      if (showArchive ? !t.archived : t.archived) return false;
+      if (filterStatus !== 'all' && t.chatStatus !== filterStatus) return false;
+      if (searchQ) {
+        var q = searchQ.toLowerCase();
+        if ((t.isletme.ad  || '').toLowerCase().indexOf(q) === -1 &&
+            (t.kurye.ad    || '').toLowerCase().indexOf(q) === -1 &&
+            (t.jobTitle    || '').toLowerCase().indexOf(q) === -1 &&
+            (t.lastMsg     || '').toLowerCase().indexOf(q) === -1) return false;
+      }
+      return true;
+    }).sort(function (a, b) { return new Date(b.lastMsgTime) - new Date(a.lastMsgTime); });
+  }
+
+  /* ─── Thread list render ────────────────────────────────────── */
+  function renderList() {
+    var threads = filteredThreads();
+    var listEl  = document.getElementById('msgThreadList');
+    if (!listEl) return;
+
+    if (!threads.length) {
+      listEl.innerHTML = '<div class="msg-no-threads">' +
+        (showArchive ? 'Arşivde görüşme yok.'
+          : searchQ   ? 'Aramanıza uygun görüşme bulunamadı.'
+          : 'Henüz görüşme yok.') +
+        '</div>';
+    } else {
+      listEl.innerHTML = threads.map(renderItem).join('');
+    }
+
+    /* update stats row */
+    var stats  = KBChat.getStats(uid);
+    var statsEl = document.getElementById('msgStatsRow');
+    if (statsEl) {
+      statsEl.querySelector('[data-stat="total"]').textContent   = stats.total;
+      statsEl.querySelector('[data-stat="active"]').textContent  = stats.active;
+      statsEl.querySelector('[data-stat="gorusme"]').textContent = stats.gorusme;
+      statsEl.querySelector('[data-stat="unread"]').textContent  = stats.totalUnread;
+    }
+  }
+
+  function renderItem(t) {
+    var isBiz   = isBusinessRole();
+    var name    = isBiz ? (t.kurye.ad || 'Kurye') : (t.isletme.ad || 'İşletme');
+    var unreadK = isBiz ? 'isletme' : 'kurye';
+    var unread  = (t.unread && t.unread[unreadK]) || 0;
+    var cls = 'msg-thread-item' +
+      (t.id === currentTid ? ' is-active' : '') +
+      (unread > 0 ? ' is-unread' : '');
+
+    var csHtml = '';
+    if (window.KBCommStatus) {
+      var cs = KBCommStatus.get(t.id);
+      var csStatus = cs ? cs.status : KBCommStatus.autoDetect(uid, t.id, t);
+      csHtml = '<div class="msg-thread-cs">' + KBCommStatus.renderMiniStatus(csStatus) + '<span style="font-size:0.7rem;color:var(--text-3);">' + (KBCommStatus.STATES[csStatus] ? KBCommStatus.STATES[csStatus].label : csStatus) + '</span></div>';
+    }
+    return '<div class="' + cls + '" data-tid="' + esc(t.id) + '" data-action="select-thread">' +
+      '<div class="msg-thread-avatar">' + esc(initials(name)) + '</div>' +
+      '<div class="msg-thread-body">' +
+        '<div class="msg-thread-top">' +
+          '<span class="msg-thread-name">' + esc(name) + '</span>' +
+          '<span class="msg-thread-time">' + timeAgo(t.lastMsgTime) + '</span>' +
+        '</div>' +
+        '<div class="msg-thread-job">' + esc(t.jobTitle) + '</div>' +
+        '<div class="msg-thread-preview">' +
+          (unread > 0 ? '<span class="msg-unread-dot">' + unread + '</span>' : '') +
+          '<span class="msg-preview-text">' + esc(t.lastMsg || 'Görüşme başlatıldı') + '</span>' +
+        '</div>' +
+        csHtml +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ─── Select / open thread ──────────────────────────────────── */
+  function selectThread(tid) {
+    currentTid = tid;
+    var thread = KBChat.getThreads(uid).find(function (t) { return t.id === tid; });
+    if (!thread) return;
+
+    KBChat.markRead(uid, tid, myRole());
+    renderList();
+    renderDetail(thread);
+
+    /* mobile: slide to detail */
+    var detail  = document.getElementById('msgDetail');
+    var sidebar = document.getElementById('msgSidebar');
+    if (detail)  detail.classList.add('is-open');
+    if (sidebar) sidebar.classList.add('is-hidden');
+  }
+
+  /* ─── Chat detail render ────────────────────────────────────── */
+  function renderDetail(thread) {
+    var detailEl = document.getElementById('msgDetail');
+    if (!detailEl) return;
+    detailEl.classList.remove('msg-detail--empty');
+
+    var isBiz   = isBusinessRole();
+    var other   = isBiz ? (thread.kurye.ad || 'Kurye') : (thread.isletme.ad || 'İşletme');
+    var msgs    = KBChat.getMsgs(thread.id);
+    var appLbl  = KBChat.APP_STATUS[thread.appStatus] || thread.appStatus;
+    var concluded = thread.chatStatus === 'sonuclandi';
+
+    detailEl.innerHTML =
+
+      /* Header */
+      '<div class="msg-header">' +
+        '<button class="msg-back-btn" data-action="back-to-list">← Geri</button>' +
+        '<div class="msg-header-info">' +
+          '<div class="msg-header-avatar">' + esc(initials(other)) + '</div>' +
+          '<div class="msg-header-text">' +
+            '<div class="msg-header-name">' + esc(other) + '</div>' +
+            '<div class="msg-header-job">' + esc(thread.jobTitle) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="msg-header-actions">' +
+          (isBiz
+            ? '<a href="profil-kurye.html?id=' + esc(thread.kuryeId) + '" class="btn btn--sm btn--ghost">👤 Profili Gör</a>'
+            : '<a href="profil-isletme.html?id=' + esc(thread.isletmeId) + '" class="btn btn--sm btn--ghost">🏢 İşletme</a>') +
+          '<a href="basvurular.html?job=' + esc(thread.jobId) + '" class="btn btn--sm btn--ghost">📋 Başvurular</a>' +
+          '<a href="mesaj-detay.html?tid=' + esc(thread.id) + '" class="btn btn--sm btn--primary" style="font-size:0.73rem">📄 Tam Görünüm</a>' +
+          '<button class="btn btn--sm btn--ghost" data-action="archive-thread" data-tid="' + esc(thread.id) + '">🗄</button>' +
+        '</div>' +
+      '</div>' +
+
+      /* Application context block */
+      '<div class="msg-app-ctx">' +
+        '<div class="msg-app-ctx-main">' +
+          '<div class="msg-app-ctx-row">' +
+            '<span class="msg-app-ctx-lbl">İlan:</span>' +
+            '<span class="msg-app-ctx-val">' + esc(thread.jobTitle) + '</span>' +
+          '</div>' +
+          '<div class="msg-app-ctx-row">' +
+            '<span class="msg-app-ctx-lbl">Başvuru:</span>' +
+            '<span class="msg-app-ctx-val">' + timeAgo(thread.createdAt) + ' önce</span>' +
+          '</div>' +
+          '<div class="msg-app-ctx-row">' +
+            '<span class="msg-app-ctx-lbl">Başvuru Durumu:</span>' +
+            '<span class="msg-app-status msg-app-status--' + esc(thread.appStatus) + '">' + esc(appLbl) + '</span>' +
+          '</div>' +
+        '</div>' +
+        KBChat.renderBadge(thread.chatStatus) +
+      '</div>' +
+
+      /* Messages */
+      '<div class="msg-bubbles" id="msgBubbles">' +
+        renderMessages(msgs) +
+      '</div>' +
+
+      /* Business actions (isletme/firma, not concluded) */
+      (isBiz && !concluded ? renderBizActions(thread) : '') +
+
+      /* Quick replies */
+      '<div class="msg-quick-replies" id="msgQuickReplies">' +
+        renderQuickReplies() +
+      '</div>' +
+
+      /* Composer */
+      '<div class="msg-composer">' +
+        '<button class="msg-attach-btn" data-action="attach" title="Dosya ekle">📎</button>' +
+        '<button class="msg-loc-btn"    data-action="location" title="Konum paylaş">📍</button>' +
+        '<textarea class="msg-input" id="msgInput" placeholder="Mesajınızı yazın…" rows="1"></textarea>' +
+        '<button class="msg-send-btn btn btn--primary btn--sm" data-action="send-msg">Gönder</button>' +
+      '</div>';
+
+    scrollBottom();
+  }
+
+  /* ─── Message bubbles ───────────────────────────────────────── */
+  function renderMessages(msgs) {
+    if (!msgs.length) {
+      return '<div class="msg-no-msgs">Henüz mesaj yok. İlk mesajı gönderin.</div>';
+    }
+    return msgs.map(function (m) {
+      if (m.type === 'system') {
+        return '<div class="msg-bubble msg-bubble--system">' + esc(m.content) + '</div>';
+      }
+      var isOut = isBusinessRole() ? m.from === 'isletme' : m.from === 'kurye';
+      var cls   = 'msg-bubble ' + (isOut ? 'msg-bubble--out' : 'msg-bubble--in');
+      var typeIcon = m.type === 'file' ? '📎 ' : m.type === 'location' ? '📍 ' : '';
+      return '<div class="' + cls + '">' +
+        '<div class="msg-bubble-text">' + typeIcon + esc(m.content) + '</div>' +
+        '<div class="msg-bubble-time">' + formatTime(m.ts) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ─── Quick replies ─────────────────────────────────────────── */
+  function renderQuickReplies() {
+    var list = isBusinessRole() ? KBChat.QUICK_REPLIES_ISLETME : KBChat.QUICK_REPLIES_KURYE;
+    return list.map(function (r) {
+      return '<button class="msg-qr-chip" data-action="quick-reply" data-text="' + esc(r) + '">' + esc(r) + '</button>';
+    }).join('');
+  }
+
+  /* ─── Business actions bar ──────────────────────────────────── */
+  function renderBizActions(thread) {
+    var btns = Object.keys(KBChat.BIZ_ACTIONS).map(function (key) {
+      var a = KBChat.BIZ_ACTIONS[key];
+      var disabled = thread.appStatus === a.appStatus ||
+        (thread.appStatus === 'kabul' && key === 'red') ||
+        (thread.appStatus === 'red'   && key === 'kabul');
+      var cls = 'btn btn--sm ' +
+        (key === 'kabul' ? 'btn--success' : key === 'red' ? 'btn--danger' : 'btn--secondary');
+      return '<button class="' + cls + '"' +
+        ' data-action="biz-action" data-biz="' + key + '" data-tid="' + esc(thread.id) + '"' +
+        (disabled ? ' disabled' : '') + '>' + a.ico + ' ' + a.lbl + '</button>';
+    }).join('');
+    return '<div class="msg-biz-actions"><span class="msg-biz-label">İşletme Aksiyonları:</span>' + btns + '</div>';
+  }
+
+  /* ─── Send message ──────────────────────────────────────────── */
+  function sendMsg() {
+    if (!currentTid) return;
+    var input = document.getElementById('msgInput');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return;
+
+    var from = myRole();
+    KBChat.sendMessage(uid, currentTid, from, 'text', text);
+    input.value = '';
+    input.style.height = '';
+
+    /* notify other party */
+    var thread = KBChat.getThreads(uid).find(function (t) { return t.id === currentTid; });
+    if (thread) {
+      var toUid = (from === 'isletme') ? thread.kuryeId : thread.isletmeId;
+      KBChat.notify(toUid, 'new_message', {
+        from: from === 'isletme' ? thread.isletme.ad : thread.kurye.ad,
+        job:  thread.jobTitle
+      });
+    }
+
+    refreshDetail();
+    renderList();
+  }
+
+  function sendSpecialMsg(type, content) {
+    if (!currentTid) return;
+    KBChat.sendMessage(uid, currentTid, myRole(), type, content);
+    refreshDetail();
+    renderList();
+  }
+
+  function refreshDetail() {
+    var thread = KBChat.getThreads(uid).find(function (t) { return t.id === currentTid; });
+    if (thread) renderDetail(thread);
+  }
+
+  /* ─── Wire events ───────────────────────────────────────────── */
+  function wire() {
+    /* Search */
+    var searchEl = document.getElementById('msgSearch');
+    if (searchEl) {
+      searchEl.addEventListener('input', function () {
+        searchQ = this.value.trim();
+        renderList();
+      });
+    }
+
+    /* Filter bar */
+    var filterBar = document.getElementById('msgFilterBar');
+    if (filterBar) {
+      filterBar.addEventListener('click', function (e) {
+        var pill = e.target.closest('[data-filter]');
+        if (!pill) return;
+        filterStatus = pill.dataset.filter;
+        filterBar.querySelectorAll('[data-filter]').forEach(function (p) { p.classList.remove('is-active'); });
+        pill.classList.add('is-active');
+        renderList();
+      });
+    }
+
+    /* Archive toggle */
+    var archBtn = document.getElementById('msgArchiveToggle');
+    if (archBtn) {
+      archBtn.addEventListener('click', function () {
+        showArchive = !showArchive;
+        this.textContent = showArchive ? '← Aktif Görüşmeler' : '🗄 Arşiv';
+        renderList();
+        if (currentTid) {
+          var thread = KBChat.getThreads(uid).find(function (t) { return t.id === currentTid; });
+          if (!thread || thread.archived !== showArchive) {
+            currentTid = null;
+            var detailEl = document.getElementById('msgDetail');
+            if (detailEl) {
+              detailEl.classList.add('msg-detail--empty');
+              detailEl.innerHTML = '<div class="msg-empty"><div class="msg-empty-ico">💬</div>' +
+                '<div class="msg-empty-title">Bir görüşme seçin</div></div>';
+            }
+          }
+        }
+      });
+    }
+
+    /* Thread list delegation */
+    var listEl = document.getElementById('msgThreadList');
+    if (listEl) {
+      listEl.addEventListener('click', function (e) {
+        var item = e.target.closest('[data-action="select-thread"]');
+        if (item) selectThread(item.dataset.tid);
+      });
+    }
+
+    /* Detail delegation */
+    var detailEl = document.getElementById('msgDetail');
+    if (detailEl) {
+      detailEl.addEventListener('click', function (e) {
+        var el     = e.target.closest('[data-action]');
+        if (!el) return;
+        var action = el.dataset.action;
+
+        if (action === 'send-msg') { sendMsg(); return; }
+
+        if (action === 'back-to-list') {
+          detailEl.classList.remove('is-open');
+          var sidebar = document.getElementById('msgSidebar');
+          if (sidebar) sidebar.classList.remove('is-hidden');
+          currentTid = null;
+          renderList();
+          return;
+        }
+
+        if (action === 'quick-reply') {
+          var inp = document.getElementById('msgInput');
+          if (inp) { inp.value = el.dataset.text; inp.focus(); }
+          return;
+        }
+
+        if (action === 'biz-action') {
+          var biz = el.dataset.biz;
+          var tid = el.dataset.tid;
+          var a   = KBChat.BIZ_ACTIONS[biz];
+          var confirmMsg = a ? ('Bu işlemi yapmak istiyor musunuz?\n' + a.ico + ' ' + a.lbl) : 'Onaylıyor musunuz?';
+          if (!confirm(confirmMsg)) return;
+          KBChat.doBusinessAction(uid, tid, biz);
+          KBChat.appendLog(tid, a.logEvent, a.lbl);
+          refreshDetail();
+          renderList();
+          return;
+        }
+
+        if (action === 'archive-thread') {
+          var tid = el.dataset.tid;
+          if (!confirm('Bu görüşmeyi arşivlemek istiyor musunuz?')) return;
+          KBChat.archiveThread(uid, tid);
+          currentTid = null;
+          detailEl.classList.remove('is-open');
+          detailEl.classList.add('msg-detail--empty');
+          var sidebar = document.getElementById('msgSidebar');
+          if (sidebar) sidebar.classList.remove('is-hidden');
+          detailEl.innerHTML = '<div class="msg-empty"><div class="msg-empty-ico">🗄</div>' +
+            '<div class="msg-empty-title">Görüşme arşivlendi.</div></div>';
+          renderList();
+          return;
+        }
+
+        if (action === 'attach') {
+          sendSpecialMsg('file', '📎 Dosya paylaşıldı (demo — gerçek uygulamada dosya yükleme aktif olacak)');
+          return;
+        }
+        if (action === 'location') {
+          sendSpecialMsg('location', '📍 Konum paylaşıldı (demo — gerçek uygulamada GPS konumu gönderilecek)');
+          return;
+        }
+      });
+
+      /* Auto-resize textarea + Enter to send */
+      detailEl.addEventListener('input', function (e) {
+        if (e.target.id !== 'msgInput') return;
+        e.target.style.height = 'auto';
+        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+      });
+      detailEl.addEventListener('keydown', function (e) {
+        if (e.target.id === 'msgInput' && e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMsg();
+        }
+      });
+    }
+  }
+
+  /* ─── URL param: auto-select thread ────────────────────────── */
+  function getTidFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('tid') || null;
+  }
+
+  /* ─── Boot ──────────────────────────────────────────────────── */
+  function boot() {
+    role = (window.KB && KB.STATE && KB.STATE.role)
+      || localStorage.getItem('kb_rol') || 'isletme';
+    var user = window.KB && KB.STATE && KB.STATE.user;
+    uid = user ? user.id : ('demo_' + role);
+
+    /* Auto-run status check on open */
+    if (window.IlanStatus) {
+      try { IlanStatus.autoCheck(uid); } catch (e) {}
+    }
+
+    /* Seed demo data once */
+    KBChat.seedDemoThreads(uid);
+
+    /* Sync comm status from current thread state */
+    if (window.KBCommStatus) {
+      try { KBCommStatus.seedDemoData(uid); } catch (e) {}
+    }
+
+    renderList();
+    wire();
+
+    /* Auto-select from ?tid= param, else first thread */
+    var paramTid = getTidFromUrl();
+    var threads  = KBChat.getThreads(uid).filter(function (t) { return !t.archived; });
+    var toSelect = paramTid
+      || (threads.length > 0 ? threads[0].id : null);
+    if (toSelect) {
+      var found = threads.find(function (t) { return t.id === toSelect; });
+      if (found) {
+        /* On desktop, don't force mobile slide — just render */
+        selectThread(found.id);
+        if (window.innerWidth > 680) {
+          /* undo mobile-only show/hide */
+          var detailEl = document.getElementById('msgDetail');
+          var sidebarEl = document.getElementById('msgSidebar');
+          if (detailEl)  detailEl.classList.remove('is-open');
+          if (sidebarEl) sidebarEl.classList.remove('is-hidden');
+          if (detailEl)  detailEl.style.display = '';
+        }
+      }
+    }
+  }
+
+  if (window.KB && KB.ready) {
+    KB.ready.then(function () {
+      role = (KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme';
+      var user = KB.STATE && KB.STATE.user;
+      uid  = user ? user.id : ('demo_' + role);
+      boot();
     });
-  </script>
+  } else {
+    document.addEventListener('DOMContentLoaded', boot);
+  }
+
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İlan Durumu · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+
+    <div class="page-header" style="margin-bottom:20px">
+      <div>
+        <h1>İlan Durumu</h1>
+        <p class="page-sub">İlanlarının durumunu takip et ve yönet.</p>
+      </div>
+      <a href="ilan-olustur.html" class="btn btn--primary btn--sm">+ Yeni İlan Oluştur</a>
+    </div>
+
+    <!-- Job selector -->
+    <div id="ildsJobBar" class="apc-job-bar">
+      <div class="skel skel--line" style="width:200px;height:56px;border-radius:12px"></div>
+      <div class="skel skel--line" style="width:180px;height:56px;border-radius:12px"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="ildsEmpty" style="display:none">
+      <div class="apc-empty">
+        <div class="apc-empty__ico">📋</div>
+        <div class="apc-empty__t">Henüz yayında ilanınız yok</div>
+        <div class="apc-empty__s">İlan oluşturarak kurye bulmaya başlayın</div>
+        <a href="ilan-olustur.html" class="btn btn--primary btn--sm" style="margin-top:14px">+ İlan Oluştur</a>
+      </div>
+    </div>
+
+    <!-- Prompt to select job -->
+    <div id="ildsPrompt">
+      <div class="apc-empty">
+        <div class="apc-empty__ico">👆</div>
+        <div class="apc-empty__t">Yukarıdan bir ilan seçin</div>
+        <div class="apc-empty__s">İlanının durumunu yönetmek için seç</div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="ildsMain" style="display:none">
+
+      <!-- ── Status Hero ── -->
+      <div class="ilds-hero" id="ildsHero">
+        <div class="ilds-hero__left">
+          <div class="ilds-hero__badge" id="ildsHeroBadge"></div>
+          <div class="ilds-hero__title" id="ildsHeroTitle">—</div>
+          <div class="ilds-hero__meta" id="ildsHeroMeta"></div>
+        </div>
+        <div class="ilds-hero__right">
+          <div class="ilds-hero__acts" id="ildsHeroActs"></div>
+          <div style="display:flex;gap:10px">
+            <a class="btn btn--ghost btn--sm" id="ildsEditLink" href="#">✏️ İlanı Düzenle</a>
+            <a class="btn btn--ghost btn--sm" id="ildsAppsLink" href="#">📋 Başvurular</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Status Pipeline ── -->
+      <div class="ilds-pipeline">
+        <div class="ilds-pipeline__label">Durum Akışı</div>
+        <div class="ilds-pipe-track" id="ildsPipeTrack"></div>
+      </div>
+
+      <!-- ── Quick Stats ── -->
+      <div class="ilds-stats" id="ildsStats"></div>
+
+      <!-- ── Job Settings ── -->
+      <div class="ilds-box">
+        <h3>İlan Ayarları</h3>
+        <div class="ilds-box-grid" id="ildsSettings"></div>
+      </div>
+
+      <!-- ── Visibility Info ── -->
+      <div class="ilds-box" id="ildsVisBox">
+        <h3>Görünürlük Durumu</h3>
+        <div id="ildsVisInfo"></div>
+      </div>
+
+      <!-- ── Applicant Snapshot ── -->
+      <div class="ilds-box" id="ildsAppsBox">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 style="margin:0">Başvuru Özeti</h3>
+          <a class="btn btn--ghost btn--sm" id="ildsAppsLink2" href="#">Tüm Başvurular →</a>
+        </div>
+        <div id="ildsAppsSnap"></div>
+      </div>
+
+      <!-- ── Activity Log ── -->
+      <div class="ilds-log">
+        <h3>Aktivite Geçmişi</h3>
+        <div id="ildsLog"></div>
+      </div>
+
+    </div><!-- /#ildsMain -->
+
+  </div><!-- /.app-content -->
+
+  <div id="app-footer"></div>
+
+  <!-- Confirm modal -->
+  <div class="modal-overlay" id="ildsConfirmOverlay" style="display:none">
+    <div class="modal ilds-confirm" id="ildsConfirm">
+      <div class="ilds-confirm__ico" id="ildsConfirmIco">⚠️</div>
+      <div class="ilds-confirm__h"   id="ildsConfirmH">Emin misiniz?</div>
+      <div class="ilds-confirm__msg" id="ildsConfirmMsg"></div>
+      <div class="ilds-confirm__acts">
+        <button class="btn btn--ghost" id="ildsConfirmCancel">Vazgeç</button>
+        <button class="btn btn--primary" id="ildsConfirmOk">Onayla</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/ilan-status.js"></script>
+  <script src="assets/js/ilan-quality.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var SEL_JOB_ID = new URLSearchParams(location.search).get('job') || '';
+    var ALL_JOBS   = [];
+    var IS         = window.IlanStatus;
+
+    /* ── Helpers ── */
+    function esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function getUid() {
+      try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
+      return 'demo';
+    }
+    function fmtDate(d) {
+      if (!d) return '—';
+      try { return new Date(d).toLocaleDateString('tr-TR', { day:'numeric', month:'long', year:'numeric' }); } catch(e) { return d; }
+    }
+    function daysLeft(dateStr) {
+      if (!dateStr) return null;
+      var diff = Math.ceil((new Date(dateStr + 'T23:59:59').getTime() - Date.now()) / 86400000);
+      return diff;
+    }
+
+    /* ── Load jobs ── */
+    function loadJobs() {
+      var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
+      var ls   = IS.getJobs(getUid());
+      ALL_JOBS = ls.concat(demo.filter(function(j) { return !ls.some(function(l) { return l.id === j.id; }); }));
+    }
+    function getJob(id) {
+      for (var i = 0; i < ALL_JOBS.length; i++) { if (ALL_JOBS[i].id === id) return ALL_JOBS[i]; }
+      return null;
+    }
+    function isOwned(job) {
+      var lsIds = IS.getJobs(getUid()).map(function(j) { return j.id; });
+      return lsIds.indexOf(job.id) !== -1;
+    }
+
+    /* ── Status Pipeline ── */
+    var PIPE_FLOW = [
+      { key:'taslak',   ico:'📝' },
+      { key:'yayinda',  ico:'🟢' },
+      { key:'doldu',    ico:'✅' }
+    ];
+    var PIPE_ALT = [
+      { key:'durduruldu',  ico:'⏸',  label:'Durduruldu' },
+      { key:'suresi_doldu',ico:'⌛',  label:'Süresi Doldu' },
+      { key:'iptal',       ico:'❌',  label:'İptal' }
+    ];
+
+    function renderPipeline(currentStatus) {
+      var track = document.getElementById('ildsPipeTrack');
+      if (!track) return;
+      var mainPath = PIPE_FLOW;
+      /* If current status is an alt status, show it highlighted separately */
+      var altMatch = PIPE_ALT.filter(function(a) { return a.key === currentStatus; })[0];
+      var html = '';
+      /* Main flow */
+      var pastCurrent = false;
+      mainPath.forEach(function(step, idx) {
+        var isCurrent = step.key === currentStatus;
+        var isPast    = !pastCurrent && !isCurrent;
+        if (isCurrent) pastCurrent = true;
+        var nodeClass = isCurrent ? 'ilds-pipe-ico--active' : (isPast ? 'ilds-pipe-ico--done' : '');
+        var lblClass  = isCurrent ? 'ilds-pipe-lbl--active' : '';
+        var d = IS.getDef(step.key);
+        html += '<div class="ilds-pipe-step"><div class="ilds-pipe-node">' +
+          '<div class="ilds-pipe-ico ' + nodeClass + '">' + step.ico + '</div>' +
+          '<div class="ilds-pipe-lbl ' + lblClass + '">' + esc(d.lbl) + '</div>' +
+          '</div></div>';
+        if (idx < mainPath.length - 1) {
+          html += '<div class="ilds-pipe-conn' + (isPast ? ' ilds-pipe-conn--done' : '') + '"></div>';
+        }
+      });
+      /* Alt status indicator */
+      if (altMatch) {
+        html += '<div class="ilds-pipe-conn"></div>' +
+          '<div class="ilds-pipe-step"><div class="ilds-pipe-node">' +
+          '<div class="ilds-pipe-ico ilds-pipe-ico--warn">' + altMatch.ico + '</div>' +
+          '<div class="ilds-pipe-lbl ilds-pipe-lbl--active">' + esc(altMatch.label) + '</div>' +
+          '</div></div>';
+      }
+      track.innerHTML = html;
+    }
+
+    /* ── Stats ── */
+    function renderStats(job) {
+      var el = document.getElementById('ildsStats');
+      if (!el) return;
+      var st = IS.getStats(job.id);
+      el.innerHTML =
+        '<div class="ilds-stat ilds-stat--blue"><div class="ilds-stat__val">' + st.views + '</div><div class="ilds-stat__lbl">👁 Görüntülenme</div></div>' +
+        '<div class="ilds-stat"><div class="ilds-stat__val">' + st.apps + '</div><div class="ilds-stat__lbl">📋 Başvuru</div></div>' +
+        '<div class="ilds-stat ilds-stat--yellow"><div class="ilds-stat__val">' + st.shortlisted + '</div><div class="ilds-stat__lbl">⭐ Kısa Liste</div></div>' +
+        '<div class="ilds-stat ilds-stat--green"><div class="ilds-stat__val">' + st.accepted + '</div><div class="ilds-stat__lbl">✅ Kabul</div></div>';
+    }
+
+    /* ── Settings ── */
+    function renderSettings(job) {
+      var el = document.getElementById('ildsSettings');
+      if (!el) return;
+      var dl   = daysLeft(job.son_basvuru);
+      var dlTxt = dl === null ? '—'
+                : dl < 0  ? '<span style="color:var(--error)">Süresi doldu</span>'
+                : dl === 0 ? '<span style="color:var(--error)">Bugün son gün</span>'
+                : dl <= 3  ? '<span style="color:var(--warning)">' + dl + ' gün kaldı</span>'
+                : dl + ' gün kaldı';
+      el.innerHTML =
+        '<div class="ilds-box-item"><div class="ilds-box-item__lbl">Son Başvuru</div><div class="ilds-box-item__val">' + fmtDate(job.son_basvuru) + '</div><div class="ilds-box-item__sub">' + dlTxt + '</div></div>' +
+        '<div class="ilds-box-item"><div class="ilds-box-item__lbl">İhtiyaç Sayısı</div><div class="ilds-box-item__val">' + (job.ihtiyac_sayisi || '—') + (job.ihtiyac_sayisi > 1 ? ' kurye' : job.ihtiyac_sayisi ? ' kurye' : '') + '</div><div class="ilds-box-item__sub">İşe alınacak</div></div>' +
+        '<div class="ilds-box-item"><div class="ilds-box-item__lbl">Araç Tipi</div><div class="ilds-box-item__val">' + esc(job.arac || '—') + '</div><div class="ilds-box-item__sub">Gereksinim</div></div>';
+    }
+
+    /* ── Visibility info ── */
+    function renderVisibility(job) {
+      var el = document.getElementById('ildsVisInfo');
+      if (!el) return;
+      var d = IS.getDef(job.durum || 'taslak');
+      var items = [
+        { lbl:'Herkese görünür', val: d.visible,     yes:'Evet', no:'Hayır' },
+        { lbl:'Arama sonuçları', val: d.searchable,  yes:'Görünüyor', no:'Gizli' },
+        { lbl:'Başvuru kabul',   val: d.accepting,   yes:'Açık', no:'Kapalı' }
+      ];
+      el.innerHTML = '<div style="display:flex;gap:24px;flex-wrap:wrap">' +
+        items.map(function(it) {
+          return '<div style="display:flex;align-items:center;gap:8px;font-size:0.875rem">' +
+            '<span style="color:' + (it.val ? 'var(--success)' : 'var(--error)') + ';font-size:1rem">' + (it.val ? '✓' : '✗') + '</span>' +
+            '<span style="color:var(--text-2)">' + esc(it.lbl) + ':</span>' +
+            '<span style="font-weight:600;color:' + (it.val ? 'var(--success)' : 'var(--error)') + '">' + (it.val ? it.yes : it.no) + '</span>' +
+            '</div>';
+        }).join('') +
+        '</div>';
+    }
+
+    /* ── Applicant snapshot ── */
+    function renderAppsSnap(job) {
+      var el = document.getElementById('ildsAppsSnap');
+      if (!el) return;
+      var pool = (window.KB_DATA && KB_DATA.kuryeler) || [];
+      var saved = {};
+      try { saved = JSON.parse(localStorage.getItem('kb_apps_' + job.id)) || {}; } catch(e) {}
+      var kIds = Object.keys(saved);
+      if (!kIds.length) {
+        /* Demo: show deterministic applicants */
+        var h = Math.abs(String(job.id).split('').reduce(function(a,c) { return (Math.imul(31,a)+c.charCodeAt(0))|0; }, 0));
+        var count = (h % 3) + 2;
+        var shown = [];
+        for (var i = 0; shown.length < count && i < pool.length; i++) {
+          shown.push(pool[(h + i * 7) % pool.length]);
+        }
+        el.innerHTML = shown.map(function(k) {
+          var inits = (k.ad||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+          return '<div class="ilds-apps-row">' +
+            '<div class="ilds-apps-av">' + inits + '</div>' +
+            '<div class="ilds-apps-info"><div class="ilds-apps-name">' + esc(k.ad||'—') + '</div><div class="ilds-apps-sub">📍 ' + esc(k.sehir||'') + ' · 🛵 ' + esc(k.arac||'') + '</div></div>' +
+            '<span class="chip chip--muted">Demo</span>' +
+            '</div>';
+        }).join('') + '<div style="font-size:0.78rem;color:var(--text-3);padding-top:10px">Demo verisi — gerçek başvurular Supabase üzerinden gelir.</div>';
+        return;
+      }
+      var html = kIds.slice(0, 5).map(function(kId) {
+        var app = saved[kId];
+        var k = pool.filter(function(x){ return x.id === kId; })[0];
+        if (!k) return '';
+        var inits = (k.ad||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+        var STATUS_LBLS = { yeni:'Yeni', inceleniyor:'İnceleniyor', mesaj_gonderildi:'Mesaj', mulakat:'Mülakat', kabul:'Kabul', red:'Red' };
+        var stLbl = STATUS_LBLS[app.status] || app.status;
+        return '<div class="ilds-apps-row">' +
+          '<div class="ilds-apps-av">' + inits + '</div>' +
+          '<div class="ilds-apps-info"><div class="ilds-apps-name">' + esc(k.ad||'—') + '</div><div class="ilds-apps-sub">📍 ' + esc(k.sehir||'') + ' · ' + esc(k.arac||'') + '</div></div>' +
+          '<span class="chip">' + stLbl + '</span>' +
+          '</div>';
+      }).join('');
+      el.innerHTML = html || '<span style="font-size:0.875rem;color:var(--text-3)">Başvuru yok</span>';
+    }
+
+    /* ── Activity log ── */
+    function renderLog(job) {
+      var el = document.getElementById('ildsLog');
+      if (!el) return;
+      var log = IS.getLog(job.id);
+      /* Add a seed log entry if empty */
+      if (!log.length) {
+        var seedDate = job.created_at || job.tarih || new Date(Date.now() - 2 * 86400000).toISOString();
+        log = [
+          { event:'created', note:'', date:seedDate },
+          { event:(job.durum === 'yayinda' ? 'published' : 'created'), note:'', date: new Date(Date.now() - 86400000).toISOString() }
+        ].filter(function(e, i, a) { return a.map(function(x){return x.event;}).indexOf(e.event) === i; });
+      }
+      el.innerHTML = log.map(function(entry) {
+        var ev = IS.getEventLabel(entry.event);
+        return '<div class="ilds-log-item">' +
+          '<div class="ilds-log-ico">' + ev.ico + '</div>' +
+          '<div class="ilds-log-body">' +
+            '<div class="ilds-log-lbl">' + esc(ev.lbl) + '</div>' +
+            (entry.note ? '<div class="ilds-log-note">' + esc(entry.note) + '</div>' : '') +
+            '<div class="ilds-log-date">' + IS.relTime(entry.date) + ' · ' + fmtDate(entry.date.slice(0, 10)) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') || '<div class="ilds-log-empty">Henüz aktivite yok.</div>';
+    }
+
+    /* ── Hero actions ── */
+    function renderHeroActs(job) {
+      var el    = document.getElementById('ildsHeroActs');
+      var owned = isOwned(job);
+      if (!el) return;
+      if (!owned) {
+        el.innerHTML = '<span style="font-size:0.8rem;color:var(--text-3)">Bu ilan size ait değil</span>';
+        return;
+      }
+      var actions = IS.getAllowedActions(job.durum || 'taslak');
+      if (!actions.length) {
+        el.innerHTML = '<span style="font-size:0.8rem;color:var(--text-3);padding:8px 0">Bu ilan için yapılabilecek işlem yok</span>';
+        return;
+      }
+      el.innerHTML = actions.map(function(a) {
+        return '<button class="btn ' + a.cls + ' btn--sm" data-action="' + esc(a.key) + '" data-jobid="' + esc(job.id) + '">' + a.ico + ' ' + a.lbl + '</button>';
+      }).join('');
+    }
+
+    /* ── Main render ── */
+    function renderJob(job) {
+      var d = IS.getDef(job.durum || 'taslak');
+
+      /* Badge + hero */
+      var badgeEl = document.getElementById('ildsHeroBadge');
+      var titleEl = document.getElementById('ildsHeroTitle');
+      var metaEl  = document.getElementById('ildsHeroMeta');
+      if (badgeEl) badgeEl.innerHTML = IS.renderBadge(job.durum || 'taslak', true);
+      if (titleEl) titleEl.textContent = job.baslik || 'İsimsiz İlan';
+      if (metaEl) {
+        metaEl.innerHTML =
+          (job.sehir  ? '<span>📍 ' + esc(job.sehir)  + '</span>' : '') +
+          (job.bolge  ? '<span>· ' + esc(job.bolge)  + '</span>' : '') +
+          (job.arac   ? '<span>🛵 ' + esc(job.arac)   + '</span>' : '') +
+          (job.tarih  ? '<span>📅 Oluşturuldu: ' + esc(job.tarih) + '</span>' : '') +
+          (job.updated_at ? '<span>⏱ Güncellendi: ' + IS.relTime(job.updated_at) + '</span>' : '');
+      }
+
+      /* Links */
+      var editLink = document.getElementById('ildsEditLink');
+      var appsLink = document.getElementById('ildsAppsLink');
+      var appsLink2 = document.getElementById('ildsAppsLink2');
+      if (editLink)  editLink.href  = 'ilan-olustur.html?edit=' + job.id;
+      if (appsLink)  appsLink.href  = 'basvurular.html?job=' + job.id;
+      if (appsLink2) appsLink2.href = 'basvurular.html?job=' + job.id;
+
+      /* Quality score badge in hero */
+      if (window.IlanQuality) {
+        var qScore  = IlanQuality.calcScore(job);
+        var qColor  = IlanQuality.scoreColor(qScore);
+        var qLabel  = IlanQuality.scoreLabel(qScore);
+        var metaEl  = document.getElementById('ildsHeroMeta');
+        if (metaEl) metaEl.innerHTML += '<span style="font-size:0.82rem;font-weight:700;color:' + qColor + '">✨ Kalite %' + qScore + ' · ' + qLabel + '</span>' +
+          '<a href="ilan-kalite.html?job=' + job.id + '" style="font-size:0.78rem;color:var(--primary);font-weight:600">Analiz →</a>';
+      }
+
+      renderHeroActs(job);
+      renderPipeline(job.durum || 'taslak');
+      renderStats(job);
+      renderSettings(job);
+      renderVisibility(job);
+      renderAppsSnap(job);
+      renderLog(job);
+    }
+
+    /* ── Job bar ── */
+    function renderJobBar() {
+      var el = document.getElementById('ildsJobBar');
+      if (!el) return;
+      var lsJobs  = IS.getJobs(getUid());
+      var demoJobs = (window.KB_DATA && KB_DATA.ilanlar) || [];
+      var combined = lsJobs.concat(demoJobs.filter(function(j) { return !lsJobs.some(function(l){ return l.id === j.id; }); }));
+
+      if (!combined.length) {
+        document.getElementById('ildsJobBar').style.display  = 'none';
+        document.getElementById('ildsEmpty').style.display   = '';
+        document.getElementById('ildsPrompt').style.display  = 'none';
+        return;
+      }
+      el.innerHTML = combined.map(function(j) {
+        var d    = IS.getDef(j.durum || 'taslak');
+        var stat = IS.getStats(j.id);
+        return '<button class="apc-job-btn' + (SEL_JOB_ID === j.id ? ' is-active' : '') + '" data-jobid="' + esc(j.id) + '" style="position:relative">' +
+          '<div>' +
+            '<div class="apc-job-btn__name">' + esc(j.baslik || 'İsimsiz İlan') + '</div>' +
+            '<div style="margin-top:4px;display:flex;align-items:center;gap:6px">' +
+              '<span class="ilds-badge ' + d.cls + '" style="font-size:0.68rem;padding:2px 7px">' + d.ico + ' ' + d.lbl + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="apc-job-btn__count">' + stat.apps + ' başvuru</span>' +
+        '</button>';
+      }).join('');
+    }
+
+    /* ── Select job ── */
+    function selectJob(jobId) {
+      SEL_JOB_ID = jobId;
+      try {
+        var url = new URL(location.href);
+        url.searchParams.set('job', jobId);
+        history.replaceState({}, '', url.toString());
+      } catch(e) {}
+
+      loadJobs();
+      var job = getJob(jobId);
+      document.getElementById('ildsPrompt').style.display = 'none';
+      document.getElementById('ildsEmpty').style.display  = 'none';
+      if (!job) {
+        document.getElementById('ildsMain').style.display = 'none';
+        document.getElementById('ildsPrompt').style.display = '';
+        return;
+      }
+      document.getElementById('ildsMain').style.display = '';
+      renderJob(job);
+      renderJobBar();
+    }
+
+    /* ── Confirm dialog ── */
+    var pendingAction = null;
+    function openConfirm(actionKey, jobId) {
+      var a = IS.ACTION_DEFS[actionKey];
+      if (!a) return;
+      document.getElementById('ildsConfirmIco').textContent = a.ico;
+      document.getElementById('ildsConfirmH').textContent   = a.lbl;
+      document.getElementById('ildsConfirmMsg').textContent = a.confirm || 'Bu işlemi yapmak istediğinizden emin misiniz?';
+      var okBtn = document.getElementById('ildsConfirmOk');
+      okBtn.className = 'btn ' + a.cls;
+      okBtn.textContent = a.lbl;
+      pendingAction = { actionKey:actionKey, jobId:jobId };
+      document.getElementById('ildsConfirmOverlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeConfirm() {
+      document.getElementById('ildsConfirmOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+      pendingAction = null;
+    }
+    function executeAction(actionKey, jobId) {
+      var ok = IS.doAction(jobId, actionKey, getUid());
+      if (!ok && window.KBMotion) { KBMotion.showErrorToast('İşlem yapılamadı'); return; }
+      loadJobs();
+      var job = getJob(jobId);
+      var a   = IS.ACTION_DEFS[actionKey];
+      if (job) {
+        renderJob(job);
+        renderJobBar();
+      }
+      if (window.KBMotion) {
+        var msgs = {
+          yayinla:'🚀 İlan yayınlandı! Kurye havuzunda görünmeye başladı.',
+          taslaga_al:'📝 İlan taslağa alındı.',
+          durdur:'⏸ İlan durduruldu.',
+          yeniden_yayinla:'🔄 İlan yeniden yayınlandı!',
+          kapat:'✅ İlan "Doldu" olarak kapatıldı.',
+          iptal:'❌ İlan iptal edildi.'
+        };
+        KBMotion.showSuccess(msgs[actionKey] || 'İşlem başarılı', '', 2400);
+      }
+    }
+
+    /* ── Wire events ── */
+    function wire() {
+      /* Job bar clicks */
+      document.getElementById('ildsJobBar').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-jobid]');
+        if (btn) selectJob(btn.dataset.jobid);
+      });
+
+      /* Action button clicks (event delegation on main) */
+      document.getElementById('ildsMain').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        var actionKey = btn.dataset.action;
+        var jobId     = btn.dataset.jobid;
+        var a         = IS.ACTION_DEFS[actionKey];
+        if (!a) return;
+        if (a.confirm) {
+          openConfirm(actionKey, jobId);
+        } else {
+          executeAction(actionKey, jobId);
+        }
+      });
+
+      /* Confirm modal */
+      document.getElementById('ildsConfirmOk').addEventListener('click', function() {
+        if (pendingAction) executeAction(pendingAction.actionKey, pendingAction.jobId);
+        closeConfirm();
+      });
+      document.getElementById('ildsConfirmCancel').addEventListener('click', closeConfirm);
+      document.getElementById('ildsConfirmOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeConfirm();
+      });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeConfirm(); });
+    }
+
+    /* ── Boot ── */
+    function boot() {
+      IS.autoCheck(getUid());
+      loadJobs();
+      renderJobBar();
+      wire();
+      if (SEL_JOB_ID) {
+        selectJob(SEL_JOB_ID);
+      }
+    }
+
+    if (window.KB && KB.ready) {
+      KB.ready().then(boot).catch(boot);
+    } else {
+      document.addEventListener('DOMContentLoaded', boot);
+    }
+
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İşe Alım Kararı — KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<div id="app-topbar"></div>
+<div id="sidebar-overlay"></div>
+<nav id="app-sidebar"></nav>
+
+<div class="app-content">
+<main class="container" style="padding-top:24px;padding-bottom:80px;max-width:900px;">
+
+  <div class="hd-page-header">
+    <h1>İşe Alım Kararı</h1>
+    <p>Aday hakkında son kararını ver.</p>
+  </div>
+
+  <div class="hd-layout">
+
+    <!-- Left column -->
+    <div class="hd-main">
+
+      <!-- Applicant card -->
+      <div class="hd-section">
+        <div class="hd-applicant" id="hdApplicant">
+          <div style="color:var(--text-3);font-size:0.83rem;">Yükleniyor…</div>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div class="hd-section">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-2);margin-bottom:4px;">Süreç Durumu</div>
+        <div id="hdStatusBar"></div>
+      </div>
+
+      <!-- Employer: actions -->
+      <div class="hd-section" id="hdActionsSection" style="display:none">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-2);margin-bottom:8px;">Karar</div>
+        <div id="hdActions"></div>
+      </div>
+
+      <!-- Internal note -->
+      <div class="hd-section" id="hdNoteSection" style="display:none">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-2);margin-bottom:8px;">İç Not <span style="font-weight:400;color:var(--text-3)">(adaya gösterilmez)</span></div>
+        <textarea id="hdNoteText" class="form-input" rows="3" placeholder="Örn: Deneyimi uygun, hafta içi başlayabilir."></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn--secondary btn--sm" id="hdNoteSave">Notu Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Courier view block -->
+      <div class="hd-section" id="hdCourierView" style="display:none">
+        <div id="hdCourierContent"></div>
+      </div>
+
+      <!-- Archive notice (if rejected) -->
+      <div id="hdArchiveNotice" style="display:none">
+        <div class="hd-archive-notice">🗄 Bu başvuru arşivlendi. Geçmiş Başvurular bölümünde görünür.</div>
+      </div>
+
+      <!-- Activity log -->
+      <div class="hd-section">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-2);margin-bottom:12px;">İşlem Geçmişi</div>
+        <div id="hdLog"></div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="hd-side">
+
+      <!-- Onboarding form (employer, after accept) -->
+      <div id="hdOnboardSection" style="display:none">
+        <div class="hd-section">
+          <div id="hdOnboardContent"></div>
+        </div>
+      </div>
+
+      <!-- Feedback block (shown when status is kabul/tamamlandi) -->
+      <div id="hdFeedbackSection" style="display:none">
+        <div class="hd-section">
+          <div id="hdFeedbackContent"></div>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="hd-section">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-2);margin-bottom:10px;">Hızlı Bağlantılar</div>
+        <div style="display:flex;flex-direction:column;gap:7px;" id="hdQuickLinks">
+          <a href="basvurular.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📋 Başvurular</a>
+          <a href="gorusmeler.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📅 Görüşmeler</a>
+          <a href="mesajlar.html"   class="btn btn--ghost btn--sm" style="justify-content:flex-start;">💬 Mesajlar</a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+</div>
+
+<!-- Note modal -->
+<div id="hdNoteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:min(440px,94vw);">
+    <h2 style="font-size:1rem;font-weight:700;margin:0 0 14px;">Not Ekle</h2>
+    <textarea id="hdModalNoteText" class="form-input" rows="4" placeholder="İç not (adaya gösterilmez)"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn--ghost" id="hdModalNoteCancel">İptal</button>
+      <button class="btn btn--primary" id="hdModalNoteSave">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject modal -->
+<div id="hdRejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:min(440px,94vw);">
+    <h2 style="font-size:1rem;font-weight:700;margin:0 0 6px;">Başvuruyu Reddet</h2>
+    <p style="font-size:0.83rem;color:var(--text-3);margin:0 0 14px;">Bu işlem geri alınamaz. Kurye bildirim alacak.</p>
+    <div style="margin-bottom:12px;">
+      <label class="form-label">Red Sebebi <span style="color:var(--text-3)">(isteğe bağlı)</span></label>
+      <textarea id="hdRejectReason" class="form-input" rows="2" placeholder="Örn: Ehliyet durumu uygun değil."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn--ghost" id="hdRejectCancel">Vazgeç</button>
+      <button class="btn btn--danger" id="hdRejectConfirm">❌ Reddet</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/ilan-status.js"></script>
+<script src="assets/js/chat.js"></script>
+<script src="assets/js/interview.js"></script>
+<script src="assets/js/hiring.js"></script>
+<script src="assets/js/comm-status.js"></script>
+<script src="assets/js/feedback.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var UID = null;
+  var ROLE = 'isletme';
+  var JOB_ID = '';
+  var KURYE_ID = '';
+
+  function getUid() {
+    if (UID) return UID;
+    try {
+      var s = JSON.parse(localStorage.getItem('kb_session') || 'null');
+      if (s && s.user && s.user.id) return (UID = s.user.id);
+    } catch (e) {}
+    return (UID = localStorage.getItem('kb_demo_uid') || ('demo_' + (localStorage.getItem('kb_rol') || 'isletme')));
+  }
+
+  function getRole() { return localStorage.getItem('kb_rol') || 'isletme'; }
+  function isBiz() { return ROLE === 'isletme' || ROLE === 'firma'; }
+
+  function initials(name) {
+    if (!name) return '?';
+    var p = String(name).trim().split(/\s+/);
+    return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase();
+  }
+
+  function renderApplicant(dec) {
+    var name = dec ? (isBiz() ? dec.kuryeAd : dec.isletmeAd) : (JOB_ID + ' — ' + KURYE_ID);
+    var job  = dec ? dec.jobTitle : '';
+    var date = dec ? KBHiring.fmtDate(dec.createdAt) : '';
+    document.getElementById('hdApplicant').innerHTML =
+      '<div class="hd-applicant__avatar"><span>' + initials(name) + '</span></div>' +
+      '<div>' +
+        '<div class="hd-applicant__name">' + name + '</div>' +
+        '<div class="hd-applicant__job">' + (job || '—') + '</div>' +
+        '<div class="hd-applicant__date">Başvuru tarihi: ' + (date || '—') + '</div>' +
+      '</div>';
+  }
+
+  function renderFeedbackBlock(dec) {
+    var fbSection = document.getElementById('hdFeedbackSection');
+    var fbContent = document.getElementById('hdFeedbackContent');
+    if (!fbSection || !fbContent) return;
+
+    var status = dec ? dec.status : '';
+    if (status !== 'kabul' && status !== 'tamamlandi') {
+      fbSection.style.display = 'none';
+      return;
+    }
+
+    if (!window.KBFeedback) { fbSection.style.display = 'none'; return; }
+
+    fbSection.style.display = '';
+    fbContent.innerHTML = KBFeedback.renderMiniCard(JOB_ID, KURYE_ID, dec.isletmeId || getUid(), ROLE);
+
+    /* Also add Geri Bildirim link to quick links */
+    var links = document.getElementById('hdQuickLinks');
+    if (links && !links.querySelector('[data-fb-link]')) {
+      var a = document.createElement('a');
+      a.href = 'geri-bildirim.html?job=' + encodeURIComponent(JOB_ID) +
+               '&kid=' + encodeURIComponent(KURYE_ID) +
+               '&iid=' + encodeURIComponent(dec.isletmeId || getUid());
+      a.className = 'btn btn--ghost btn--sm';
+      a.style.justifyContent = 'flex-start';
+      a.setAttribute('data-fb-link', '1');
+      a.textContent = '⭐ Geri Bildirim';
+      links.appendChild(a);
+    }
+  }
+
+  function renderAll() {
+    var dec = KBHiring.getDecision(JOB_ID, KURYE_ID);
+    var ob  = KBHiring.getOnboarding(JOB_ID, KURYE_ID);
+    var status = dec ? dec.status : 'beklemede';
+
+    renderApplicant(dec);
+
+    document.getElementById('hdStatusBar').innerHTML = KBHiring.renderStatusBar(status);
+
+    var actSec    = document.getElementById('hdActionsSection');
+    var noteSec   = document.getElementById('hdNoteSection');
+    var onboardSec = document.getElementById('hdOnboardSection');
+    var archiveEl = document.getElementById('hdArchiveNotice');
+    var courierView = document.getElementById('hdCourierView');
+
+    if (isBiz()) {
+      actSec.style.display = '';
+      noteSec.style.display = '';
+      courierView.style.display = 'none';
+      document.getElementById('hdActions').innerHTML = KBHiring.renderEmployerActions(dec, JOB_ID, KURYE_ID);
+      if (dec && dec.note) document.getElementById('hdNoteText').value = dec.note;
+
+      if (status === 'kabul' || status === 'tamamlandi') {
+        onboardSec.style.display = '';
+        document.getElementById('hdOnboardContent').innerHTML = KBHiring.renderOnboardingForm(ob, JOB_ID, KURYE_ID);
+      } else {
+        onboardSec.style.display = 'none';
+      }
+      archiveEl.style.display = status === 'reddedildi' ? '' : 'none';
+
+    } else {
+      actSec.style.display = 'none';
+      noteSec.style.display = 'none';
+      onboardSec.style.display = 'none';
+      courierView.style.display = '';
+      archiveEl.style.display = 'none';
+
+      var html = '';
+      if (status === 'kabul' || status === 'tamamlandi') {
+        html = KBHiring.renderOnboardingBlock(ob);
+      } else if (status === 'reddedildi') {
+        html = '<div class="hd-rejected-notice" style="margin:0">❌ Bu başvurunuz değerlendirildi. Başarılar dileriz.</div>';
+        if (dec && dec.reason) {
+          html += '<p style="font-size:0.78rem;color:var(--text-3);margin-top:8px;">Sebep: ' + dec.reason + '</p>';
+        }
+      } else {
+        html = '<div class="hd-chip hd-chip--' + status + '" style="font-size:0.82rem;padding:6px 14px;">' +
+               (KBHiring.STATES[status]||{}).icon + ' ' + (KBHiring.STATES[status]||{}).label + '</div>' +
+               '<p style="font-size:0.82rem;color:var(--text-3);margin-top:10px;">Başvurunuz işveren tarafından inceleniyor.</p>';
+      }
+      document.getElementById('hdCourierContent').innerHTML = html;
+    }
+
+    /* Feedback block */
+    renderFeedbackBlock(dec);
+
+    /* Quick link to message thread */
+    if (dec && dec.threadId) {
+      var links = document.getElementById('hdQuickLinks');
+      if (links && !links.querySelector('[data-thread-link]')) {
+        var a = document.createElement('a');
+        a.href = 'mesaj-detay.html?tid=' + encodeURIComponent(dec.threadId);
+        a.className = 'btn btn--primary btn--sm';
+        a.style.justifyContent = 'flex-start';
+        a.setAttribute('data-thread-link', '1');
+        a.textContent = '💬 Görüşme Konuşması';
+        links.prepend(a);
+      }
+    }
+
+    document.getElementById('hdLog').innerHTML = KBHiring.renderActivityLog(JOB_ID, KURYE_ID);
+  }
+
+  function doAction(action, jobId, kuryeId) {
+    var uid = getUid();
+    var dec = KBHiring.getDecision(jobId, kuryeId) || {};
+
+    if (action === 'shortlist') {
+      KBHiring.makeDecision(uid, jobId, kuryeId, 'kisa_listede', {
+        jobTitle: dec.jobTitle, kuryeAd: dec.kuryeAd, isletmeAd: dec.isletmeAd, threadId: dec.threadId
+      });
+      if (window.KBMotion) KBMotion.showSuccess('Kısa Listeye Alındı!', dec.kuryeAd || '', 2000);
+      renderAll();
+
+    } else if (action === 'accept') {
+      if (!confirm('Bu adayı kabul etmek istiyor musunuz?')) return;
+      KBHiring.makeDecision(uid, jobId, kuryeId, 'kabul', {
+        jobTitle: dec.jobTitle, kuryeAd: dec.kuryeAd, isletmeAd: dec.isletmeAd, threadId: dec.threadId
+      });
+      if (window.KBMotion) KBMotion.showSuccess('Kabul Edildi!', dec.kuryeAd + ' işe alındı.', 2200);
+      renderAll();
+
+    } else if (action === 'reject') {
+      document.getElementById('hdRejectModal').style.display = 'flex';
+
+    } else if (action === 'add-note') {
+      var curDec = KBHiring.getDecision(jobId, kuryeId);
+      document.getElementById('hdModalNoteText').value = curDec ? (curDec.note || '') : '';
+      document.getElementById('hdNoteModal').style.display = 'flex';
+
+    } else if (action === 'save-onboard') {
+      var startDate     = (document.getElementById('obStartDate')     || {}).value || '';
+      var startPoint    = (document.getElementById('obStartPoint')    || {}).value || '';
+      var contactPerson = (document.getElementById('obContactPerson') || {}).value || '';
+      var contactPhone  = (document.getElementById('obContactPhone')  || {}).value || '';
+      var workDetails   = (document.getElementById('obWorkDetails')   || {}).value || '';
+      var firstDay      = (document.getElementById('obFirstDayNotes') || {}).value || '';
+
+      KBHiring.setOnboarding(uid, jobId, kuryeId, {
+        startDate: startDate, startPoint: startPoint,
+        contactPerson: contactPerson, contactPhone: contactPhone,
+        workDetails: workDetails, firstDayNotes: firstDay
+      });
+      if (window.KBMotion) KBMotion.showSuccess('Gönderildi!', 'Başlangıç bilgileri adaya iletildi.', 2200);
+      renderAll();
+    }
+  }
+
+  function wire() {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-hd-action]');
+      if (!btn) return;
+      doAction(btn.dataset.hdAction, btn.dataset.job || JOB_ID, btn.dataset.kid || KURYE_ID);
+    });
+
+    document.getElementById('hdNoteSave').addEventListener('click', function () {
+      var note = document.getElementById('hdNoteText').value.trim();
+      if (!note) return;
+      KBHiring.addNote(getUid(), JOB_ID, KURYE_ID, note);
+      if (window.KBMotion) KBMotion.showSuccess('Not kaydedildi.', '', 1600);
+      renderAll();
+    });
+
+    document.getElementById('hdModalNoteCancel').addEventListener('click', function () {
+      document.getElementById('hdNoteModal').style.display = 'none';
+    });
+    document.getElementById('hdModalNoteSave').addEventListener('click', function () {
+      var note = document.getElementById('hdModalNoteText').value.trim();
+      if (!note) { document.getElementById('hdNoteModal').style.display = 'none'; return; }
+      KBHiring.addNote(getUid(), JOB_ID, KURYE_ID, note);
+      document.getElementById('hdNoteModal').style.display = 'none';
+      if (window.KBMotion) KBMotion.showSuccess('Not kaydedildi.', '', 1600);
+      renderAll();
+    });
+
+    document.getElementById('hdRejectCancel').addEventListener('click', function () {
+      document.getElementById('hdRejectModal').style.display = 'none';
+    });
+    document.getElementById('hdRejectConfirm').addEventListener('click', function () {
+      var reason = document.getElementById('hdRejectReason').value.trim();
+      var dec = KBHiring.getDecision(JOB_ID, KURYE_ID) || {};
+      KBHiring.makeDecision(getUid(), JOB_ID, KURYE_ID, 'reddedildi', {
+        jobTitle: dec.jobTitle, kuryeAd: dec.kuryeAd, isletmeAd: dec.isletmeAd,
+        threadId: dec.threadId, reason: reason
+      });
+      document.getElementById('hdRejectModal').style.display = 'none';
+      if (window.KBMotion) KBMotion.showSuccess('Reddedildi', 'Başvuru arşive taşındı.', 2000);
+      renderAll();
+    });
+
+    ['hdNoteModal', 'hdRejectModal'].forEach(function (id) {
+      document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target === this) this.style.display = 'none';
+      });
+    });
+  }
+
+  function boot() {
+    var params = new URLSearchParams(window.location.search);
+    JOB_ID   = params.get('job') || 'job_demo_1';
+    KURYE_ID = params.get('kid') || 'k_demo_1';
+    ROLE = getRole();
+
+    var uid = getUid();
+
+    if (!KBHiring.getDecision(JOB_ID, KURYE_ID)) {
+      KBHiring.seedDemoData(uid);
+      if (!KBHiring.getDecision(JOB_ID, KURYE_ID)) {
+        KBHiring.makeDecision(uid, JOB_ID, KURYE_ID, 'beklemede', {
+          jobTitle:  params.get('title')   || '',
+          kuryeAd:   params.get('kurye')   || '',
+          isletmeAd: params.get('isletme') || '',
+          threadId:  params.get('tid')     || null
+        });
+      }
+    }
+
+    if (window.KBFeedback) KBFeedback.seedDemoData();
+
+    renderAll();
+    wire();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+
+</body>
+</html>

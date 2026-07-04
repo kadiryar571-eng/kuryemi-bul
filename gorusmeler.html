@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Görüşmeler — KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<div id="app-topbar"></div>
+<div id="sidebar-overlay"></div>
+<nav id="app-sidebar"></nav>
+
+<div class="app-content">
+<main class="container" style="padding-top:24px;padding-bottom:64px;max-width:820px;">
+
+  <div style="margin-bottom:24px;">
+    <h1 style="font-size:1.35rem;font-weight:700;color:var(--text);margin:0 0 4px;">Görüşmeler</h1>
+    <p style="font-size:0.85rem;color:var(--text-3);margin:0;">Planlanan görüşmelerini buradan takip et.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="iv-stats" id="ivStats"></div>
+
+  <!-- Search + Filter -->
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+    <input type="search" id="ivSearch" class="form-input" placeholder="İlan veya kişi ara…" style="max-width:260px;padding:7px 12px;font-size:0.83rem;">
+  </div>
+  <div class="iv-filter-bar" id="ivFilterBar">
+    <button class="iv-filter-pill is-active" data-filter="hepsi">Hepsi</button>
+    <button class="iv-filter-pill" data-filter="bekliyor">Bekliyor</button>
+    <button class="iv-filter-pill" data-filter="onaylandi">Onaylandı</button>
+    <button class="iv-filter-pill" data-filter="yeniden_planlandi">Yeniden Planlandı</button>
+    <button class="iv-filter-pill" data-filter="tamamlandi">Tamamlandı</button>
+    <button class="iv-filter-pill" data-filter="iptal">İptal</button>
+  </div>
+
+  <!-- List -->
+  <div class="iv-list" id="ivList">
+    <p style="color:var(--text-3);font-size:0.85rem;padding:24px 0;text-align:center;">Yükleniyor…</p>
+  </div>
+
+</main>
+</div>
+
+<!-- Reschedule modal overlay -->
+<div id="ivRescheduleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:min(480px,94vw);max-height:90vh;overflow-y:auto;">
+    <h2 style="font-size:1rem;font-weight:700;margin:0 0 16px;">Yeniden Planlama Talebi</h2>
+    <input type="hidden" id="rsIvId">
+    <div class="iv-reschedule-form__row" style="margin-bottom:10px;">
+      <div>
+        <label class="form-label">Yeni Tarih</label>
+        <input type="date" id="rsDate" class="form-input">
+      </div>
+      <div>
+        <label class="form-label">Yeni Saat</label>
+        <input type="time" id="rsTime" class="form-input">
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label class="form-label">Görüşme Türü</label>
+      <select id="rsType" class="form-input">
+        <option value="yüz yüze">Yüz Yüze</option>
+        <option value="online">Online</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label class="form-label">Konum / Link</label>
+      <input type="text" id="rsLocation" class="form-input" placeholder="Adres veya meeting linki">
+    </div>
+    <div style="margin-bottom:16px;">
+      <label class="form-label">Neden değiştiriyorsunuz?</label>
+      <textarea id="rsReason" class="form-input" rows="2" placeholder="Kısa açıklama (isteğe bağlı)"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn--ghost" id="rsCancel">İptal</button>
+      <button class="btn btn--primary" id="rsSubmit">Talep Gönder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post-note modal -->
+<div id="ivNoteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:min(440px,94vw);">
+    <h2 style="font-size:1rem;font-weight:700;margin:0 0 14px;">Görüşme Notu Ekle</h2>
+    <input type="hidden" id="noteIvId">
+    <textarea id="noteText" class="form-input" rows="4" placeholder="Görüşmeyle ilgili notlarınızı ekleyin…"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn--ghost" id="noteCancel">İptal</button>
+      <button class="btn btn--primary" id="noteSubmit">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script src="assets/js/interview.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+<script>
+(function () {
+  var UID = null;
+  var ROLE = 'kurye';
+  var filterStatus = 'hepsi';
+  var searchQ = '';
+
+  function getUid() {
+    if (UID) return UID;
+    try {
+      var s = JSON.parse(localStorage.getItem('kb_session') || 'null');
+      if (s && s.user && s.user.id) return (UID = s.user.id);
+    } catch (e) {}
+    return (UID = localStorage.getItem('kb_demo_uid') || 'demo_user');
+  }
+
+  function getRole() {
+    return localStorage.getItem('kb_rol') || 'kurye';
+  }
+
+  function isBiz() { return ROLE === 'isletme' || ROLE === 'firma'; }
+
+  function filteredList() {
+    var all = KBInterview.getAll(getUid());
+    if (filterStatus !== 'hepsi') all = all.filter(function (iv) { return iv.status === filterStatus; });
+    if (searchQ) {
+      var q = searchQ.toLowerCase();
+      all = all.filter(function (iv) {
+        return (iv.jobTitle || '').toLowerCase().indexOf(q) >= 0
+          || (iv.kurye && iv.kurye.ad || '').toLowerCase().indexOf(q) >= 0
+          || (iv.isletme && iv.isletme.ad || '').toLowerCase().indexOf(q) >= 0;
+      });
+    }
+    all.sort(function (a, b) { return (b.date + b.time).localeCompare(a.date + a.time); });
+    return all;
+  }
+
+  function renderStats() {
+    var s = KBInterview.getStats(getUid());
+    document.getElementById('ivStats').innerHTML =
+      '<div class="iv-stat"><div class="iv-stat__num">' + s.toplam + '</div><div class="iv-stat__lbl">Toplam</div></div>'
+      + '<div class="iv-stat"><div class="iv-stat__num">' + s.bekliyor + '</div><div class="iv-stat__lbl">Bekliyor</div></div>'
+      + '<div class="iv-stat"><div class="iv-stat__num">' + s.onaylandi + '</div><div class="iv-stat__lbl">Onaylandı</div></div>'
+      + '<div class="iv-stat"><div class="iv-stat__num">' + s.tamamlandi + '</div><div class="iv-stat__lbl">Tamamlandı</div></div>';
+  }
+
+  function renderList() {
+    var list = filteredList();
+    var el = document.getElementById('ivList');
+    if (!list.length) {
+      el.innerHTML = '<p style="color:var(--text-3);font-size:0.85rem;padding:32px 0;text-align:center;">Görüşme bulunamadı.</p>';
+      return;
+    }
+    el.innerHTML = list.map(function (iv) { return KBInterview.renderCard(iv, ROLE); }).join('');
+  }
+
+  function renderAll() { renderStats(); renderList(); }
+
+  // Actions
+  function doAction(action, ivId) {
+    var uid = getUid();
+    if (action === 'onayla') {
+      KBInterview.respond(uid, ivId, 'onayla');
+      if (window.KBMotion) KBMotion.showSuccess('Onaylandı!', 'Görüşmeyi onayladınız.');
+      renderAll();
+    } else if (action === 'reddet') {
+      KBInterview.respond(uid, ivId, 'reddet');
+      if (window.KBMotion) KBMotion.showSuccess('Reddedildi', 'Görüşme daveti reddedildi.');
+      renderAll();
+    } else if (action === 'reschedule') {
+      document.getElementById('rsIvId').value = ivId;
+      document.getElementById('ivRescheduleModal').style.display = 'flex';
+    } else if (action === 'accept-reschedule') {
+      KBInterview.acceptReschedule(uid, ivId);
+      if (window.KBMotion) KBMotion.showSuccess('Kabul Edildi', 'Yeni tarih planlamaya alındı.');
+      renderAll();
+    } else if (action === 'complete') {
+      KBInterview.complete(uid, ivId);
+      if (window.KBMotion) KBMotion.showSuccess('Tamamlandı', 'Görüşme tamamlandı olarak işaretlendi.');
+      renderAll();
+    } else if (action === 'cancel') {
+      if (!confirm('Görüşmeyi iptal etmek istediğinize emin misiniz?')) return;
+      KBInterview.cancelInterview(uid, ivId);
+      renderAll();
+    } else if (action === 'add-note') {
+      document.getElementById('noteIvId').value = ivId;
+      var iv = KBInterview.getOne(uid, ivId);
+      document.getElementById('noteText').value = iv ? (iv.postNote || '') : '';
+      document.getElementById('ivNoteModal').style.display = 'flex';
+    } else if (action === 'decide-kabul') {
+      KBInterview.makeDecision(uid, ivId, 'kabul');
+      if (window.KBMotion) KBMotion.showSuccess('Kabul!', 'Aday kabul edildi.');
+      renderAll();
+    } else if (action === 'decide-red') {
+      KBInterview.makeDecision(uid, ivId, 'red');
+      renderAll();
+    } else if (action === 'decide-sonraki') {
+      KBInterview.makeDecision(uid, ivId, 'sonraki_asama');
+      if (window.KBMotion) KBMotion.showSuccess('Sonraki Aşama', 'Aday sonraki aşamaya taşındı.');
+      renderAll();
+    }
+  }
+
+  function wire() {
+    // Filter pills
+    document.getElementById('ivFilterBar').addEventListener('click', function (e) {
+      var pill = e.target.closest('[data-filter]');
+      if (!pill) return;
+      filterStatus = pill.dataset.filter;
+      document.querySelectorAll('.iv-filter-pill').forEach(function (p) { p.classList.remove('is-active'); });
+      pill.classList.add('is-active');
+      renderList();
+    });
+
+    // Search
+    document.getElementById('ivSearch').addEventListener('input', function (e) {
+      searchQ = e.target.value.trim();
+      renderList();
+    });
+
+    // Card actions (delegation)
+    document.getElementById('ivList').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-iv-action]');
+      if (!btn) return;
+      doAction(btn.dataset.ivAction, btn.dataset.ivId);
+    });
+
+    // Mini card click → detail
+    document.getElementById('ivList').addEventListener('click', function (e) {
+      var card = e.target.closest('.iv-mini-card');
+      if (card && !e.target.closest('[data-iv-action]')) {
+        var id = card.dataset.ivId;
+        var iv = KBInterview.getOne(getUid(), id);
+        if (iv && iv.threadId) window.location.href = 'mesaj-detay.html?tid=' + encodeURIComponent(iv.threadId);
+      }
+    });
+
+    // Reschedule modal
+    document.getElementById('rsCancel').addEventListener('click', function () {
+      document.getElementById('ivRescheduleModal').style.display = 'none';
+    });
+    document.getElementById('rsSubmit').addEventListener('click', function () {
+      var ivId = document.getElementById('rsIvId').value;
+      var date = document.getElementById('rsDate').value;
+      var time = document.getElementById('rsTime').value;
+      if (!date || !time) {
+        if (window.KBMotion) KBMotion.showErrorToast('Lütfen tarih ve saat seçin.');
+        return;
+      }
+      KBInterview.requestReschedule(getUid(), ivId, {
+        date: date, time: time,
+        type: document.getElementById('rsType').value,
+        location: document.getElementById('rsLocation').value,
+        reason: document.getElementById('rsReason').value
+      });
+      document.getElementById('ivRescheduleModal').style.display = 'none';
+      if (window.KBMotion) KBMotion.showSuccess('Talep Gönderildi', 'Yeniden planlama talebiniz iletildi.');
+      renderAll();
+    });
+
+    // Note modal
+    document.getElementById('noteCancel').addEventListener('click', function () {
+      document.getElementById('ivNoteModal').style.display = 'none';
+    });
+    document.getElementById('noteSubmit').addEventListener('click', function () {
+      var ivId = document.getElementById('noteIvId').value;
+      var note = document.getElementById('noteText').value.trim();
+      KBInterview.addPostNote(getUid(), ivId, note);
+      document.getElementById('ivNoteModal').style.display = 'none';
+      if (window.KBMotion) KBMotion.showSuccess('Not Kaydedildi');
+      renderAll();
+    });
+
+    // Close modals on backdrop click
+    ['ivRescheduleModal', 'ivNoteModal'].forEach(function (id) {
+      document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target === this) this.style.display = 'none';
+      });
+    });
+  }
+
+  function boot() {
+    ROLE = getRole();
+    var uid = getUid();
+    KBInterview.seedDemoData(uid);
+    KBInterview.checkReminders(uid);
+    renderAll();
+    wire();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+
+</body>
+</html>

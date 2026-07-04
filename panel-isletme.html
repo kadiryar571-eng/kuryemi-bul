@@ -99,8 +99,21 @@
         <div class="panel-box__body" style="display:flex;flex-wrap:wrap;gap:10px">
           <a href="kuryeler.html" class="btn btn--primary">Kurye Bul</a>
           <a href="ilanlar.html" class="btn btn--secondary">İlanlar</a>
-          <a href="mesajlar.html" class="btn btn--ghost">Mesajlar</a>
+          <a href="basvurular.html" class="btn btn--ghost">Başvurular <span id="panelHiringBadge" style="display:none;background:var(--primary);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
+          <a href="mesajlar.html" class="btn btn--ghost">Mesajlar <span id="panelMsgBadge" style="display:none;background:var(--error);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
+          <a href="geri-bildirim.html" class="btn btn--ghost">Geri Bildirim <span id="panelFbBadge" style="display:none;background:var(--warning);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
           <a href="profil-duzenle.html" class="btn btn--ghost">Profili Düzenle</a>
+        </div>
+      </div>
+      <div class="panel-box" style="margin-top:16px">
+        <div class="iv-upcoming__header" style="padding:14px 16px 6px;">
+          <span class="iv-upcoming__title">📅 Yaklaşan Görüşmeler</span>
+          <a href="gorusmeler.html" class="iv-upcoming__link">Tümü →</a>
+        </div>
+        <div class="panel-box__body">
+          <div class="iv-upcoming" id="panelIvUpcoming">
+            <p style="color:var(--text-3);font-size:0.82rem;">Yükleniyor…</p>
+          </div>
         </div>
       </div>
     </div>
@@ -116,7 +129,6 @@
           <div id="isletmeIlan">
             <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:70%"></span></span></div></div>
           </div>
-          <!-- localStorage jobs (offline / local mode) -->
           <div id="isletmeIlanLocal" style="margin-top:16px"></div>
         </div>
       </div>
@@ -143,6 +155,13 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/ilan-status.js"></script>
+  <script src="assets/js/ilan-quality.js"></script>
+  <script src="assets/js/chat.js"></script>
+  <script src="assets/js/interview.js"></script>
+  <script src="assets/js/hiring.js"></script>
+  <script src="assets/js/comm-status.js"></script>
+  <script src="assets/js/feedback.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
@@ -211,6 +230,75 @@
     document.addEventListener('DOMContentLoaded', async function () {
       if (window.KBApp && KBApp.initPanel) KBApp.initPanel('isletme');
 
+      /* Auto-status check */
+      if (window.IlanStatus) {
+        try {
+          var chkUid = 'demo';
+          try { var chkS = window.KB && KB.session && KB.session(); if (chkS && chkS.user && chkS.user.id) chkUid = chkS.user.id; } catch(e) {}
+          IlanStatus.autoCheck(chkUid);
+        } catch(e) {}
+      }
+
+      /* Unread messages badge */
+      if (window.KBChat) {
+        try {
+          var msgUid = 'demo';
+          try { var ms = window.KB && KB.session && KB.session(); if (ms && ms.user && ms.user.id) msgUid = ms.user.id; } catch(e) {}
+          var unreadCount = KBChat.getUnreadCount(msgUid, 'isletme');
+          var badge = document.getElementById('panelMsgBadge');
+          if (badge && unreadCount > 0) { badge.textContent = unreadCount; badge.style.display = 'inline'; }
+        } catch(e) {}
+      }
+
+      /* Comm status sync */
+      if (window.KBCommStatus && window.KBChat) {
+        try {
+          var csUid = 'demo';
+          try { var csS = window.KB && KB.session && KB.session(); if (csS && csS.user && csS.user.id) csUid = csS.user.id; } catch(e) {}
+          KBCommStatus.observe(csUid);
+        } catch(e) {}
+      }
+
+      /* Pending hiring decisions badge */
+      if (window.KBHiring) {
+        try {
+          var hdUid = 'demo';
+          try { var hdS = window.KB && KB.session && KB.session(); if (hdS && hdS.user && hdS.user.id) hdUid = hdS.user.id; } catch(e) {}
+          KBHiring.seedDemoData(hdUid);
+          var pending = KBHiring.getPendingDecisions(hdUid).length;
+          var hdBadge = document.getElementById('panelHiringBadge');
+          if (hdBadge && pending > 0) { hdBadge.textContent = pending; hdBadge.style.display = 'inline'; }
+        } catch(e) {}
+      }
+
+      /* Pending feedback badge */
+      if (window.KBFeedback) {
+        try {
+          var fbUid = 'demo';
+          try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
+          KBFeedback.seedDemoData();
+          var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'isletme').length;
+          var fbBadge = document.getElementById('panelFbBadge');
+          if (fbBadge && pendingFb > 0) { fbBadge.textContent = pendingFb; fbBadge.style.display = 'inline'; }
+        } catch(e) {}
+      }
+
+      /* Upcoming interviews widget */
+      if (window.KBInterview) {
+        try {
+          var ivUid = 'demo';
+          try { var ivS = window.KB && KB.session && KB.session(); if (ivS && ivS.user && ivS.user.id) ivUid = ivS.user.id; } catch(e) {}
+          KBInterview.seedDemoData(ivUid);
+          KBInterview.checkReminders(ivUid);
+          var ivEl = document.getElementById('panelIvUpcoming');
+          if (ivEl) ivEl.innerHTML = KBInterview.renderUpcomingWidget(ivUid, 'isletme', 3);
+          ivEl && ivEl.addEventListener('click', function(e) {
+            var card = e.target.closest('.iv-mini-card');
+            if (card) window.location.href = 'gorusmeler.html';
+          });
+        } catch(e) {}
+      }
+
       /* Welcome block */
       try {
         await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
@@ -236,18 +324,15 @@
           if (pct < 100) { progLink.style.display = ''; }
 
           renderProfEngine(profile, 'isletme');
-
           sub.textContent = 'İlanlarını yönet ve uygun kuryeleri keşfet.';
 
           if (profile.avatar_url) {
             var img = document.createElement('img');
-            img.src = profile.avatar_url;
-            img.alt = ad;
-            avatar.innerHTML = '';
-            avatar.appendChild(img);
+            img.src = profile.avatar_url; img.alt = ad;
+            avatar.innerHTML = ''; avatar.appendChild(img);
           } else {
-            var initials = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
-            avatar.textContent = initials || ad[0].toUpperCase();
+            var inits = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+            avatar.textContent = inits || ad[0].toUpperCase();
           }
         } else {
           greeting.textContent = 'Merhaba!';
@@ -262,18 +347,23 @@
         var teklifEl = document.getElementById('statTeklif');
         var kuryeEl = document.getElementById('statKurye');
         var ilanSub = document.getElementById('statIlanSub');
-
-        var ilanSayisi = 0;
-        var teklifSayisi = 0;
-        var kuryeSayisi = 0;
+        var ilanSayisi = 0, teklifSayisi = 0, kuryeSayisi = 0;
         try {
           var myOff = window.SB && SB.isOn() ? await SB.myOffers() : null;
           if (myOff) {
-            ilanSayisi = myOff.filter(function(o){ return o.sender_id === (profile && profile.id); }).length;
+            ilanSayisi   = myOff.filter(function(o){ return o.sender_id   === (profile && profile.id); }).length;
             teklifSayisi = myOff.filter(function(o){ return o.receiver_id === (profile && profile.id); }).length;
           }
           var pool = window.SB && SB.isOn() ? await SB.pool('kurye') : null;
           kuryeSayisi = pool ? pool.length : 0;
+        } catch(e) {}
+
+        try {
+          var lsUid0 = 'demo';
+          try { var lsS0 = window.KB && KB.session && KB.session(); if (lsS0 && lsS0.user && lsS0.user.id) lsUid0 = lsS0.user.id; } catch(e) {}
+          var lsJobsCount = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + lsUid0)) || [];
+          var lsActive = lsJobsCount.filter(function(j) { return j.durum === 'yayinda'; }).length;
+          if (lsActive > ilanSayisi) ilanSayisi = lsActive;
         } catch(e) {}
 
         animateCount(ilanEl, ilanSayisi);
@@ -286,7 +376,7 @@
         console.warn('Welcome block error:', err);
       }
 
-      /* ── LocalStorage ilan listesi ── */
+      /* LocalStorage ilan listesi */
       try {
         var lsUid = 'demo';
         try {
@@ -299,24 +389,26 @@
 
         var lsHost = document.getElementById('isletmeIlanLocal');
         if (lsHost && lsJobs.length) {
-          function lsStatusBadge(s) {
-            var cls = s === 'yayinda' ? 'jc-job-status--yayinda' : s === 'kapali' ? 'jc-job-status--kapali' : 'jc-job-status--taslak';
-            var lbl = { yayinda: 'Yayında', taslak: 'Taslak', kapali: 'Kapalı' }[s] || s;
-            return '<span class="jc-job-status ' + cls + '">' + lbl + '</span>';
-          }
           lsHost.innerHTML =
             '<div style="font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:10px">📋 Oluşturduğunuz İlanlar (' + lsJobs.length + ')</div>' +
             lsJobs.map(function(j) {
               var loc = [j.sehir, j.bolge].filter(Boolean).join(' · ');
+              var badge = window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'taslak') : ('<span class="chip">' + (j.durum||'taslak') + '</span>');
+              var qScore = window.IlanQuality ? IlanQuality.calcScore(j) : null;
+              var qColor = qScore !== null ? IlanQuality.scoreColor(qScore) : 'var(--text-3)';
+              var qBadge = qScore !== null ? '<span style="font-size:0.7rem;font-weight:700;color:' + qColor + ';background:var(--surface-2);border-radius:99px;padding:2px 8px;border:1px solid var(--border)" title="İlan kalitesi">%' + qScore + ' Kalite</span>' : '';
               return '<div class="jc-ls-item">' +
                 '<div class="jc-ls-main">' +
                   '<div class="jc-ls-title">' + (j.baslik || 'Başlıksız') + '</div>' +
-                  '<div class="jc-ls-meta">' + (loc || '') + (j.tarih ? ' · ' + j.tarih : '') + '</div>' +
+                  '<div class="jc-ls-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + (loc || '') + (j.tarih ? ' · ' + j.tarih : '') + ' ' + qBadge + '</div>' +
                 '</div>' +
                 '<div class="jc-ls-right">' +
-                  lsStatusBadge(j.durum) +
+                  badge +
                   '<div class="jc-ls-acts">' +
+                    '<a href="ilan-kalite.html?job=' + j.id + '" class="btn btn--ghost btn--sm" title="Kalite Analizi">✨ Kalite</a>' +
+                    '<a href="ilan-durum.html?job=' + j.id + '" class="btn btn--ghost btn--sm">📊 Durum</a>' +
                     '<a href="ilan-olustur.html?edit=' + j.id + '" class="btn btn--ghost btn--sm">Düzenle</a>' +
+                    '<a href="basvurular.html?job=' + j.id + '" class="btn btn--light btn--sm">📋 Başvurular</a>' +
                   '</div>' +
                 '</div>' +
               '</div>';
