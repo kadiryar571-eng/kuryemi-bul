@@ -954,14 +954,12 @@
           } catch (e) {}
         }
 
-        /* Role guard: only isletme or firma can access this page */
+        /* Role guard: giriş yapmış herkes erişebilir */
         try {
           var role = KB.getRole && KB.getRole();
-          if (role && role !== 'isletme' && role !== 'firma' && role !== 'guest') {
-            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-              document.querySelector('.app-content').innerHTML = '<div class="card" style="padding:40px;text-align:center"><div style="font-size:2rem;margin-bottom:12px">🚫</div><h2>Erişim Kısıtlı</h2><p style="color:var(--text-2);margin:12px 0">Bu sayfa yalnızca işletme ve firma hesapları içindir.</p><a href="panel-kurye.html" class="btn btn--primary">Panele Dön</a></div>';
-              return;
-            }
+          if (!role || role === 'guest') {
+            location.href = 'giris.html';
+            return;
           }
         } catch(e) {}
 

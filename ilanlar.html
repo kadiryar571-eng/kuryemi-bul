@@ -69,12 +69,12 @@
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderListings) KBApp.renderListings();
 
-      /* İlan Oluştur butonu — sadece isletme/firma rolü için göster */
+      /* İlan Oluştur butonu — giriş yapmış herkese göster */
       var createBtn = document.getElementById('btnCreateListing');
       if (createBtn && window.KB) {
         KB.ready().then(function () {
           var role = KB.getRole ? KB.getRole() : '';
-          if (role === 'isletme' || role === 'firma') createBtn.style.display = 'inline-flex';
+          if (role && role !== 'guest') createBtn.style.display = 'inline-flex';
         });
       }
 
