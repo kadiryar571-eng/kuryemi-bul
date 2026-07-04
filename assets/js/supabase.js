@@ -424,17 +424,48 @@
   /* ---------- İLAN & BAŞVURU ---------- */
   function listingFromDb(l) {
     return {
-      id: l.id, owner_id: l.owner_id, role: l.role, baslik: l.baslik, aciklama: l.aciklama,
-      sehir: l.sehir, bolge: l.bolge, arac: l.arac, durum: l.durum,
+      id: l.id, owner_id: l.owner_id, role: l.role, durum: l.durum,
       tarih: (l.created_at || "").slice(0, 10),
-      sahip: (l.owner && l.owner.ad) || "",
-      // Harita için: ilanın konumu = sahibi olan işletmenin koordinatı
-      lat: (l.owner && l.owner.lat != null) ? l.owner.lat : null,
-      lng: (l.owner && l.owner.lng != null) ? l.owner.lng : null,
-      // İlan detayı / firma bölümü için (yalnız listingById join'inde dolu)
-      sahipAvatar: (l.owner && l.owner.avatar_url) || "",
-      sahipDogrulama: (l.owner && l.owner.dogrulama) || "none",
-      sahipRol: (l.owner && l.owner.role) || "isletme"
+      /* Temel */
+      baslik:           l.baslik           || "",
+      aciklama:         l.aciklama         || "",
+      sehir:            l.sehir            || "",
+      bolge:            l.bolge            || "",
+      mahalle:          l.mahalle          || "",
+      teslimat_bolge:   l.teslimat_bolge   || "",
+      arac:             l.arac             || "",
+      kategori:         l.kategori         || "",
+      /* Maaş */
+      maas_min:         l.maas_min         || null,
+      maas_max:         l.maas_max         || null,
+      maas_aralik:      l.maas_aralik      || "",
+      maas_modeli:      l.maas_modeli      || "",
+      /* Çalışma koşulları */
+      calisma_sekli:    l.calisma_sekli    || "",
+      vardiya_tipi:     l.vardiya_tipi     || "",
+      calisma_saatleri: l.calisma_saatleri || "",
+      deneyim:          l.deneyim          || "",
+      sigorta:          l.sigorta          || "",
+      bonus:            l.bonus            || "",
+      /* Listeler */
+      faydalar:         Array.isArray(l.faydalar)      ? l.faydalar      : [],
+      gereksinimler:    Array.isArray(l.gereksinimler) ? l.gereksinimler : [],
+      /* Detay metinler */
+      gorev_tanimi:     l.gorev_tanimi     || "",
+      gunluk_akis:      l.gunluk_akis      || "",
+      beklentiler:      l.beklentiler      || "",
+      /* Meta */
+      oncelik:          l.oncelik          || "normal",
+      kontenjan:        l.kontenjan        || 1,
+      son_basvuru:      l.son_basvuru      || null,
+      tip:              l.tip              || "kurye-ilani",
+      /* Sahip bilgisi */
+      sahip:            (l.owner && l.owner.ad) || "",
+      sahipRol:         l.sahip_rol || (l.owner && l.owner.role) || "isletme",
+      lat:              (l.owner && l.owner.lat != null) ? l.owner.lat : null,
+      lng:              (l.owner && l.owner.lng != null) ? l.owner.lng : null,
+      sahipAvatar:      (l.owner && l.owner.avatar_url) || "",
+      sahipDogrulama:   (l.owner && l.owner.dogrulama)  || "none",
     };
   }
   async function listingById(id) {
@@ -445,19 +476,70 @@
     if (r.error) { console.warn("listingById:", r.error); return null; }
     return r.data ? listingFromDb(r.data) : null;
   }
+  function _listingRow(fields, ownerMeta) {
+    return {
+      owner_id:         ownerMeta.id,
+      owner_user:       ownerMeta.userId,
+      role:             ownerMeta.role,
+      sahip_rol:        ownerMeta.role,
+      /* Temel */
+      baslik:           fields.baslik           || "",
+      aciklama:         fields.aciklama          || "",
+      sehir:            fields.sehir             || "",
+      bolge:            fields.bolge             || "",
+      mahalle:          fields.mahalle           || "",
+      teslimat_bolge:   fields.teslimat_bolge    || "",
+      arac:             fields.arac              || "",
+      kategori:         fields.kategori          || "",
+      /* Maaş */
+      maas_min:         fields.maas_min          || null,
+      maas_max:         fields.maas_max          || null,
+      maas_aralik:      fields.maas_aralik       || "",
+      maas_modeli:      fields.maas_modeli       || "",
+      /* Çalışma */
+      calisma_sekli:    fields.calisma_sekli     || "",
+      vardiya_tipi:     fields.vardiya_tipi      || "",
+      calisma_saatleri: fields.calisma_saatleri  || "",
+      deneyim:          fields.deneyim           || "",
+      sigorta:          fields.sigorta           || "",
+      bonus:            fields.bonus             || "",
+      /* Listeler */
+      faydalar:         Array.isArray(fields.faydalar)      ? fields.faydalar      : [],
+      gereksinimler:    Array.isArray(fields.gereksinimler) ? fields.gereksinimler : [],
+      /* Detay */
+      gorev_tanimi:     fields.gorev_tanimi      || "",
+      gunluk_akis:      fields.gunluk_akis       || "",
+      beklentiler:      fields.beklentiler       || "",
+      /* Meta */
+      oncelik:          fields.oncelik           || "normal",
+      kontenjan:        fields.kontenjan          || 1,
+      son_basvuru:      fields.son_basvuru        || null,
+      tip:              fields.tip               || "kurye-ilani",
+      durum:            fields.durum             || "acik",
+    };
+  }
+
   async function createListing(fields) {
     var u = await getUser();
     if (!u) throw new Error("oturum yok");
     var me = await myProfile();
     if (!me || !me.id) throw new Error("Önce profilini oluştur.");
-    var row = {
-      owner_id: me.id, owner_user: u.id, role: me.role,
-      baslik: fields.baslik, aciklama: fields.aciklama || "", sehir: fields.sehir || "",
-      bolge: fields.bolge || "", arac: fields.arac || ""
-    };
+    var row = _listingRow(fields, { id: me.id, userId: u.id, role: me.role });
     var r = await client.from("listings").insert(row).select().maybeSingle();
     if (r.error) throw r.error;
     return listingFromDb(r.data);
+  }
+
+  async function updateListing(id, fields) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var me = await myProfile();
+    if (!me || !me.id) throw new Error("oturum yok");
+    var row = _listingRow(fields, { id: me.id, userId: u.id, role: me.role });
+    delete row.owner_id; delete row.owner_user; delete row.role;
+    var r = await client.from("listings").update(row).eq("id", id).eq("owner_user", u.id).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ? listingFromDb(r.data) : null;
   }
   async function myListings() {
     var u = await getUser();
@@ -746,7 +828,7 @@
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
-    createListing: createListing, myListings: myListings, openListings: openListings, listingById: listingById,
+    createListing: createListing, updateListing: updateListing, myListings: myListings, openListings: openListings, listingById: listingById,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
     listingApplications: listingApplications, updateApplication: updateApplication,

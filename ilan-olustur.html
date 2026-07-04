@@ -699,7 +699,7 @@
             break;
           }
         }
-        if (idx !== -1) { job.id = editingId; jobs[idx] = job; }
+        if (idx !== -1) { job.id = editingId; job.sbId = jobs[idx].sbId || null; jobs[idx] = job; }
         else { job.id = editingId; jobs.unshift(job); }
       } else {
         job.id    = 'ilan_' + Date.now();
@@ -765,8 +765,31 @@
       doPublish();
     }
 
-    function doPublish() {
-      var job = upsertJob(readForm(), 'yayinda');
+    async function _syncToSb(job, form, sbDurum) {
+      if (!window.SB || !SB.isOn || !SB.isOn()) return;
+      try {
+        form.durum = sbDurum;
+        var result = job.sbId
+          ? await SB.updateListing(job.sbId, form)
+          : await SB.createListing(form);
+        if (result && result.id && !job.sbId) {
+          var stored = loadMyJobs();
+          for (var i = 0; i < stored.length; i++) {
+            if (stored[i].id === job.id) { stored[i].sbId = result.id; break; }
+          }
+          saveMyJobs(stored);
+          job.sbId = result.id;
+        }
+      } catch (e) {
+        console.warn('SB sync failed:', e);
+        if (sbDurum === 'acik' && window.KBMotion) KBMotion.showErrorToast('Supabase kayıt başarısız. İlan yerel olarak kaydedildi.');
+      }
+    }
+
+    async function doPublish() {
+      var form = readForm();
+      var job  = upsertJob(form, 'yayinda');
+      await _syncToSb(job, form, 'acik');
       renderMyJobs();
       updateStatus('yayinda');
       updateEditBadge(job);
@@ -774,8 +797,10 @@
       if (window.KBMotion) KBMotion.showSuccess('İlan yayınlandı!', 'Kurye havuzunda görünmeye başladı.', 2600);
     }
 
-    function saveDraftJob() {
-      var job = upsertJob(readForm(), 'taslak');
+    async function saveDraftJob() {
+      var form = readForm();
+      var job  = upsertJob(form, 'taslak');
+      await _syncToSb(job, form, 'taslak');
       renderMyJobs();
       updateStatus('taslak');
       updateEditBadge(job);
