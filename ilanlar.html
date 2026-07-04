@@ -20,7 +20,10 @@
         <h1>İş İlanları</h1>
         <p class="page-sub">Açık kurye ilanlarını incele ve başvur.</p>
       </div>
-      <span class="text-sm text-muted" id="listingsCount"></span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="text-sm text-muted" id="listingsCount"></span>
+        <a href="ilan-olustur.html" class="btn btn--primary btn--sm" id="btnCreateListing" style="display:none">+ İlan Oluştur</a>
+      </div>
     </div>
 
     <!-- Filtre çubuğu -->
@@ -65,6 +68,15 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderListings) KBApp.renderListings();
+
+      /* İlan Oluştur butonu — sadece isletme/firma rolü için göster */
+      var createBtn = document.getElementById('btnCreateListing');
+      if (createBtn && window.KB) {
+        KB.ready().then(function () {
+          var role = KB.getRole ? KB.getRole() : '';
+          if (role === 'isletme' || role === 'firma') createBtn.style.display = 'inline-flex';
+        });
+      }
 
       /* Tercih banner — kullanıcının tercihleri varsa filtre çubuğu üstünde göster */
       if (window.KBPrefs && KBPrefs.hasPrefs()) {
