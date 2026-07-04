@@ -43,13 +43,10 @@
   /* ---------- AUTH ---------- */
   // Rol artık kayıtta seçilmez; handle_new_user trigger'ı varsayılan 'kurye' atar,
   // kullanıcı profil-duzenle.html'de rolünü seçer.
-  async function signUp(email, password, ad, role) {
-    var redirectBase = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
-      ? 'https://kuryemibul.com'
-      : location.origin;
+  async function signUp(email, password, ad, telefon) {
     return client.auth.signUp({
       email: email, password: password,
-      options: { data: { ad: ad || "", role: role || "kurye" }, emailRedirectTo: redirectBase + '/verify-email.html' }
+      options: { data: { ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
     });
   }
   // Capacitor native ortam mı?
@@ -133,7 +130,7 @@
   async function resendVerification(email) {
     return client.auth.resend({
       type: "signup", email: email,
-      options: { emailRedirectTo: "https://kuryemibul.com/verify-email.html" }
+      options: { emailRedirectTo: location.origin + "/verify-email.html" }
     });
   }
   async function signIn(email, password) {
@@ -142,7 +139,7 @@
   async function signOut() { return client.auth.signOut(); }
   // Şifre sıfırlama: e-postaya bağlantı gönderir (kullanıcı sifre-sifirla.html'e döner)
   async function resetPassword(email) {
-    return client.auth.resetPasswordForEmail(email, { redirectTo: "https://kuryemibul.com/sifre-sifirla.html" });
+    return client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + "/sifre-sifirla.html" });
   }
   // Sıfırlama oturumundayken (veya girişliyken) yeni şifre belirle
   async function updatePassword(newPass) {
@@ -480,48 +477,6 @@
   async function deleteListing(id) {
     return client.from("listings").delete().eq("id", id);
   }
-  async function updateListing(id, fields) {
-    var u = await getUser();
-    if (!u) throw new Error("oturum yok");
-    var allowed = ['baslik', 'aciklama', 'sehir', 'bolge', 'arac'];
-    var updates = {};
-    allowed.forEach(function(k) { if (fields[k] !== undefined) updates[k] = fields[k]; });
-    var r = await client.from('listings').update(updates).eq('id', id).eq('owner_user', u.id).select().maybeSingle();
-    if (r.error) throw r.error;
-    return r.data ? listingFromDb(r.data) : null;
-  }
-  async function myListingsApplications() {
-    var u = await getUser();
-    if (!u) return [];
-    var listRes = await client.from('listings').select('id,baslik').eq('owner_user', u.id);
-    var listings = (listRes.data || []);
-    if (!listings.length) return [];
-    var ids = listings.map(function(l) { return l.id; });
-    var lblMap = {};
-    listings.forEach(function(l) { lblMap[l.id] = l.baslik; });
-    var r = await client.from('applications')
-      .select('*, applicant:applicant_id(id,ad,role,puan,sehir,avatar_url)')
-      .in('listing_id', ids).order('created_at', { ascending: false });
-    if (r.error) { console.warn('myListingsApplications:', r.error); return []; }
-    return (r.data || []).map(function(a) {
-      return { id: a.id, durum: a.durum, mesaj: a.mesaj,
-        tarih: (a.created_at || '').slice(0, 10),
-        listingId: a.listing_id, ilanBaslik: lblMap[a.listing_id] || '',
-        applicantId: a.applicant ? a.applicant.id : '',
-        ad: (a.applicant && a.applicant.ad) || 'Kullanıcı',
-        rol: (a.applicant && a.applicant.role) || '',
-        puan: (a.applicant && Number(a.applicant.puan)) || 0,
-        sehir: (a.applicant && a.applicant.sehir) || '',
-        avatar: (a.applicant && a.applicant.avatar_url) || '' };
-    });
-  }
-  async function setYayinda(val) {
-    var u = await getUser();
-    if (!u) throw new Error('oturum yok');
-    var r = await client.from('profiles').update({ yayinda: !!val }).eq('user_id', u.id);
-    if (r.error) throw r.error;
-    return true;
-  }
   async function applyToListing(listingId, mesaj) {
     var u = await getUser();
     if (!u) throw new Error("oturum yok");
@@ -602,30 +557,6 @@
     var r = await client.rpc("review_kyc", { p_profile_id: profileId, p_decision: decision });
     if (r.error) throw r.error;
     return true;
-  }
-  async function listKycHistory() {
-    var r = await client.rpc("list_kyc_history");
-    if (r.error) throw r.error;
-    return r.data || [];
-  }
-  async function adminStats() {
-    var [pR, kR] = await Promise.allSettled([
-      client.from('profiles').select('id', { count: 'exact', head: true }),
-      listPendingKyc()
-    ]);
-    return {
-      totalUsers : (pR.status === 'fulfilled' ? pR.value.count : 0) || 0,
-      pendingKyc : (kR.status === 'fulfilled' ? kR.value.length : 0) || 0
-    };
-  }
-  async function adminListUsers(role) {
-    var q = client.from('profiles')
-      .select('id,ad,role,dogrulama,yayinda,created_at')
-      .order('created_at', { ascending: false })
-      .limit(100);
-    if (role && role !== 'tumu') q = q.eq('role', role);
-    var r = await q;
-    return r.data || [];
   }
 
   /* ---------- BAŞVURU + KONUŞMA PIPELINE ---------- */
@@ -855,16 +786,13 @@
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
     createListing: createListing, myListings: myListings, openListings: openListings, listingById: listingById,
-    updateListingStatus: updateListingStatus, deleteListing: deleteListing, updateListing: updateListing,
+    updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
-    myListingsApplications: myListingsApplications, setYayinda: setYayinda,
     listingApplications: listingApplications, updateApplication: updateApplication,
     applyWithConv: applyWithConv, myConvs: myConvs, getConvDetail: getConvDetail,
     sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
-    listKycHistory: listKycHistory,
-    adminStats: adminStats, adminListUsers: adminListUsers,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
     myListingStats: myListingStats,

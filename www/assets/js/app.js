@@ -58,13 +58,12 @@
   var $bottomnav = document.getElementById('kb-bottomnav');
 
   /* ── Helpers ──────────────────────────────────────────── */
-  window.renderScreen = function (html, cb) {
+  window.renderScreen = function (html) {
     $screen.classList.add('fading');
     setTimeout(function () {
       $screen.innerHTML = html;
       $screen.scrollTop = 0;
       $screen.classList.remove('fading');
-      if (typeof cb === 'function') cb();
     }, 120);
   };
 
@@ -82,7 +81,7 @@
   /* Dashboard greeting bar — greeting left, bell+hamburger right */
   window.showDashboardBar = function () {
     var profile = APP.profile || {};
-    var name = profile.ad || 'Kullanıcı';
+    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
     var firstName = name.split(' ')[0];
     $appbar.className = 'kb-appbar kb-appbar--dash';
     $appbar.style.display = '';
@@ -145,7 +144,7 @@
   function _buildDrawer() {
     var role = APP.role || 'kurye';
     var profile = APP.profile || {};
-    var name = profile.ad || 'Kullanıcı';
+    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
     var roleLabels = { kurye: 'Kurye', firma: 'Firma', isletme: 'Esnaf / İşletme', admin: 'Admin' };
     var roleLabel = roleLabels[role] || role;
     var profilRoute = '/' + role + '/profil';
@@ -283,30 +282,16 @@
     return items.map(function (item) {
       return '<button class="kb-bottomnav__item" data-nav="' + item.key + '" ' +
         'onclick="Router.go(\'' + item.route + '\')">' +
-        '<span class="kb-bottomnav__badge" id="nav-badge-' + item.key + '" style="display:none"></span>' +
         ICON[item.icon] +
         '<span>' + item.label + '</span>' +
         '</button>';
     }).join('');
   }
 
-  window.updateNavBadge = function (key, count) {
-    var el = document.getElementById('nav-badge-' + key);
-    if (!el) return;
-    if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.style.display = ''; }
-    else { el.style.display = 'none'; }
-  };
-
-  function _refreshNavBadges() {
-    if (!window.SB || !SB.isOn()) return;
-    SB.unreadCount().then(function (n) { updateNavBadge('mesajlar', n); }).catch(function () {});
-  }
-
   function renderNav(role) {
     var map = { kurye: NAV_KURYE, firma: NAV_FIRMA, isletme: NAV_ISLETME, admin: NAV_ADMIN };
     $bottomnav.innerHTML = buildNav(map[role] || NAV_KURYE);
     showBottomNav();
-    _refreshNavBadges();
   }
 
   /* ── Auth guard + init ───────────────────────────────── */
@@ -323,13 +308,6 @@
       var profile = await SB.myProfile();
       APP.profile = profile;
       APP.role    = (profile && profile.role) || 'kurye';
-
-      if (SB.isOn()) {
-        try {
-          var isAdmin = await SB.amIAdmin();
-          if (isAdmin) APP.role = 'admin';
-        } catch (e) {}
-      }
 
       document.body.setAttribute('data-role', APP.role);
       renderNav(APP.role);
@@ -387,21 +365,18 @@
     /* Firma */
     Router.define('/firma/panel',       FirmaScreens.panel);
     Router.define('/firma/harita',      FirmaScreens.harita);
-    Router.define('/firma/ilanlarim',         FirmaScreens.ilanlarim);
-    Router.define('/firma/ilan/yeni',         FirmaScreens.ilanYeni);
-    Router.define('/firma/ilan/:id/duzenle',  FirmaScreens.ilanDuzenle);
-    Router.define('/firma/basvurular',        FirmaScreens.basvurular);
+    Router.define('/firma/ilanlarim',   FirmaScreens.ilanlarim);
+    Router.define('/firma/ilan/yeni',   FirmaScreens.ilanYeni);
+    Router.define('/firma/basvurular',  FirmaScreens.basvurular);
     Router.define('/firma/aday/:id',    FirmaScreens.adayDetay);
     Router.define('/firma/mesajlar',    FirmaScreens.mesajlar);
     Router.define('/firma/mesaj/:id',   FirmaScreens.mesajChat);
     Router.define('/firma/profil',      FirmaScreens.profil);
 
     /* İşletme */
-    Router.define('/isletme/panel',             IsletmeScreens.panel);
-    Router.define('/isletme/harita',            IsletmeScreens.harita);
-    Router.define('/isletme/ilanlarim',         IsletmeScreens.ilanlarim);
-    Router.define('/isletme/ilan/yeni',         IsletmeScreens.ilanYeni);
-    Router.define('/isletme/ilan/:id/duzenle',  IsletmeScreens.ilanDuzenle);
+    Router.define('/isletme/panel',       IsletmeScreens.panel);
+    Router.define('/isletme/harita',      IsletmeScreens.harita);
+    Router.define('/isletme/ilan/yeni',   IsletmeScreens.ilanYeni);
     Router.define('/isletme/basvurular',  IsletmeScreens.basvurular);
     Router.define('/isletme/aday/:id',    IsletmeScreens.adayDetay);
     Router.define('/isletme/mesajlar',    IsletmeScreens.mesajlar);
@@ -410,7 +385,6 @@
 
     /* Shared */
     Router.define('/bildirimler',    SharedScreens.bildirimler);
-    Router.define('/teklifler',      SharedScreens.teklifler);
     Router.define('/favoriler',      SharedScreens.favoriler);
     Router.define('/ayarlar',        SharedScreens.ayarlar);
     Router.define('/yardim',         SharedScreens.yardim);
@@ -421,8 +395,6 @@
     /* Admin */
     Router.define('/admin/panel',        AdminScreens.panel);
     Router.define('/admin/kullanicilar', AdminScreens.kullanicilar);
-    Router.define('/admin/kyc',          AdminScreens.kycListesi);
-    Router.define('/admin/kyc-gecmis',   AdminScreens.kycGecmisi);
     Router.define('/admin/ilanlar',      AdminScreens.ilanlar);
     Router.define('/admin/raporlar',     AdminScreens.raporlar);
     Router.define('/admin/sikayetler',   AdminScreens.sikayetler);

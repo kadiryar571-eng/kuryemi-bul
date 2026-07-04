@@ -55,6 +55,16 @@ window.LoginScreens = (function () {
           'Giriş Yap' +
         '</button>' +
 
+        /* Demo bypass — geliştirme ve test için */
+        '<div style="margin-top:14px;background:rgba(108,77,255,.08);border:1px solid rgba(108,77,255,.2);border-radius:14px;padding:14px">' +
+          '<div style="font-size:.72rem;font-weight:700;color:#8B6DFF;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px">Demo Mod — Hesap Gerekmez</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
+            '<button onclick="LoginScreens.demoLogin(\'kurye\')"   style="background:rgba(108,77,255,.15);border:1px solid rgba(108,77,255,.3);border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#BBA0FF;cursor:pointer">🛵 Kurye</button>'  +
+            '<button onclick="LoginScreens.demoLogin(\'firma\')"   style="background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.3); border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#4ADE80;cursor:pointer">🏢 Firma</button>'   +
+            '<button onclick="LoginScreens.demoLogin(\'isletme\')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#FB923C;cursor:pointer">🏪 Esnaf</button>'   +
+          '</div>' +
+        '</div>' +
+
         '<p class="text-center fs-sm text-muted mt-12">' +
           'Giriş yaparak ' +
           '<a href="#" style="color:var(--c-kurye)">Kullanım Koşullarını</a>' +
@@ -99,9 +109,6 @@ window.LoginScreens = (function () {
           '</div>' +
           '<div id="login-err" class="kb-error-msg" style="display:none;margin-bottom:10px"></div>' +
           '<button class="btn btn--primary" onclick="LoginScreens._doLogin()" id="btn-login">Giriş Yap</button>' +
-          '<div style="text-align:center;margin-top:12px">' +
-            '<button class="kb-link-btn" onclick="LoginScreens._showForgotPass()">Şifremi Unuttum?</button>' +
-          '</div>' +
           '<div class="auth-divider">veya</div>' +
           '<button class="btn btn--google" onclick="LoginScreens._googleLogin()">' +
             '<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.2 30.3 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.7 13.2 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2l7.7 6c4.5-4.2 7-10.4 7-17.2z"/><path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.8 23.8 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.4-6.2z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.7-6c-2 1.4-4.7 2.2-7.6 2.2-6 0-11.2-4.1-13-9.6l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/></svg>' +
@@ -210,10 +217,6 @@ window.LoginScreens = (function () {
       _showErr(errEl, 'E-posta ve şifre zorunlu.');
       return;
     }
-    if (!window.SB || !SB.isOn()) {
-      _showErr(errEl, 'İnternet bağlantısı yok. Bağlantını kontrol et.');
-      return;
-    }
     btn.disabled = true;
     btn.textContent = 'Giriş yapılıyor…';
 
@@ -222,18 +225,7 @@ window.LoginScreens = (function () {
       if (result && result.error) throw result.error;
       await _afterLogin();
     } catch (e) {
-      var msg = 'Giriş başarısız. Bilgileri kontrol et.';
-      var errMsg = (e && e.message) || '';
-      if (errMsg.indexOf('Email not confirmed') !== -1 || errMsg.indexOf('email_not_confirmed') !== -1) {
-        msg = 'E-posta adresin onaylanmamış. Gelen kutunu kontrol et ve onay bağlantısına tıkla.';
-      } else if (errMsg.indexOf('Invalid login credentials') !== -1 || errMsg.indexOf('invalid_credentials') !== -1) {
-        msg = 'E-posta veya şifre hatalı.';
-      } else if (errMsg.indexOf('Too many requests') !== -1 || errMsg.indexOf('over_request_rate_limit') !== -1) {
-        msg = 'Çok fazla deneme yapıldı. Birkaç dakika bekle.';
-      } else if (errMsg.indexOf('User not found') !== -1) {
-        msg = 'Bu e-posta ile kayıtlı hesap bulunamadı.';
-      }
-      _showErr(errEl, msg);
+      _showErr(errEl, 'Giriş başarısız. Bilgileri kontrol et.');
       btn.disabled = false;
       btn.textContent = 'Giriş Yap';
     }
@@ -260,23 +252,12 @@ window.LoginScreens = (function () {
     btn.textContent = 'Kayıt olunuyor…';
 
     try {
-      var result = await SB.signUp(email, pass, name, role);
+      var result = await SB.signUp(email, pass, { full_name: name, role: role });
       if (result && result.error) throw result.error;
-
-      /* Supabase email onayı zorunlu kılınmışsa session null gelir */
-      if (!result.data || !result.data.session) {
-        _showErr(errEl, 'Kayıt başarılı! E-postanı kontrol et ve gelen onay bağlantısına tıkla.');
-        errEl.style.color = 'var(--c-kurye)';
-        errEl.style.background = 'rgba(34,197,94,.08)';
-        btn.disabled = false;
-        btn.textContent = 'Kayıt Ol';
-        return;
-      }
-
-      toast('Hoş geldin!');
+      toast('Hoş geldin! E-postanı doğrula.');
       await _afterLogin();
     } catch (e) {
-      _showErr(errEl, 'Kayıt başarısız. Bu e-posta zaten kullanımda olabilir.');
+      _showErr(errEl, 'Kayıt başarısız. Bu e-posta kullanılıyor olabilir.');
       btn.disabled = false;
       btn.textContent = 'Kayıt Ol';
     }
@@ -301,74 +282,14 @@ window.LoginScreens = (function () {
 
     document.body.setAttribute('data-role', APP.role);
 
-    if (window.renderNav) renderNav(APP.role);
-
+    var $bn = document.getElementById('kb-bottomnav');
+    if ($bn) {
+      /* Rebuild nav for new role — reuse buildNav via app.js closure isn't accessible,
+         so we redirect and let boot handle it */
+    }
     Router.go('/' + APP.role + '/panel');
-  }
-
-  /* Forgot password panel */
-  function _showForgotPass() {
-    renderScreen(
-      '<div class="login-wrap">' +
-        '<button class="kb-appbar__back" onclick="LoginScreens.showLogin()" style="margin-bottom:16px">' +
-          ICON.back + '<span style="margin-left:4px;font-weight:600">Geri</span>' +
-        '</button>' +
-        '<div class="login-logo">' +
-          '<img src="assets/logo.png" alt="" onerror="this.style.display=\'none\'">' +
-          '<span class="login-logo__brand">KuryemiBul</span>' +
-        '</div>' +
-        '<p class="login-slogan" style="margin-bottom:8px">Şifreni sıfırla</p>' +
-        '<p style="font-size:13px;color:var(--c-muted);margin-bottom:20px;text-align:center">' +
-          'Kayıtlı e-posta adresini gir. Sana şifre sıfırlama bağlantısı gönderelim.' +
-        '</p>' +
-        '<div class="kb-form-group">' +
-          '<label class="kb-label">E-posta</label>' +
-          '<input class="kb-input" type="email" id="fp-email" placeholder="ornek@email.com" autocomplete="email">' +
-        '</div>' +
-        '<div id="fp-msg" class="kb-error-msg" style="display:none;margin-bottom:10px"></div>' +
-        '<button class="btn btn--primary" id="fp-btn" onclick="LoginScreens._doForgotPass()">Sıfırlama Bağlantısı Gönder</button>' +
-      '</div>'
-    );
-  }
-
-  async function _doForgotPass() {
-    var email = (document.getElementById('fp-email') || {}).value || '';
-    var msgEl = document.getElementById('fp-msg');
-    var btn   = document.getElementById('fp-btn');
-    if (!email) {
-      _showMsg(msgEl, 'E-posta adresi zorunlu.', false);
-      return;
-    }
-    if (!window.SB || !SB.isOn()) {
-      _showMsg(msgEl, 'İnternet bağlantısı yok.', false);
-      return;
-    }
-    btn.disabled = true;
-    btn.textContent = 'Gönderiliyor…';
-    try {
-      var r = await SB.resetPassword(email);
-      if (r && r.error) throw r.error;
-      _showMsg(msgEl, 'Bağlantı gönderildi! E-posta kutunu kontrol et.', true);
-      btn.textContent = 'Tekrar Gönder';
-      btn.disabled = false;
-    } catch (e) {
-      _showMsg(msgEl, 'Gönderilemedi. E-posta adresini kontrol et.', false);
-      btn.disabled = false;
-      btn.textContent = 'Sıfırlama Bağlantısı Gönder';
-    }
-  }
-
-  function _showMsg(el, msg, success) {
-    if (!el) { toast(msg); return; }
-    el.textContent = msg;
-    el.style.display = '';
-    if (success) {
-      el.style.color = 'var(--c-success, #22c55e)';
-      el.style.background = 'rgba(34,197,94,.08)';
-    } else {
-      el.style.color = '';
-      el.style.background = '';
-    }
+    /* Reload to re-run boot and rebuild nav */
+    location.reload();
   }
 
   function _showErr(el, msg) {
@@ -377,18 +298,29 @@ window.LoginScreens = (function () {
     el.style.display = '';
   }
 
+  /* Demo / geliştirme bypass — Supabase gerekmez */
+  function demoLogin(role) {
+    role = role || 'kurye';
+    var names = { kurye: 'Kadir Yar', firma: 'ABC Lojistik', isletme: 'Lezzet Dükkânı' };
+    APP.role    = role;
+    APP.profile = { full_name: names[role] || 'Demo Kullanıcı', role: role, score: 4.8, yayinda: true };
+    document.body.setAttribute('data-role', role);
+    showLayout();
+    if (window.renderNav) window.renderNav(role);
+    Router.go('/' + role + '/panel');
+  }
+
   return {
-    entry          : entry,
-    register       : register,
-    showLogin      : showLogin,
-    startRole      : startRole,
-    _tab           : _tab,
-    _togglePass    : _togglePass,
-    _doLogin       : _doLogin,
-    _doRegister    : _doRegister,
-    _googleLogin   : _googleLogin,
-    _showForgotPass: _showForgotPass,
-    _doForgotPass  : _doForgotPass
+    entry       : entry,
+    register    : register,
+    showLogin   : showLogin,
+    startRole   : startRole,
+    demoLogin   : demoLogin,
+    _tab        : _tab,
+    _togglePass : _togglePass,
+    _doLogin    : _doLogin,
+    _doRegister : _doRegister,
+    _googleLogin: _googleLogin
   };
 
 })();
