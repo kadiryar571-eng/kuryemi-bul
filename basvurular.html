@@ -90,6 +90,7 @@
   <script src="assets/js/ilan-status.js"></script>
   <script src="assets/js/chat.js"></script>
   <script src="assets/js/hiring.js"></script>
+  <script src="assets/js/notifications.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
@@ -242,19 +243,16 @@
     }
 
     function notifyApplicant(kId, event, jobTitle) {
-      var key = 'kb_notifications_' + kId, notes = [];
-      try { notes = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
       var MSGS = {
-        viewed:     'başvurunuzu inceledi',
-        shortlisted:'sizi kısa listeye aldı',
-        kabul:      'başvurunuzu kabul etti',
-        red:        'başvurunuzu reddetti',
-        mulakat:    'sizi mülakata davet etti'
+        viewed:      { title: 'Başvuru Görüntülendi', body: '"' + jobTitle + '" ilanı için başvurunuz görüntülendi.', type: 'basvuru' },
+        shortlisted: { title: 'Kısa Liste',           body: '"' + jobTitle + '" ilanında kısa listeye alındınız.',   type: 'basvuru' },
+        kabul:       { title: 'Başvuru Kabul Edildi', body: '"' + jobTitle + '" ilanı için kabul aldınız!',           type: 'karar'   },
+        red:         { title: 'Başvuru Reddedildi',   body: '"' + jobTitle + '" ilanı için başvurunuz reddedildi.',  type: 'karar'   },
+        mulakat:     { title: 'Mülakat Daveti',        body: '"' + jobTitle + '" ilanı için mülakata davet edildiniz.', type: 'gorusme' },
       };
-      if (MSGS[event]) {
-        notes.unshift({ msg:'"' + jobTitle + '" ilanı için işveren ' + MSGS[event] + '.', date:new Date().toISOString(), read:false });
-        try { localStorage.setItem(key, JSON.stringify(notes.slice(0, 100))); } catch(e) {}
-      }
+      var m = MSGS[event];
+      if (!m) return;
+      if (window.KBNotif) KBNotif.push(kId, m.type, m.title, m.body, { link: 'gorusmeler.html' });
     }
 
     /* ── Filters ── */

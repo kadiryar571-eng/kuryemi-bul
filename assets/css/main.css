@@ -682,6 +682,14 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .talent-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 12px; transition: box-shadow var(--transition), border-color var(--transition); position: relative; }
 .talent-card:hover { box-shadow: var(--shadow); border-color: #c8cdd4; }
 
+/* List view toggle */
+.cards-grid--list { grid-template-columns: 1fr; }
+.cards-grid--list .talent-card { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+.cards-grid--list .talent-card .pcard__top { flex: 1; min-width: 200px; }
+.cards-grid--list .talent-card .pcard__foot { margin-top: 0; }
+.cards-grid--list .talent-card .match-score { position: static; order: -1; }
+.cards-grid--list .talent-card p { display: none; }
+
 /* ─── 19. İLAN KARTLARI ──────────────────────────────────────── */
 .job-card {
   background: var(--surface);

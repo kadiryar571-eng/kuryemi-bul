@@ -627,6 +627,59 @@
     return ch;
   }
 
+  /* ---- İşe Alım Omurgası (migration-16) ---- */
+  async function myPid2() { var u = await getUser(); if (!u) return null; var r = await client.from('profiles').select('id').eq('user_id', u.id).maybeSingle(); return r.data ? r.data.id : null; }
+
+  /* Görüşmeler */
+  async function createInterview(data) {
+    var pid = await myPid2(); if (!pid) return { error: 'auth' };
+    var r = await client.from('interviews').insert(Object.assign({ interviewer_id: pid }, data)).select().maybeSingle();
+    return r.error ? { error: r.error.message } : r.data;
+  }
+  async function myInterviews(opts) {
+    var pid = await myPid2(); if (!pid) return [];
+    opts = opts || {};
+    var q = client.from('interviews').select('*').or('interviewer_id.eq.' + pid + ',interviewee_id.eq.' + pid).order('date', { ascending: true });
+    if (opts.status) q = q.eq('status', opts.status);
+    var r = await q; return r.data || [];
+  }
+  async function updateInterview(id, patch) {
+    var r = await client.from('interviews').update(patch).eq('id', id).select().maybeSingle();
+    return r.error ? { error: r.error.message } : r.data;
+  }
+
+  /* İşe Alım Kararları */
+  async function createHiringDecision(data) {
+    var pid = await myPid2(); if (!pid) return { error: 'auth' };
+    var r = await client.from('hiring_decisions').insert(Object.assign({ employer_id: pid }, data)).select().maybeSingle();
+    return r.error ? { error: r.error.message } : r.data;
+  }
+  async function myHiringDecisions(opts) {
+    var pid = await myPid2(); if (!pid) return [];
+    opts = opts || {};
+    var q = client.from('hiring_decisions').select('*').or('employer_id.eq.' + pid + ',applicant_id.eq.' + pid).order('updated_at', { ascending: false });
+    if (opts.status) q = q.eq('status', opts.status);
+    var r = await q; return r.data || [];
+  }
+  async function updateHiringDecision(id, patch) {
+    var r = await client.from('hiring_decisions').update(patch).eq('id', id).select().maybeSingle();
+    return r.error ? { error: r.error.message } : r.data;
+  }
+
+  /* Onboarding */
+  async function saveOnboarding(decisionId, data) {
+    var pid = await myPid2(); if (!pid) return { error: 'auth' };
+    var r = await client.from('onboarding').upsert(
+      Object.assign({ decision_id: decisionId, employer_id: pid }, data),
+      { onConflict: 'decision_id' }
+    ).select().maybeSingle();
+    return r.error ? { error: r.error.message } : r.data;
+  }
+  async function getOnboarding(decisionId) {
+    var r = await client.from('onboarding').select('*').eq('decision_id', decisionId).maybeSingle();
+    return r.data || null;
+  }
+
   /* ---- Push Subscription ---- */
   async function savePushSubscription(sub) {
     var u = await getUser();
@@ -701,6 +754,9 @@
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
-    myListingStats: myListingStats
+    myListingStats: myListingStats,
+    createInterview: createInterview, myInterviews: myInterviews, updateInterview: updateInterview,
+    createHiringDecision: createHiringDecision, myHiringDecisions: myHiringDecisions, updateHiringDecision: updateHiringDecision,
+    saveOnboarding: saveOnboarding, getOnboarding: getOnboarding
   };
 })();

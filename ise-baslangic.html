@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İşe Başlangıç — KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<div id="app-topbar"></div>
+<div id="sidebar-overlay"></div>
+<nav id="app-sidebar"></nav>
+
+<div class="app-content">
+<main class="container" style="padding-top:24px;padding-bottom:80px;max-width:860px;">
+
+  <!-- Hero -->
+  <div class="ob-hero" id="obHero">
+    <div class="ob-hero__badge">🎉 İşe Kabul</div>
+    <h1 class="ob-hero__title" id="obHeroTitle">Tebrikler!</h1>
+    <p class="ob-hero__sub" id="obHeroSub">İşe başlangıç bilgileriniz yükleniyor…</p>
+  </div>
+
+  <!-- Progress steps -->
+  <div class="ob-steps" id="obSteps">
+    <div class="ob-step" data-step="bilgiler">
+      <div class="ob-step__dot"></div>
+      <div class="ob-step__label">Bilgiler</div>
+    </div>
+    <div class="ob-step-line"></div>
+    <div class="ob-step" data-step="belgeler">
+      <div class="ob-step__dot"></div>
+      <div class="ob-step__label">Belgeler</div>
+    </div>
+    <div class="ob-step-line"></div>
+    <div class="ob-step" data-step="ilk-gun">
+      <div class="ob-step__dot"></div>
+      <div class="ob-step__label">İlk Gün</div>
+    </div>
+    <div class="ob-step-line"></div>
+    <div class="ob-step" data-step="tamamlandi">
+      <div class="ob-step__dot"></div>
+      <div class="ob-step__label">Tamamlandı</div>
+    </div>
+  </div>
+
+  <!-- Step: Bilgiler (Start info) -->
+  <div class="ob-panel" id="step-bilgiler">
+    <div class="panel-box">
+      <div class="panel-box__head"><h3>Başlangıç Bilgileri</h3></div>
+      <div class="panel-box__body">
+        <div class="ob-info-grid" id="obInfoGrid">
+          <p style="color:var(--text-3);font-size:0.85rem">Yükleniyor…</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-box" style="margin-top:16px">
+      <div class="panel-box__head"><h3>İşveren İletişim</h3></div>
+      <div class="panel-box__body">
+        <div id="obContactBlock">
+          <p style="color:var(--text-3);font-size:0.85rem">Yükleniyor…</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn--primary" data-next="belgeler">Devam → Belgeler</button>
+    </div>
+  </div>
+
+  <!-- Step: Belgeler (Documents) -->
+  <div class="ob-panel" id="step-belgeler" style="display:none">
+    <div class="panel-box">
+      <div class="panel-box__head">
+        <h3>Gerekli Belgeler</h3>
+        <span style="font-size:0.78rem;color:var(--text-3)">İşe başlamadan önce hazır olması gerekenler</span>
+      </div>
+      <div class="panel-box__body">
+        <div class="ob-checklist" id="obDocChecklist"></div>
+      </div>
+    </div>
+
+    <div class="panel-box" style="margin-top:16px">
+      <div class="panel-box__head"><h3>Notlarım</h3></div>
+      <div class="panel-box__body">
+        <textarea id="obDocNotes" class="form-input" rows="3" placeholder="Belge ile ilgili notlarınızı buraya yazın…"></textarea>
+        <button class="btn btn--ghost btn--sm" id="btnSaveDocNotes" style="margin-top:8px">Notu Kaydet</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">
+      <button class="btn btn--ghost" data-prev="bilgiler">← Geri</button>
+      <button class="btn btn--primary" data-next="ilk-gun">Devam → İlk Gün</button>
+    </div>
+  </div>
+
+  <!-- Step: İlk Gün (First day) -->
+  <div class="ob-panel" id="step-ilk-gun" style="display:none">
+    <div class="panel-box">
+      <div class="panel-box__head"><h3>İlk Gün Detayları</h3></div>
+      <div class="panel-box__body">
+        <div id="obFirstDayBlock">
+          <p style="color:var(--text-3);font-size:0.85rem">İlk gün bilgisi henüz girilmemiş.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-box" style="margin-top:16px">
+      <div class="panel-box__head"><h3>İlk Gün Kontrol Listesi</h3></div>
+      <div class="panel-box__body">
+        <div class="ob-checklist" id="obDayChecklist"></div>
+      </div>
+    </div>
+
+    <div class="panel-box" style="margin-top:16px">
+      <div class="panel-box__head"><h3>Konum & Rota</h3></div>
+      <div class="panel-box__body">
+        <div id="obLocationBlock" style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:1.5rem">📍</span>
+          <div id="obLocationText" style="font-size:0.9rem;color:var(--text-2)">Başlangıç noktası girilmemiş.</div>
+          <a id="obMapLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display:none;margin-left:auto">Haritada Gör →</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">
+      <button class="btn btn--ghost" data-prev="belgeler">← Geri</button>
+      <button class="btn btn--primary" id="btnCompleteOnboard">Onboarding'i Tamamla ✓</button>
+    </div>
+  </div>
+
+  <!-- Step: Tamamlandı -->
+  <div class="ob-panel" id="step-tamamlandi" style="display:none">
+    <div class="panel-box" style="text-align:center;padding:48px 24px">
+      <div style="font-size:3rem;margin-bottom:16px">🎊</div>
+      <h2 style="font-size:1.4rem;font-weight:700;margin-bottom:8px">Hazırsınız!</h2>
+      <p style="color:var(--text-2);font-size:0.9rem;margin-bottom:24px">
+        Tüm bilgileri tamamladınız. İşe başarıyla başlıyorsunuz.
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="mesajlar.html"   class="btn btn--primary">💬 İşverenle Mesajlaş</a>
+        <a href="panel-kurye.html" class="btn btn--ghost">Panele Dön</a>
+        <a href="geri-bildirim.html" class="btn btn--ghost">⭐ Geri Bildirim</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/hiring.js"></script>
+<script src="assets/js/notifications.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/motion.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  var STEPS = ['bilgiler', 'belgeler', 'ilk-gun', 'tamamlandi'];
+  var CUR_STEP = 'bilgiler';
+  var OB_DATA = null;
+  var JOB_ID  = null;
+  var KURYE_ID = null;
+
+  var DOC_LIST = [
+    'Kimlik fotokopisi (ön-arka)',
+    'İkametgah belgesi',
+    'Ehliyet fotokopisi (varsa)',
+    'SGK kaydı onayı',
+    'Banka hesap bilgileri (IBAN)',
+    'Sağlık raporu (kurye için)',
+  ];
+
+  var DAY_LIST = [
+    'Başlangıç saatini öğrendim',
+    'Başlangıç noktasına nasıl ulaşacağımı biliyorum',
+    'Gerekli tüm belgelerimi hazırladım',
+    'İletişim kişisinin bilgilerini kaydettim',
+    'İlk gün kıyafet/ekipman gereksinimlerini kontrol ettim',
+  ];
+
+  function esc(s) { return window.KB ? KB.esc(s) : String(s).replace(/[&<>"']/g, function (c) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+  /* ── Step navigation ──────────────────────────────────── */
+  function goStep(step) {
+    CUR_STEP = step;
+    STEPS.forEach(function (s) {
+      var el = document.getElementById('step-' + s);
+      if (el) el.style.display = s === step ? '' : 'none';
+    });
+    document.querySelectorAll('.ob-step').forEach(function (el) {
+      var idx = STEPS.indexOf(el.dataset.step);
+      var cur = STEPS.indexOf(step);
+      el.classList.toggle('is-active',   idx === cur);
+      el.classList.toggle('is-done',     idx < cur);
+    });
+    saveProgress();
+  }
+
+  /* ── Persist progress ─────────────────────────────────── */
+  function saveProgress() {
+    var key = 'kb_ob_progress_' + (JOB_ID || '') + '_' + (KURYE_ID || '');
+    try { localStorage.setItem(key, JSON.stringify({ step: CUR_STEP, docChecks: getChecks('ob-doc-chk'), dayChecks: getChecks('ob-day-chk'), docNotes: (document.getElementById('obDocNotes') || {}).value || '' })); } catch (e) {}
+  }
+
+  function loadProgress() {
+    var key = 'kb_ob_progress_' + (JOB_ID || '') + '_' + (KURYE_ID || '');
+    try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; }
+  }
+
+  function getChecks(prefix) {
+    var result = {};
+    document.querySelectorAll('[data-chk^="' + prefix + '"]').forEach(function (cb) {
+      result[cb.dataset.chk] = cb.checked;
+    });
+    return result;
+  }
+
+  function restoreChecks(checks) {
+    if (!checks) return;
+    Object.keys(checks).forEach(function (k) {
+      var el = document.querySelector('[data-chk="' + k + '"]');
+      if (el) el.checked = checks[k];
+    });
+  }
+
+  /* ── Render info grid ─────────────────────────────────── */
+  function renderInfoGrid(ob) {
+    if (!ob) { document.getElementById('obInfoGrid').innerHTML = '<p style="color:var(--text-3)">Başlangıç bilgisi henüz girilmemiş.</p>'; return; }
+    var rows = [
+      { lbl: '📅 Başlangıç Tarihi', val: ob.startDate   ? new Date(ob.startDate).toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '—' },
+      { lbl: '📍 Başlangıç Noktası', val: ob.startPoint || '—' },
+      { lbl: '👤 İletişim Kişisi',   val: ob.contactPerson || '—' },
+      { lbl: '📞 Telefon',           val: ob.contactPhone  || '—' },
+      { lbl: '⚙️ Çalışma Detayları', val: ob.workDetails   || '—' },
+    ];
+    document.getElementById('obInfoGrid').innerHTML =
+      '<div class="ob-info-grid__inner">' +
+      rows.map(function (r) {
+        return '<div class="ob-info-row">' +
+          '<span class="ob-info-row__lbl">' + r.lbl + '</span>' +
+          '<span class="ob-info-row__val">' + esc(r.val) + '</span>' +
+        '</div>';
+      }).join('') +
+      '</div>';
+
+    /* Contact block */
+    var cBlock = document.getElementById('obContactBlock');
+    if (cBlock) {
+      cBlock.innerHTML = ob.contactPerson || ob.contactPhone
+        ? '<div style="display:flex;align-items:center;gap:14px">' +
+            '<div style="width:44px;height:44px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem">' +
+              (ob.contactPerson ? ob.contactPerson[0].toUpperCase() : '?') +
+            '</div>' +
+            '<div><div style="font-weight:600">' + esc(ob.contactPerson || '—') + '</div>' +
+            (ob.contactPhone ? '<div style="font-size:0.83rem;color:var(--text-3)">' + esc(ob.contactPhone) + '</div>' : '') + '</div>' +
+            (ob.contactPhone ? '<a href="tel:' + esc(ob.contactPhone) + '" class="btn btn--primary btn--sm" style="margin-left:auto">Ara</a>' : '') +
+          '</div>'
+        : '<p style="color:var(--text-3);font-size:0.85rem">İletişim bilgisi henüz eklenmedi.</p>';
+    }
+
+    /* Location block */
+    var locEl = document.getElementById('obLocationText');
+    var mapLink = document.getElementById('obMapLink');
+    if (locEl && ob.startPoint) {
+      locEl.textContent = ob.startPoint;
+      if (mapLink) { mapLink.href = 'https://maps.google.com/?q=' + encodeURIComponent(ob.startPoint); mapLink.style.display = ''; }
+    }
+
+    /* First day block */
+    var fdEl = document.getElementById('obFirstDayBlock');
+    if (fdEl && ob.firstDayNotes) {
+      fdEl.innerHTML = '<div style="background:var(--bg);border-radius:var(--radius);padding:14px;font-size:0.88rem;color:var(--text-2);white-space:pre-wrap">' + esc(ob.firstDayNotes) + '</div>';
+    }
+  }
+
+  /* ── Render hero ──────────────────────────────────────── */
+  function renderHero(dec, ob) {
+    var title = document.getElementById('obHeroTitle');
+    var sub   = document.getElementById('obHeroSub');
+    if (dec) {
+      if (title) title.textContent = 'Tebrikler, ' + (dec.kuryeAd || 'kurye') + '!';
+      if (sub)   sub.textContent   = '"' + (dec.jobTitle || 'İş İlanı') + '" pozisyonuna kabul edildiniz.';
+    }
+    if (ob && ob.startDate) {
+      var d = new Date(ob.startDate);
+      var today = new Date(); today.setHours(0,0,0,0);
+      var diff  = Math.ceil((d - today) / 86400000);
+      if (diff > 0 && sub) sub.textContent += ' İşe başlamanıza ' + diff + ' gün kaldı.';
+    }
+  }
+
+  /* ── Build checklist ──────────────────────────────────── */
+  function buildChecklist(containerId, items, prefix) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = items.map(function (item, i) {
+      var id = prefix + '_' + i;
+      return '<label class="ob-check-item" for="' + id + '">' +
+        '<input type="checkbox" id="' + id + '" data-chk="' + prefix + '_' + i + '">' +
+        '<span>' + esc(item) + '</span>' +
+      '</label>';
+    }).join('');
+    el.addEventListener('change', saveProgress);
+  }
+
+  /* ── Wire ─────────────────────────────────────────────── */
+  function wire() {
+    /* next/prev buttons */
+    document.querySelectorAll('[data-next]').forEach(function (btn) {
+      btn.addEventListener('click', function () { goStep(btn.dataset.next); });
+    });
+    document.querySelectorAll('[data-prev]').forEach(function (btn) {
+      btn.addEventListener('click', function () { goStep(btn.dataset.prev); });
+    });
+
+    /* Complete button */
+    var completeBtn = document.getElementById('btnCompleteOnboard');
+    if (completeBtn) {
+      completeBtn.addEventListener('click', function () {
+        saveProgress();
+        /* Mark complete in hiring data */
+        if (window.KBHiring && JOB_ID && KURYE_ID) {
+          KBHiring.setOnboardingComplete(JOB_ID, KURYE_ID);
+        }
+        /* Send notification */
+        if (window.KBNotif) {
+          var uid = localStorage.getItem('kb_demo_uid') || 'demo_user';
+          KBNotif.push(uid, 'sistem', 'Onboarding Tamamlandı', 'İşe başlangıç sürecinizi başarıyla tamamladınız!', { link: 'panel-kurye.html' });
+        }
+        goStep('tamamlandi');
+        if (window.KBMotion) KBMotion.showSuccess('Tamamlandı!', 'Harika başarılar!', 2500);
+      });
+    }
+
+    /* Save doc notes */
+    var saveNotes = document.getElementById('btnSaveDocNotes');
+    if (saveNotes) {
+      saveNotes.addEventListener('click', function () {
+        saveProgress();
+        if (window.KBMotion) KBMotion.showSuccess('Not kaydedildi.', '', 1400);
+      });
+    }
+  }
+
+  /* ── Boot ─────────────────────────────────────────────── */
+  function boot() {
+    var params = new URLSearchParams(window.location.search);
+    JOB_ID   = params.get('job');
+    KURYE_ID = params.get('kid');
+
+    /* Lookup hiring decision */
+    var dec = null, ob = null;
+    if (window.KBHiring && JOB_ID && KURYE_ID) {
+      dec = KBHiring.getDecision(JOB_ID, KURYE_ID);
+      ob  = dec && dec.onboarding ? dec.onboarding : null;
+    }
+
+    /* If no real data, use demo */
+    if (!dec) {
+      dec = { kuryeAd: 'Ahmet Demir', jobTitle: 'Dağıtım Kuryesi', isletmeAd: 'KuryemiBul A.Ş.' };
+      ob  = { startDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0], startPoint: 'Maslak Metro Çıkışı, İstanbul', contactPerson: 'Elif Hanım', contactPhone: '0555 000 00 01', workDetails: 'Hafta içi 09:00-18:00, motosiklet kullanımı zorunlu.', firstDayNotes: 'Sarı yelek ve KuryemiBul çantasını teslim alacaksınız. Kimliğinizi yanınızda getirin.' };
+    }
+
+    renderHero(dec, ob);
+    renderInfoGrid(ob);
+    buildChecklist('obDocChecklist', DOC_LIST, 'ob-doc-chk');
+    buildChecklist('obDayChecklist', DAY_LIST, 'ob-day-chk');
+
+    /* Restore progress */
+    var prog = loadProgress();
+    if (prog) {
+      if (prog.step) goStep(prog.step);
+      if (prog.docChecks) restoreChecks(prog.docChecks);
+      if (prog.dayChecks) restoreChecks(prog.dayChecks);
+      if (prog.docNotes) { var dn = document.getElementById('obDocNotes'); if (dn) dn.value = prog.docNotes; }
+    } else {
+      goStep('bilgiler');
+    }
+
+    wire();
+  }
+
+  if (window.KB && KB.ready && KB.ready.then) {
+    KB.ready.then(boot);
+  } else {
+    document.addEventListener('DOMContentLoaded', boot);
+  }
+})();
+</script>
+
+<style>
+  .ob-hero { background: linear-gradient(135deg, var(--primary) 0%, #0040CC 100%); color: #fff; border-radius: var(--radius-lg); padding: 32px 28px; margin-bottom: 24px; }
+  .ob-hero__badge { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 99px; padding: 4px 14px; font-size: 0.8rem; font-weight: 600; margin-bottom: 12px; }
+  .ob-hero__title { font-size: 1.5rem; font-weight: 700; margin: 0 0 6px; }
+  .ob-hero__sub { font-size: 0.9rem; opacity: 0.85; margin: 0; }
+
+  .ob-steps { display: flex; align-items: center; margin-bottom: 24px; }
+  .ob-step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ob-step__dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .ob-step.is-done .ob-step__dot { background: var(--success); border-color: var(--success); }
+  .ob-step.is-done .ob-step__dot::after { content: '✓'; color: #fff; font-size: 0.75rem; font-weight: 700; }
+  .ob-step.is-active .ob-step__dot { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+  .ob-step.is-active .ob-step__dot::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #fff; display: block; }
+  .ob-step__label { font-size: 0.72rem; color: var(--text-3); white-space: nowrap; }
+  .ob-step.is-active .ob-step__label { color: var(--primary); font-weight: 600; }
+  .ob-step.is-done .ob-step__label { color: var(--success); }
+  .ob-step-line { flex: 1; height: 2px; background: var(--border); margin: 0 4px; margin-bottom: 22px; }
+
+  .ob-info-grid__inner { display: grid; gap: 12px; }
+  .ob-info-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .ob-info-row:last-child { border-bottom: none; }
+  .ob-info-row__lbl { font-size: 0.82rem; color: var(--text-3); width: 160px; flex-shrink: 0; }
+  .ob-info-row__val { font-size: 0.88rem; color: var(--text); font-weight: 500; }
+
+  .ob-checklist { display: flex; flex-direction: column; gap: 8px; }
+  .ob-check-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius); cursor: pointer; font-size: 0.88rem; color: var(--text-2); transition: background 0.15s; }
+  .ob-check-item:hover { background: var(--primary-light); }
+  .ob-check-item input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--primary); }
+  .ob-check-item:has(input:checked) { color: var(--text-3); text-decoration: line-through; }
+
+  @media (max-width: 680px) {
+    .ob-step__label { display: none; }
+    .ob-info-row { flex-direction: column; gap: 4px; }
+    .ob-info-row__lbl { width: auto; }
+  }
+</style>
+
+</body>
+</html>

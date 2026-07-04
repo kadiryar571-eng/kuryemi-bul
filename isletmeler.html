@@ -15,9 +15,22 @@
   <nav id="app-sidebar"></nav>
 
   <div class="app-content">
+
     <div class="page-header">
-      <h1>İşletme Havuzu</h1>
-      <p class="page-sub">Kurye arayan işletmeleri keşfet, teklif gönder.</p>
+      <div>
+        <h1>İşletme Havuzu</h1>
+        <p class="page-sub">Kurye arayan işletmeleri keşfet ve teklif gönder.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="harita.html?type=isletme" class="btn btn--ghost btn--sm">🗺 Haritada Gör</a>
+        <button class="btn btn--ghost btn--sm" id="btnToggleView">⊟ Liste</button>
+      </div>
+    </div>
+
+    <!-- Stats banner -->
+    <div style="display:flex;gap:16px;padding:10px 16px;background:var(--primary-light);border-radius:var(--radius);margin-bottom:14px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:0.82rem;color:var(--primary);font-weight:600">✓ <span id="psBanner">Yükleniyor…</span></span>
+      <span style="font-size:0.78rem;color:var(--text-3);margin-left:auto">Aktif ilan sayısına göre sıralanır</span>
     </div>
 
     <div class="filter-bar">
@@ -30,6 +43,12 @@
       </div>
       <select id="fSelect1"><option value="">Tüm Şehirler</option></select>
       <select id="fSelect2"><option value="">Tüm Türler</option></select>
+      <select id="fSort" onchange="sortPool(this.value)" style="min-width:130px">
+        <option value="match">Match Skoru</option>
+        <option value="listings">Aktif İlanlar</option>
+        <option value="rating">En Yüksek Puan</option>
+        <option value="newest">En Yeni</option>
+      </select>
     </div>
 
     <div class="active-chips" id="poolChips"></div>
@@ -39,7 +58,11 @@
       <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
       <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
       <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
     </div>
+
   </div>
 
   <div id="app-footer"></div>
@@ -52,9 +75,44 @@
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
+  (function () {
+    var isListView = false;
+    var toggleBtn = document.getElementById('btnToggleView');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function () {
+        isListView = !isListView;
+        var grid = document.getElementById('poolGrid');
+        if (grid) grid.classList.toggle('cards-grid--list', isListView);
+        toggleBtn.textContent = isListView ? '⊞ Grid' : '⊟ Liste';
+        try { localStorage.setItem('kb_pool_view_isletme', isListView ? 'list' : 'grid'); } catch (e) {}
+      });
+      try { if (localStorage.getItem('kb_pool_view_isletme') === 'list') toggleBtn.click(); } catch (e) {}
+    }
+
+    window.sortPool = function (mode) {
+      var cards = Array.from(document.querySelectorAll('#poolGrid .talent-card'));
+      cards.sort(function (a, b) {
+        if (mode === 'match') {
+          var sa = parseInt((a.querySelector('.match-score') || {}).textContent || '0');
+          var sb = parseInt((b.querySelector('.match-score') || {}).textContent || '0');
+          return sb - sa;
+        }
+        return 0;
+      });
+      var grid = document.getElementById('poolGrid');
+      if (grid) cards.forEach(function (c) { grid.appendChild(c); });
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
-      if (window.KBApp && KBApp.renderPool) KBApp.renderPool('isletme');
+      if (window.KBApp && KBApp.renderPool) {
+        KBApp.renderPool('isletme').then(function () {
+          var countEl = document.getElementById('resultCount');
+          var banner  = document.getElementById('psBanner');
+          if (banner && countEl) banner.textContent = countEl.textContent;
+        });
+      }
     });
+  })();
   </script>
 </body>
 </html>

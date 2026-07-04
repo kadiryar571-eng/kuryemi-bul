@@ -96,6 +96,7 @@
           <a href="basvurular.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📋 Başvurular</a>
           <a href="gorusmeler.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📅 Görüşmeler</a>
           <a href="mesajlar.html"   class="btn btn--ghost btn--sm" style="justify-content:flex-start;">💬 Mesajlar</a>
+          <a id="hdOnboardLink" href="ise-baslangic.html" class="btn btn--primary btn--sm" style="justify-content:flex-start;display:none;">🎉 İşe Başlangıç Bilgileri</a>
         </div>
       </div>
 
@@ -145,6 +146,7 @@
 <script src="assets/js/chat.js"></script>
 <script src="assets/js/interview.js"></script>
 <script src="assets/js/hiring.js"></script>
+<script src="assets/js/notifications.js"></script>
 <script src="assets/js/comm-status.js"></script>
 <script src="assets/js/feedback.js"></script>
 <script src="assets/js/app.js"></script>
@@ -245,6 +247,8 @@
       if (status === 'kabul' || status === 'tamamlandi') {
         onboardSec.style.display = '';
         document.getElementById('hdOnboardContent').innerHTML = KBHiring.renderOnboardingForm(ob, JOB_ID, KURYE_ID);
+        var obLink = document.getElementById('hdOnboardLink');
+        if (obLink) { obLink.href = 'ise-baslangic.html?job=' + encodeURIComponent(JOB_ID||'') + '&kid=' + encodeURIComponent(KURYE_ID||''); obLink.style.display = 'flex'; }
       } else {
         onboardSec.style.display = 'none';
       }
@@ -309,6 +313,7 @@
       KBHiring.makeDecision(uid, jobId, kuryeId, 'kabul', {
         jobTitle: dec.jobTitle, kuryeAd: dec.kuryeAd, isletmeAd: dec.isletmeAd, threadId: dec.threadId
       });
+      if (window.KBNotif) KBNotif.push(kuryeId, 'karar', 'İşe Kabul!', '"' + (dec.jobTitle||'') + '" pozisyonu için kabul edildiniz.', { link: 'gorusmeler.html' });
       if (window.KBMotion) KBMotion.showSuccess('Kabul Edildi!', dec.kuryeAd + ' işe alındı.', 2200);
       renderAll();
 
@@ -376,6 +381,7 @@
         threadId: dec.threadId, reason: reason
       });
       document.getElementById('hdRejectModal').style.display = 'none';
+      if (window.KBNotif) { var _rd = KBHiring.getDecision(JOB_ID, KURYE_ID) || {}; KBNotif.push(KURYE_ID, 'karar', 'Başvuru Sonucu', '"' + (_rd.jobTitle||'') + '" başvurunuz olumsuz sonuçlandı.', { link: 'mesajlar.html' }); }
       if (window.KBMotion) KBMotion.showSuccess('Reddedildi', 'Başvuru arşive taşındı.', 2000);
       renderAll();
     });

@@ -15,12 +15,25 @@
   <nav id="app-sidebar"></nav>
 
   <div class="app-content">
+
     <div class="page-header">
-      <h1>Kurye Havuzu</h1>
-      <p class="page-sub">Bölge, şehir ve seviyeye göre kurye bul.</p>
+      <div>
+        <h1>Kurye Havuzu</h1>
+        <p class="page-sub">Bölge, şehir, seviye ve araç tipine göre kurye bul.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="harita.html?type=kurye" class="btn btn--ghost btn--sm">🗺 Haritada Gör</a>
+        <button class="btn btn--ghost btn--sm" id="btnToggleView" title="Görünüm değiştir">⊟ Liste</button>
+      </div>
     </div>
 
-    <!-- Filtre çubuğu -->
+    <!-- Pool stats banner -->
+    <div class="pool-stats-bar" id="poolStatsBanner" style="display:flex;gap:16px;padding:10px 16px;background:var(--primary-light);border-radius:var(--radius);margin-bottom:14px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:0.82rem;color:var(--primary);font-weight:600">✓ <span id="psBanner">Yükleniyor…</span></span>
+      <span style="font-size:0.78rem;color:var(--text-3);margin-left:auto">Match skoru: Profilinize göre hesaplanır</span>
+    </div>
+
+    <!-- Filter bar -->
     <div class="filter-bar">
       <div class="search-wrap" style="position:relative;flex:1;min-width:180px">
         <span class="search-ico" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none">
@@ -31,20 +44,43 @@
       </div>
       <select id="fSelect1"><option value="">Tüm Şehirler</option></select>
       <select id="fSelect2"><option value="">Tüm Seviyeler</option></select>
+      <select id="fSelect3" onchange="filterByArac(this.value)">
+        <option value="">Tüm Araçlar</option>
+        <option value="Motosiklet">🛵 Motosiklet</option>
+        <option value="Bisiklet">🚲 Bisiklet</option>
+        <option value="Elektrikli Bisiklet">⚡ E-Bisiklet</option>
+        <option value="Araç">🚗 Araç</option>
+        <option value="Yaya">🚶 Yaya</option>
+      </select>
+      <select id="fSort" onchange="sortPool(this.value)" style="min-width:130px">
+        <option value="match">Match Skoru</option>
+        <option value="rating">En Yüksek Puan</option>
+        <option value="experience">Deneyim</option>
+        <option value="newest">En Yeni</option>
+      </select>
     </div>
 
-    <!-- Aktif filtre chipleri -->
+    <!-- Active filter chips -->
     <div class="active-chips" id="poolChips"></div>
 
-    <!-- Sonuç sayısı -->
+    <!-- Result count -->
     <p class="text-sm text-muted mb-16" id="resultCount"></p>
 
-    <!-- Kart grid -->
+    <!-- Card grid -->
     <div class="cards-grid" id="poolGrid">
       <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
       <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
       <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
     </div>
+
+    <!-- Load more -->
+    <div style="text-align:center;margin-top:24px" id="loadMoreWrap" style="display:none">
+      <button class="btn btn--ghost" id="btnLoadMore">Daha Fazla Göster</button>
+    </div>
+
   </div>
 
   <div id="app-footer"></div>
@@ -57,9 +93,78 @@
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
+  (function () {
+    var isListView = false;
+    var aracFilter = '';
+    var sortMode   = 'match';
+
+    /* View toggle */
+    var toggleBtn = document.getElementById('btnToggleView');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function () {
+        isListView = !isListView;
+        var grid = document.getElementById('poolGrid');
+        if (grid) grid.classList.toggle('cards-grid--list', isListView);
+        toggleBtn.textContent = isListView ? '⊞ Grid' : '⊟ Liste';
+        try { localStorage.setItem('kb_pool_view_kurye', isListView ? 'list' : 'grid'); } catch (e) {}
+      });
+      /* Restore saved view */
+      try { if (localStorage.getItem('kb_pool_view_kurye') === 'list') toggleBtn.click(); } catch (e) {}
+    }
+
+    /* Araç filter (client-side, post-render) */
+    window.filterByArac = function (val) {
+      aracFilter = val;
+      applyClientFilters();
+    };
+
+    /* Sort (client-side) */
+    window.sortPool = function (mode) {
+      sortMode = mode;
+      applyClientFilters();
+    };
+
+    function applyClientFilters() {
+      var cards = document.querySelectorAll('#poolGrid .talent-card');
+      var arr = Array.from(cards);
+
+      /* Filter by araç */
+      arr.forEach(function (c) {
+        if (!aracFilter) { c.style.display = ''; return; }
+        var text = c.textContent || '';
+        c.style.display = text.indexOf(aracFilter) >= 0 ? '' : 'none';
+      });
+
+      /* Sort */
+      var visible = arr.filter(function (c) { return c.style.display !== 'none'; });
+      visible.sort(function (a, b) {
+        if (sortMode === 'match') {
+          var sa = parseInt((a.querySelector('.match-score') || {}).textContent || '0');
+          var sb = parseInt((b.querySelector('.match-score') || {}).textContent || '0');
+          return sb - sa;
+        }
+        if (sortMode === 'rating') {
+          var ra = parseFloat((a.textContent.match(/(\d\.\d)\s*\/\s*5/) || ['0','0'])[1]);
+          var rb = parseFloat((b.textContent.match(/(\d\.\d)\s*\/\s*5/) || ['0','0'])[1]);
+          return rb - ra;
+        }
+        return 0;
+      });
+      var grid = document.getElementById('poolGrid');
+      if (grid) visible.forEach(function (c) { grid.appendChild(c); });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-      if (window.KBApp && KBApp.renderPool) KBApp.renderPool('kurye');
+      if (window.KBApp && KBApp.renderPool) {
+        KBApp.renderPool('kurye').then(function () {
+          /* Update banner */
+          var countEl = document.getElementById('resultCount');
+          var banner  = document.getElementById('psBanner');
+          if (banner && countEl) banner.textContent = countEl.textContent;
+        });
+      }
     });
+  })();
   </script>
 </body>
 </html>

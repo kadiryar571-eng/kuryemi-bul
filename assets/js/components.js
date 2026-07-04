@@ -199,7 +199,7 @@
       '</div>' +
       '<div class="topbar-spacer"></div>' +
       '<div class="topbar-actions">' +
-        '<a class="topbar-ico-btn" href="bildirimler.html" title="Bildirimler">' + SIC.bell + '</a>' +
+        '<a class="topbar-ico-btn" href="bildirimler.html" title="Bildirimler" style="position:relative">' + SIC.bell + '<span id="kbNotifBadge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:99px;background:var(--error);color:#fff;font-size:0.65rem;font-weight:700;align-items:center;justify-content:center;padding:0 3px;pointer-events:none"></span></a>' +
         '<a class="topbar-ico-btn" href="mesajlar.html" title="Mesajlar">' + SIC.messages + '</a>' +
         '<a class="topbar-ico-btn" href="profil-' + (role !== 'guest' ? role : 'kurye') + '.html" title="' + esc(name) + '" style="width:auto;padding:0 8px;gap:6px;font-size:.85rem;font-weight:600;color:var(--text-2)">' +
           '<span style="width:30px;height:30px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0">' + esc(initial) + '</span>' +
@@ -216,6 +216,14 @@
         if (sb) sb.classList.toggle('is-open');
         if (ov) ov.classList.toggle('is-open');
       });
+    }
+
+    /* Notification badge */
+    if (window.KBNotif) {
+      try {
+        var nbUid = (SESSION.user && SESSION.user.id) || localStorage.getItem('kb_demo_uid') || 'demo_user';
+        KBNotif.updateBadge(nbUid);
+      } catch (e) {}
     }
   }
 

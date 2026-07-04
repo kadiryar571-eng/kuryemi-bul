@@ -35,20 +35,20 @@
 
     <!-- Mini İstatistikler -->
     <div class="dash-stats-mini">
-      <a href="havuzum.html" class="dash-stat">
-        <span class="dash-stat__label">Havuzumdaki Kuryeler</span>
-        <span class="dash-stat__value" id="statHavuz">—</span>
-        <span class="dash-stat__delta is-neutral">kayıtlı kurye</span>
+      <a href="#" class="dash-stat" onclick="switchTab('filo');return false;">
+        <span class="dash-stat__label">Filodaki Kuryeler</span>
+        <span class="dash-stat__value" id="statFilo">—</span>
+        <span class="dash-stat__delta is-neutral" id="statFiloSub">aktif üye</span>
       </a>
-      <a href="#" class="dash-stat" onclick="switchTab('teklifler');return false;">
-        <span class="dash-stat__label">Gönderilen Teklifler</span>
-        <span class="dash-stat__value" id="statTeklif">—</span>
-        <span class="dash-stat__delta is-neutral" id="statTeklifSub">aktif teklif</span>
+      <a href="#" class="dash-stat" onclick="switchTab('ise-alim');return false;">
+        <span class="dash-stat__label">İşe Alım</span>
+        <span class="dash-stat__value" id="statBasvuru">—</span>
+        <span class="dash-stat__delta is-neutral">bekleyen başvuru</span>
       </a>
       <a href="kuryeler.html" class="dash-stat">
         <span class="dash-stat__label">Kurye Havuzu</span>
         <span class="dash-stat__value" id="statKurye">—</span>
-        <span class="dash-stat__delta">mevcut kurye</span>
+        <span class="dash-stat__delta">uygun kurye</span>
       </a>
     </div>
 
@@ -57,7 +57,7 @@
       <div class="prof-engine__head">
         <div>
           <div class="prof-engine__title">Profilini Tamamla</div>
-          <div class="prof-engine__sub">Profil bilgilerini tamamlayarak daha fazla iş fırsatına ulaş.</div>
+          <div class="prof-engine__sub">Firma profili eksiksiz olduğunda daha fazla kurye sizi tercih eder.</div>
         </div>
         <div class="prof-engine__pct-wrap">
           <span class="prof-engine__pct" id="profPct">%0</span>
@@ -70,66 +70,141 @@
       <div class="prof-engine__steps" id="profSteps"></div>
       <div class="prof-engine__footer">
         <a href="profil-duzenle.html" class="btn btn--primary btn--sm">Profili Düzenle</a>
-        <span class="prof-engine__note">Tamamlanan profiller daha fazla görüntülenir.</span>
+        <span class="prof-engine__note">Tamamlanan profiller %40 daha fazla görüntülenir.</span>
       </div>
     </div>
 
     <!-- Tab nav -->
     <nav class="dash__nav">
       <button data-tab="ana">Genel Bakış</button>
-      <button data-tab="personel">Kurye Havuzu</button>
-      <button data-tab="teklifler">Teklifler</button>
+      <button data-tab="filo">Filo Yönetimi</button>
+      <button data-tab="ise-alim">İşe Alım</button>
     </nav>
 
-    <!-- Genel Bakış -->
+    <!-- ── Genel Bakış ─────────────────────────────────────── -->
     <div class="dash__panel" id="panel-ana">
+
+      <!-- Firma Metrikleri -->
       <div class="panel-box mb-16">
         <div class="panel-box__head">
-          <h3>Metrikler</h3>
+          <h3>Filo Metrikleri</h3>
           <a href="profil-duzenle.html" class="btn btn--ghost btn--sm">Profili Düzenle</a>
         </div>
         <div class="panel-box__body">
-          <div id="firmaMetrics">
-            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:60%"></span></span></div></div>
+          <div id="firmaMetrics" class="dash-stats-mini" style="margin:0;padding:0;border:none;gap:8px">
+            <div class="dash-stat" style="cursor:default">
+              <span class="dash-stat__label">Aktif Üye</span>
+              <span class="dash-stat__value" id="metAktif">—</span>
+              <span class="dash-stat__delta is-neutral">kurye</span>
+            </div>
+            <div class="dash-stat" style="cursor:default">
+              <span class="dash-stat__label">Bu Ay İşe Alım</span>
+              <span class="dash-stat__value" id="metIseAl">—</span>
+              <span class="dash-stat__delta is-up">+bu ay</span>
+            </div>
+            <div class="dash-stat" style="cursor:default">
+              <span class="dash-stat__label">Ortalama Puan</span>
+              <span class="dash-stat__value" id="metPuan">—</span>
+              <span class="dash-stat__delta is-neutral">/ 5.0</span>
+            </div>
           </div>
         </div>
       </div>
-      <div class="panel-box">
+
+      <!-- Hızlı Erişim -->
+      <div class="panel-box mb-16">
         <div class="panel-box__head"><h3>Hızlı Erişim</h3></div>
         <div class="panel-box__body" style="display:flex;flex-wrap:wrap;gap:10px">
-          <a href="kuryeler.html" class="btn btn--primary">Kurye Havuzu</a>
-          <a href="havuzum.html" class="btn btn--secondary">Havuzum</a>
-          <a href="mesajlar.html" class="btn btn--ghost">Mesajlar</a>
+          <a href="kuryeler.html"    class="btn btn--primary">Kurye Bul</a>
+          <a href="basvurular.html"  class="btn btn--secondary">Başvurular <span id="panelHiringBadge" style="display:none;background:var(--primary);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
+          <a href="mesajlar.html"    class="btn btn--ghost">Mesajlar <span id="panelMsgBadge" style="display:none;background:var(--error);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
+          <a href="geri-bildirim.html" class="btn btn--ghost">Geri Bildirim <span id="panelFbBadge" style="display:none;background:var(--warning);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
+          <a href="havuzum.html"     class="btn btn--ghost">Havuzum</a>
           <a href="profil-duzenle.html" class="btn btn--ghost">Profili Düzenle</a>
         </div>
       </div>
+
+      <!-- Yaklaşan Görüşmeler -->
+      <div class="panel-box">
+        <div class="iv-upcoming__header" style="padding:14px 16px 6px;">
+          <span class="iv-upcoming__title">📅 Yaklaşan Görüşmeler</span>
+          <a href="gorusmeler.html" class="iv-upcoming__link">Tümü →</a>
+        </div>
+        <div class="panel-box__body">
+          <div class="iv-upcoming" id="panelIvUpcoming">
+            <p style="color:var(--text-3);font-size:0.82rem;">Yükleniyor…</p>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Kurye Havuzu -->
-    <div class="dash__panel" id="panel-personel">
+    <!-- ── Filo Yönetimi ───────────────────────────────────── -->
+    <div class="dash__panel" id="panel-filo">
+
+      <div class="panel-box mb-16">
+        <div class="panel-box__head">
+          <h3>Aktif Filo Üyeleri</h3>
+          <a href="kuryeler.html" class="btn btn--primary btn--sm">Kurye Ekle</a>
+        </div>
+        <div class="panel-box__body">
+          <div id="filoList">
+            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:60%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div></div>
+            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:70%"></span><span class="skel skel--line" style="width:35%;margin-top:8px"></span></span></div></div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel-box">
         <div class="panel-box__head">
-          <h3>Mevcut Kuryeler</h3>
-          <a href="kuryeler.html" class="btn btn--primary btn--sm">Tümünü Gör</a>
+          <h3>Son Ayrılanlar</h3>
+          <span style="font-size:0.78rem;color:var(--text-3)">Son 30 gün</span>
         </div>
         <div class="panel-box__body">
-          <div id="firmaPersonel">
-            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:70%"></span></span></div></div>
+          <div id="filoAyrilanlar">
+            <p style="font-size:0.85rem;color:var(--text-3);">Bu dönemde ayrılan kurye yok.</p>
           </div>
         </div>
       </div>
+
     </div>
 
-    <!-- Teklifler -->
-    <div class="dash__panel" id="panel-teklifler">
-      <div class="panel-box">
-        <div class="panel-box__head"><h3>Teklifler</h3></div>
+    <!-- ── İşe Alım ────────────────────────────────────────── -->
+    <div class="dash__panel" id="panel-ise-alim">
+
+      <!-- Aksiyon linkleri -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <a href="basvurular.html"   class="btn btn--primary">📋 Başvuruları Yönet</a>
+        <a href="gorusmeler.html"   class="btn btn--secondary">📅 Görüşmeler</a>
+        <a href="karar.html"        class="btn btn--ghost">⚖️ Karar Ver</a>
+        <a href="geri-bildirim.html" class="btn btn--ghost">⭐ Geri Bildirim</a>
+      </div>
+
+      <!-- Bekleyen kararlar -->
+      <div class="panel-box mb-16">
+        <div class="panel-box__head">
+          <h3>Bekleyen Kararlar</h3>
+          <a href="basvurular.html" class="btn btn--ghost btn--sm">Tümü →</a>
+        </div>
         <div class="panel-box__body">
-          <div id="firmaTeklif">
-            <div class="empty">Henüz teklif yok.</div>
+          <div id="firmaPendingDecisions">
+            <p style="color:var(--text-3);font-size:0.82rem;">Yükleniyor…</p>
           </div>
         </div>
       </div>
+
+      <!-- Aktif Teklifler -->
+      <div class="panel-box">
+        <div class="panel-box__head">
+          <h3>Gönderilen Teklifler</h3>
+        </div>
+        <div class="panel-box__body">
+          <div id="firmaTeklif">
+            <p class="empty">Henüz gönderilen teklif yok.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div><!-- /.app-content -->
@@ -141,43 +216,49 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/chat.js"></script>
+  <script src="assets/js/interview.js"></script>
+  <script src="assets/js/hiring.js"></script>
+  <script src="assets/js/comm-status.js"></script>
+  <script src="assets/js/feedback.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
   <script>
+  (function () {
+    'use strict';
+
+    /* ── Tab switching ────────────────────────────────────── */
     function switchTab(tabName) {
-      var btns = document.querySelectorAll('.dash__nav button');
-      var panels = document.querySelectorAll('.dash__panel');
-      btns.forEach(function(b) {
+      document.querySelectorAll('.dash__nav button').forEach(function (b) {
         b.classList.toggle('is-active', b.dataset.tab === tabName);
       });
-      panels.forEach(function(p) {
+      document.querySelectorAll('.dash__panel').forEach(function (p) {
         p.classList.toggle('is-active', p.id === 'panel-' + tabName);
       });
     }
+    window.switchTab = switchTab;
 
-    function renderProfEngine(profile, role) {
+    /* ── Profile completion engine ────────────────────────── */
+    function renderProfEngine(profile) {
       var el = document.getElementById('profEngine');
       if (!el || !profile) return;
-      var STEPS = {
-        firma: [
-          { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
-          { label: 'Hizmet bölgelerini seç',       done: !!(profile.sehir) },
-          { label: 'Firma bilgilerini doldur',      done: !!(profile.hakkinda || profile.bio) },
-          { label: 'Kurye ihtiyaçlarını belirle',  done: !!(profile.kurye_sayisi || profile.ihtiyac) },
-          { label: 'Logo yükle',                   done: !!(profile.avatar_url) },
-          { label: 'İletişim tercihlerini ayarla', done: !!(profile.web || profile.telefon) },
-        ],
-      };
-      var steps = STEPS[role] || STEPS.firma;
-      var doneCount = steps.filter(function(s){ return s.done; }).length;
+      var steps = [
+        { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
+        { label: 'Faaliyet şehrini belirle',      done: !!(profile.sehir) },
+        { label: 'Firma hakkında bilgi ekle',      done: !!(profile.hakkinda || profile.bio) },
+        { label: 'Kurye ihtiyaçlarını belirle',  done: !!(profile.kurye_sayisi || profile.ihtiyac) },
+        { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
+        { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
+      ];
+      var doneCount = steps.filter(function (s) { return s.done; }).length;
       var pct = Math.round((doneCount / steps.length) * 100);
       if (pct >= 100) { el.style.display = 'none'; return; }
       el.style.display = '';
       document.getElementById('profPct').textContent = '%' + pct;
-      requestAnimationFrame(function(){ document.getElementById('profBarFill').style.width = pct + '%'; });
+      requestAnimationFrame(function () { document.getElementById('profBarFill').style.width = pct + '%'; });
       var stepsEl = document.getElementById('profSteps');
       stepsEl.innerHTML = '';
-      steps.forEach(function(step) {
+      steps.forEach(function (step) {
         var a = document.createElement('a');
         a.href = 'profil-duzenle.html';
         a.className = 'prof-step' + (step.done ? ' is-done' : '');
@@ -194,97 +275,194 @@
     }
 
     function animateCount(el, target) {
-      var start = 0;
-      var duration = 900;
+      if (!el) return;
       var t0 = performance.now();
-      function step(now) {
-        var p = Math.min((now - t0) / duration, 1);
-        var ease = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(ease * target);
-        if (p < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
+      var dur = 900;
+      (function tick(now) {
+        var p = Math.min((now - t0) / dur, 1);
+        el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target);
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
     }
 
+    /* ── Demo filo data ───────────────────────────────────── */
+    function seedFiloDemo(uid) {
+      var key = 'kb_filo_' + uid;
+      if (localStorage.getItem(key)) return;
+      var demo = [
+        { id: 'k1', ad: 'Ahmet Demir',  sehir: 'İstanbul', seviye: 'Deneyimli', durum: 'aktif',   baslangic: '2025-01-10', puan: 4.8 },
+        { id: 'k2', ad: 'Selin Yıldız', sehir: 'İstanbul', seviye: 'Orta',      durum: 'aktif',   baslangic: '2025-02-15', puan: 4.5 },
+        { id: 'k3', ad: 'Murat Kaya',   sehir: 'İstanbul', seviye: 'Yeni',      durum: 'izinli',  baslangic: '2025-03-01', puan: 4.2 },
+        { id: 'k4', ad: 'Elif Şahin',   sehir: 'Ankara',   seviye: 'Deneyimli', durum: 'aktif',   baslangic: '2024-11-20', puan: 4.9 },
+      ];
+      localStorage.setItem(key, JSON.stringify(demo));
+    }
+
+    function getFilo(uid) {
+      try { return JSON.parse(localStorage.getItem('kb_filo_' + uid) || '[]'); } catch (e) { return []; }
+    }
+
+    function renderFilo(uid) {
+      var list = getFilo(uid);
+      var el = document.getElementById('filoList');
+      if (!el) return;
+      if (!list.length) {
+        el.innerHTML = '<div class="empty" style="text-align:center;padding:32px 0"><p style="color:var(--text-3)">Filo üyesi yok. Kuryeler bölümünden kurye ekleyin.</p><a href="kuryeler.html" class="btn btn--primary btn--sm" style="margin-top:12px">Kurye Bul</a></div>';
+        return;
+      }
+      var aktif = list.filter(function (k) { return k.durum === 'aktif'; }).length;
+      animateCount(document.getElementById('statFilo'), aktif);
+      animateCount(document.getElementById('metAktif'), aktif);
+      document.getElementById('statFiloSub').textContent = aktif + ' aktif üye';
+
+      var durumMap = { aktif: { label: 'Aktif', cls: 'is-active' }, izinli: { label: 'İzinli', cls: 'is-warn' }, pasif: { label: 'Pasif', cls: 'is-muted' } };
+      el.innerHTML = list.map(function (k) {
+        var d = durumMap[k.durum] || { label: k.durum, cls: '' };
+        var ava = k.ad.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+        var baslangic = k.baslangic ? new Date(k.baslangic).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        return '<div class="hd-applicant" style="cursor:default">' +
+          '<div class="hd-applicant__avatar" style="background:var(--primary-light);color:var(--primary)">' + ava + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="hd-applicant__name">' + k.ad + '</div>' +
+            '<div class="hd-applicant__job">' + k.sehir + ' · ' + k.seviye + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--text-3)">Başlangıç: ' + baslangic + ' · Puan: ⭐ ' + (k.puan || '—') + '</div>' +
+          '</div>' +
+          '<span class="hd-chip hd-chip--' + d.cls + '">' + d.label + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── Pending decisions ────────────────────────────────── */
+    function renderPendingDecisions(uid) {
+      var el = document.getElementById('firmaPendingDecisions');
+      if (!el) return;
+      var pending = (window.KBHiring ? KBHiring.getPendingDecisions(uid) : []).slice(0, 4);
+      if (!pending.length) {
+        el.innerHTML = '<p style="color:var(--text-3);font-size:0.82rem;">Bekleyen karar yok.</p>';
+        return;
+      }
+      el.innerHTML = pending.map(function (d) {
+        var ava = (d.kuryeAd || 'K').split(' ').map(function (w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+        return '<div class="hd-applicant">' +
+          '<div class="hd-applicant__avatar" style="background:var(--warning-bg,#FFF3CD);color:var(--warning)">' + ava + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="hd-applicant__name">' + (d.kuryeAd || 'Aday') + '</div>' +
+            '<div class="hd-applicant__job">' + (d.jobTitle || 'İş İlanı') + '</div>' +
+          '</div>' +
+          '<a href="karar.html?job=' + encodeURIComponent(d.jobId || '') + '&kid=' + encodeURIComponent(d.kuryeId || '') + '" class="btn btn--primary btn--sm">Karar Ver</a>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── Boot ─────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', async function () {
       if (window.KBApp && KBApp.initPanel) KBApp.initPanel('firma');
 
-      /* Welcome block */
+      switchTab('ana');
+
+      var uid = 'demo_firma';
       try {
-        await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
+        await (window.KB && KB.ready ? KB.ready : Promise.resolve());
+        var s = window.KB && KB.STATE && KB.STATE.user;
+        if (s && s.id) uid = s.id;
+      } catch (e) {}
+
+      /* Profile */
+      try {
         var profile = window.SB && SB.isOn() ? await SB.myProfile() : null;
-        var greeting = document.getElementById('welcomeGreeting');
-        var sub = document.getElementById('welcomeSub');
-        var avatar = document.getElementById('welcomeAvatar');
-        var progFill = document.getElementById('welcomeProgFill');
-        var progLabel = document.getElementById('welcomeProgLabel');
-        var progLink = document.getElementById('welcomeProgLink');
+        var greet = document.getElementById('welcomeGreeting');
+        var sub   = document.getElementById('welcomeSub');
+        var av    = document.getElementById('welcomeAvatar');
+        var pFill = document.getElementById('welcomeProgFill');
+        var pLbl  = document.getElementById('welcomeProgLabel');
+        var pLink = document.getElementById('welcomeProgLink');
 
         if (profile) {
-          var ad = profile.ad || 'Firma';
-          var firstName = ad.split(' ')[0];
-          var hour = new Date().getHours();
-          var gStr = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';
-          greeting.textContent = gStr + ', ' + firstName + ' 👋';
-
-          var guc = profile.profil_guc || 0;
-          var pct = Math.min(100, Math.round(guc));
-          progFill.style.width = pct + '%';
-          progLabel.textContent = 'Profil %' + pct + ' tamamlandı';
-          if (pct < 100) { progLink.style.display = ''; }
-
-          renderProfEngine(profile, 'firma');
-
-          sub.textContent = 'Kurye havuzunu yönet ve doğru eşleşmeleri bul.';
-
+          var ad  = profile.ad || 'Firma';
+          var fn  = ad.split(' ')[0];
+          var h   = new Date().getHours();
+          greet.textContent = (h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar') + ', ' + fn + '!';
+          var guc = Math.min(100, Math.round(profile.profil_guc || 0));
+          pFill.style.width = guc + '%';
+          pLbl.textContent  = 'Profil %' + guc + ' tamamlandı';
+          if (guc < 100) pLink.style.display = '';
+          sub.textContent = 'Filo yönetiminizi ve kurye havuzunuzu buradan takip edin.';
+          renderProfEngine(profile);
           if (profile.avatar_url) {
-            var img = document.createElement('img');
-            img.src = profile.avatar_url;
-            img.alt = ad;
-            avatar.innerHTML = '';
-            avatar.appendChild(img);
+            var img = document.createElement('img'); img.src = profile.avatar_url; img.alt = ad;
+            av.innerHTML = ''; av.appendChild(img);
           } else {
-            var initials = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
-            avatar.textContent = initials || ad[0].toUpperCase();
+            av.textContent = ad.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || ad[0].toUpperCase();
           }
-        } else {
-          greeting.textContent = 'Merhaba!';
-          sub.textContent = 'Profil verisine ulaşılamadı.';
-          avatar.textContent = '?';
-          progFill.style.width = '0%';
-          progLabel.textContent = 'Profil yükleniyor';
         }
+      } catch (e) {}
 
-        /* Stat counts */
-        var havuzEl = document.getElementById('statHavuz');
-        var teklifEl = document.getElementById('statTeklif');
-        var kuryeEl = document.getElementById('statKurye');
-        var teklifSub = document.getElementById('statTeklifSub');
+      /* Filo */
+      seedFiloDemo(uid);
+      renderFilo(uid);
 
-        var havuzSayisi = 0;
-        var teklifSayisi = 0;
-        var kuryeSayisi = 0;
+      /* Kurye pool count */
+      try {
+        var pool = window.SB && SB.isOn() ? await SB.pool('kurye') : (window.KB_DATA && KB_DATA.kuryeler) || [];
+        animateCount(document.getElementById('statKurye'), pool.length);
+      } catch (e) { animateCount(document.getElementById('statKurye'), 128); }
+
+      /* Metrics */
+      animateCount(document.getElementById('metIseAl'), 2);
+      document.getElementById('metPuan').textContent = '4.7';
+
+      /* Unread messages badge */
+      if (window.KBChat) {
         try {
-          var myPool = window.SB && SB.isOn() ? await SB.pool('firma') : null;
-          havuzSayisi = myPool ? myPool.length : 0;
-          var myOff = window.SB && SB.isOn() ? await SB.myOffers() : null;
-          if (myOff) {
-            teklifSayisi = myOff.filter(function(o){ return o.sender_id === (profile && profile.id); }).length;
+          var unread = KBChat.getUnreadCount(uid, 'firma');
+          var mb = document.getElementById('panelMsgBadge');
+          if (mb && unread > 0) { mb.textContent = unread; mb.style.display = 'inline'; }
+        } catch (e) {}
+      }
+
+      /* Hiring */
+      if (window.KBHiring) {
+        try {
+          KBHiring.seedDemoData(uid);
+          var pending = KBHiring.getPendingDecisions(uid).length;
+          animateCount(document.getElementById('statBasvuru'), pending);
+          var hb = document.getElementById('panelHiringBadge');
+          if (hb && pending > 0) { hb.textContent = pending; hb.style.display = 'inline'; }
+          renderPendingDecisions(uid);
+        } catch (e) {}
+      }
+
+      /* Feedback badge */
+      if (window.KBFeedback) {
+        try {
+          KBFeedback.seedDemoData();
+          var pfb = KBFeedback.getPendingFeedbacks(uid, 'firma').length;
+          var fb = document.getElementById('panelFbBadge');
+          if (fb && pfb > 0) { fb.textContent = pfb; fb.style.display = 'inline'; }
+        } catch (e) {}
+      }
+
+      /* Upcoming interviews */
+      if (window.KBInterview) {
+        try {
+          KBInterview.seedDemoData(uid);
+          KBInterview.checkReminders(uid);
+          var ivEl = document.getElementById('panelIvUpcoming');
+          if (ivEl) {
+            ivEl.innerHTML = KBInterview.renderUpcomingWidget(uid, 'firma', 3);
+            ivEl.addEventListener('click', function (e) {
+              if (e.target.closest('.iv-mini-card')) window.location.href = 'gorusmeler.html';
+            });
           }
-          var kuryePool = window.SB && SB.isOn() ? await SB.pool('kurye') : null;
-          kuryeSayisi = kuryePool ? kuryePool.length : 0;
-        } catch(e) {}
+        } catch (e) {}
+      }
 
-        animateCount(havuzEl, havuzSayisi);
-        animateCount(teklifEl, teklifSayisi);
-        animateCount(kuryeEl, kuryeSayisi);
-        teklifSub.textContent = teklifSayisi === 1 ? '1 aktif teklif' : teklifSayisi + ' aktif teklif';
-        teklifSub.className = 'dash-stat__delta' + (teklifSayisi > 0 ? '' : ' is-neutral');
-
-      } catch(err) {
-        console.warn('Welcome block error:', err);
+      /* Comm status */
+      if (window.KBCommStatus && window.KBChat) {
+        try { KBCommStatus.observe(uid); } catch (e) {}
       }
     });
+  })();
   </script>
 </body>
 </html>

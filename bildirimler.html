@@ -6,20 +6,6 @@
   <title>Bildirimler · KuryemiBul</title>
   <link rel="icon" href="assets/logo.png">
   <link rel="stylesheet" href="assets/css/main.css">
-  <style>
-    .notif-list { display: flex; flex-direction: column; gap: 0; }
-    .notif-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
-    .notif-item:last-child { border-bottom: none; }
-    .notif-ico { width: 40px; height: 40px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
-    .notif-body { flex: 1; }
-    .notif-title { font-size: 0.9rem; font-weight: 500; color: var(--text); line-height: 1.4; }
-    .notif-time { font-size: 0.78rem; color: var(--text-3); margin-top: 3px; }
-    .notif-item--unread .notif-title { font-weight: 600; }
-    .notif-item--unread { background: #f0f4ff; border-radius: var(--radius); padding: 14px; margin: 0 -4px; }
-    .notif-empty { text-align: center; padding: 64px 0; color: var(--text-2); }
-    .notif-empty__ic { font-size: 2.5rem; margin-bottom: 12px; }
-    .notif-empty__t { font-weight: 600; margin-bottom: 6px; }
-  </style>
 </head>
 <body>
 
@@ -28,20 +14,43 @@
   <nav id="app-sidebar"></nav>
 
   <div class="app-content">
-    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+
+    <div class="page-header">
       <div>
         <h1>Bildirimler</h1>
-        <p class="page-sub">Teklif, başvuru ve mesaj güncellemeleri.</p>
+        <p class="page-sub">Başvuru, görüşme, mesaj ve karar güncellemeleri.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn--ghost btn--sm" id="btnMarkAll">Tümünü Okundu Say</button>
+        <button class="btn btn--ghost btn--sm" id="btnClearAll" style="color:var(--error)">Tümünü Sil</button>
       </div>
     </div>
 
-    <div class="card" style="padding:24px">
-      <div id="notifList">
-        <div class="skel-card"><span class="skel skel--line" style="width:80%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div>
-        <div class="skel-card" style="margin-top:12px"><span class="skel skel--line" style="width:70%"></span><span class="skel skel--line" style="width:35%;margin-top:8px"></span></div>
-        <div class="skel-card" style="margin-top:12px"><span class="skel skel--line" style="width:75%"></span><span class="skel skel--line" style="width:45%;margin-top:8px"></span></div>
+    <!-- Filter pills -->
+    <div class="iv-filter-bar" id="notifFilterBar" style="margin-bottom:16px">
+      <button class="iv-filter-pill is-active" data-filter="all">Tümü</button>
+      <button class="iv-filter-pill" data-filter="basvuru">📋 Başvuru</button>
+      <button class="iv-filter-pill" data-filter="gorusme">📅 Görüşme</button>
+      <button class="iv-filter-pill" data-filter="karar">⚖️ Karar</button>
+      <button class="iv-filter-pill" data-filter="mesaj">💬 Mesaj</button>
+      <button class="iv-filter-pill" data-filter="teklif">✉️ Teklif</button>
+      <button class="iv-filter-pill" data-filter="geri">⭐ Geri Bildirim</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="iv-stats" id="notifStats" style="margin-bottom:16px"></div>
+
+    <!-- List -->
+    <div class="panel-box">
+      <div class="panel-box__body" style="padding:0">
+        <div id="notifList">
+          <div class="skel-card"><span class="skel skel--line" style="width:80%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div>
+          <div class="skel-card" style="margin-top:4px"><span class="skel skel--line" style="width:70%"></span><span class="skel skel--line" style="width:35%;margin-top:8px"></span></div>
+          <div class="skel-card" style="margin-top:4px"><span class="skel skel--line" style="width:75%"></span><span class="skel skel--line" style="width:45%;margin-top:8px"></span></div>
+        </div>
       </div>
     </div>
+
   </div>
 
   <div id="app-footer"></div>
@@ -51,56 +60,133 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/notifications.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
+
   <script>
-    document.addEventListener('DOMContentLoaded', async function () {
-      if (!window.KB) return;
-      await KB.ready();
-      var host = document.getElementById('notifList');
-      if (!host) return;
-      if (!window.SB || !SB.isOn()) {
-        var mockNotifs = (window.KB_DATA && KB_DATA.bildirimler) || [];
-        if (!mockNotifs.length) {
-          host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Bildirim bulunmuyor</div></div>';
-          return;
-        }
-        var icoMap = { offer: '✉️', message: '💬', apply: '📋', system: '⚙️' };
-        host.innerHTML = '<div class="notif-list">' + mockNotifs.map(function(n) {
-          var ico = icoMap[n.type] || '🔔';
-          var unread = !n.read_at;
-          var dateStr = '';
-          try { dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''; } catch(e) {}
-          return '<div class="notif-item' + (unread ? ' notif-item--unread' : '') + '"' +
-            (n.link ? ' style="cursor:pointer" onclick="location.href=\'' + n.link + '\'"' : '') + '>' +
-            '<div class="notif-ico">' + ico + '</div>' +
-            '<div class="notif-body">' +
-              '<div class="notif-title">' + (n.title ? '<strong>' + (window.KB ? KB.esc(n.title) : n.title) + '</strong> — ' : '') + (window.KB ? KB.esc(n.body || 'Yeni bildirim') : (n.body || 'Yeni bildirim')) + '</div>' +
-              '<div class="notif-time">' + dateStr + '</div>' +
-            '</div></div>';
-        }).join('') + '</div>';
+  (function () {
+    'use strict';
+
+    var ACTIVE_FILTER = 'all';
+    var UID = null;
+
+    function getUid() {
+      if (UID) return UID;
+      try { var s = window.KB && KB.STATE && KB.STATE.user; if (s && s.id) return (UID = s.id); } catch (e) {}
+      try { var s2 = JSON.parse(localStorage.getItem('kb_session') || 'null'); if (s2 && s2.user && s2.user.id) return (UID = s2.user.id); } catch (e) {}
+      return (UID = localStorage.getItem('kb_demo_uid') || 'demo_user');
+    }
+
+    function renderStats(uid) {
+      var all    = KBNotif.getAll(uid);
+      var unread = all.filter(function (n) { return !n.read; }).length;
+      var el = document.getElementById('notifStats');
+      if (!el) return;
+      el.innerHTML =
+        '<div class="iv-stat"><div class="iv-stat__num">' + all.length + '</div><div class="iv-stat__lbl">Toplam</div></div>' +
+        '<div class="iv-stat"><div class="iv-stat__num">' + unread + '</div><div class="iv-stat__lbl">Okunmamış</div></div>' +
+        '<div class="iv-stat"><div class="iv-stat__num">' + (all.length - unread) + '</div><div class="iv-stat__lbl">Okunmuş</div></div>';
+    }
+
+    function renderList(uid) {
+      var opts = ACTIVE_FILTER !== 'all' ? { type: ACTIVE_FILTER } : {};
+      var list = KBNotif.getAll(uid, opts);
+      var el   = document.getElementById('notifList');
+      if (!el) return;
+
+      if (!list.length) {
+        el.innerHTML =
+          '<div class="notif-empty">' +
+            '<div class="notif-empty__ic">🔔</div>' +
+            '<div class="notif-empty__t">Bildirim yok</div>' +
+            '<p style="color:var(--text-2);font-size:0.85rem">Yeni başvuru, görüşme ve mesajlar burada görünür.</p>' +
+          '</div>';
         return;
       }
-      try {
-        var notifs = await SB.myNotifications ? SB.myNotifications() : Promise.resolve([]);
-        if (!notifs || !notifs.length) {
-          host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Henüz bildirim yok</div><p style="color:var(--text-2);font-size:0.85rem">Yeni teklifler ve mesajlar burada görünür.</p></div>';
+
+      el.innerHTML = '<div class="notif-list">' + list.map(function (n) {
+        return KBNotif.renderItem(n);
+      }).join('') + '</div>';
+    }
+
+    function render() {
+      var uid = getUid();
+      renderStats(uid);
+      renderList(uid);
+    }
+
+    function wire() {
+      var uid = getUid();
+
+      /* Filter pills */
+      document.getElementById('notifFilterBar').addEventListener('click', function (e) {
+        var pill = e.target.closest('[data-filter]');
+        if (!pill) return;
+        ACTIVE_FILTER = pill.dataset.filter;
+        document.querySelectorAll('.iv-filter-pill').forEach(function (p) {
+          p.classList.toggle('is-active', p.dataset.filter === ACTIVE_FILTER);
+        });
+        renderList(uid);
+      });
+
+      /* List actions: read, delete, link */
+      document.getElementById('notifList').addEventListener('click', function (e) {
+        var readBtn = e.target.closest('[data-read]');
+        var delBtn  = e.target.closest('[data-del]');
+        var item    = e.target.closest('.notif-item--link');
+
+        if (readBtn) {
+          KBNotif.markRead(uid, readBtn.dataset.read);
+          readBtn.closest('.notif-item').classList.remove('notif-item--unread');
+          renderStats(uid);
           return;
         }
-        host.innerHTML = '<div class="notif-list">' + notifs.map(function(n) {
-          var ico = n.type === 'offer' ? '✉️' : n.type === 'message' ? '💬' : n.type === 'apply' ? '📋' : '🔔';
-          var unread = !n.read_at;
-          return '<div class="notif-item' + (unread ? ' notif-item--unread' : '') + '">' +
-            '<div class="notif-ico">' + ico + '</div>' +
-            '<div class="notif-body">' +
-              '<div class="notif-title">' + (n.body || n.message || 'Yeni bildirim') + '</div>' +
-              '<div class="notif-time">' + (n.created_at ? new Date(n.created_at).toLocaleDateString('tr-TR') : '') + '</div>' +
-            '</div></div>';
-        }).join('') + '</div>';
-      } catch (e) {
-        host.innerHTML = '<div class="notif-empty"><div class="notif-empty__ic">🔔</div><div class="notif-empty__t">Bildirimler yüklenemedi</div></div>';
-      }
-    });
+        if (delBtn) {
+          KBNotif.remove(uid, delBtn.dataset.del);
+          render();
+          return;
+        }
+        if (item && !readBtn && !delBtn) {
+          var href = item.dataset.href;
+          KBNotif.markRead(uid, item.dataset.nid);
+          if (href) window.location.href = href;
+        }
+      });
+
+      /* Mark all read */
+      document.getElementById('btnMarkAll').addEventListener('click', function () {
+        KBNotif.markAllRead(uid);
+        render();
+      });
+
+      /* Clear all */
+      document.getElementById('btnClearAll').addEventListener('click', function () {
+        if (!confirm('Tüm bildirimler silinecek. Emin misiniz?')) return;
+        KBNotif.clear(uid);
+        render();
+      });
+    }
+
+    function boot() {
+      var uid = getUid();
+      KBNotif.seedDemoData(uid);
+      /* Mark all as read on open */
+      render();
+      wire();
+      /* Update topbar badge to 0 after viewing */
+      setTimeout(function () {
+        KBNotif.markAllRead(uid);
+        KBNotif.updateBadge(uid);
+      }, 2000);
+    }
+
+    if (window.KB && KB.ready && KB.ready.then) {
+      KB.ready.then(boot);
+    } else {
+      document.addEventListener('DOMContentLoaded', boot);
+    }
+  })();
   </script>
 </body>
 </html>
