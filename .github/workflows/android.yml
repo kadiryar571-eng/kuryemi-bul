@@ -6,9 +6,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Repoyu çek
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Node kur
         uses: actions/setup-node@v4
@@ -52,3 +56,13 @@ jobs:
           name: kuryemibul-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Web sitesindeki indirme dosyasını güncelle
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk downloads/kuryemibul.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add downloads/kuryemibul.apk
+          git diff --staged --quiet || git commit -m "chore: APK güncelle (otomatik) [skip ci]"
+          git pull --rebase origin main
+          git push
