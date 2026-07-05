@@ -89,9 +89,6 @@ window.FirmaScreens = (function () {
           '<button class="quick-btn" onclick="Router.go(\'/firma/ilan/yeni\')">' +
             '<div class="quick-btn__icon">📋</div><div class="quick-btn__label">Yeni İlan Oluştur</div>' +
           '</button>' +
-          '<button class="quick-btn" onclick="Router.go(\'/firma/kurye-ilanlari\')">' +
-            '<div class="quick-btn__icon">🛵</div><div class="quick-btn__label">Kurye İlanları</div>' +
-          '</button>' +
           '<button class="quick-btn" onclick="Router.go(\'/firma/mesajlar\')">' +
             '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
           '</button>' +

@@ -346,74 +346,6 @@ window.SharedScreens = (function () {
     toast(theme === 'dark' ? 'Koyu tema seçildi' : 'Açık tema seçildi');
   }
 
-  /* ── Kurye İlanları (firma/işletme keşif ekranı) ─────────── */
-  var _kuryeIlanCache = [];
-  var _kuryeIlanAppliedIds = {};
-
-  function kuryeIlanlari() {
-    showAppBar('Kurye İlanları', false);
-    showBottomNav();
-
-    renderScreen(
-      '<div class="kb-screen-inner">' +
-        '<div style="font-size:.82rem;color:var(--muted);margin-bottom:12px">İş arayan kuryelerin paylaştığı ilanlar. İlgilendiğin bir kurye varsa "İlgileniyorum" ile başvuru gönder.</div>' +
-        '<div id="kurye-ilan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
-      '</div>'
-    );
-
-    setTimeout(function () { _loadKuryeIlanlari(); }, 130);
-  }
-
-  function _kuryeIlanCard(il) {
-    var applied = !!_kuryeIlanAppliedIds[il.id];
-    return '<div class="kb-card" style="margin-bottom:10px">' +
-      '<div class="flex items-center justify-between mb-8">' +
-        '<div style="font-weight:700">' + (il.baslik || 'İlan') + '</div>' +
-        (il.maas_aralik ? '<span class="kb-chip kb-chip--accent">' + il.maas_aralik + '</span>' : '') +
-      '</div>' +
-      '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' +
-        [il.sahip, [il.sehir, il.bolge].filter(Boolean).join(', '), il.arac].filter(Boolean).join(' · ') +
-      '</div>' +
-      (il.aciklama ? '<div style="font-size:.84rem;color:var(--text);line-height:1.5;margin-bottom:8px">' + il.aciklama.slice(0, 140) + '</div>' : '') +
-      '<div class="flex" style="gap:8px;margin-top:6px">' +
-        '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/profil-kurye?id=' + il.owner_id + '\')">Profili İncele</button>' +
-        '<button class="btn btn--sm ' + (applied ? 'btn--ghost' : 'btn--primary') + '" ' +
-          (applied ? 'disabled' : ('onclick="SharedScreens._kuryeIlaniBasvur(\'' + il.id + '\')"')) + '>' +
-          (applied ? 'Başvuruldu ✓' : 'İlgileniyorum') +
-        '</button>' +
-      '</div>' +
-    '</div>';
-  }
-
-  async function _loadKuryeIlanlari() {
-    var el = document.getElementById('kurye-ilan-list');
-    if (!el) return;
-    if (!(window.SB && SB.isOn())) {
-      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">🛵</div><div class="kb-empty__title">Bu ekran çevrimiçi mod gerektirir</div></div>';
-      return;
-    }
-    try {
-      var items = await SB.openListings(['kurye']);
-      _kuryeIlanCache = items || [];
-      el.innerHTML = _kuryeIlanCache.length
-        ? _kuryeIlanCache.map(_kuryeIlanCard).join('')
-        : '<div class="kb-empty"><div class="kb-empty__icon">🛵</div><div class="kb-empty__title">Henüz ilan yok</div><div class="kb-empty__sub">Kuryeler ilan paylaştıkça burada görünür.</div></div>';
-    } catch (e) {
-      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">⚠️</div><div class="kb-empty__title">Yüklenemedi</div></div>';
-    }
-  }
-
-  async function _kuryeIlaniBasvur(id) {
-    try {
-      await SB.applyToListing(id, '');
-      _kuryeIlanAppliedIds[id] = true;
-      toast('İlgi gönderildi ✓');
-      _loadKuryeIlanlari();
-    } catch (e) {
-      toast('Gönderilemedi, tekrar dene');
-    }
-  }
-
   /* ── Yardım & Destek ────────────────────────────────────── */
   function yardim() {
     showAppBar('Yardım & Destek', true);
@@ -1112,9 +1044,6 @@ window.SharedScreens = (function () {
     _setTheme   : _setTheme,
     _faqToggle  : _faqToggle,
     _deleteAccount : _deleteAccount,
-    // Kurye İlanları (firma/işletme keşif)
-    kuryeIlanlari      : kuryeIlanlari,
-    _kuryeIlaniBasvur  : _kuryeIlaniBasvur,
     // Shared premium panel
     premDashPanel   : premDashPanel,
     // Shared messaging engine

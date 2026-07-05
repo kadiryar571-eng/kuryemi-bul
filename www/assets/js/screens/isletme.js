@@ -82,9 +82,6 @@ window.IsletmeScreens = (function () {
           '<button class="quick-btn" onclick="Router.go(\'/isletme/ilan/yeni\')">' +
             '<div class="quick-btn__icon">📋</div><div class="quick-btn__label">İlan Oluştur</div>' +
           '</button>' +
-          '<button class="quick-btn" onclick="Router.go(\'/isletme/kurye-ilanlari\')">' +
-            '<div class="quick-btn__icon">🛵</div><div class="quick-btn__label">Kurye İlanları</div>' +
-          '</button>' +
           '<button class="quick-btn" onclick="Router.go(\'/isletme/mesajlar\')">' +
             '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
           '</button>' +

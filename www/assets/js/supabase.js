@@ -508,10 +508,8 @@
     if (r.error) { console.warn("myListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
-  async function openListings(roles) {
-    var q = client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik");
-    if (roles && roles.length) q = q.in("role", roles);
-    var r = await q.order("created_at", { ascending: false });
+  async function openListings() {
+    var r = await client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik").order("created_at", { ascending: false });
     if (r.error) { console.warn("openListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }

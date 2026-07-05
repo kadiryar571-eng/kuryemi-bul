@@ -574,50 +574,34 @@ declare
   v_conv_id uuid;
   v_owner_id uuid;
   v_owner_user uuid;
-  v_owner_role text;
   v_listing_title text;
-  v_app_ad text;
-  v_app_puan numeric;
-  v_app_sehir text;
-  v_app_arac text;
-  v_app_seviye text;
-  v_app_deneyim int;
-  v_kurye_id uuid; v_kurye_user uuid;
-  v_employer_id uuid; v_employer_user uuid;
-  v_kurye_unread int := 0; v_employer_unread int := 0;
+  v_kurye_ad text;
+  v_kurye_puan numeric;
+  v_kurye_sehir text;
+  v_kurye_arac text;
+  v_kurye_seviye text;
+  v_kurye_deneyim int;
 begin
-  select owner_id, owner_user, baslik, role
-    into v_owner_id, v_owner_user, v_listing_title, v_owner_role
+  select owner_id, owner_user, baslik
+    into v_owner_id, v_owner_user, v_listing_title
     from public.listings where id = new.listing_id;
   if v_owner_id is null then return new; end if;
 
   select ad, puan, sehir, arac, seviye, deneyim
-    into v_app_ad, v_app_puan, v_app_sehir, v_app_arac, v_app_seviye, v_app_deneyim
+    into v_kurye_ad, v_kurye_puan, v_kurye_sehir, v_kurye_arac, v_kurye_seviye, v_kurye_deneyim
     from public.profiles where id = new.applicant_id;
-
-  -- İlan sahibi kurye ise (kurye kendi ilanını paylaşmış), taraflar ters çevrilir:
-  -- ilan sahibi = kurye tarafı, başvuran (firma/işletme) = işveren tarafı.
-  if v_owner_role = 'kurye' then
-    v_kurye_id := v_owner_id;       v_kurye_user := v_owner_user;
-    v_employer_id := new.applicant_id; v_employer_user := new.applicant_user;
-    v_kurye_unread := 1;
-  else
-    v_kurye_id := new.applicant_id; v_kurye_user := new.applicant_user;
-    v_employer_id := v_owner_id;     v_employer_user := v_owner_user;
-    v_employer_unread := 1;
-  end if;
 
   -- Konuşma oluştur (application başına bir tane garantisi için unique constraint var)
   insert into public.conversations (
     application_id, listing_id,
     kurye_id, employer_id,
     kurye_user, employer_user,
-    last_message, kurye_unread, employer_unread
+    last_message, employer_unread
   ) values (
     new.id, new.listing_id,
-    v_kurye_id, v_employer_id,
-    v_kurye_user, v_employer_user,
-    'Yeni başvuru', v_kurye_unread, v_employer_unread
+    new.applicant_id, v_owner_id,
+    new.applicant_user, v_owner_user,
+    'Yeni başvuru', 1
   ) returning id into v_conv_id;
 
   -- Sistem mesajı
@@ -625,37 +609,36 @@ begin
   values (v_conv_id, null, 'system',
     '"' || coalesce(v_listing_title, 'İlan') || '" ilanına yeni başvuru geldi.', 'system');
 
-  -- Başvuran profil kartı (ilan sahibi tarafı görecek)
+  -- Başvuran profil kartı (işveren tarafı görecek)
   insert into public.conv_messages (
     conversation_id, sender_user, sender_role, content, message_type, metadata
   ) values (
-    v_conv_id, new.applicant_user, coalesce(new.applicant_role, 'kurye'),
-    coalesce(v_app_ad, 'Aday') || ' profilini paylaştı.',
+    v_conv_id, new.applicant_user, 'kurye',
+    coalesce(v_kurye_ad, 'Aday') || ' profilini paylaştı.',
     'profile_card',
     jsonb_build_object(
       'profile_id', new.applicant_id,
-      'role', coalesce(new.applicant_role, ''),
-      'ad', coalesce(v_app_ad, ''),
-      'puan', coalesce(v_app_puan, 0),
-      'sehir', coalesce(v_app_sehir, ''),
-      'arac', coalesce(v_app_arac, ''),
-      'seviye', coalesce(v_app_seviye, 'standart'),
-      'deneyim', coalesce(v_app_deneyim, 0)
+      'ad', coalesce(v_kurye_ad, ''),
+      'puan', coalesce(v_kurye_puan, 0),
+      'sehir', coalesce(v_kurye_sehir, ''),
+      'arac', coalesce(v_kurye_arac, ''),
+      'seviye', coalesce(v_kurye_seviye, 'standart'),
+      'deneyim', coalesce(v_kurye_deneyim, 0)
     )
   );
 
   -- Kapak mesajı varsa
   if new.mesaj is not null and trim(new.mesaj) <> '' then
     insert into public.conv_messages (conversation_id, sender_user, sender_role, content, message_type)
-    values (v_conv_id, new.applicant_user, coalesce(new.applicant_role, 'kurye'), new.mesaj, 'text');
+    values (v_conv_id, new.applicant_user, 'kurye', new.mesaj, 'text');
   end if;
 
-  -- İlan sahibi bildirimi
+  -- İşveren bildirimi
   insert into public.notifications (user_id, type, title, body, link, data)
   values (
     v_owner_user, 'new_application',
     'Yeni başvuru alındı',
-    coalesce(v_app_ad, 'Bir aday') || ' ilanınıza başvurdu.',
+    coalesce(v_kurye_ad, 'Bir aday') || ' ilanınıza başvurdu.',
     '/conversations/' || v_conv_id,
     jsonb_build_object('conversation_id', v_conv_id, 'listing_title', coalesce(v_listing_title, ''))
   );
