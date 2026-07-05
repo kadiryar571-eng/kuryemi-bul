@@ -110,6 +110,16 @@ window.KuryeScreens = (function () {
           '<button class="prem-upgrade__btn">Detayları Gör</button>' +
         '</div>' +
 
+        /* ── Hızlı İşlemler ── */
+        '<div class="quick-actions" style="margin-bottom:0">' +
+          '<button class="quick-btn" onclick="Router.go(\'/kurye/ilanlarim\')">' +
+            '<div class="quick-btn__icon">🛵</div><div class="quick-btn__label">İlanımı Paylaş</div>' +
+          '</button>' +
+          '<button class="quick-btn" onclick="Router.go(\'/kurye/mesajlar\')">' +
+            '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
+          '</button>' +
+        '</div>' +
+
         /* ── Suggested Jobs ── */
         '<div class="kb-section-head" style="margin-top:4px">' +
           '<div class="kb-section-title">Sana Özel İlanlar</div>' +
@@ -129,7 +139,7 @@ window.KuryeScreens = (function () {
     if (!window.SB || !SB.isOn()) return;
     try {
       var results = await Promise.allSettled([
-        SB.openListings(),
+        SB.openListings(['isletme','firma']),
         SB.myApplications(),
         SB.myConvs()
       ]);
@@ -697,7 +707,7 @@ window.KuryeScreens = (function () {
 
   function _loadRealIlanlar() {
     if (!window.SB || !SB.isOn()) return;
-    SB.openListings().then(function (listings) {
+    SB.openListings(['isletme','firma']).then(function (listings) {
       if (!listings || !listings.length) return;
       var feed = document.getElementById('il-feed');
       if (!feed) return;
@@ -775,6 +785,400 @@ window.KuryeScreens = (function () {
     var list = document.getElementById('ilan-list');
     if (list) list.innerHTML = filtered.length ? filtered.map(_jobCard).join('') :
       '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">İlan bulunamadı</div></div>';
+  }
+
+  /* ── 3b. KENDİ İLANIM (iş arıyorum ilanı) ────────────────── */
+  var _myIlanCache = [];
+  var _editIlanId = null;
+  var MY_FAYDA_LIST = ['SGK / Sigorta','Yemek Kartı','Servis / Ulaşım','Araç Yakıtı','Aidat Desteği','Ekipman'];
+  var MY_GEREK_LIST = ['Ehliyet (B)','Motorsiklet','Araç Sahibi','Akıllı Telefon','App Kullanımı'];
+
+  function _mySectionTitle(t) {
+    return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-kurye);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(108,77,255,.2)">' + t + '</div>';
+  }
+  function _myChipChecks(list, prefix) {
+    return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">' +
+      list.map(function(item, i) {
+        var id = prefix + i;
+        return '<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1.5px solid rgba(108,77,255,.35);background:var(--surface2,rgba(108,77,255,.08));font-size:.82rem;cursor:pointer;color:inherit">' +
+          '<input type="checkbox" id="' + id + '" value="' + item + '" style="accent-color:var(--c-kurye);width:15px;height:15px;flex-shrink:0"> ' + item + '</label>';
+      }).join('') +
+    '</div>';
+  }
+
+  function ilanlarim() {
+    showAppBar('İlanım', false,
+      '<button class="kb-appbar__action" onclick="Router.go(\'/kurye/ilan/yeni\')">' + ICON.plus + '</button>'
+    );
+    showBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div style="font-size:.82rem;color:var(--muted);margin-bottom:12px">İş arayışını bir ilan olarak paylaş, firma ve işletmeler seni keşfetsin.</div>' +
+        '<div id="my-ilan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+        '<button class="btn btn--primary mt-16" onclick="Router.go(\'/kurye/ilan/yeni\')">' +
+          ICON.plus + 'İlan Paylaş' +
+        '</button>' +
+      '</div>'
+    );
+
+    setTimeout(function () { _loadMyIlanlar(); }, 130);
+  }
+
+  function _myIlanCard(il) {
+    var isAcik = (il.durum || '') === 'acik';
+    return '<div class="kb-card" style="margin-bottom:10px">' +
+      '<div class="flex items-center justify-between mb-8">' +
+        '<div style="font-weight:700">' + (il.baslik || 'İlan') + '</div>' +
+        '<span class="kb-chip ' + (isAcik ? 'kb-chip--success' : '') + '">' + (isAcik ? 'Açık' : 'Pasif') + '</span>' +
+      '</div>' +
+      ((il.sehir) ? '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' + [il.sehir, il.bolge].filter(Boolean).join(', ') + '</div>' : '') +
+      '<div style="font-size:.82rem;color:var(--c-kurye);font-weight:600">' + (il.tarih || '') + '</div>' +
+      '<div class="flex" style="gap:8px;margin-top:10px">' +
+        '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/kurye/gelen-basvurular\')">Gelen İlgi</button>' +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/kurye/ilan/duzenle/' + il.id + '\')">Düzenle</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="KuryeScreens._myIlanToggle(\'' + il.id + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function _myIlanEmpty() {
+    return '<div style="padding:48px 24px;text-align:center">' +
+      '<div style="font-size:2.5rem;margin-bottom:12px">🛵</div>' +
+      '<div style="font-weight:700;font-size:1rem;margin-bottom:6px">Henüz ilan paylaşmadın</div>' +
+      '<div style="font-size:.84rem;color:var(--muted)">"İlan Paylaş" ile iş arayışını duyur.</div>' +
+    '</div>';
+  }
+
+  function _myIlanRenderList(list) {
+    if (!list || !list.length) return _myIlanEmpty();
+    return list.map(_myIlanCard).join('');
+  }
+
+  async function _loadMyIlanlar() {
+    var el = document.getElementById('my-ilan-list');
+    if (!el) return;
+    if (_myIlanCache.length > 0) el.innerHTML = _myIlanRenderList(_myIlanCache);
+    if (!(window.SB && SB.isOn())) {
+      if (!_myIlanCache.length) el.innerHTML = _myIlanEmpty();
+      return;
+    }
+    try {
+      var items = await SB.myListings();
+      _myIlanCache = items || [];
+      var cur = document.getElementById('my-ilan-list');
+      if (cur) cur.innerHTML = _myIlanRenderList(_myIlanCache);
+    } catch (e) {
+      if (!_myIlanCache.length) {
+        var cur2 = document.getElementById('my-ilan-list');
+        if (cur2) cur2.innerHTML = _myIlanEmpty();
+      }
+    }
+  }
+
+  async function _myIlanToggle(id, setAcik) {
+    try {
+      await SB.updateListingStatus(id, setAcik ? 'acik' : 'kapali');
+      toast(setAcik ? 'İlan yayınlandı' : 'İlan pasife alındı');
+      _loadMyIlanlar();
+    } catch (e) { toast('İşlem başarısız'); }
+  }
+
+  function ilanYeni(ctx) {
+    _editIlanId = (ctx && ctx.params && ctx.params.id) || null;
+    showAppBar(_editIlanId ? 'İlanımı Düzenle' : 'İlan Paylaş', true);
+    showBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+
+      _mySectionTitle('Temel Bilgiler') +
+      '<div class="kb-form-group"><label class="kb-label">Pozisyon *</label>' +
+        '<select class="kb-select" id="il-poz">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Yaya Kurye</option><option>Bisiklet Kurye</option>' +
+          '<option>Motorlu Kurye</option><option>Araçlı Kurye</option><option>Cargo Kurye</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Şehir *</label>' +
+        '<input class="kb-input" id="il-sehir" type="text" placeholder="İstanbul"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">İlçe / Bölge</label>' +
+        '<input class="kb-input" id="il-bolge" type="text" placeholder="Kadıköy"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Çalışabileceğim Bölgeler</label>' +
+        '<input class="kb-input" id="il-mahalle" type="text" placeholder="Moda, Caddebostan..."></div>' +
+
+      _mySectionTitle('Çalışma Tercihleri') +
+      '<div class="kb-form-group"><label class="kb-label">Çalışma Şekli</label>' +
+        '<select class="kb-select" id="il-sekli">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Tam Zamanlı</option><option>Yarı Zamanlı</option>' +
+          '<option>Sözleşmeli</option><option>Freelance</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Uygun Olduğum Vardiya</label>' +
+        '<select class="kb-select" id="il-vardiya">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Gündüz (08-18)</option><option>Akşam (16-24)</option>' +
+          '<option>Gece (22-08)</option><option>Esnek</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Beklenen Ücret Modeli</label>' +
+        '<select class="kb-select" id="il-maas-model">' +
+          '<option value="aylık">Aylık (₺/ay)</option>' +
+          '<option value="günlük">Günlük (₺/gün)</option>' +
+          '<option value="saatlik">Saatlik (₺/sa)</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Beklenen Ücret Aralığı (₺)</label>' +
+        '<div class="flex" style="gap:8px">' +
+          '<input class="kb-input" id="il-maas-min" type="number" placeholder="Min (25.000)">' +
+          '<input class="kb-input" id="il-maas-max" type="number" placeholder="Max (35.000)">' +
+        '</div></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Uygun Olduğum Saatler</label>' +
+        '<input class="kb-input" id="il-saat" type="text" placeholder="09:00 - 18:00"></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Aracım</label>' +
+        '<select class="kb-select" id="il-arac">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Yaya</option><option>Bisiklet</option>' +
+          '<option>Motorsiklet</option><option>Otomobil</option><option>Van / Minibüs</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Deneyimim</label>' +
+        '<select class="kb-select" id="il-deneyim">' +
+          '<option value="">Seçiniz</option>' +
+          '<option>Tecrübesiz</option><option>0-6 ay</option>' +
+          '<option>6-12 ay</option><option>1-2 yıl</option><option>2+ yıl</option>' +
+        '</select></div>' +
+
+      _mySectionTitle('Kendimi Tanıtayım') +
+      '<div class="kb-form-group"><label class="kb-label">Kısa Tanıtım</label>' +
+        '<textarea class="kb-input" id="il-gorev" rows="4" placeholder="Kendini ve iş deneyimini kısaca anlat..."></textarea></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Beklentilerim</label>' +
+        '<textarea class="kb-input" id="il-beklenti" rows="3" placeholder="İşverenden beklentilerin..."></textarea></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Ek Açıklama</label>' +
+        '<textarea class="kb-input" id="il-aciklama" rows="3" placeholder="Diğer bilgiler..."></textarea></div>' +
+
+      _mySectionTitle('Sahip Olduklarım') +
+      '<div class="kb-form-group"><label class="kb-label">Sigorta Durumum</label>' +
+        '<select class="kb-select" id="il-sigorta">' +
+          '<option value="">Seçiniz</option>' +
+          '<option value="SGK">SGK Sigortalı</option>' +
+          '<option value="Bağkur">Bağkur</option>' +
+          '<option value="Yok">Sigortasız</option>' +
+        '</select></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Diğer Notlar</label>' +
+        '<input class="kb-input" id="il-prim" type="text" placeholder="Referans, sertifika vb..."></div>' +
+      '<div class="kb-form-group"><label class="kb-label">Sahip Olduğum İmkanlar</label>' +
+        _myChipChecks(MY_FAYDA_LIST, 'il-fayda-') +
+      '</div>' +
+      '<div class="kb-form-group"><label class="kb-label">Ehliyet / Belgelerim</label>' +
+        _myChipChecks(MY_GEREK_LIST, 'il-gerek-') +
+      '</div>' +
+
+      '<div style="height:16px"></div>' +
+      '<button id="il-yayinla-btn" class="btn btn--primary" style="width:100%" onclick="KuryeScreens._myYayinla()">' + (_editIlanId ? 'Kaydet' : 'İlanı Paylaş') + '</button>' +
+      '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+      '<div style="height:32px"></div>' +
+      '</div>'
+    );
+
+    if (_editIlanId) {
+      setTimeout(function () { _loadMyIlanForEdit(_editIlanId); }, 130);
+    }
+  }
+
+  function _myIlanSetChecks(prefix, list, values) {
+    values = values || [];
+    for (var i = 0; i < list.length; i++) {
+      var el = document.getElementById(prefix + i);
+      if (el) el.checked = values.indexOf(list[i]) !== -1;
+    }
+  }
+
+  async function _loadMyIlanForEdit(id) {
+    try {
+      var il = await SB.listingById(id);
+      if (!il) return;
+      function set(elId, val) { var el = document.getElementById(elId); if (el) el.value = (val == null ? '' : val); }
+      set('il-poz', il.baslik);
+      set('il-sehir', il.sehir); set('il-bolge', il.bolge); set('il-mahalle', il.mahalle);
+      set('il-sekli', il.calisma_sekli); set('il-vardiya', il.vardiya_tipi);
+      set('il-maas-model', il.maas_modeli); set('il-maas-min', il.maas_min); set('il-maas-max', il.maas_max);
+      set('il-saat', il.calisma_saatleri); set('il-arac', il.arac); set('il-deneyim', il.deneyim);
+      set('il-gorev', il.gorev_tanimi); set('il-beklenti', il.beklentiler); set('il-aciklama', il.aciklama);
+      set('il-sigorta', il.sigorta); set('il-prim', il.bonus);
+      _myIlanSetChecks('il-fayda-', MY_FAYDA_LIST, il.faydalar);
+      _myIlanSetChecks('il-gerek-', MY_GEREK_LIST, il.gereksinimler);
+    } catch (e) {}
+  }
+
+  async function _myYayinla() {
+    var btn  = document.getElementById('il-yayinla-btn');
+    var hata = document.getElementById('il-hata');
+    var idleLabel = _editIlanId ? 'Kaydet' : 'İlanı Paylaş';
+    if (btn)  { btn.disabled = true; btn.textContent = _editIlanId ? 'Kaydediliyor…' : 'Paylaşılıyor…'; }
+    if (hata) hata.style.display = 'none';
+
+    function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+    function checks(prefix, count) {
+      var out = [];
+      for (var i = 0; i < count; i++) {
+        var el = document.getElementById(prefix + i);
+        if (el && el.checked) out.push(el.value);
+      }
+      return out;
+    }
+
+    var baslik = v('il-poz');
+    var sehir  = v('il-sehir');
+
+    if (!baslik) {
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
+      if (hata) { hata.textContent = 'Pozisyon seçiniz.'; hata.style.display = 'block'; }
+      return;
+    }
+    if (!sehir) {
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
+      if (hata) { hata.textContent = 'Şehir giriniz.'; hata.style.display = 'block'; }
+      return;
+    }
+
+    var fields = {
+      baslik: baslik,
+      sehir: sehir, bolge: v('il-bolge'), mahalle: v('il-mahalle'),
+      calisma_sekli: v('il-sekli'), vardiya_tipi: v('il-vardiya'),
+      maas_modeli: v('il-maas-model'), maas_min: v('il-maas-min'), maas_max: v('il-maas-max'),
+      calisma_saatleri: v('il-saat'), arac: v('il-arac'), deneyim: v('il-deneyim'),
+      gorev_tanimi: v('il-gorev'), beklentiler: v('il-beklenti'), aciklama: v('il-aciklama'),
+      sigorta: v('il-sigorta'), bonus: v('il-prim'),
+      faydalar: checks('il-fayda-', MY_FAYDA_LIST.length),
+      gereksinimler: checks('il-gerek-', MY_GEREK_LIST.length),
+      tip: 'kurye-ilani'
+    };
+
+    try {
+      if (_editIlanId) {
+        var updated = await SB.updateListing(_editIlanId, fields);
+        if (updated) _myIlanCache = _myIlanCache.map(function (x) { return x.id === _editIlanId ? updated : x; });
+        toast('İlan güncellendi ✓');
+      } else {
+        var newIlan = await SB.createListing(fields);
+        if (newIlan) _myIlanCache = [newIlan].concat(_myIlanCache);
+        toast('İlanın paylaşıldı! ✓');
+      }
+      setTimeout(function () { Router.go('/kurye/ilanlarim'); }, 800);
+    } catch (e) {
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
+      if (hata) { hata.textContent = (e && e.message) || 'Bir hata oluştu. Tekrar deneyin.'; hata.style.display = 'block'; }
+    }
+  }
+
+  /* ── 3c. GELEN İLGİ (kendi ilanıma gelen başvurular) ─────── */
+  var _gelenBasCache = [];
+
+  function gelenBasvurular() {
+    showAppBar('Gelen İlgi', true);
+    showBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-tabs" id="gelen-bas-tabs">' +
+          '<button class="kb-tab active" onclick="KuryeScreens._gelenBasFilter(\'tumu\',this)">Tümü</button>' +
+          '<button class="kb-tab"        onclick="KuryeScreens._gelenBasFilter(\'yeni\',this)">Yeni</button>' +
+          '<button class="kb-tab"        onclick="KuryeScreens._gelenBasFilter(\'deger\',this)">İncelendi</button>' +
+        '</div>' +
+        '<div id="gelen-bas-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+      '</div>'
+    );
+
+    setTimeout(function () { _loadGelenBasvurular(); }, 130);
+  }
+
+  function _gelenBasCard(a) {
+    var durum = a.durum || '';
+    var badge = durum === 'reviewed' ? '<span class="kb-chip kb-chip--success">✓ İncelendi</span>' :
+      durum === 'accepted' ? '<span class="kb-chip kb-chip--accent">✓ Kabul Edildi</span>' :
+      '<span class="kb-chip">⏳ Yeni</span>';
+    return '<div class="kb-card kb-card--pressable" style="margin-bottom:10px" onclick="Router.go(\'/kurye/basvuru/' + a.id + '\')">' +
+      '<div class="flex items-center justify-between mb-8">' +
+        '<div style="font-weight:700">' + (a.ad || 'Kullanıcı') + '</div>' + badge +
+      '</div>' +
+      '<div style="font-size:.82rem;color:var(--muted)">' + (a.rol === 'firma' ? 'Firma' : 'İşletme') + (a.sehir ? ' · ' + a.sehir : '') + '</div>' +
+      '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">' + (a.tarih || '') + '</div>' +
+    '</div>';
+  }
+
+  async function _loadGelenBasvurular() {
+    var el = document.getElementById('gelen-bas-list');
+    if (!el) return;
+    if (!(window.SB && SB.isOn())) {
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Bu ekran çevrimiçi mod gerektirir</div></div>';
+      return;
+    }
+    try {
+      var apps = await SB.allMyListingApplications();
+      _gelenBasCache = apps || [];
+      el.innerHTML = _gelenBasCache.length
+        ? _gelenBasCache.map(_gelenBasCard).join('')
+        : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Henüz ilgi yok</div><div class="kb-empty__sub">İlan paylaşınca gelen ilgiler burada görünür.</div></div>';
+    } catch (e) {
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">⚠️</div><div class="kb-empty__title">Yüklenemedi</div></div>';
+    }
+  }
+
+  function _gelenBasFilter(type, btn) {
+    document.querySelectorAll('#gelen-bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
+    btn.classList.add('active');
+    var all = _gelenBasCache;
+    var filtered = type === 'tumu' ? all
+      : type === 'yeni'  ? all.filter(function (a) { return (a.durum || '') === 'pending' || !a.durum; })
+      : all.filter(function (a) { return (a.durum || '') === 'reviewed'; });
+    var el = document.getElementById('gelen-bas-list');
+    if (el) el.innerHTML = filtered.length ? filtered.map(_gelenBasCard).join('') :
+      '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">Bu filtrede sonuç yok</div></div>';
+  }
+
+  function basvuruDetay(ctx) {
+    var id = ctx.params.id;
+    var a = _gelenBasCache.find(function (x) { return x.id === id; });
+    if (!a) { Router.go('/kurye/gelen-basvurular'); return; }
+
+    var name = a.ad || 'Kullanıcı';
+    var durum = a.durum || '';
+    var durumBadge = durum === 'reviewed' ? '<span class="kb-chip kb-chip--success">✓ İncelendi</span>' :
+      durum === 'accepted' ? '<span class="kb-chip kb-chip--accent">✓ Kabul Edildi</span>' :
+      '<span class="kb-chip">⏳ Yeni</span>';
+
+    showAppBar(name, true);
+    showBottomNav();
+
+    renderScreen(
+      '<div>' +
+        '<div class="detail-hero">' +
+          '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">' +
+            '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-kurye)">' + initials(name) + '</div>' +
+            '<div>' +
+              '<div style="font-size:1.1rem;font-weight:800">' + name + '</div>' +
+              '<div style="font-size:.82rem;color:var(--muted);margin:4px 0">' + (a.rol === 'firma' ? 'Firma' : 'İşletme') + '</div>' +
+              durumBadge +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        (a.sehir ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + a.sehir + '</div></div>' : '') +
+        (a.mesaj ? '<div class="detail-section"><div class="detail-section__title">Mesaj</div>' +
+          '<div style="font-size:.88rem;color:var(--text);line-height:1.6;padding:4px 0">' + a.mesaj + '</div></div>' : '') +
+        (a.tarih ? '<div class="detail-section"><div class="detail-row" style="color:var(--muted)">' + ICON.clock + 'Tarih: ' + a.tarih + '</div></div>' : '') +
+        '<div class="detail-cta" style="display:flex;gap:10px">' +
+          '<button class="btn btn--outline" onclick="Router.go(\'/kurye/mesajlar\')" style="flex:1">Mesaj Gönder</button>' +
+          '<button class="btn btn--primary" onclick="KuryeScreens._gelenBasDegerlendir(\'' + id + '\')" style="flex:1">Değerlendir</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function _gelenBasDegerlendir(id) {
+    if (window.SB && SB.isOn()) {
+      SB.updateApplication(id, 'reviewed').catch(function () {});
+      var idx = _gelenBasCache.findIndex(function (x) { return x.id === id; });
+      if (idx >= 0) _gelenBasCache[idx].durum = 'reviewed';
+    }
+    toast('İncelemeye alındı.');
+    setTimeout(function () { Router.back(); }, 700);
   }
 
   /* ── 4. İLAN DETAY ─────────────────────────────────────── */
@@ -1849,6 +2253,15 @@ window.KuryeScreens = (function () {
     mesajlar    : mesajlar,
     mesajChat   : mesajChat,
     profil      : profil,
+    // Kendi ilanım (iş arıyorum) + gelen ilgi
+    ilanlarim         : ilanlarim,
+    ilanYeni          : ilanYeni,
+    gelenBasvurular   : gelenBasvurular,
+    basvuruDetay      : basvuruDetay,
+    _myIlanToggle     : _myIlanToggle,
+    _myYayinla        : _myYayinla,
+    _gelenBasFilter   : _gelenBasFilter,
+    _gelenBasDegerlendir : _gelenBasDegerlendir,
     _ilanFilter      : _ilanFilter,
     _ilCat           : _ilCat,
     _ilSort          : _ilSort,

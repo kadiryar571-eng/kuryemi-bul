@@ -373,12 +373,11 @@
   async function changePassword(newPass) {
     return client.auth.updateUser({ password: newPass });
   }
-  // Profil verilerini sil (profil + iletişim + teklifler + havuz kayıtları). Sonra çıkış.
+  // Hesabı tamamen sil (auth.users + cascade ile tüm profil/ilan/mesaj/token verisi). Sonra çıkış.
   async function deleteMyData() {
     var u = await getUser();
     if (!u) throw new Error("oturum yok");
-    await client.from("pool_members").delete().eq("owner_user", u.id);
-    var r = await client.from("profiles").delete().eq("user_id", u.id); // contacts/offers/pool member cascade
+    var r = await client.rpc("delete_own_account");
     if (r.error) throw r.error;
     await client.auth.signOut();
     return true;

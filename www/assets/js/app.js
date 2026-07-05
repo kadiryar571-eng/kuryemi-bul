@@ -150,17 +150,21 @@
     var profilRoute = '/' + role + '/profil';
 
     var quickLinks = role === 'kurye' ? [
+      { icon: 'briefcase', label: 'İlanım (İş Arıyorum)', route: '/kurye/ilanlarim' },
       { icon: 'check',   label: 'Başvurularım',     route: '/kurye/basvurular' },
       { icon: 'heart',   label: 'Favori İlanlarım', route: '/favoriler'         },
       { icon: 'map',     label: 'Yakın İlanlar',    route: '/kurye/harita'     },
       { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'      }
     ] : role === 'firma' ? [
       { icon: 'list',    label: 'İlanlarım',         route: '/firma/ilanlarim'  },
+      { icon: 'users',   label: 'Kurye İlanları',    route: '/firma/kurye-ilanlari' },
       { icon: 'check',   label: 'Başvurular',        route: '/firma/basvurular' },
       { icon: 'heart',   label: 'Kaydedilenler',     route: '/favoriler'         },
       { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'      }
     ] : [
-      { icon: 'list',    label: 'İlanlarım',         route: '/isletme/basvurular' },
+      { icon: 'list',    label: 'İlanlarım',         route: '/isletme/ilanlarim' },
+      { icon: 'users',   label: 'Kurye İlanları',    route: '/isletme/kurye-ilanlari' },
+      { icon: 'check',   label: 'Başvurular',        route: '/isletme/basvurular' },
       { icon: 'heart',   label: 'Kaydedilenler',     route: '/favoriler'           },
       { icon: 'map',     label: 'Yakın Kuryeler',    route: '/isletme/harita'     },
       { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'        }
@@ -356,6 +360,13 @@
     Router.define('/kurye/panel',       KuryeScreens.panel);
     Router.define('/kurye/harita',      KuryeScreens.harita);
     Router.define('/kurye/ilanlar',     KuryeScreens.ilanlar);
+    /* Not: '/kurye/ilan/yeni' ve '/kurye/ilan/duzenle/:id', '/kurye/ilan/:id' ile aynı segment
+       sayısına sahip — router ilk eşleşeni kullandığından bunlar ÖNCE tanımlanmalı. */
+    Router.define('/kurye/ilan/yeni',        KuryeScreens.ilanYeni);
+    Router.define('/kurye/ilan/duzenle/:id', KuryeScreens.ilanYeni);
+    Router.define('/kurye/ilanlarim',        KuryeScreens.ilanlarim);
+    Router.define('/kurye/gelen-basvurular', KuryeScreens.gelenBasvurular);
+    Router.define('/kurye/basvuru/:id',      KuryeScreens.basvuruDetay);
     Router.define('/kurye/ilan/:id',    KuryeScreens.ilanDetay);
     Router.define('/kurye/basvurular',  KuryeScreens.basvurular);
     Router.define('/kurye/mesajlar',    KuryeScreens.mesajlar);
@@ -367,6 +378,8 @@
     Router.define('/firma/harita',      FirmaScreens.harita);
     Router.define('/firma/ilanlarim',   FirmaScreens.ilanlarim);
     Router.define('/firma/ilan/yeni',   FirmaScreens.ilanYeni);
+    Router.define('/firma/ilan/duzenle/:id', FirmaScreens.ilanYeni);
+    Router.define('/firma/kurye-ilanlari', SharedScreens.kuryeIlanlari);
     Router.define('/firma/basvurular',  FirmaScreens.basvurular);
     Router.define('/firma/aday/:id',    FirmaScreens.adayDetay);
     Router.define('/firma/mesajlar',    FirmaScreens.mesajlar);
@@ -376,7 +389,10 @@
     /* İşletme */
     Router.define('/isletme/panel',       IsletmeScreens.panel);
     Router.define('/isletme/harita',      IsletmeScreens.harita);
+    Router.define('/isletme/ilanlarim',   IsletmeScreens.ilanlarim);
     Router.define('/isletme/ilan/yeni',   IsletmeScreens.ilanYeni);
+    Router.define('/isletme/ilan/duzenle/:id', IsletmeScreens.ilanYeni);
+    Router.define('/isletme/kurye-ilanlari', SharedScreens.kuryeIlanlari);
     Router.define('/isletme/basvurular',  IsletmeScreens.basvurular);
     Router.define('/isletme/aday/:id',    IsletmeScreens.adayDetay);
     Router.define('/isletme/mesajlar',    IsletmeScreens.mesajlar);

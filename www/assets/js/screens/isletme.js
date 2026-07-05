@@ -17,6 +17,8 @@ window.IsletmeScreens = (function () {
   ];
 
   var _basCache = [];
+  var _ilanlarimCache = [];
+  var _editIlanId = null;
 
   function _adayCard(a) {
     var name  = a.ad || a.name || 'Kurye';
@@ -52,7 +54,7 @@ window.IsletmeScreens = (function () {
       heroCtaLabel: 'Profilimi Gör',
       heroCtaRoute: '/isletme/profil',
       stats: [
-        { id: 'ips-ilan',  num: '—', label: 'Açık İlan',          icon: 'briefcase', color: 'orange', route: '/isletme/ilan/yeni',  action: 'Oluştur'  },
+        { id: 'ips-ilan',  num: '—', label: 'Açık İlan',          icon: 'briefcase', color: 'orange', route: '/isletme/ilanlarim',  action: 'Yönet'  },
         { id: 'ips-bas',   num: '—', label: 'Gelen Başvuru',       icon: 'check',     color: 'blue',   route: '/isletme/basvurular', action: 'İncele'   },
         { id: 'ips-mesaj', num: '—', label: 'Okunmamış Mesaj',     icon: 'msg',       color: 'green',  route: '/isletme/mesajlar',   action: 'Oku'      },
         { id: 'ips-puan',  num: '—', label: 'Profil Görüntülenme', icon: 'eye',       color: 'purple', route: '/isletme/profil',     action: 'Detaylar' }
@@ -79,6 +81,9 @@ window.IsletmeScreens = (function () {
         '<div class="quick-actions" style="margin-bottom:0">' +
           '<button class="quick-btn" onclick="Router.go(\'/isletme/ilan/yeni\')">' +
             '<div class="quick-btn__icon">📋</div><div class="quick-btn__label">İlan Oluştur</div>' +
+          '</button>' +
+          '<button class="quick-btn" onclick="Router.go(\'/isletme/kurye-ilanlari\')">' +
+            '<div class="quick-btn__icon">🛵</div><div class="quick-btn__label">Kurye İlanları</div>' +
           '</button>' +
           '<button class="quick-btn" onclick="Router.go(\'/isletme/mesajlar\')">' +
             '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
@@ -176,8 +181,107 @@ window.IsletmeScreens = (function () {
     '</div>';
   }
 
-  function ilanYeni() {
-    showAppBar('İlan Oluştur', true);
+  /* ── 3b. İLANLARIM (yönetim listesi) ───────────────────── */
+  function ilanlarim() {
+    showAppBar('İlanlarım', false,
+      '<button class="kb-appbar__action" onclick="Router.go(\'/isletme/ilan/yeni\')">' + ICON.plus + '</button>'
+    );
+    showBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-tabs" id="ilan-tabs">' +
+          '<button class="kb-tab active" onclick="IsletmeScreens._ilanFilter(\'tumu\',this)">Tümü</button>' +
+          '<button class="kb-tab"        onclick="IsletmeScreens._ilanFilter(\'acik\',this)">Açık</button>' +
+          '<button class="kb-tab"        onclick="IsletmeScreens._ilanFilter(\'pasif\',this)">Pasif</button>' +
+        '</div>' +
+        '<div id="isletme-ilan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+        '<button class="btn btn--primary mt-16" style="background:var(--c-isletme,#FF6B35)" onclick="Router.go(\'/isletme/ilan/yeni\')">' +
+          ICON.plus + 'Yeni İlan Oluştur' +
+        '</button>' +
+      '</div>'
+    );
+
+    setTimeout(function () { _loadIlanlarim(); }, 130);
+  }
+
+  function _ilanCard(il) {
+    var isAcik = (il.durum || il.active === true) === 'acik' || il.active === true;
+    return '<div class="kb-card" style="margin-bottom:10px">' +
+      '<div class="flex items-center justify-between mb-8">' +
+        '<div style="font-weight:700">' + (il.baslik || il.title || 'İlan') + '</div>' +
+        '<span class="kb-chip ' + (isAcik ? 'kb-chip--success' : '') + '">' + (isAcik ? 'Açık' : 'Pasif') + '</span>' +
+      '</div>' +
+      ((il.sehir || il.type) ? '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' + [(il.type || ''), (il.sehir || '')].filter(Boolean).join(' · ') + '</div>' : '') +
+      '<div style="font-size:.82rem;color:var(--c-isletme,#FF6B35);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
+      '<div class="flex" style="gap:8px;margin-top:10px">' +
+        '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/basvurular\')">Başvuruları Gör</button>' +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/isletme/ilan/duzenle/' + il.id + '\')">Düzenle</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="IsletmeScreens._ilanToggle(\'' + il.id + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function _emptyIlan() {
+    return '<div style="padding:48px 24px;text-align:center">' +
+      '<div style="font-size:2.5rem;margin-bottom:12px">📋</div>' +
+      '<div style="font-weight:700;font-size:1rem;margin-bottom:6px">Henüz ilan yok</div>' +
+      '<div style="font-size:.84rem;color:var(--muted)">Yeni İlan Oluştur butonuna tıklayın.</div>' +
+    '</div>';
+  }
+
+  function _renderIlanList(list) {
+    if (!list || !list.length) return _emptyIlan();
+    return list.map(_ilanCard).join('');
+  }
+
+  async function _loadIlanlarim() {
+    var el = document.getElementById('isletme-ilan-list');
+    if (!el) return;
+
+    if (_ilanlarimCache.length > 0) {
+      el.innerHTML = _renderIlanList(_ilanlarimCache);
+    }
+
+    if (!(window.SB && SB.isOn())) {
+      if (!_ilanlarimCache.length) el.innerHTML = _emptyIlan();
+      return;
+    }
+    try {
+      var items = await SB.myListings();
+      _ilanlarimCache = items || [];
+      var cur = document.getElementById('isletme-ilan-list');
+      if (cur) cur.innerHTML = _renderIlanList(_ilanlarimCache);
+    } catch(e) {
+      if (!_ilanlarimCache.length) {
+        var cur2 = document.getElementById('isletme-ilan-list');
+        if (cur2) cur2.innerHTML = _emptyIlan();
+      }
+    }
+  }
+
+  function _ilanFilter(type, btn) {
+    document.querySelectorAll('#ilan-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
+    btn.classList.add('active');
+    var all = _ilanlarimCache;
+    var filtered = type === 'tumu' ? all
+      : type === 'acik'  ? all.filter(function (x) { return (x.durum || '') === 'acik' || x.active === true; })
+      : all.filter(function (x) { return (x.durum || '') !== 'acik' && x.active !== true; });
+    var el = document.getElementById('isletme-ilan-list');
+    if (el) el.innerHTML = _renderIlanList(filtered);
+  }
+
+  async function _ilanToggle(id, setAcik) {
+    try {
+      await SB.updateListingStatus(id, setAcik ? 'acik' : 'kapali');
+      toast(setAcik ? 'İlan yayınlandı' : 'İlan pasife alındı');
+      _loadIlanlarim();
+    } catch(e) { toast('İşlem başarısız'); }
+  }
+
+  function ilanYeni(ctx) {
+    _editIlanId = (ctx && ctx.params && ctx.params.id) || null;
+    showAppBar(_editIlanId ? 'İlanı Düzenle' : 'İlan Oluştur', true);
     showBottomNav();
     setActiveNav('yeni');
 
@@ -280,17 +384,48 @@ window.IsletmeScreens = (function () {
         '</select></div>' +
 
       '<div style="height:16px"></div>' +
-      '<button id="il-yayinla-btn" class="btn btn--primary" style="background:var(--c-isletme,#FF6B35);width:100%" onclick="IsletmeScreens._yayinla()">İlan Yayınla</button>' +
+      '<button id="il-yayinla-btn" class="btn btn--primary" style="background:var(--c-isletme,#FF6B35);width:100%" onclick="IsletmeScreens._yayinla()">' + (_editIlanId ? 'Kaydet' : 'İlan Yayınla') + '</button>' +
       '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
       '<div style="height:32px"></div>' +
       '</div>'
     );
+
+    if (_editIlanId) {
+      setTimeout(function () { _loadIlanForEdit(_editIlanId); }, 130);
+    }
+  }
+
+  function _setChecks(prefix, list, values) {
+    values = values || [];
+    for (var i = 0; i < list.length; i++) {
+      var el = document.getElementById(prefix + i);
+      if (el) el.checked = values.indexOf(list[i]) !== -1;
+    }
+  }
+
+  async function _loadIlanForEdit(id) {
+    try {
+      var il = await SB.listingById(id);
+      if (!il) return;
+      function set(elId, val) { var el = document.getElementById(elId); if (el) el.value = (val == null ? '' : val); }
+      set('il-poz', il.baslik); set('il-kat', il.kategori);
+      set('il-sehir', il.sehir); set('il-bolge', il.bolge); set('il-mahalle', il.mahalle);
+      set('il-sekli', il.calisma_sekli); set('il-vardiya', il.vardiya_tipi);
+      set('il-maas-model', il.maas_modeli); set('il-maas-min', il.maas_min); set('il-maas-max', il.maas_max);
+      set('il-saat', il.calisma_saatleri); set('il-arac', il.arac); set('il-deneyim', il.deneyim);
+      set('il-gorev', il.gorev_tanimi); set('il-beklenti', il.beklentiler); set('il-aciklama', il.aciklama);
+      set('il-sigorta', il.sigorta); set('il-prim', il.bonus);
+      set('il-kontenjan', il.kontenjan); set('il-sonbas', il.son_basvuru); set('il-oncelik', il.oncelik);
+      _setChecks('il-fayda-', FAYDA_LIST, il.faydalar);
+      _setChecks('il-gerek-', GEREK_LIST, il.gereksinimler);
+    } catch (e) {}
   }
 
   async function _yayinla() {
     var btn  = document.getElementById('il-yayinla-btn');
     var hata = document.getElementById('il-hata');
-    if (btn)  { btn.disabled = true; btn.textContent = 'Yayınlanıyor…'; }
+    var idleLabel = _editIlanId ? 'Kaydet' : 'İlan Yayınla';
+    if (btn)  { btn.disabled = true; btn.textContent = _editIlanId ? 'Kaydediliyor…' : 'Yayınlanıyor…'; }
     if (hata) hata.style.display = 'none';
 
     function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -307,35 +442,45 @@ window.IsletmeScreens = (function () {
     var sehir  = v('il-sehir');
 
     if (!baslik) {
-      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
       if (hata) { hata.textContent = 'Pozisyon seçiniz.'; hata.style.display = 'block'; }
       return;
     }
     if (!sehir) {
-      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
       if (hata) { hata.textContent = 'Şehir giriniz.'; hata.style.display = 'block'; }
       return;
     }
 
+    var fields = {
+      baslik: baslik, kategori: v('il-kat'),
+      sehir: sehir, bolge: v('il-bolge'), mahalle: v('il-mahalle'),
+      calisma_sekli: v('il-sekli'), vardiya_tipi: v('il-vardiya'),
+      maas_modeli: v('il-maas-model'), maas_min: v('il-maas-min'), maas_max: v('il-maas-max'),
+      calisma_saatleri: v('il-saat'), arac: v('il-arac'), deneyim: v('il-deneyim'),
+      gorev_tanimi: v('il-gorev'), beklentiler: v('il-beklenti'), aciklama: v('il-aciklama'),
+      sigorta: v('il-sigorta'), bonus: v('il-prim'),
+      faydalar: checks('il-fayda-', FAYDA_LIST.length),
+      gereksinimler: checks('il-gerek-', GEREK_LIST.length),
+      kontenjan: parseInt(v('il-kontenjan'), 10) || 1,
+      son_basvuru: v('il-sonbas') || null, oncelik: v('il-oncelik') || 'normal',
+      tip: 'kurye-ilani'
+    };
+
     try {
-      await SB.createListing({
-        baslik: baslik, kategori: v('il-kat'),
-        sehir: sehir, bolge: v('il-bolge'), mahalle: v('il-mahalle'),
-        calisma_sekli: v('il-sekli'), vardiya_tipi: v('il-vardiya'),
-        maas_modeli: v('il-maas-model'), maas_min: v('il-maas-min'), maas_max: v('il-maas-max'),
-        calisma_saatleri: v('il-saat'), arac: v('il-arac'), deneyim: v('il-deneyim'),
-        gorev_tanimi: v('il-gorev'), beklentiler: v('il-beklenti'), aciklama: v('il-aciklama'),
-        sigorta: v('il-sigorta'), bonus: v('il-prim'),
-        faydalar: checks('il-fayda-', FAYDA_LIST.length),
-        gereksinimler: checks('il-gerek-', GEREK_LIST.length),
-        kontenjan: parseInt(v('il-kontenjan'), 10) || 1,
-        son_basvuru: v('il-sonbas') || null, oncelik: v('il-oncelik') || 'normal',
-        tip: 'kurye-ilani'
-      });
-      toast('İlanınız yayınlandı! ✓');
-      setTimeout(function () { Router.go('/isletme/basvurular'); }, 800);
+      if (_editIlanId) {
+        var updated = await SB.updateListing(_editIlanId, fields);
+        if (updated) _ilanlarimCache = _ilanlarimCache.map(function (x) { return x.id === _editIlanId ? updated : x; });
+        toast('İlan güncellendi ✓');
+        setTimeout(function () { Router.go('/isletme/ilanlarim'); }, 800);
+      } else {
+        var newIlan = await SB.createListing(fields);
+        if (newIlan) _ilanlarimCache = [newIlan].concat(_ilanlarimCache);
+        toast('İlanınız yayınlandı! ✓');
+        setTimeout(function () { Router.go('/isletme/ilanlarim'); }, 800);
+      }
     } catch(e) {
-      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
       if (hata) { hata.textContent = (e && e.message) || 'Bir hata oluştu. Tekrar deneyin.'; hata.style.display = 'block'; }
     }
   }
@@ -534,6 +679,7 @@ window.IsletmeScreens = (function () {
   return {
     panel      : panel,
     harita     : harita,
+    ilanlarim  : ilanlarim,
     ilanYeni   : ilanYeni,
     basvurular : basvurular,
     adayDetay  : adayDetay,
@@ -541,6 +687,8 @@ window.IsletmeScreens = (function () {
     mesajChat  : mesajChat,
     profil     : profil,
     _basFilter : _basFilter,
+    _ilanFilter: _ilanFilter,
+    _ilanToggle: _ilanToggle,
     _yayinla   : _yayinla,
     _kabul     : _kabul
   };

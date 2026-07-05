@@ -60,7 +60,12 @@ window.Router = (function () {
 
   /* Navigate programmatically */
   function go(path) {
-    location.hash = '#' + path;
+    var newHash = '#' + path;
+    if (location.hash === newHash) {
+      resolve(); /* hash değişmezse tarayıcı hashchange fırlatmaz — elle çöz */
+    } else {
+      location.hash = newHash;
+    }
   }
 
   /* Back — tries history, falls back to /login */

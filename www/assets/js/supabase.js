@@ -373,12 +373,11 @@
   async function changePassword(newPass) {
     return client.auth.updateUser({ password: newPass });
   }
-  // Profil verilerini sil (profil + iletişim + teklifler + havuz kayıtları). Sonra çıkış.
+  // Hesabı tamamen sil (auth.users + cascade ile tüm profil/ilan/mesaj/token verisi). Sonra çıkış.
   async function deleteMyData() {
     var u = await getUser();
     if (!u) throw new Error("oturum yok");
-    await client.from("pool_members").delete().eq("owner_user", u.id);
-    var r = await client.from("profiles").delete().eq("user_id", u.id); // contacts/offers/pool member cascade
+    var r = await client.rpc("delete_own_account");
     if (r.error) throw r.error;
     await client.auth.signOut();
     return true;
@@ -478,6 +477,30 @@
     if (r.error) throw r.error;
     return listingFromDb(r.data);
   }
+  async function updateListing(id, fields) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var maasMin = fields.maas_min ? parseInt(fields.maas_min, 10) : null;
+    var maasMax = fields.maas_max ? parseInt(fields.maas_max, 10) : null;
+    var maasAralik = (maasMin && maasMax) ? (maasMin.toLocaleString('tr') + ' – ' + maasMax.toLocaleString('tr') + ' ₺/' + (fields.maas_modeli || 'ay')) : (maasMin ? maasMin.toLocaleString('tr') + ' ₺+' : '');
+    var row = {
+      tip: fields.tip || "kurye-ilani",
+      baslik: fields.baslik, aciklama: fields.aciklama || "",
+      sehir: fields.sehir || "", bolge: fields.bolge || "", mahalle: fields.mahalle || "",
+      teslimat_bolge: fields.teslimat_bolge || fields.mahalle || fields.bolge || "",
+      arac: fields.arac || "", kategori: fields.kategori || "",
+      calisma_sekli: fields.calisma_sekli || "", vardiya_tipi: fields.vardiya_tipi || "",
+      maas_min: maasMin, maas_max: maasMax, maas_modeli: fields.maas_modeli || "aylık", maas_aralik: maasAralik,
+      calisma_saatleri: fields.calisma_saatleri || "", deneyim: fields.deneyim || "",
+      sigorta: fields.sigorta || "", bonus: fields.bonus || "",
+      faydalar: fields.faydalar || [], gereksinimler: fields.gereksinimler || [],
+      gorev_tanimi: fields.gorev_tanimi || "", gunluk_akis: fields.gunluk_akis || "", beklentiler: fields.beklentiler || "",
+      kontenjan: fields.kontenjan || 1, son_basvuru: fields.son_basvuru || null, oncelik: fields.oncelik || "normal"
+    };
+    var r = await client.from("listings").update(row).eq("id", id).eq("owner_user", u.id).select().maybeSingle();
+    if (r.error) throw r.error;
+    return listingFromDb(r.data);
+  }
   async function myListings() {
     var u = await getUser();
     if (!u) return [];
@@ -485,8 +508,10 @@
     if (r.error) { console.warn("myListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
-  async function openListings() {
-    var r = await client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik").order("created_at", { ascending: false });
+  async function openListings(roles) {
+    var q = client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik");
+    if (roles && roles.length) q = q.in("role", roles);
+    var r = await q.order("created_at", { ascending: false });
     if (r.error) { console.warn("openListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
@@ -823,7 +848,7 @@
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
-    createListing: createListing, myListings: myListings, openListings: openListings, listingById: listingById,
+    createListing: createListing, updateListing: updateListing, myListings: myListings, openListings: openListings, listingById: listingById,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
     listingApplications: listingApplications, updateApplication: updateApplication, allMyListingApplications: allMyListingApplications,

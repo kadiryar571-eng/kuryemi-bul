@@ -24,6 +24,7 @@ window.FirmaScreens = (function () {
   ];
 
   var _ilanlarimCache = [];
+  var _editIlanId = null;
   var _basCache = [];
 
   function _adayCard(a, role) {
@@ -87,6 +88,9 @@ window.FirmaScreens = (function () {
         '<div class="quick-actions" style="margin-bottom:0">' +
           '<button class="quick-btn" onclick="Router.go(\'/firma/ilan/yeni\')">' +
             '<div class="quick-btn__icon">📋</div><div class="quick-btn__label">Yeni İlan Oluştur</div>' +
+          '</button>' +
+          '<button class="quick-btn" onclick="Router.go(\'/firma/kurye-ilanlari\')">' +
+            '<div class="quick-btn__icon">🛵</div><div class="quick-btn__label">Kurye İlanları</div>' +
           '</button>' +
           '<button class="quick-btn" onclick="Router.go(\'/firma/mesajlar\')">' +
             '<div class="quick-btn__icon">💬</div><div class="quick-btn__label">Mesajlar</div>' +
@@ -203,6 +207,7 @@ window.FirmaScreens = (function () {
       '<div style="font-size:.82rem;color:var(--c-accent);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
       '<div class="flex" style="gap:8px;margin-top:10px">' +
         '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/firma/basvurular\')">Başvuruları Gör</button>' +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/firma/ilan/duzenle/' + il.id + '\')">Düzenle</button>' : '') +
         (il.id ? '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._ilanToggle(\'' + il.id + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
       '</div>' +
     '</div>';
@@ -282,8 +287,9 @@ window.FirmaScreens = (function () {
     '</div>';
   }
 
-  function ilanYeni() {
-    showAppBar('Yeni İlan Oluştur', true);
+  function ilanYeni(ctx) {
+    _editIlanId = (ctx && ctx.params && ctx.params.id) || null;
+    showAppBar(_editIlanId ? 'İlanı Düzenle' : 'Yeni İlan Oluştur', true);
     showBottomNav();
 
     renderScreen(
@@ -385,17 +391,48 @@ window.FirmaScreens = (function () {
         '</select></div>' +
 
       '<div style="height:16px"></div>' +
-      '<button id="il-yayinla-btn" class="btn btn--primary" style="width:100%" onclick="FirmaScreens._yayinla()">İlan Yayınla</button>' +
+      '<button id="il-yayinla-btn" class="btn btn--primary" style="width:100%" onclick="FirmaScreens._yayinla()">' + (_editIlanId ? 'Kaydet' : 'İlan Yayınla') + '</button>' +
       '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
       '<div style="height:32px"></div>' +
       '</div>'
     );
+
+    if (_editIlanId) {
+      setTimeout(function () { _loadIlanForEdit(_editIlanId); }, 130);
+    }
+  }
+
+  function _setChecks(prefix, list, values) {
+    values = values || [];
+    for (var i = 0; i < list.length; i++) {
+      var el = document.getElementById(prefix + i);
+      if (el) el.checked = values.indexOf(list[i]) !== -1;
+    }
+  }
+
+  async function _loadIlanForEdit(id) {
+    try {
+      var il = await SB.listingById(id);
+      if (!il) return;
+      function set(elId, val) { var el = document.getElementById(elId); if (el) el.value = (val == null ? '' : val); }
+      set('il-poz', il.baslik); set('il-kat', il.kategori);
+      set('il-sehir', il.sehir); set('il-bolge', il.bolge); set('il-mahalle', il.mahalle);
+      set('il-sekli', il.calisma_sekli); set('il-vardiya', il.vardiya_tipi);
+      set('il-maas-model', il.maas_modeli); set('il-maas-min', il.maas_min); set('il-maas-max', il.maas_max);
+      set('il-saat', il.calisma_saatleri); set('il-arac', il.arac); set('il-deneyim', il.deneyim);
+      set('il-gorev', il.gorev_tanimi); set('il-beklenti', il.beklentiler); set('il-aciklama', il.aciklama);
+      set('il-sigorta', il.sigorta); set('il-prim', il.bonus);
+      set('il-kontenjan', il.kontenjan); set('il-sonbas', il.son_basvuru); set('il-oncelik', il.oncelik);
+      _setChecks('il-fayda-', FAYDA_LIST, il.faydalar);
+      _setChecks('il-gerek-', GEREK_LIST, il.gereksinimler);
+    } catch (e) {}
   }
 
   async function _yayinla() {
     var btn  = document.getElementById('il-yayinla-btn');
     var hata = document.getElementById('il-hata');
-    if (btn)  { btn.disabled = true; btn.textContent = 'Yayınlanıyor…'; }
+    var idleLabel = _editIlanId ? 'Kaydet' : 'İlan Yayınla';
+    if (btn)  { btn.disabled = true; btn.textContent = _editIlanId ? 'Kaydediliyor…' : 'Yayınlanıyor…'; }
     if (hata) hata.style.display = 'none';
 
     function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -412,36 +449,44 @@ window.FirmaScreens = (function () {
     var sehir  = v('il-sehir');
 
     if (!baslik) {
-      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
       if (hata) { hata.textContent = 'Pozisyon seçiniz.'; hata.style.display = 'block'; }
       return;
     }
     if (!sehir) {
-      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
       if (hata) { hata.textContent = 'Şehir giriniz.'; hata.style.display = 'block'; }
       return;
     }
 
+    var fields = {
+      baslik: baslik, kategori: v('il-kat'),
+      sehir: sehir, bolge: v('il-bolge'), mahalle: v('il-mahalle'),
+      calisma_sekli: v('il-sekli'), vardiya_tipi: v('il-vardiya'),
+      maas_modeli: v('il-maas-model'), maas_min: v('il-maas-min'), maas_max: v('il-maas-max'),
+      calisma_saatleri: v('il-saat'), arac: v('il-arac'), deneyim: v('il-deneyim'),
+      gorev_tanimi: v('il-gorev'), beklentiler: v('il-beklenti'), aciklama: v('il-aciklama'),
+      sigorta: v('il-sigorta'), bonus: v('il-prim'),
+      faydalar: checks('il-fayda-', FAYDA_LIST.length),
+      gereksinimler: checks('il-gerek-', GEREK_LIST.length),
+      kontenjan: parseInt(v('il-kontenjan'), 10) || 1,
+      son_basvuru: v('il-sonbas') || null, oncelik: v('il-oncelik') || 'normal',
+      tip: 'kurye-ilani'
+    };
+
     try {
-      var newIlan = await SB.createListing({
-        baslik: baslik, kategori: v('il-kat'),
-        sehir: sehir, bolge: v('il-bolge'), mahalle: v('il-mahalle'),
-        calisma_sekli: v('il-sekli'), vardiya_tipi: v('il-vardiya'),
-        maas_modeli: v('il-maas-model'), maas_min: v('il-maas-min'), maas_max: v('il-maas-max'),
-        calisma_saatleri: v('il-saat'), arac: v('il-arac'), deneyim: v('il-deneyim'),
-        gorev_tanimi: v('il-gorev'), beklentiler: v('il-beklenti'), aciklama: v('il-aciklama'),
-        sigorta: v('il-sigorta'), bonus: v('il-prim'),
-        faydalar: checks('il-fayda-', FAYDA_LIST.length),
-        gereksinimler: checks('il-gerek-', GEREK_LIST.length),
-        kontenjan: parseInt(v('il-kontenjan'), 10) || 1,
-        son_basvuru: v('il-sonbas') || null, oncelik: v('il-oncelik') || 'normal',
-        tip: 'kurye-ilani'
-      });
-      if (newIlan) _ilanlarimCache = [newIlan].concat(_ilanlarimCache);
-      toast('İlanınız yayınlandı! ✓');
+      if (_editIlanId) {
+        var updated = await SB.updateListing(_editIlanId, fields);
+        if (updated) _ilanlarimCache = _ilanlarimCache.map(function (x) { return x.id === _editIlanId ? updated : x; });
+        toast('İlan güncellendi ✓');
+      } else {
+        var newIlan = await SB.createListing(fields);
+        if (newIlan) _ilanlarimCache = [newIlan].concat(_ilanlarimCache);
+        toast('İlanınız yayınlandı! ✓');
+      }
       setTimeout(function () { Router.go('/firma/ilanlarim'); }, 800);
     } catch(e) {
-      if (btn)  { btn.disabled = false; btn.textContent = 'İlan Yayınla'; }
+      if (btn)  { btn.disabled = false; btn.textContent = idleLabel; }
       if (hata) { hata.textContent = (e && e.message) || 'Bir hata oluştu. Tekrar deneyin.'; hata.style.display = 'block'; }
     }
   }
