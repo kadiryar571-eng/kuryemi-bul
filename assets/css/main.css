@@ -545,6 +545,14 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .public-nav .nav-links a.active { color: var(--primary); }
 .public-nav .nav-actions { display: flex; align-items: center; gap: 8px; }
 
+@media (max-width: 680px) {
+  .public-nav { padding: 0 12px; gap: 8px; }
+  .public-nav .nav-links { display: none; }
+  .public-nav .nav-brand { font-size: 1.05rem; }
+  .public-nav .nav-actions { gap: 6px; }
+  .public-nav .nav-actions .btn { padding: 6px 10px; font-size: 0.82rem; }
+}
+
 /* ─── 16. AUTH SAYFASI ───────────────────────────────────────── */
 .auth-page {
   min-height: 100vh;
