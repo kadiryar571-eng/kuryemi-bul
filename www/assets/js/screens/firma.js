@@ -275,6 +275,7 @@ window.FirmaScreens = (function () {
   /* ── 4. YENİ İLAN OLUŞTUR ──────────────────────────────── */
   var FAYDA_LIST = ['SGK / Sigorta','Yemek Kartı','Servis / Ulaşım','Araç Yakıtı','Aidat Desteği','Ekipman'];
   var GEREK_LIST = ['Ehliyet (B)','Motorsiklet','Araç Sahibi','Akıllı Telefon','App Kullanımı'];
+  var HIZMET_LIST = ['Şehir İçi Teslimat','Şehirler Arası Nakliye','Aynı Gün Teslimat','Gece Teslimatı','Soğuk Zincir Taşıma','Kurumsal Lojistik','Depo / Stoklama','Filo Kiralama'];
 
   function _sectionTitle(t) {
     return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-firma,#00C896);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(0,200,150,.2)">' + t + '</div>';
@@ -410,6 +411,14 @@ window.FirmaScreens = (function () {
       var el = document.getElementById(prefix + i);
       if (el) el.checked = values.indexOf(list[i]) !== -1;
     }
+  }
+  function _readChecks(prefix, count) {
+    var out = [];
+    for (var i = 0; i < count; i++) {
+      var el = document.getElementById(prefix + i);
+      if (el && el.checked) out.push(el.value);
+    }
+    return out;
   }
 
   async function _loadIlanForEdit(id) {
@@ -813,10 +822,13 @@ window.FirmaScreens = (function () {
           '</div>' +
           '<div class="detail-row">' + ICON.pin + (p.sehir || 'Şehir belirtilmemiş') + '</div>' +
           '<div class="detail-row">' + ICON.briefcase + 'Kapasite: ' + (p.kapasite || 0) + ' kurye' + '</div>' +
-          (hizmetler.length ? '<div class="job-card__tags" style="margin-top:8px">' +
-            hizmetler.map(function (h) { return '<span class="kb-chip">' + _esc(h) + '</span>'; }).join('') +
-          '</div>' : '') +
           (p.aciklama ? '<div style="font-size:.84rem;color:var(--text2);margin-top:10px;line-height:1.5">' + _esc(p.aciklama) + '</div>' : '') +
+        '</div>' +
+
+        '<div class="kb-card">' +
+          '<div class="kb-label">Verilen Hizmetler</div>' +
+          _chipChecks(HIZMET_LIST, 'fb-hizmet-') +
+          '<button class="btn btn--primary btn--sm" style="margin-top:10px;width:auto;padding:8px 16px" onclick="FirmaScreens._saveHizmetler()">Kaydet</button>' +
         '</div>' +
 
         '<div class="kb-card">' +
@@ -837,6 +849,17 @@ window.FirmaScreens = (function () {
 
       '</div>'
     );
+
+    setTimeout(function () { _setChecks('fb-hizmet-', HIZMET_LIST, hizmetler); }, 130);
+  }
+
+  function _saveHizmetler() {
+    var secilen = _readChecks('fb-hizmet-', HIZMET_LIST.length);
+    if (!window.SB || !SB.isOn()) { toast('Hizmetler kaydedildi ✓'); return; }
+    SB.updateMyProfile({ hizmetler: secilen }).then(function (updated) {
+      APP.profile = updated;
+      toast('Hizmetler kaydedildi ✓');
+    }).catch(function () { toast('Hizmetler kaydedilemedi'); });
   }
 
   function _belgeList(belgeler) {
@@ -932,6 +955,7 @@ window.FirmaScreens = (function () {
     _degerlendir : _degerlendir,
     _kabul       : _kabul,
     _saveAdres   : _saveAdres,
+    _saveHizmetler : _saveHizmetler,
     _pickBelge   : _pickBelge,
     _pickFoto    : _pickFoto
   };
