@@ -179,7 +179,7 @@
     el.innerHTML = hires.map(function(dec) {
       var myRole = biz ? 'isletme' : 'kurye';
       var myFb   = KBFeedback.getFeedback(dec.jobId, dec.kuryeId, myRole);
-      var name   = biz ? (dec.kuryeAd || 'Kurye') : (dec.isletmeAd || 'İşletme');
+      var name   = biz ? (dec.kuryeAd || 'Kurye') : (dec.isletmeAd || 'Esnaf');
       var statusHtml = myFb
         ? '<span class="fb-status-done">✓ Değerlendirildi</span>'
         : '<span class="fb-status-pending">● Bekliyor</span>';
@@ -221,8 +221,8 @@
     formsEl.style.display = 'flex';
 
     /* Form section: own feedback */
-    var formTitle = biz ? 'Kurye Değerlendirmesi' : 'İşletme Değerlendirmesi';
-    var formSub   = biz ? 'İşe aldığın kurye için puan ver' : 'Çalıştığın işletme için puan ver';
+    var formTitle = biz ? 'Kurye Değerlendirmesi' : 'Esnaf Değerlendirmesi';
+    var formSub   = biz ? 'İşe aldığın kurye için puan ver' : 'Çalıştığın esnaf için puan ver';
     document.getElementById('fbFormTitle').textContent = formTitle;
     document.getElementById('fbFormSub').textContent   = formSub;
 
@@ -245,7 +245,7 @@
       receivedSection.style.display = '';
       document.getElementById('fbReceivedTitle').textContent = biz
         ? 'Kurye\'nin Sizi Değerlendirmesi'
-        : 'İşletme\'nin Sizi Değerlendirmesi';
+        : 'Esnafın Sizi Değerlendirmesi';
       document.getElementById('fbReceivedContent').innerHTML =
         KBFeedback.renderCard(otherFb, { canEdit: false, canReport: true });
     } else {
@@ -260,7 +260,7 @@
     var otherProfileRole = biz ? 'kurye'  : 'isletme';
     var otherRepSection  = document.getElementById('fbOtherRepSection');
     otherRepSection.style.display = '';
-    document.getElementById('fbOtherRepTitle').textContent = biz ? 'Kurye İtibarı' : 'İşletme İtibarı';
+    document.getElementById('fbOtherRepTitle').textContent = biz ? 'Kurye İtibarı' : 'Esnaf İtibarı';
     document.getElementById('fbOtherRepContent').innerHTML =
       KBFeedback.renderReputationBlock(otherProfileId, otherProfileRole);
   }

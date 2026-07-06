@@ -613,7 +613,7 @@ window.SharedScreens = (function () {
       var c = detail.conv;
       var u = window.APP && APP.user;
       var iAmKurye   = !!(u && c.kurye_user === u.id);
-      var otherName  = iAmKurye ? ((c.employer && c.employer.ad) || 'İşletme') : ((c.kurye && c.kurye.ad) || 'Kurye');
+      var otherName  = iAmKurye ? ((c.employer && c.employer.ad) || 'Esnaf') : ((c.kurye && c.kurye.ad) || 'Kurye');
       var otherEmoji = iAmKurye ? '🏢' : '🛵';
       var otherBg    = iAmKurye ? '#F97316' : '#6C4DFF';
       var listingTitle = (c.listing && c.listing.baslik) || 'İlan';
@@ -922,7 +922,7 @@ window.SharedScreens = (function () {
 
           '<div style="padding-bottom:14px">' +
             '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">' +
-              (isKurye ? 'Ad Soyad' : role === 'firma' ? 'Firma Adı' : 'İşletme Adı') +
+              (isKurye ? 'Ad Soyad' : role === 'firma' ? 'Kurye Firması Adı' : 'Esnaf Adı') +
             '</label>' +
             '<input id="pd-ad" class="kb-input" value="' + _pdEsc(p.ad || '') + '" placeholder="' + (isKurye ? 'Adınız Soyadınız' : 'Kuruluş adı') + '">' +
           '</div>' +
@@ -1097,7 +1097,7 @@ window._spmShell = function() {
       '</div>' +
       '<div class="spm-chips-row" id="spmChipsRow">' +
         '<button type="button" class="spm-chip is-on" data-spmlayer="ilan"><span class="spm-chip__dot" style="background:#f59e0b"></span>İş İlanları</button>' +
-        '<button type="button" class="spm-chip is-on" data-spmlayer="firma"><span class="spm-chip__dot" style="background:#a855f7"></span>Firmalar</button>' +
+        '<button type="button" class="spm-chip is-on" data-spmlayer="firma"><span class="spm-chip__dot" style="background:#a855f7"></span>Kurye Firmaları</button>' +
         '<button type="button" class="spm-chip" data-spmlayer="acil"><span class="spm-chip__dot" style="background:#ef4444"></span>Acil Alım</button>' +
         '<button type="button" class="spm-chip" data-spmlayer="premium"><span class="spm-chip__dot" style="background:#f59e0b;box-shadow:0 0 5px #f59e0b"></span>Premium</button>' +
         '<button type="button" class="spm-chip" data-spmlayer="yakin"><span class="spm-chip__dot" style="background:#22d3ee"></span>Yakınımda</button>' +
@@ -1203,8 +1203,8 @@ window.initPremiumMap = async function(role) {
   var PIN = {
     ilan:    { color: '#f59e0b', emoji: '💼', label: 'İlan' },
     kurye:   { color: '#22d3ee', emoji: '🛵', label: 'Kurye' },
-    isletme: { color: '#4f8bff', emoji: '🏪', label: 'İşletme' },
-    firma:   { color: '#a855f7', emoji: '🏢', label: 'Firma' }
+    isletme: { color: '#4f8bff', emoji: '🏪', label: 'Esnaf' },
+    firma:   { color: '#a855f7', emoji: '🏢', label: 'Kurye Firması' }
   };
 
   if (scrollEl) scrollEl.innerHTML = window._spmBcardSkel(3);

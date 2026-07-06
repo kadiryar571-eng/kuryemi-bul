@@ -53,7 +53,7 @@
       ico:       '📅',
       appStatus: 'mulakat',
       chatStatus:'gorusme',
-      systemMsg: 'Mülakata davet edildiniz. İşletme sizinle görüşmek istiyor.',
+      systemMsg: 'Mülakata davet edildiniz. Esnaf sizinle görüşmek istiyor.',
       logEvent:  'interview_invite',
       notifType: 'interview_request'
     },
@@ -120,7 +120,7 @@
       kuryeId:     kuryeId,
       kurye:       meta.kurye      || { id: kuryeId, ad: 'Kurye', avatar: '' },
       isletmeId:   meta.isletmeId  || '',
-      isletme:     meta.isletme    || { id: meta.isletmeId, ad: 'İşletme', avatar: '' },
+      isletme:     meta.isletme    || { id: meta.isletmeId, ad: 'Esnaf', avatar: '' },
       appStatus:   meta.appStatus  || 'inceleniyor',
       chatStatus:  'yeni',
       lastMsg:     '',
@@ -253,11 +253,11 @@
       var key   = 'kb_notifications_' + toUid;
       var notifs = JSON.parse(localStorage.getItem(key) || '[]');
       var msgMap = {
-        interview_request: (data.isletme || 'İşletme') + ' sizi mülakata davet etti: ' + (data.job || ''),
+        interview_request: (data.isletme || 'Esnaf') + ' sizi mülakata davet etti: ' + (data.job || ''),
         hiring_decision:   data.actionKey === 'kabul'
           ? 'Tebrikler! Başvurunuz kabul edildi — ' + (data.job || '')
           : 'Başvuru sonuçlandı: ' + (data.job || ''),
-        new_message:       (data.from || 'İşletme') + ' size mesaj gönderdi: ' + (data.job || '')
+        new_message:       (data.from || 'Esnaf') + ' size mesaj gönderdi: ' + (data.job || '')
       };
       notifs.unshift({
         id:   'notif_' + Date.now(),
@@ -340,7 +340,7 @@
         isletme:     { id: uid, ad: 'Terra Pizza', avatar: '' },
         appStatus:   'mulakat',
         chatStatus:  'gorusme',
-        lastMsg:     'Mülakata davet edildiniz. İşletme sizinle görüşmek istiyor.',
+        lastMsg:     'Mülakata davet edildiniz. Esnaf sizinle görüşmek istiyor.',
         lastMsgTime: new Date(now - 5 * 3600000).toISOString(),
         unread:      { kurye: 1, isletme: 0 },
         archived:    false,
@@ -400,7 +400,7 @@
           { from: 'kurye',   content: 'Merhaba, moto kurye ilanına başvurmak istiyorum.' },
           { from: 'isletme', content: 'Merhaba Mehmet Bey! Profiliniz çok uygun görünüyor.' },
           { from: 'isletme', content: 'Sizi mülakata davet etmek istiyoruz. Uygun musunuz?' },
-          { from: 'system',  content: 'Mülakata davet edildiniz. İşletme sizinle görüşmek istiyor.', type: 'system' }
+          { from: 'system',  content: 'Mülakata davet edildiniz. Esnaf sizinle görüşmek istiyor.', type: 'system' }
         ],
         [now - 3 * 86400000, now - 2 * 86400000, now - 6 * 3600000, now - 5 * 3600000]
       ],

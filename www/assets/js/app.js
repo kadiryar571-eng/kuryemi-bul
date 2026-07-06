@@ -145,7 +145,7 @@
     var role = APP.role || 'kurye';
     var profile = APP.profile || {};
     var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
-    var roleLabels = { kurye: 'Kurye', firma: 'Firma', isletme: 'Esnaf / İşletme', admin: 'Admin' };
+    var roleLabels = { kurye: 'Kurye', firma: 'Kurye Firması', isletme: 'Esnaf', admin: 'Admin' };
     var roleLabel = roleLabels[role] || role;
     var profilRoute = '/' + role + '/profil';
 
@@ -363,7 +363,7 @@
     Router.define('/kurye/mesaj/:id',   KuryeScreens.mesajChat);
     Router.define('/kurye/profil',      KuryeScreens.profil);
 
-    /* Firma */
+    /* Kurye Firması */
     Router.define('/firma/panel',       FirmaScreens.panel);
     Router.define('/firma/harita',      FirmaScreens.harita);
     Router.define('/firma/ilanlarim',   FirmaScreens.ilanlarim);
@@ -375,7 +375,7 @@
     Router.define('/firma/mesaj/:id',   FirmaScreens.mesajChat);
     Router.define('/firma/profil',      FirmaScreens.profil);
 
-    /* İşletme */
+    /* Esnaf */
     Router.define('/isletme/panel',       IsletmeScreens.panel);
     Router.define('/isletme/harita',      IsletmeScreens.harita);
     Router.define('/isletme/ilanlarim',   IsletmeScreens.ilanlarim);

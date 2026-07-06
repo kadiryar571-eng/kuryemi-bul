@@ -545,7 +545,7 @@
         jobTitle:  job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
         kurye:     { id: kid, ad: k.ad || 'Kurye', avatar: '' },
         isletmeId: uid,
-        isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'İşletme', avatar: '' },
+        isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'Esnaf', avatar: '' },
         appStatus: app ? (app.status || 'inceleniyor') : 'inceleniyor',
         createdAt: app ? (app.date || new Date().toISOString()) : new Date().toISOString()
       });
@@ -571,7 +571,7 @@
               jobTitle: job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
               kurye:     { id: kid, ad: k.ad || 'Kurye', avatar: '' },
               isletmeId: uid,
-              isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'İşletme', avatar: '' },
+              isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'Esnaf', avatar: '' },
               appStatus: app ? (app.status || 'inceleniyor') : 'inceleniyor',
               createdAt: app ? (app.date || new Date().toISOString()) : new Date().toISOString()
             })
@@ -580,7 +580,7 @@
         KBHiring.makeDecision(uid, jobId, kid, 'beklemede', {
           jobTitle:  job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
           kuryeAd:   k.ad || 'Kurye',
-          isletmeAd: (job && (job.isletme_adi || job.firma_adi)) || 'İşletme',
+          isletmeAd: (job && (job.isletme_adi || job.firma_adi)) || 'Esnaf',
           threadId:  thread ? thread.id : null
         });
       }

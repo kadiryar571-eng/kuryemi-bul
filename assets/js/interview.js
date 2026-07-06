@@ -107,7 +107,7 @@
       kuryeId: data.kuryeId || '',
       kurye: data.kurye || { id: data.kuryeId, ad: 'Kurye', avatar: '' },
       isletmeId: isletmeId,
-      isletme: data.isletme || { id: isletmeId, ad: 'İşletme', avatar: '' },
+      isletme: data.isletme || { id: isletmeId, ad: 'Esnaf', avatar: '' },
       date: data.date || '',
       time: data.time || '',
       type: data.type || 'yüz yüze',

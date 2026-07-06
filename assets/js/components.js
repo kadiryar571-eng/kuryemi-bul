@@ -59,7 +59,7 @@
   function toggleTheme() { setTheme(getTheme() === 'dark' ? 'light' : 'dark'); }
 
   /* ─── ROLE / PANEL ─────────────────────────────────────────── */
-  var ROLE_LABELS = { guest: 'Ziyaretçi', ziyaretci: 'Ziyaretçi', kurye: 'Kurye', isletme: 'İşletme', firma: 'Kurye Firması', admin: 'Admin' };
+  var ROLE_LABELS = { guest: 'Ziyaretçi', ziyaretci: 'Ziyaretçi', kurye: 'Kurye', isletme: 'Esnaf', firma: 'Kurye Firması', admin: 'Admin' };
 
   function getRole() {
     var p = SESSION.profile;
@@ -254,8 +254,8 @@
     var items = [
       { href: panel, label: 'Dashboard', ic: SIC.dashboard },
       { href: 'kuryeler.html',  label: 'Kuryeler',  ic: SIC.couriers },
-      { href: 'isletmeler.html', label: 'İşletmeler', ic: SIC.businesses },
-      { href: 'firmalar.html',  label: 'Firmalar',  ic: SIC.firms },
+      { href: 'isletmeler.html', label: 'Esnaflar', ic: SIC.businesses },
+      { href: 'firmalar.html',  label: 'Kurye Firmaları',  ic: SIC.firms },
       { href: 'ilanlar.html',   label: 'İlanlar',   ic: SIC.jobs },
       { href: 'harita.html',    label: 'Harita',    ic: SIC.map },
       { href: 'havuzum.html',   label: 'Havuzum',   ic: SIC.pool },

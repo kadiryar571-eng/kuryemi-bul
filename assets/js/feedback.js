@@ -297,7 +297,7 @@
       report_resolved:  'Şikayet çözüldü',
       report_dismissed: 'Şikayet reddedildi'
     };
-    var ROLE_LABELS = { isletme:'İşletme', kurye:'Kurye' };
+    var ROLE_LABELS = { isletme:'Esnaf', kurye:'Kurye' };
     var html = '<div class="fb-log">';
     log.slice().reverse().forEach(function(item) {
       html += '<div class="fb-log-item"><div class="fb-log-dot"></div><div style="flex:1">';

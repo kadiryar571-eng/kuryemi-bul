@@ -166,7 +166,7 @@
 
   function renderItem(t) {
     var isBiz   = isBusinessRole();
-    var name    = isBiz ? (t.kurye.ad || 'Kurye') : (t.isletme.ad || 'İşletme');
+    var name    = isBiz ? (t.kurye.ad || 'Kurye') : (t.isletme.ad || 'Esnaf');
     var unreadK = isBiz ? 'isletme' : 'kurye';
     var unread  = (t.unread && t.unread[unreadK]) || 0;
     var cls = 'msg-thread-item' +
@@ -220,7 +220,7 @@
     detailEl.classList.remove('msg-detail--empty');
 
     var isBiz   = isBusinessRole();
-    var other   = isBiz ? (thread.kurye.ad || 'Kurye') : (thread.isletme.ad || 'İşletme');
+    var other   = isBiz ? (thread.kurye.ad || 'Kurye') : (thread.isletme.ad || 'Esnaf');
     var msgs    = KBChat.getMsgs(thread.id);
     var appLbl  = KBChat.APP_STATUS[thread.appStatus] || thread.appStatus;
     var concluded = thread.chatStatus === 'sonuclandi';
@@ -240,7 +240,7 @@
         '<div class="msg-header-actions">' +
           (isBiz
             ? '<a href="profil-kurye.html?id=' + esc(thread.kuryeId) + '" class="btn btn--sm btn--ghost">👤 Profili Gör</a>'
-            : '<a href="profil-isletme.html?id=' + esc(thread.isletmeId) + '" class="btn btn--sm btn--ghost">🏢 İşletme</a>') +
+            : '<a href="profil-isletme.html?id=' + esc(thread.isletmeId) + '" class="btn btn--sm btn--ghost">🏢 Esnaf</a>') +
           '<a href="basvurular.html?job=' + esc(thread.jobId) + '" class="btn btn--sm btn--ghost">📋 Başvurular</a>' +
           '<a href="mesaj-detay.html?tid=' + esc(thread.id) + '" class="btn btn--sm btn--primary" style="font-size:0.73rem">📄 Tam Görünüm</a>' +
           '<button class="btn btn--sm btn--ghost" data-action="archive-thread" data-tid="' + esc(thread.id) + '">🗄</button>' +
@@ -330,7 +330,7 @@
         ' data-action="biz-action" data-biz="' + key + '" data-tid="' + esc(thread.id) + '"' +
         (disabled ? ' disabled' : '') + '>' + a.ico + ' ' + a.lbl + '</button>';
     }).join('');
-    return '<div class="msg-biz-actions"><span class="msg-biz-label">İşletme Aksiyonları:</span>' + btns + '</div>';
+    return '<div class="msg-biz-actions"><span class="msg-biz-label">Esnaf Aksiyonları:</span>' + btns + '</div>';
   }
 
   /* ─── Send message ──────────────────────────────────────────── */

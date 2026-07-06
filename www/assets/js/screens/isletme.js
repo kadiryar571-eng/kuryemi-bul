@@ -1,6 +1,6 @@
 /* ============================================================
    KuryemiBul — screens/isletme.js
-   7 İşletme ekranı: Panel, Harita, İlan Oluştur,
+   7 Esnaf ekranı: Panel, Harita, İlan Oluştur,
                      Başvurular, Aday Detayı, Mesajlar, Profil
    ============================================================ */
 window.IsletmeScreens = (function () {
@@ -46,8 +46,8 @@ window.IsletmeScreens = (function () {
 
     renderScreen(SharedScreens.premDashPanel({
       heroRoute:    '/isletme/profil',
-      heroBadge:    ICON.star + ' İşletme',
-      heroTitle:    'İşletme Puanınız',
+      heroBadge:    ICON.star + ' Esnaf',
+      heroTitle:    'Esnaf Puanınız',
       heroScoreBig: '4.7',
       heroDenom:    '/ 5.0',
       heroDesc:     'Puanınız arttıkça daha nitelikli kuryeler başvurur',
@@ -107,7 +107,7 @@ window.IsletmeScreens = (function () {
     } catch(e) {}
   }
 
-  /* ── İşletme dashboard helpers ──────────────────────────── */
+  /* ── Esnaf dashboard helpers ──────────────────────────── */
   function _iMCard(icon, val, lbl, iconBg, iconColor, route) {
     return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
       '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
@@ -629,20 +629,20 @@ window.IsletmeScreens = (function () {
 
   /* ── 7. PROFİL ──────────────────────────────────────────── */
   function profil() {
-    showAppBar('İşletme Profilim', false,
+    showAppBar('Esnaf Profilim', false,
       '<button class="kb-appbar__action" onclick="Router.go(\'/ayarlar\')">' + ICON.settings + '</button>'
     );
     showBottomNav();
     setActiveNav('profil');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.business_name)) || 'İşletme';
+    var name = (APP.profile && (APP.profile.full_name || APP.profile.business_name)) || 'Esnaf';
 
     renderScreen(
       '<div>' +
         '<div class="profile-hero">' +
           '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
           '<div class="profile-hero__name">' + name + '</div>' +
-          '<div class="profile-hero__sub">Esnaf / İşletme</div>' +
+          '<div class="profile-hero__sub">Esnaf</div>' +
           '<div class="profile-hero__badges">' +
             '<span class="kb-chip kb-chip--warning">⭐ 4.5</span>' +
             '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' +
@@ -651,7 +651,7 @@ window.IsletmeScreens = (function () {
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0">' +
           _mi('Profil Düzenle',    'user',       '/profil-duzenle') +
-          _mi('İşletme Bilgileri', 'briefcase', '/ayarlar') +
+          _mi('Esnaf Bilgileri', 'briefcase', '/ayarlar') +
           _mi('Puanlamalar',       'star',       '/ayarlar') +
           _mi('Bildirimler',       'bell',       '/bildirimler') +
           _mi('Ayarlar',           'settings',   '/ayarlar') +

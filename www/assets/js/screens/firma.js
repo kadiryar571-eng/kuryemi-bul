@@ -1,6 +1,6 @@
 /* ============================================================
    KuryemiBul — screens/firma.js
-   8 Firma ekranı: Panel, Harita, İlanlarım, Yeni İlan,
+   8 Kurye Firması ekranı: Panel, Harita, İlanlarım, Yeni İlan,
                    Başvurular, Aday Detayı, Mesajlar, Profil
    ============================================================ */
 window.FirmaScreens = (function () {
@@ -53,8 +53,8 @@ window.FirmaScreens = (function () {
 
     renderScreen(SharedScreens.premDashPanel({
       heroRoute:    '/firma/profil',
-      heroBadge:    ICON.star + ' Firma',
-      heroTitle:    'Firma Puanınız',
+      heroBadge:    ICON.star + ' Kurye Firması',
+      heroTitle:    'Kurye Firması Puanınız',
       heroScoreBig: '4.6',
       heroDenom:    '/ 5.0',
       heroDesc:     'Puanınız arttıkça en iyi kuryeler sizinle çalışmak ister',
@@ -114,7 +114,7 @@ window.FirmaScreens = (function () {
     } catch(e) {}
   }
 
-  /* ── Firma dashboard helpers ─────────────────────────────── */
+  /* ── Kurye Firması dashboard helpers ─────────────────────────────── */
   function _fMCard(icon, val, lbl, iconBg, iconColor, route) {
     return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
       '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
@@ -635,20 +635,20 @@ window.FirmaScreens = (function () {
 
   /* ── 8. PROFİL ──────────────────────────────────────────── */
   function profil() {
-    showAppBar('Firma Profilim', false,
+    showAppBar('Kurye Firması Profilim', false,
       '<button class="kb-appbar__action" onclick="Router.go(\'/ayarlar\')">' + ICON.settings + '</button>'
     );
     showBottomNav();
     setActiveNav('profil');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.company_name)) || 'Firma';
+    var name = (APP.profile && (APP.profile.full_name || APP.profile.company_name)) || 'Kurye Firması';
 
     renderScreen(
       '<div>' +
         '<div class="profile-hero">' +
           '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-firma)">' + initials(name) + '</div>' +
           '<div class="profile-hero__name">' + name + '</div>' +
-          '<div class="profile-hero__sub">Firma</div>' +
+          '<div class="profile-hero__sub">Kurye Firması</div>' +
           '<div class="profile-hero__badges">' +
             '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' +
             '<span class="kb-chip kb-chip--accent">' + ICON.star + ' 4.6</span>' +
@@ -657,7 +657,7 @@ window.FirmaScreens = (function () {
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0 0 0 0">' +
           _mi('Profil Düzenle',      'user',        '/profil-duzenle') +
-          _mi('Firma Bilgileri',     'briefcase',  '/ayarlar') +
+          _mi('Kurye Firması Bilgileri',     'briefcase',  '/ayarlar') +
           _mi('Çalışanlar',          'users',       '/ayarlar') +
           _mi('Puanlamalar',         'star',        '/ayarlar') +
           _mi('Bildirimler',         'bell',        '/bildirimler') +

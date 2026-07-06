@@ -653,7 +653,7 @@
         applicationId: c.application_id,
         listingTitle: (c.listing && c.listing.baslik) || '',
         listingSehir: [(c.listing && c.listing.sehir), (c.listing && c.listing.bolge)].filter(Boolean).join(' · '),
-        otherName: iAmKurye ? ((c.employer && c.employer.ad) || 'İşletme') : ((c.kurye && c.kurye.ad) || 'Kurye'),
+        otherName: iAmKurye ? ((c.employer && c.employer.ad) || 'Esnaf') : ((c.kurye && c.kurye.ad) || 'Kurye'),
         otherRole: iAmKurye ? 'isletme' : 'kurye',
         lastMessage: c.last_message || '',
         lastMessageAt: c.last_message_at,
@@ -809,7 +809,7 @@
     }, { onConflict: "user_id,token" });
   }
 
-  /* ---- İşletme Analitik ---- */
+  /* ---- Esnaf Analitik ---- */
   async function myListingStats() {
     var u = await getUser();
     if (!u) return { openCount: 0, closedCount: 0, totalApps: 0, pendingApps: 0, acceptedApps: 0 };

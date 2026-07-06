@@ -19,8 +19,8 @@ window.Platform = (function () {
       { id: 'delivery', ic: '📦', t: 'Teslimat İstihbaratı', href: 'teslimat.html' }
     ]},
     { group: 'Roller', items: [
-      { id: 'biz',     ic: '🏪', t: 'İşletme Paneli',  href: 'panel-isletme.html' },
-      { id: 'fleet',   ic: '🚚', t: 'Firma Merkezi',   href: 'panel-firma.html' },
+      { id: 'biz',     ic: '🏪', t: 'Esnaf Paneli',  href: 'panel-isletme.html' },
+      { id: 'fleet',   ic: '🚚', t: 'Kurye Firması Merkezi',   href: 'panel-firma.html' },
       { id: 'courier', ic: '🛵', t: 'Kurye Profili',   href: 'panel-kurye.html' }
     ]},
     { group: 'Analiz', items: [
@@ -88,7 +88,7 @@ window.Platform = (function () {
         SB.myProfile().then(function (p) {
           var name = (p && p.ad) || nm;
           var role = p && p.role;
-          var rl = role === 'kurye' ? 'Kurye' : role === 'isletme' ? 'İşletme' : role === 'firma' ? 'Kurye Firması' : 'Üye';
+          var rl = role === 'kurye' ? 'Kurye' : role === 'isletme' ? 'Esnaf' : role === 'firma' ? 'Kurye Firması' : 'Üye';
           var su = $('#sideUser');
           if (su) su.innerHTML = '<span class="av">' + (role === 'isletme' ? '🏪' : role === 'firma' ? '🏢' : '🛵') + '</span><span><b>' + esc(name) + '</b><span>' + rl + '</span></span>';
         }).catch(function () {});

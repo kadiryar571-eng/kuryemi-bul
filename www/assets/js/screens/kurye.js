@@ -321,7 +321,7 @@ window.KuryeScreens = (function () {
           '<button class="map-chip map-chip--active" data-filter="tumu"    onclick="KuryeScreens._mapCat(this,\'tumu\')">Tümü</button>' +
           '<button class="map-chip"                  data-filter="ilanlar" onclick="KuryeScreens._mapCat(this,\'ilanlar\')">💼 İş İlanları</button>' +
           '<button class="map-chip"                  data-filter="firma"   onclick="KuryeScreens._mapCat(this,\'firma\')">🏢 Kurye Firmaları</button>' +
-          '<button class="map-chip"                  data-filter="isletme" onclick="KuryeScreens._mapCat(this,\'isletme\')">🏪 İşletmeler</button>' +
+          '<button class="map-chip"                  data-filter="isletme" onclick="KuryeScreens._mapCat(this,\'isletme\')">🏪 Esnaflar</button>' +
           '<button class="map-chip map-chip--gold"   data-filter="premium" onclick="KuryeScreens._mapCat(this,\'premium\')">⭐ Premium İşler</button>' +
         '</div>' +
 
@@ -362,8 +362,8 @@ window.KuryeScreens = (function () {
 
           /* Colored pins */
           '<div class="map-pin map-pin--blue"   style="left:38%;top:42%" title="İş İlanı"><span>💼</span></div>' +
-          '<div class="map-pin map-pin--purple" style="left:55%;top:33%" title="Firma"><span>🏢</span></div>' +
-          '<div class="map-pin map-pin--green"  style="left:48%;top:58%" title="İşletme"><span>🏪</span></div>' +
+          '<div class="map-pin map-pin--purple" style="left:55%;top:33%" title="Kurye Firması"><span>🏢</span></div>' +
+          '<div class="map-pin map-pin--green"  style="left:48%;top:58%" title="Esnaf"><span>🏪</span></div>' +
           '<div class="map-pin map-pin--orange" style="left:68%;top:44%" title="İlan"><span>💼</span></div>' +
           '<div class="map-pin map-pin--gold"   style="left:30%;top:64%" title="Premium"><span>⭐</span></div>' +
 
@@ -682,7 +682,7 @@ window.KuryeScreens = (function () {
       id: l.id,
       emoji: aracEmoji,
       title: l.baslik || 'İlan',
-      company: l.sahip || 'İşletme',
+      company: l.sahip || 'Esnaf',
       salary: '—',
       location: [l.sehir, l.bolge].filter(Boolean).join(', ') || 'Belirtilmemiş',
       dist: '—',
@@ -789,7 +789,7 @@ window.KuryeScreens = (function () {
       renderScreen('<div class="kb-screen-inner" style="padding-top:32px;text-align:center"><div class="kb-spinner"></div></div>');
       SB.listingById(id).then(function(ilan) {
         if (!ilan) { toast('İlan bulunamadı'); Router.back(); return; }
-        _renderIlanDetay(ilan.id, ilan.baslik, ilan.sahip || 'İşletme', ilan.aciklama || '', ilan.sehir || '', ilan.arac || '');
+        _renderIlanDetay(ilan.id, ilan.baslik, ilan.sahip || 'Esnaf', ilan.aciklama || '', ilan.sehir || '', ilan.arac || '');
       }).catch(function() { toast('İlan yüklenemedi'); Router.back(); });
       return;
     }
@@ -836,7 +836,7 @@ window.KuryeScreens = (function () {
 
   function _basvur(ilanId, titleOverride, companyOverride) {
     var mock = MOCK_ILANLAR_PREMIUM.find(function (j) { return j.id === ilanId; }) ||
-      { id: ilanId, title: titleOverride || 'İlan', company: companyOverride || 'İşletme', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
+      { id: ilanId, title: titleOverride || 'İlan', company: companyOverride || 'Esnaf', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
     var ilan = titleOverride
       ? Object.assign({}, mock, { title: titleOverride, company: companyOverride || mock.company })
       : mock;
@@ -980,7 +980,7 @@ window.KuryeScreens = (function () {
   function _basCard(b) {
     return '<div class="kb-card" style="margin-bottom:10px">' +
       '<div class="flex items-center justify-between mb-8">' +
-        '<div style="font-weight:700">' + (b.firma || b.company || 'İşletme') + '</div>' +
+        '<div style="font-weight:700">' + (b.firma || b.company || 'Esnaf') + '</div>' +
         _basLabel(b.durum || b.status) +
       '</div>' +
       '<div style="font-size:.85rem;color:var(--muted)">' + (b.baslik || b.role || '') + '</div>' +
@@ -1376,7 +1376,7 @@ window.KuryeScreens = (function () {
       var c = detail.conv;
       var u = window.APP && APP.user;
       var iAmKurye = !!(u && c.kurye_user === u.id);
-      var otherName = iAmKurye ? ((c.employer && c.employer.ad) || 'İşletme') : ((c.kurye && c.kurye.ad) || 'Kurye');
+      var otherName = iAmKurye ? ((c.employer && c.employer.ad) || 'Esnaf') : ((c.kurye && c.kurye.ad) || 'Kurye');
       var otherEmoji = iAmKurye ? '🏢' : '🛵';
       var otherBg    = iAmKurye ? '#F97316' : '#6C4DFF';
       var listingTitle = (c.listing && c.listing.baslik) || 'İlan';

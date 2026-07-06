@@ -25,7 +25,7 @@ window.LoginScreens = (function () {
         '<button class="role-btn role-btn--kurye" onclick="LoginScreens.startRole(\'kurye\')">' +
           '<div class="role-btn__icon">🛵</div>' +
           '<div class="role-btn__text">' +
-            '<div class="role-btn__title">Kurye Ol</div>' +
+            '<div class="role-btn__title">Kurye</div>' +
             '<div class="role-btn__sub">İş fırsatlarını keşfet, başvur</div>' +
           '</div>' +
           ICON.chevron +
@@ -34,7 +34,7 @@ window.LoginScreens = (function () {
         '<button class="role-btn role-btn--firma" onclick="LoginScreens.startRole(\'firma\')">' +
           '<div class="role-btn__icon">🏢</div>' +
           '<div class="role-btn__text">' +
-            '<div class="role-btn__title">Firma Ol</div>' +
+            '<div class="role-btn__title">Kurye Firması</div>' +
             '<div class="role-btn__sub">Kuryeleri işe al, adayları değerlendir</div>' +
           '</div>' +
           ICON.chevron +
@@ -43,7 +43,7 @@ window.LoginScreens = (function () {
         '<button class="role-btn role-btn--isletme" onclick="LoginScreens.startRole(\'isletme\')">' +
           '<div class="role-btn__icon">🏪</div>' +
           '<div class="role-btn__text">' +
-            '<div class="role-btn__title">Esnaf / İşletme Ol</div>' +
+            '<div class="role-btn__title">Esnaf</div>' +
             '<div class="role-btn__sub">İhtiyacın olan kuryeyi bul</div>' +
           '</div>' +
           ICON.chevron +
@@ -60,7 +60,7 @@ window.LoginScreens = (function () {
           '<div style="font-size:.72rem;font-weight:700;color:#8B6DFF;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px">Demo Mod — Hesap Gerekmez</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
             '<button onclick="LoginScreens.demoLogin(\'kurye\')"   style="background:rgba(108,77,255,.15);border:1px solid rgba(108,77,255,.3);border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#BBA0FF;cursor:pointer">🛵 Kurye</button>'  +
-            '<button onclick="LoginScreens.demoLogin(\'firma\')"   style="background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.3); border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#4ADE80;cursor:pointer">🏢 Firma</button>'   +
+            '<button onclick="LoginScreens.demoLogin(\'firma\')"   style="background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.3); border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#4ADE80;cursor:pointer">🏢 Kurye Fir.</button>'   +
             '<button onclick="LoginScreens.demoLogin(\'isletme\')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:10px;padding:10px 4px;font-size:.75rem;font-weight:700;color:#FB923C;cursor:pointer">🏪 Esnaf</button>'   +
           '</div>' +
         '</div>' +
@@ -144,8 +144,8 @@ window.LoginScreens = (function () {
         '<label class="kb-label">Rol</label>' +
         '<select class="kb-select" id="reg-role">' +
           '<option value="kurye">Kurye</option>' +
-          '<option value="firma">Firma</option>' +
-          '<option value="isletme">Esnaf / İşletme</option>' +
+          '<option value="firma">Kurye Firması</option>' +
+          '<option value="isletme">Esnaf</option>' +
         '</select>' +
       '</div>' +
       '<div id="reg-err" class="kb-error-msg" style="display:none;margin-bottom:10px"></div>' +

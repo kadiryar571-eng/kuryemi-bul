@@ -790,7 +790,7 @@
     }, { onConflict: "user_id,token" });
   }
 
-  /* ---- İşletme Analitik ---- */
+  /* ---- Esnaf Analitik ---- */
   async function myListingStats() {
     var u = await getUser();
     if (!u) return { openCount: 0, closedCount: 0, totalApps: 0, pendingApps: 0, acceptedApps: 0 };

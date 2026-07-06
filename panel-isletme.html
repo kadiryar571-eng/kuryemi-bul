@@ -183,7 +183,7 @@
         isletme: [
           { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
           { label: 'Faaliyet bölgeni belirle',      done: !!(profile.sehir) },
-          { label: 'İşletme bilgilerini doldur',    done: !!(profile.hakkinda || profile.bio) },
+          { label: 'Esnaf bilgilerini doldur',    done: !!(profile.hakkinda || profile.bio) },
           { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
           { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
           { label: 'Çalışma tercihlerini belirle',  done: !!(profile.tercihler || profile.tercih) },
@@ -311,7 +311,7 @@
         var progLink = document.getElementById('welcomeProgLink');
 
         if (profile) {
-          var ad = profile.ad || 'İşletme';
+          var ad = profile.ad || 'Esnaf';
           var firstName = ad.split(' ')[0];
           var hour = new Date().getHours();
           var gStr = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';

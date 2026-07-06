@@ -58,8 +58,8 @@
           </div>
           <div class="form-grid">
             <div class="jc-field field--full">
-              <label for="jcIsletme">İşletme / Firma Adı</label>
-              <input class="jc-input" id="jcIsletme" type="text" placeholder="İşletme adınız" readonly>
+              <label for="jcIsletme">Esnaf / Kurye Firması Adı</label>
+              <input class="jc-input" id="jcIsletme" type="text" placeholder="Esnaf adınız" readonly>
             </div>
             <div class="jc-field">
               <label for="jcPozBaslik">Pozisyon Başlığı *</label>
@@ -639,7 +639,7 @@
         '<article class="job-card">' +
           '<div class="employer-badge">' +
             '<div class="employer-badge__av">' + esc(initials) + '</div>' +
-            '<span class="employer-badge__name">' + esc(job.sahip || 'İşletme') + '</span>' +
+            '<span class="employer-badge__name">' + esc(job.sahip || 'Esnaf') + '</span>' +
           '</div>' +
           '<div class="job-card__title">' + esc(job.baslik) + '</div>' +
           (job.maas_aralik ? '<div class="job-card__salary">💰 ' + esc(job.maas_aralik) + (job.maas_modeli ? ' · ' + esc(job.maas_modeli) : '') + '</div>' : '') +

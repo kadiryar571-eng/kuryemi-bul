@@ -173,7 +173,7 @@
           <span class="qa-badge" id="qaMsgBadge" style="display:none">0</span>
           <div>
             <div class="qa-card__title">Mesajlar</div>
-            <div class="qa-card__desc">İşletmelerle yaptığın görüşmeler.</div>
+            <div class="qa-card__desc">Esnaflarla yaptığın görüşmeler.</div>
           </div>
         </a>
 
@@ -219,7 +219,7 @@
       </div>
       <div class="ss-tabs">
         <button class="ss-tab is-active" data-ss="ilanlar">Önerilen İlanlar</button>
-        <button class="ss-tab" data-ss="isletmeler">Önerilen İşletmeler</button>
+        <button class="ss-tab" data-ss="isletmeler">Önerilen Esnaflar</button>
       </div>
       <div class="ss-panel" id="ssPanelIlanlar">
         <div class="ss-scroll" id="suggIlanList"></div>
@@ -508,7 +508,7 @@
           applyBtn.disabled = true;
           applyBtn.textContent = '✓ Başvuruldu';
           applyBtn.classList.replace('btn--primary', 'btn--secondary');
-          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'İşletme en kısa sürede iletişime geçecek.', 2600);
+          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'Esnaf en kısa sürede iletişime geçecek.', 2600);
         }
       });
     }
@@ -686,7 +686,7 @@
           btn.disabled = true;
           btn.textContent = '✓ Başvuruldu';
           btn.classList.replace('btn--primary', 'btn--secondary');
-          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'İşletme en kısa sürede iletişime geçecek.', 2600);
+          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'Esnaf en kısa sürede iletişime geçecek.', 2600);
         });
       }
 
@@ -847,7 +847,7 @@
         isletme: [
           { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
           { label: 'Faaliyet bölgeni belirle',      done: !!(profile.sehir) },
-          { label: 'İşletme bilgilerini doldur',    done: !!(profile.hakkinda || profile.bio) },
+          { label: 'Esnaf bilgilerini doldur',    done: !!(profile.hakkinda || profile.bio) },
           { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
           { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
           { label: 'Çalışma tercihlerini belirle',  done: !!(profile.tercihler || profile.tercih) },
@@ -855,7 +855,7 @@
         firma: [
           { label: 'Temel bilgilerini tamamla',     done: !!(profile.ad && profile.ad.length > 1) },
           { label: 'Hizmet bölgelerini seç',        done: !!(profile.sehir) },
-          { label: 'Firma bilgilerini doldur',       done: !!(profile.hakkinda || profile.bio) },
+          { label: 'Kurye Firması bilgilerini doldur',       done: !!(profile.hakkinda || profile.bio) },
           { label: 'Kurye ihtiyaçlarını belirle',   done: !!(profile.kurye_sayisi || profile.ihtiyac) },
           { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
           { label: 'İletişim tercihlerini ayarla',  done: !!(profile.web || profile.telefon) },

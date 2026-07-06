@@ -351,7 +351,7 @@
       (saved ? "♥" : "♡") + '</button>';
 
     /* ── Şirket rolü etiketi ────────────────────────────────── */
-    var roleLabel = l.sahipRol === 'firma' ? 'Firma' : l.sahipRol === 'isletme' ? 'İşletme' : '';
+    var roleLabel = l.sahipRol === 'firma' ? 'Kurye Firması' : l.sahipRol === 'isletme' ? 'Esnaf' : '';
 
     /* ── Kart ───────────────────────────────────────────────── */
     return '<article class="job-card job-card--rich" data-job="' + l.id + '">' +
@@ -1093,7 +1093,7 @@
             : type === "isletme" ? [x.tur, x.sehir].filter(Boolean).join(" · ")
             : (x.bolgeler || []).slice(0, 2).join(", ");
     var tagline = type === "kurye"    ? (lvlLbl[x.seviye] || "Kurye")
-                : type === "isletme" ? (x.tur || "İşletme")
+                : type === "isletme" ? (x.tur || "Esnaf")
                 : "Kurye Firması";
 
     /* ── Verification center checklist ───────────────────── */
@@ -1216,7 +1216,7 @@
 
     } else if (type === "isletme") {
       sections += prfSection("Doğrulama Merkezi", '<div class="prf-verif">' + verifHtml + '</div>');
-      sections += prfSection("İşletme Metrikleri", prfKpiGrid([
+      sections += prfSection("Esnaf Metrikleri", prfKpiGrid([
         { val: x.puan ? Number(x.puan).toFixed(1) : "—", lbl: "Puan", hi: true },
         { val: x.acikIlan || 0, lbl: "Açık İlan", hi: false }
       ]));
@@ -1229,7 +1229,7 @@
 
     } else { /* firma */
       sections += prfSection("Doğrulama Merkezi", '<div class="prf-verif">' + verifHtml + '</div>');
-      sections += prfSection("Firma Metrikleri", prfKpiGrid([
+      sections += prfSection("Kurye Firması Metrikleri", prfKpiGrid([
         { val: x.puan ? Number(x.puan).toFixed(1) : "—", lbl: "Puan", hi: true },
         { val: x.kapasite || 0, lbl: "Kurye Kapasitesi", hi: false }
       ]));
@@ -1862,8 +1862,8 @@
     var PIN = {
       ilan:    { color: "#f59e0b", emoji: "💼", label: "İlan" },
       kurye:   { color: "#22d3ee", emoji: "🛵", label: "Kurye" },
-      isletme: { color: "#4f8bff", emoji: "🏪", label: "İşletme" },
-      firma:   { color: "#a855f7", emoji: "🏢", label: "Firma" }
+      isletme: { color: "#4f8bff", emoji: "🏪", label: "Esnaf" },
+      firma:   { color: "#a855f7", emoji: "🏢", label: "Kurye Firması" }
     };
 
     if (window.KB && KB.ready) await KB.ready();
@@ -2300,8 +2300,8 @@
       '<div class="jd-hero">' +
         '<div class="jd-hero__co">' + logoHtml +
           '<div class="jd-hero__co-info">' +
-            '<div class="jd-hero__co-name"><a href="' + pUrl + '" style="color:inherit;text-decoration:none">' + KB.esc(l.sahip || "İşletme") + '</a>' + verBadge + '</div>' +
-            '<div class="jd-hero__co-role">' + (l.sahipRol === "firma" ? "Kurye Firması" : "İşletme") + '</div>' +
+            '<div class="jd-hero__co-name"><a href="' + pUrl + '" style="color:inherit;text-decoration:none">' + KB.esc(l.sahip || "Esnaf") + '</a>' + verBadge + '</div>' +
+            '<div class="jd-hero__co-role">' + (l.sahipRol === "firma" ? "Kurye Firması" : "Esnaf") + '</div>' +
           '</div>' +
         '</div>' +
         '<h1 class="jd-hero__title">' + KB.esc(l.baslik) + '</h1>' +
@@ -2392,7 +2392,7 @@
           '<div class="jd-company">' +
             '<div class="jd-company__head">' +
               (l.sahipAvatar ? '<img class="jd-company__logo" src="' + KB.esc(l.sahipAvatar) + '" alt="">' : '<div class="jd-company__logo--ph">' + inits + '</div>') +
-              '<div><div class="jd-company__name">' + KB.esc(l.sahip || "—") + '</div><div class="jd-company__role">' + (l.sahipRol === "firma" ? "Kurye Firması" : "İşletme") + '</div></div>' +
+              '<div><div class="jd-company__name">' + KB.esc(l.sahip || "—") + '</div><div class="jd-company__role">' + (l.sahipRol === "firma" ? "Kurye Firması" : "Esnaf") + '</div></div>' +
             '</div>' +
             '<a class="jd-company__link" href="' + pUrl + '">Profili Görüntüle →</a>' +
           '</div>' +
@@ -2596,16 +2596,16 @@
     function ctxItems(other) {
       var r = myRole, items = [];
       if (r === "kurye") {
-        if (other.role === "isletme" && other.id) items.push({ href: "profil-isletme.html?id=" + other.id, label: "🏪 İşletmeyi Görüntüle" });
-        if (other.role === "firma" && other.id)   items.push({ href: "profil-firma.html?id=" + other.id, label: "🏢 Firmayı Görüntüle" });
+        if (other.role === "isletme" && other.id) items.push({ href: "profil-isletme.html?id=" + other.id, label: "🏪 Esnafı Görüntüle" });
+        if (other.role === "firma" && other.id)   items.push({ href: "profil-firma.html?id=" + other.id, label: "🏢 Kurye Firmasını Görüntüle" });
         items.push({ href: "ilanlar.html", label: "⚡ Fırsatlara Bak" });
       } else if (r === "isletme") {
         if (other.role === "kurye" && other.id)  items.push({ href: "profil-kurye.html?id=" + other.id, label: "🛵 Kurye Profilini Gör" });
-        if (other.role === "firma" && other.id)  items.push({ href: "profil-firma.html?id=" + other.id, label: "🏢 Firmayı Gör" });
+        if (other.role === "firma" && other.id)  items.push({ href: "profil-firma.html?id=" + other.id, label: "🏢 Kurye Firmasını Gör" });
         items.push({ href: "eslesme.html", label: "🤝 Eşleşmelere Git" });
       } else if (r === "firma") {
         if (other.role === "kurye" && other.id)    items.push({ href: "profil-kurye.html?id=" + other.id, label: "🛵 Kurye Profilini Gör" });
-        if (other.role === "isletme" && other.id)  items.push({ href: "profil-isletme.html?id=" + other.id, label: "🏪 İşletmeyi Gör" });
+        if (other.role === "isletme" && other.id)  items.push({ href: "profil-isletme.html?id=" + other.id, label: "🏪 Esnafı Gör" });
         items.push({ href: "kuryeler.html", label: "👥 Kurye Havuzuna Git" });
       }
       items.push({ action: "archive", label: "🗂️ Konuşmayı Arşivle" });

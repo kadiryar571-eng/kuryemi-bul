@@ -57,7 +57,7 @@
       <div class="prof-engine__head">
         <div>
           <div class="prof-engine__title">Profilini Tamamla</div>
-          <div class="prof-engine__sub">Firma profili eksiksiz olduğunda daha fazla kurye sizi tercih eder.</div>
+          <div class="prof-engine__sub">Kurye Firması profili eksiksiz olduğunda daha fazla kurye sizi tercih eder.</div>
         </div>
         <div class="prof-engine__pct-wrap">
           <span class="prof-engine__pct" id="profPct">%0</span>
@@ -245,7 +245,7 @@
       var steps = [
         { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
         { label: 'Faaliyet şehrini belirle',      done: !!(profile.sehir) },
-        { label: 'Firma hakkında bilgi ekle',      done: !!(profile.hakkinda || profile.bio) },
+        { label: 'Kurye Firması hakkında bilgi ekle',      done: !!(profile.hakkinda || profile.bio) },
         { label: 'Kurye ihtiyaçlarını belirle',  done: !!(profile.kurye_sayisi || profile.ihtiyac) },
         { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
         { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
@@ -378,7 +378,7 @@
         var pLink = document.getElementById('welcomeProgLink');
 
         if (profile) {
-          var ad  = profile.ad || 'Firma';
+          var ad  = profile.ad || 'Kurye Firması';
           var fn  = ad.split(' ')[0];
           var h   = new Date().getHours();
           greet.textContent = (h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar') + ', ' + fn + '!';

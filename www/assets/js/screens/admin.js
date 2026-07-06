@@ -62,8 +62,8 @@ window.AdminScreens = (function () {
         '</div>' +
         '<div class="kb-card" style="padding:0 16px">' +
           _adminUserRow('Mehmet Kaya',      'Kurye',   'Aktif') +
-          _adminUserRow('Lezzet Dükkanım',  'İşletme', 'Aktif') +
-          _adminUserRow('XYZ Kargo',        'Firma',   'Doğrulama Bekliyor') +
+          _adminUserRow('Lezzet Dükkanım',  'Esnaf', 'Aktif') +
+          _adminUserRow('XYZ Kargo',        'Kurye Firması',   'Doğrulama Bekliyor') +
           _adminUserRow('Aday Kurye',       'Kurye',   'Askıda') +
         '</div>' +
       '</div>'
@@ -108,10 +108,10 @@ window.AdminScreens = (function () {
 
     var users = [
       { name: 'Mehmet Kaya',     role: 'Kurye',   status: 'active'   },
-      { name: 'ABC Lojistik',    role: 'Firma',   status: 'active'   },
-      { name: 'Lezzet Dükkanım', role: 'İşletme', status: 'active'   },
+      { name: 'ABC Lojistik',    role: 'Kurye Firması',   status: 'active'   },
+      { name: 'Lezzet Dükkanım', role: 'Esnaf', status: 'active'   },
       { name: 'Ayşe Demir',      role: 'Kurye',   status: 'active'   },
-      { name: 'XYZ Kargo',       role: 'Firma',   status: 'pending'  },
+      { name: 'XYZ Kargo',       role: 'Kurye Firması',   status: 'pending'  },
       { name: 'Deneme Kullanıcı',role: 'Kurye',   status: 'suspended'}
     ];
 
@@ -121,8 +121,8 @@ window.AdminScreens = (function () {
         '<div class="kb-tabs" id="usr-tabs">' +
           '<button class="kb-tab active" onclick="AdminScreens._userFilter(\'tumu\',this)">Tümü</button>' +
           '<button class="kb-tab"        onclick="AdminScreens._userFilter(\'kurye\',this)">Kurye</button>' +
-          '<button class="kb-tab"        onclick="AdminScreens._userFilter(\'firma\',this)">Firma</button>' +
-          '<button class="kb-tab"        onclick="AdminScreens._userFilter(\'isletme\',this)">İşletme</button>' +
+          '<button class="kb-tab"        onclick="AdminScreens._userFilter(\'firma\',this)">Kurye Firması</button>' +
+          '<button class="kb-tab"        onclick="AdminScreens._userFilter(\'isletme\',this)">Esnaf</button>' +
         '</div>' +
         '<div id="usr-list" class="kb-card" style="padding:0 16px">' +
           users.map(function (u) { return _userRow(u); }).join('') +
@@ -133,10 +133,10 @@ window.AdminScreens = (function () {
 
   var _allUsers = [
     { name: 'Mehmet Kaya',     role: 'Kurye',   roleLow: 'kurye',   status: 'active'    },
-    { name: 'ABC Lojistik',    role: 'Firma',   roleLow: 'firma',   status: 'active'    },
-    { name: 'Lezzet Dükkanım', role: 'İşletme', roleLow: 'isletme', status: 'active'    },
+    { name: 'ABC Lojistik',    role: 'Kurye Firması',   roleLow: 'firma',   status: 'active'    },
+    { name: 'Lezzet Dükkanım', role: 'Esnaf', roleLow: 'isletme', status: 'active'    },
     { name: 'Ayşe Demir',      role: 'Kurye',   roleLow: 'kurye',   status: 'active'    },
-    { name: 'XYZ Kargo',       role: 'Firma',   roleLow: 'firma',   status: 'pending'   },
+    { name: 'XYZ Kargo',       role: 'Kurye Firması',   roleLow: 'firma',   status: 'pending'   },
     { name: 'Deneme',          role: 'Kurye',   roleLow: 'kurye',   status: 'suspended' }
   ];
 
@@ -267,8 +267,8 @@ window.AdminScreens = (function () {
         '<div class="kb-section-head"><div class="kb-section-title">Kullanıcı Dağılımı</div></div>' +
         '<div class="kb-card">' +
           _barRow('Kurye',   65, 'var(--c-kurye)') +
-          _barRow('Firma',   20, 'var(--c-firma)') +
-          _barRow('İşletme', 15, 'var(--c-isletme)') +
+          _barRow('Kurye Firması',   20, 'var(--c-firma)') +
+          _barRow('Esnaf', 15, 'var(--c-isletme)') +
         '</div>' +
 
         '<div class="kb-section-head"><div class="kb-section-title">Aktivite Grafiği</div></div>' +
