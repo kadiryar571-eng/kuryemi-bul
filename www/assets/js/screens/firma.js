@@ -588,7 +588,11 @@ window.FirmaScreens = (function () {
     if (!window.SB || !SB.isOn()) { render(MOCK_ADAYLAR); return; }
 
     try {
-      var apps = await SB.allMyListingApplications();
+      var apps = await Promise.race([
+        SB.allMyListingApplications(),
+        new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 8000); })
+      ]);
+      if (apps === null) throw new Error('timeout');
       _basCache = apps || [];
       render(_basCache);
     } catch (e) {
@@ -723,7 +727,10 @@ window.FirmaScreens = (function () {
     if (!window.SB || !SB.isOn() || !APP.profile || !APP.profile.id) { el.innerHTML = empty; return; }
 
     try {
-      var list = await SB.reviewsFor(APP.profile.id);
+      var list = await Promise.race([
+        SB.reviewsFor(APP.profile.id),
+        new Promise(function (resolve) { setTimeout(function () { resolve([]); }, 8000); })
+      ]);
       el.innerHTML = list.length ? list.map(function (r) {
         return '<div class="kb-card">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +

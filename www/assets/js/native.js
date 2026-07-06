@@ -52,6 +52,13 @@
     });
   }
 
+  /* ── Dış bağlantı aç (yasal sayfalar vb.) ──────────────── */
+  window.KBOpenUrl = function (url) {
+    var Browser = plug('Browser');
+    if (Browser && Browser.open) { Browser.open({ url: url }); return; }
+    window.open(url, '_blank');
+  };
+
   /* ── Kamera — Profil fotoğrafı ─────────────────────────── */
   window.KBPickPhoto = function (onSuccess, onError) {
     var Camera = plug('Camera');

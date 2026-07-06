@@ -267,35 +267,15 @@ window.SharedScreens = (function () {
         '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Hesap</div>' +
         '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
           _settingItem('Profil Düzenle',     'user',     function(){ Router.go('/profil-duzenle'); }) +
-          _settingItem('Şifre Değiştir',     'shield',   function(){}) +
-          _settingItem('Bildirim Ayarları',  'bell',     function(){}) +
-        '</div>' +
-
-        '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Uygulama</div>' +
-        '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
-          '<div class="profile-menu-item" style="padding:14px 0">' +
-            '<div class="profile-menu-item__icon">' + ICON.settings + '</div>' +
-            '<div class="profile-menu-item__label">Dil</div>' +
-            '<div style="display:flex;gap:6px">' +
-              '<button class="kb-chip kb-chip--accent" id="lang-tr" onclick="SharedScreens._setLang(\'tr\')">TR</button>' +
-              '<button class="kb-chip" id="lang-en" onclick="SharedScreens._setLang(\'en\')">EN</button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="profile-menu-item" style="padding:14px 0;border-top:1px solid var(--border)">' +
-            '<div class="profile-menu-item__icon">' + ICON.settings + '</div>' +
-            '<div class="profile-menu-item__label">Tema</div>' +
-            '<div style="display:flex;gap:6px">' +
-              '<button class="kb-chip kb-chip--accent" onclick="SharedScreens._setTheme(\'light\')">Açık</button>' +
-              '<button class="kb-chip" onclick="SharedScreens._setTheme(\'dark\')">Koyu</button>' +
-            '</div>' +
-          '</div>' +
+          _settingItem('Şifre Değiştir',     'shield',   function(){ Router.go('/sifre-degistir'); }) +
+          _settingItem('Bildirim Ayarları',  'bell',     function(){ Router.go('/bildirim-ayarlari'); }) +
         '</div>' +
 
         '<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Yasal</div>' +
         '<div class="kb-card" style="padding:0 16px;margin-bottom:16px">' +
-          _settingItem('Gizlilik Politikası', 'doc', function(){}) +
-          _settingItem('Kullanım Koşulları',  'doc', function(){}) +
-          _settingItem('KVKK',               'doc', function(){}) +
+          _settingItem('Gizlilik Politikası', 'doc', function(){ KBOpenUrl('https://kuryemibul.com/gizlilik.html'); }) +
+          _settingItem('Kullanım Koşulları',  'doc', function(){ KBOpenUrl('https://kuryemibul.com/sartlar.html'); }) +
+          _settingItem('KVKK',               'doc', function(){ KBOpenUrl('https://kuryemibul.com/kvkk.html'); }) +
         '</div>' +
 
         '<button class="btn btn--danger mt-12" onclick="signOut()">Çıkış Yap</button>' +
@@ -336,14 +316,193 @@ window.SharedScreens = (function () {
     '</div>';
   }
 
-  function _setLang(lang) {
-    localStorage.setItem('kb_lang', lang);
-    toast(lang === 'tr' ? 'Dil: Türkçe' : 'Language: English');
+  /* ── Şifre Değiştir (e-posta OTP kodu) ─────────────────────── */
+  var _sdEmail = '';
+  var _sdCooldownTimer = null;
+
+  function _sdMaskEmail(email) {
+    var parts = String(email || '').split('@');
+    if (parts.length !== 2) return email || '';
+    var name = parts[0];
+    var visible = name.slice(0, 2);
+    return visible + '***@' + parts[1];
   }
 
-  function _setTheme(theme) {
-    localStorage.setItem('kb_theme', theme);
-    toast(theme === 'dark' ? 'Koyu tema seçildi' : 'Açık tema seçildi');
+  function sifreDegistir() {
+    showAppBar('Şifre Değiştir', true);
+    hideBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-card" id="sd-step1">' +
+          '<div style="font-weight:700;margin-bottom:6px">E-posta Doğrulaması</div>' +
+          '<div style="font-size:.84rem;color:var(--text2);margin-bottom:14px">Güvenliğiniz için önce e-posta adresinize bir doğrulama kodu göndereceğiz: <b id="sd-email">…</b></div>' +
+          '<button class="btn btn--primary" id="sd-send-btn" onclick="SharedScreens._sdSendCode(false)">Doğrulama Kodu Gönder</button>' +
+        '</div>' +
+
+        '<div id="sd-step2" style="display:none">' +
+          '<div class="kb-card">' +
+            '<div class="kb-label">Doğrulama Kodu</div>' +
+            '<input id="sd-code" class="kb-input" inputmode="numeric" maxlength="12" placeholder="Doğrulama kodu" style="letter-spacing:.2em;text-align:center;font-size:1.1rem">' +
+            '<button class="btn btn--ghost btn--sm" id="sd-resend-btn" style="margin-top:8px;width:auto;padding:6px 12px" onclick="SharedScreens._sdSendCode(true)">Kodu Tekrar Gönder</button>' +
+          '</div>' +
+          '<div class="kb-card">' +
+            '<div class="kb-label">Yeni Şifre</div>' +
+            '<input id="sd-pass1" class="kb-input" type="password" placeholder="En az 6 karakter">' +
+            '<div class="kb-label" style="margin-top:12px">Yeni Şifre (Tekrar)</div>' +
+            '<input id="sd-pass2" class="kb-input" type="password" placeholder="Yeni şifrenizi tekrar girin">' +
+            '<button class="btn btn--primary" id="sd-confirm-btn" style="margin-top:14px" onclick="SharedScreens._sdConfirm()">Onayla ve Şifreyi Değiştir</button>' +
+          '</div>' +
+        '</div>' +
+
+        '<div id="sd-error" style="display:none;margin-top:4px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#DC2626;font-size:.84rem;text-align:center"></div>' +
+      '</div>'
+    );
+
+    if (window.SB && SB.isOn()) {
+      SB.getUser().then(function (u) {
+        _sdEmail = (u && u.email) || '';
+        var el = document.getElementById('sd-email');
+        if (el) el.textContent = _sdMaskEmail(_sdEmail);
+      }).catch(function () {});
+    }
+  }
+
+  function _sdShowError(msg) {
+    var el = document.getElementById('sd-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function _sdSendCode(isResend) {
+    var el = document.getElementById('sd-error');
+    if (el) el.style.display = 'none';
+    if (!_sdEmail) { _sdShowError('Oturum bilgisi bulunamadı, tekrar giriş yapın.'); return; }
+
+    var btn = document.getElementById(isResend ? 'sd-resend-btn' : 'sd-send-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Gönderiliyor…'; }
+
+    if (!window.SB || !SB.isOn()) {
+      toast('Kod gönderildi (demo)');
+      document.getElementById('sd-step2').style.display = '';
+      if (btn) { btn.disabled = false; btn.textContent = isResend ? 'Kodu Tekrar Gönder' : 'Doğrulama Kodu Gönder'; }
+      return;
+    }
+
+    SB.sendPasswordOtp(_sdEmail).then(function (r) {
+      if (r && r.error) throw r.error;
+      toast('Kod ' + _sdMaskEmail(_sdEmail) + ' adresine gönderildi ✓');
+      document.getElementById('sd-step2').style.display = '';
+      if (isResend) _sdStartCooldown(30);
+    }).catch(function (e) {
+      _sdShowError((e && e.message) || 'Kod gönderilemedi, tekrar deneyin.');
+    }).finally(function () {
+      if (btn && !isResend) { btn.disabled = false; btn.textContent = 'Doğrulama Kodu Gönder'; }
+      if (isResend) _sdStartCooldown(30);
+    });
+  }
+
+  function _sdStartCooldown(seconds) {
+    var btn = document.getElementById('sd-resend-btn');
+    if (!btn) return;
+    clearInterval(_sdCooldownTimer);
+    var remaining = seconds;
+    btn.disabled = true;
+    btn.textContent = 'Tekrar gönder (' + remaining + 's)';
+    _sdCooldownTimer = setInterval(function () {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(_sdCooldownTimer);
+        btn.disabled = false;
+        btn.textContent = 'Kodu Tekrar Gönder';
+      } else if (btn) {
+        btn.textContent = 'Tekrar gönder (' + remaining + 's)';
+      }
+    }, 1000);
+  }
+
+  function _sdConfirm() {
+    var el = document.getElementById('sd-error');
+    if (el) el.style.display = 'none';
+
+    var code  = (document.getElementById('sd-code').value || '').trim();
+    var pass1 = document.getElementById('sd-pass1').value || '';
+    var pass2 = document.getElementById('sd-pass2').value || '';
+
+    if (!code || code.length < 4) { _sdShowError('Lütfen e-postanıza gelen doğrulama kodunu girin.'); return; }
+    if (pass1.length < 6) { _sdShowError('Yeni şifre en az 6 karakter olmalı.'); return; }
+    if (pass1 !== pass2) { _sdShowError('Şifreler eşleşmiyor.'); return; }
+
+    var btn = document.getElementById('sd-confirm-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor…'; }
+
+    if (!window.SB || !SB.isOn()) {
+      toast('Şifreniz güncellendi ✓');
+      setTimeout(function () { Router.back(); }, 700);
+      return;
+    }
+
+    SB.verifyPasswordOtp(_sdEmail, code).then(function (r) {
+      if (r && r.error) throw r.error;
+      return SB.changePassword(pass1);
+    }).then(function (r) {
+      if (r && r.error) throw r.error;
+      toast('Şifreniz güncellendi ✓');
+      setTimeout(function () { Router.back(); }, 700);
+    }).catch(function (e) {
+      _sdShowError((e && e.message) || 'Kod hatalı/süresi dolmuş ya da şifre güncellenemedi.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Onayla ve Şifreyi Değiştir'; }
+    });
+  }
+
+  /* ── Bildirim Ayarları ──────────────────────────────────── */
+  function bildirimAyarlari() {
+    showAppBar('Bildirim Ayarları', true);
+    showBottomNav();
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-card" id="na-card">' +
+          '<div style="padding:20px 0;text-align:center"><div class="kb-spinner"></div></div>' +
+        '</div>' +
+      '</div>'
+    );
+
+    setTimeout(function () {
+    (typeof KBPushStatus === 'function' ? KBPushStatus() : Promise.resolve('unsupported')).then(function (status) {
+      var el = document.getElementById('na-card');
+      if (!el) return;
+      if (status === 'unsupported') {
+        el.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Bildirimler</div>' +
+          '<div style="font-size:.84rem;color:var(--text2)">Bildirimler yalnızca mobil uygulamada kullanılabilir.</div>';
+      } else if (status === 'granted') {
+        el.innerHTML = '<div style="display:flex;align-items:center;gap:10px">' +
+          '<span class="kb-chip kb-chip--success">' + ICON.check + ' Açık</span>' +
+          '<div style="font-size:.84rem;color:var(--text2)">Push bildirimleri açık.</div>' +
+        '</div>';
+      } else {
+        el.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Bildirimler Kapalı</div>' +
+          '<div style="font-size:.84rem;color:var(--text2);margin-bottom:14px">Yeni mesaj, başvuru ve teklif bildirimleri almak için izin verin.' +
+          (status === 'denied' ? ' Daha önce reddettiyseniz telefonun Ayarlar > Uygulamalar > KuryemiBul > Bildirimler bölümünden açmanız gerekebilir.' : '') +
+          '</div>' +
+          '<button class="btn btn--primary btn--sm" style="width:auto;padding:8px 16px" onclick="SharedScreens._naRequest()">Bildirimleri Aç</button>';
+      }
+    }).catch(function () {
+      var el = document.getElementById('na-card');
+      if (el) el.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Bildirim durumu okunamadı</div>' +
+        '<div style="font-size:.84rem;color:var(--text2)">Bir sorun oluştu, lütfen tekrar deneyin.</div>';
+    });
+    }, 130);
+  }
+
+  function _naRequest() {
+    if (typeof KBRequestPush !== 'function') { toast('Bu cihazda desteklenmiyor'); return; }
+    KBRequestPush().then(function (status) {
+      if (status === 'granted') toast('Bildirimler açıldı ✓');
+      else toast('İzin verilmedi');
+      bildirimAyarlari();
+    }).catch(function () { toast('Bir hata oluştu'); });
   }
 
   /* ── Yardım & Destek ────────────────────────────────────── */
@@ -1040,8 +1199,11 @@ window.SharedScreens = (function () {
     favoriler   : favoriler,
     ayarlar     : ayarlar,
     yardim      : yardim,
-    _setLang    : _setLang,
-    _setTheme   : _setTheme,
+    sifreDegistir    : sifreDegistir,
+    bildirimAyarlari : bildirimAyarlari,
+    _sdSendCode : _sdSendCode,
+    _sdConfirm  : _sdConfirm,
+    _naRequest  : _naRequest,
     _faqToggle  : _faqToggle,
     _deleteAccount : _deleteAccount,
     // Shared premium panel

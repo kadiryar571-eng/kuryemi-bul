@@ -397,6 +397,8 @@
     Router.define('/yardim',         SharedScreens.yardim);
     Router.define('/profil-duzenle', SharedScreens.profilDuzenle);
     Router.define('/sifre-sifirla', SharedScreens.sifreSifirla);
+    Router.define('/sifre-degistir', SharedScreens.sifreDegistir);
+    Router.define('/bildirim-ayarlari', SharedScreens.bildirimAyarlari);
     Router.define('/verify-email',  SharedScreens.verifyEmail);
 
     /* Admin */
@@ -444,6 +446,27 @@
       /* Firebase henüz yapılandırılmamış — sessizce geç */
     }
   }
+
+  /* ── Bildirim Ayarları ekranından çağrılır ────────────────── */
+  function _timeout(ms) {
+    return new Promise(function (resolve) { setTimeout(function () { resolve('unsupported'); }, ms); });
+  }
+  window.KBPushStatus = async function () {
+    if (!window.Capacitor || !Capacitor.isNativePlatform()) return 'unsupported';
+    var P = Capacitor.Plugins.PushNotifications;
+    if (!P) return 'unsupported';
+    try {
+      var r = await Promise.race([P.checkPermissions(), _timeout(4000).then(function () { return { receive: 'unsupported' }; })]);
+      return r.receive;
+    } catch (e) { return 'unsupported'; }
+  };
+  window.KBRequestPush = async function () {
+    var P = window.Capacitor && Capacitor.isNativePlatform() && Capacitor.Plugins.PushNotifications;
+    if (!P) return 'unsupported';
+    var r = await P.requestPermissions();
+    if (r.receive === 'granted') P.register();
+    return r.receive;
+  };
 
   /* ── DOMContentLoaded ─────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {

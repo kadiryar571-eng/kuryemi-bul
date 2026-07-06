@@ -395,6 +395,14 @@
   async function changePassword(newPass) {
     return client.auth.updateUser({ password: newPass });
   }
+  // Şifre değiştirme için e-postaya 6 haneli doğrulama kodu gönder (mevcut kullanıcı, yeni hesap açmaz)
+  async function sendPasswordOtp(email) {
+    return client.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+  }
+  // Kullanıcının e-postaya gelen kodu doğrula (oturumu tazeler)
+  async function verifyPasswordOtp(email, code) {
+    return client.auth.verifyOtp({ email: email, token: code, type: "email" });
+  }
   // Hesabı tamamen sil (auth.users + cascade ile tüm profil/ilan/mesaj/token verisi). Sonra çıkış.
   async function deleteMyData() {
     var u = await getUser();
@@ -868,6 +876,7 @@
     myNotifications: myNotifications, unreadCount: unreadCount, markNotificationRead: markNotificationRead,
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,
     changePassword: changePassword, deleteMyData: deleteMyData,
+    sendPasswordOtp: sendPasswordOtp, verifyPasswordOtp: verifyPasswordOtp,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
     createListing: createListing, updateListing: updateListing, myListings: myListings, openListings: openListings, listingById: listingById,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
