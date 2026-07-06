@@ -64,5 +64,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add downloads/kuryemibul.apk
           git diff --staged --quiet || git commit -m "chore: APK güncelle (otomatik) [skip ci]"
+          git checkout -- .
           git pull --rebase origin main
           git push
