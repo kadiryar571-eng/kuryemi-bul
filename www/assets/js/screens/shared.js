@@ -107,7 +107,7 @@ window.SharedScreens = (function () {
           '</div>' +
 
           '<button id="sp-btn" class="btn btn--primary" onclick="SharedScreens._doSifreSifirla()">Şifremi Güncelle</button>' +
-          '<div id="sp-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+          '<div id="sp-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#DC2626;font-size:.84rem;text-align:center"></div>' +
         '</div>' +
       '</div>'
     );
@@ -959,7 +959,7 @@ window.SharedScreens = (function () {
         '</div>' +
 
         '<button id="pd-save-btn" class="btn btn--primary" style="background:' + accent + ';border-color:' + accent + '" onclick="SharedScreens._saveProfilDuzenle()">Kaydet</button>' +
-        '<div id="pd-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+        '<div id="pd-error" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#DC2626;font-size:.84rem;text-align:center"></div>' +
 
       '</div>'
     );

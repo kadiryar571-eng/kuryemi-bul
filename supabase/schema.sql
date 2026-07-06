@@ -37,6 +37,9 @@ create table if not exists public.profiles (
   -- firma alanları
   kapasite    int default 0,
   hizmetler   text[] default '{}',
+  adres       text default '',
+  belgeler    text[] default '{}',
+  fotograflar text[] default '{}',
   yayinda     boolean not null default false,  -- profil tamamlanınca true; havuzda görünürlük
   created_at  timestamptz default now()
 );
@@ -745,4 +748,40 @@ begin
 end;
 $$;
 revoke all on function public.delete_own_account() from public;
+
+-- ---------- 19) FİRMA PROFİL GENİŞLETME (adres / belgeler / fotoğraflar) ----------
+-- "Kurye Firması Bilgileri" ekranı için — mevcut profiles tablosu canlıda zaten
+-- var olduğundan (create table if not exists tetiklenmez), kolonları ayrıca
+-- ALTER TABLE ile ekliyoruz. Var olan satırları etkilemez, hepsi opsiyonel.
+alter table public.profiles add column if not exists adres       text default '';
+alter table public.profiles add column if not exists belgeler    text[] default '{}';
+alter table public.profiles add column if not exists fotograflar text[] default '{}';
+
+-- Storage bucket'ları: avatars/kyc_documents ile aynı desen.
+-- firma_belgeler: özel (yalnız sahibi + admin görür, kimlik/vergi levhası gibi belgeler).
+-- firma_fotograflar: herkese açık (havuzda/profilde gösterilecek işletme fotoğrafları).
+insert into storage.buckets (id, name, public)
+  values ('firma_belgeler', 'firma_belgeler', false)
+  on conflict (id) do nothing;
+insert into storage.buckets (id, name, public)
+  values ('firma_fotograflar', 'firma_fotograflar', true)
+  on conflict (id) do nothing;
+
+-- Kullanıcı yalnız kendi klasörüne (path: <user_id>/...) yazar/okur/siler.
+drop policy if exists firma_belgeler_owner_all on storage.objects;
+create policy firma_belgeler_owner_all on storage.objects
+  for all using (bucket_id = 'firma_belgeler' and auth.uid()::text = (storage.foldername(name))[1])
+  with check (bucket_id = 'firma_belgeler' and auth.uid()::text = (storage.foldername(name))[1]);
+
+drop policy if exists firma_fotograflar_owner_write on storage.objects;
+create policy firma_fotograflar_owner_write on storage.objects
+  for insert with check (bucket_id = 'firma_fotograflar' and auth.uid()::text = (storage.foldername(name))[1]);
+
+drop policy if exists firma_fotograflar_owner_delete on storage.objects;
+create policy firma_fotograflar_owner_delete on storage.objects
+  for delete using (bucket_id = 'firma_fotograflar' and auth.uid()::text = (storage.foldername(name))[1]);
+
+drop policy if exists firma_fotograflar_public_read on storage.objects;
+create policy firma_fotograflar_public_read on storage.objects
+  for select using (bucket_id = 'firma_fotograflar');
 grant execute on function public.delete_own_account() to authenticated;

@@ -382,7 +382,7 @@ window.IsletmeScreens = (function () {
 
       '<div style="height:16px"></div>' +
       '<button id="il-yayinla-btn" class="btn btn--primary" style="background:var(--c-isletme,#FF6B35);width:100%" onclick="IsletmeScreens._yayinla()">' + (_editIlanId ? 'Kaydet' : 'İlan Yayınla') + '</button>' +
-      '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+      '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#DC2626;font-size:.84rem;text-align:center"></div>' +
       '<div style="height:32px"></div>' +
       '</div>'
     );

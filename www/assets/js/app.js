@@ -374,6 +374,9 @@
     Router.define('/firma/mesajlar',    FirmaScreens.mesajlar);
     Router.define('/firma/mesaj/:id',   FirmaScreens.mesajChat);
     Router.define('/firma/profil',      FirmaScreens.profil);
+    Router.define('/firma/calisanlar',  FirmaScreens.calisanlar);
+    Router.define('/firma/bilgiler',    FirmaScreens.bilgiler);
+    Router.define('/firma/puanlamalar', FirmaScreens.puanlamalar);
 
     /* Esnaf */
     Router.define('/isletme/panel',       IsletmeScreens.panel);

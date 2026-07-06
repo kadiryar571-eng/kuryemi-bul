@@ -6,6 +6,10 @@
 window.FirmaScreens = (function () {
   'use strict';
 
+  function _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   var MOCK_ILANLAR = [
     { id: '1', title: 'Motorlu Kurye', type: 'Tam Zamanlı', salary: '25.000 - 35.000 ₺', basvuru: 8,  active: true  },
     { id: '2', title: 'Yaya Kurye',    type: 'Part Time',   salary: '15.000 - 22.000 ₺', basvuru: 14, active: true  },
@@ -15,7 +19,8 @@ window.FirmaScreens = (function () {
   var MOCK_ADAYLAR = [
     { id: '1', name: 'Mehmet Kaya',   score: '4.8', exp: '3.5 yıl deneyim', loc: 'Kadıköy, İstanbul', status: 'pending'   },
     { id: '2', name: 'Ayşe Demir',    score: '4.7', exp: '2 yıl deneyim',   loc: 'Beşiktaş, İstanbul', status: 'reviewed' },
-    { id: '3', name: 'Can Bağlar',    score: '4.6', exp: '1 yıl deneyim',   loc: 'Ümraniye, İstanbul', status: 'pending'  }
+    { id: '3', name: 'Can Bağlar',    score: '4.6', exp: '1 yıl deneyim',   loc: 'Ümraniye, İstanbul', status: 'pending'  },
+    { id: '4', name: 'Deniz Aksoy',   score: '4.9', exp: '4 yıl deneyim',   loc: 'Kartal, İstanbul',   status: 'accepted' }
   ];
 
   var MOCK_MESAJLAR = [
@@ -389,7 +394,7 @@ window.FirmaScreens = (function () {
 
       '<div style="height:16px"></div>' +
       '<button id="il-yayinla-btn" class="btn btn--primary" style="width:100%" onclick="FirmaScreens._yayinla()">' + (_editIlanId ? 'Kaydet' : 'İlan Yayınla') + '</button>' +
-      '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#EF4444;font-size:.84rem;text-align:center"></div>' +
+      '<div id="il-hata" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#DC2626;font-size:.84rem;text-align:center"></div>' +
       '<div style="height:32px"></div>' +
       '</div>'
     );
@@ -544,6 +549,45 @@ window.FirmaScreens = (function () {
       : '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">Bu filtrede sonuç yok</div></div>';
   }
 
+  /* ── 5b. ÇALIŞANLAR (anlaştığı kuryeler) ───────────────────── */
+  function calisanlar() {
+    showAppBar('Çalışanlar', true);
+    showBottomNav();
+    setActiveNav('profil');
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Kabul ettiğiniz ve ekibinize kattığınız kuryeler.</p>' +
+        '<div id="firma-calisan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+      '</div>'
+    );
+
+    setTimeout(function () { _loadCalisanlarAsync(); }, 130);
+  }
+
+  async function _loadCalisanlarAsync() {
+    var el = document.getElementById('firma-calisan-list');
+    if (!el) return;
+
+    function render(list) {
+      var accepted = list.filter(function (a) { return (a.durum || a.status) === 'accepted'; });
+      el.innerHTML = accepted.length
+        ? accepted.map(function(a) { return _adayCard(a, 'firma'); }).join('')
+        : '<div class="kb-empty"><div class="kb-empty__icon">🤝</div><div class="kb-empty__title">Henüz anlaştığınız kurye yok</div><div class="kb-empty__sub">Başvurulardan bir adayı kabul edince burada görünür.</div></div>';
+    }
+
+    if (!window.SB || !SB.isOn()) { render(MOCK_ADAYLAR); return; }
+
+    try {
+      var apps = await SB.allMyListingApplications();
+      _basCache = apps || [];
+      render(_basCache);
+    } catch (e) {
+      console.warn('_loadCalisanlarAsync:', e);
+      render(MOCK_ADAYLAR);
+    }
+  }
+
   /* ── 6. ADAY DETAY ──────────────────────────────────────── */
   function adayDetay(ctx) {
     var id = ctx.params.id;
@@ -590,9 +634,13 @@ window.FirmaScreens = (function () {
 
         '<div id="aday-profil-extra"></div>' +
 
-        '<div class="detail-cta" style="display:flex;gap:10px">' +
-          '<button class="btn btn--outline" onclick="Router.go(\'/firma/mesajlar\')" style="flex:1">Mesaj Gönder</button>' +
-          '<button class="btn btn--primary" onclick="FirmaScreens._degerlendir(\'' + id + '\')" style="flex:1">Değerlendir</button>' +
+        '<div class="detail-cta" style="display:flex;flex-direction:column;gap:8px">' +
+          '<div style="display:flex;gap:10px">' +
+            '<button class="btn btn--outline" onclick="Router.go(\'/firma/mesajlar\')" style="flex:1">Mesaj Gönder</button>' +
+            '<button class="btn btn--success" onclick="FirmaScreens._kabul(\'' + id + '\')" style="flex:1">Kabul Et</button>' +
+          '</div>' +
+          (durum !== 'reviewed' && durum !== 'accepted' ?
+            '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._degerlendir(\'' + id + '\')">İncelendi olarak işaretle</button>' : '') +
         '</div>' +
       '</div>'
     );
@@ -621,6 +669,66 @@ window.FirmaScreens = (function () {
     }
     toast('Aday değerlendirmeye alındı.');
     setTimeout(function () { Router.back(); }, 700);
+  }
+
+  function _kabul(id) {
+    if (window.SB && SB.isOn()) {
+      SB.updateApplication(id, 'accepted').catch(function() {});
+      var idx = _basCache.findIndex(function(x) { return x.id === id; });
+      if (idx >= 0) _basCache[idx].durum = 'accepted';
+    } else {
+      var mi = MOCK_ADAYLAR.findIndex(function(x) { return x.id === id; });
+      if (mi >= 0) MOCK_ADAYLAR[mi].status = 'accepted';
+    }
+    toast('Kurye ekibinize katıldı! ✓');
+    setTimeout(function () { Router.back(); }, 700);
+  }
+
+  /* ── 6b. PUANLAMALAR ────────────────────────────────────── */
+  function puanlamalar() {
+    showAppBar('Puanlamalar', true);
+    showBottomNav();
+    setActiveNav('profil');
+
+    var puan = (APP.profile && APP.profile.puan) || 0;
+    var adet = (APP.profile && APP.profile.degerlendirme) || 0;
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-card" style="text-align:center;margin-bottom:16px">' +
+          '<div style="font-size:2.2rem;font-weight:800;color:var(--c-firma)">' + (puan > 0 ? Number(puan).toFixed(1) : '—') + '</div>' +
+          '<div class="kb-stars" style="justify-content:center;margin:4px 0">' + ICON.star + ' ' + adet + ' değerlendirme</div>' +
+        '</div>' +
+        '<div id="firma-puan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+      '</div>'
+    );
+
+    setTimeout(function () { _loadPuanlamalarAsync(); }, 130);
+  }
+
+  async function _loadPuanlamalarAsync() {
+    var el = document.getElementById('firma-puan-list');
+    if (!el) return;
+    var empty = '<div class="kb-empty"><div class="kb-empty__icon">⭐</div><div class="kb-empty__title">Henüz değerlendirme yok</div></div>';
+
+    if (!window.SB || !SB.isOn() || !APP.profile || !APP.profile.id) { el.innerHTML = empty; return; }
+
+    try {
+      var list = await SB.reviewsFor(APP.profile.id);
+      el.innerHTML = list.length ? list.map(function (r) {
+        return '<div class="kb-card">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
+            '<div style="font-weight:700">' + _esc(r.ad) + '</div>' +
+            '<div class="kb-stars">' + ICON.star + ' ' + r.puan + '</div>' +
+          '</div>' +
+          (r.yorum ? '<div style="font-size:.86rem;color:var(--text2);line-height:1.5">' + _esc(r.yorum) + '</div>' : '') +
+          '<div style="font-size:.7rem;color:var(--muted);margin-top:6px">' + (r.tarih || '') + '</div>' +
+        '</div>';
+      }).join('') : empty;
+    } catch (e) {
+      console.warn('_loadPuanlamalarAsync:', e);
+      el.innerHTML = empty;
+    }
   }
 
   /* ── 7. MESAJLAR ────────────────────────────────────────── */
@@ -657,9 +765,9 @@ window.FirmaScreens = (function () {
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0 0 0 0">' +
           _mi('Profil Düzenle',      'user',        '/profil-duzenle') +
-          _mi('Kurye Firması Bilgileri',     'briefcase',  '/ayarlar') +
-          _mi('Çalışanlar',          'users',       '/ayarlar') +
-          _mi('Puanlamalar',         'star',        '/ayarlar') +
+          _mi('Kurye Firması Bilgileri',     'briefcase',  '/firma/bilgiler') +
+          _mi('Çalışanlar',          'users',       '/firma/calisanlar') +
+          _mi('Puanlamalar',         'star',        '/firma/puanlamalar') +
           _mi('Bildirimler',         'bell',        '/bildirimler') +
           _mi('Ayarlar',             'settings',    '/ayarlar') +
           _mi('Yardım & Destek',     'help',        '/yardim') +
@@ -680,6 +788,130 @@ window.FirmaScreens = (function () {
     '</div>';
   }
 
+  /* ── 9. KURYE FİRMASI BİLGİLERİ ─────────────────────────── */
+  function bilgiler() {
+    showAppBar('Kurye Firması Bilgileri', true);
+    showBottomNav();
+    setActiveNav('profil');
+
+    var p = APP.profile || {};
+    var dogrulama = p.dogrulama || 'none';
+    var dBadge = dogrulama === 'verified' ? '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' :
+                 dogrulama === 'pending'  ? '<span class="kb-chip kb-chip--warning">⏳ Doğrulama Bekliyor</span>' :
+                 '<span class="kb-chip">' + ICON.shield + ' Doğrulanmadı</span>';
+
+    var hizmetler = p.hizmetler || [];
+    var belgeler  = p.belgeler || [];
+    var fotograflar = p.fotograflar || [];
+
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+
+        '<div class="kb-card">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+            '<div style="font-weight:800">Temel Bilgiler</div>' + dBadge +
+          '</div>' +
+          '<div class="detail-row">' + ICON.pin + (p.sehir || 'Şehir belirtilmemiş') + '</div>' +
+          '<div class="detail-row">' + ICON.briefcase + 'Kapasite: ' + (p.kapasite || 0) + ' kurye' + '</div>' +
+          (hizmetler.length ? '<div class="job-card__tags" style="margin-top:8px">' +
+            hizmetler.map(function (h) { return '<span class="kb-chip">' + _esc(h) + '</span>'; }).join('') +
+          '</div>' : '') +
+          (p.aciklama ? '<div style="font-size:.84rem;color:var(--text2);margin-top:10px;line-height:1.5">' + _esc(p.aciklama) + '</div>' : '') +
+        '</div>' +
+
+        '<div class="kb-card">' +
+          '<div class="kb-label">Açık Adres / İşletme Yeri</div>' +
+          '<textarea id="fb-adres" class="kb-input" rows="3" style="resize:none;height:auto" placeholder="Ofis / depo / şube adresi…">' + _esc(p.adres || '') + '</textarea>' +
+          '<button class="btn btn--primary btn--sm" style="margin-top:8px;width:auto;padding:8px 16px" onclick="FirmaScreens._saveAdres()">Kaydet</button>' +
+        '</div>' +
+
+        '<div class="kb-section-head"><div class="kb-section-title">Belgeler</div>' +
+          '<button class="kb-section-link" onclick="FirmaScreens._pickBelge()">+ Ekle</button>' +
+        '</div>' +
+        '<div class="pr-docs" id="fb-belge-list" style="margin-bottom:16px">' + _belgeList(belgeler) + '</div>' +
+
+        '<div class="kb-section-head"><div class="kb-section-title">Fotoğraflar</div>' +
+          '<button class="kb-section-link" onclick="FirmaScreens._pickFoto()">+ Ekle</button>' +
+        '</div>' +
+        '<div id="fb-foto-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + _fotoGrid(fotograflar) + '</div>' +
+
+      '</div>'
+    );
+  }
+
+  function _belgeList(belgeler) {
+    if (!belgeler.length) return '<div class="kb-empty" style="padding:20px 0"><div class="kb-empty__sub">Henüz belge eklenmedi.</div></div>';
+    return belgeler.map(function (path) {
+      var name = path.split('/').pop();
+      return '<div class="pr-doc">' +
+        '<div class="pr-doc__icon">' + ICON.doc + '</div>' +
+        '<div class="pr-doc__label">' + _esc(name) + '</div>' +
+        '<div class="pr-doc__status pr-doc__status--ok">Yüklendi</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function _fotoGrid(fotograflar) {
+    if (!fotograflar.length) return '<div class="kb-empty" style="grid-column:1/-1;padding:20px 0"><div class="kb-empty__sub">Henüz fotoğraf eklenmedi.</div></div>';
+    return fotograflar.map(function (url) {
+      return '<div style="aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--surface2)">' +
+        '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">' +
+      '</div>';
+    }).join('');
+  }
+
+  function _saveAdres() {
+    var el = document.getElementById('fb-adres');
+    var adres = el ? el.value.trim() : '';
+    if (!window.SB || !SB.isOn()) { toast('Adres kaydedildi ✓'); return; }
+    SB.updateMyProfile({ adres: adres }).then(function (updated) {
+      APP.profile = updated;
+      toast('Adres kaydedildi ✓');
+    }).catch(function () { toast('Adres kaydedilemedi'); });
+  }
+
+  function _pickBelge() {
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,application/pdf';
+    inp.onchange = function () {
+      if (!inp.files || !inp.files[0]) return;
+      var file = inp.files[0];
+      if (!window.SB || !SB.isOn()) { toast('Belge yüklendi ✓'); return; }
+      toast('Belge yükleniyor…');
+      SB.uploadFirmaBelge(file).then(function (path) {
+        var arr = (APP.profile.belgeler || []).concat([path]);
+        return SB.updateMyProfile({ belgeler: arr });
+      }).then(function (updated) {
+        APP.profile = updated;
+        toast('Belge yüklendi ✓');
+        bilgiler();
+      }).catch(function () { toast('Belge yüklenemedi'); });
+    };
+    inp.click();
+  }
+
+  function _pickFoto() {
+    if (typeof KBPickPhoto !== 'function') { toast('Kamera erişimi yok'); return; }
+    KBPickPhoto(function (dataUrl) {
+      if (!window.SB || !SB.isOn()) { toast('Fotoğraf yüklendi ✓'); return; }
+      toast('Fotoğraf yükleniyor…');
+      fetch(dataUrl).then(function (r) { return r.blob(); }).then(function (blob) {
+        var file = new File([blob], 'foto.jpg', { type: blob.type || 'image/jpeg' });
+        return SB.uploadFirmaFoto(file);
+      }).then(function (url) {
+        if (!url) return;
+        var arr = (APP.profile.fotograflar || []).concat([url]);
+        return SB.updateMyProfile({ fotograflar: arr });
+      }).then(function (updated) {
+        if (!updated) return;
+        APP.profile = updated;
+        toast('Fotoğraf yüklendi ✓');
+        bilgiler();
+      }).catch(function () { toast('Fotoğraf yüklenemedi'); });
+    });
+  }
+
   return {
     panel       : panel,
     harita      : harita,
@@ -690,11 +922,18 @@ window.FirmaScreens = (function () {
     mesajlar    : mesajlar,
     mesajChat   : mesajChat,
     profil      : profil,
+    calisanlar  : calisanlar,
+    puanlamalar : puanlamalar,
+    bilgiler    : bilgiler,
     _ilanFilter  : _ilanFilter,
     _ilanToggle  : _ilanToggle,
     _basFilter   : _basFilter,
     _yayinla     : _yayinla,
-    _degerlendir : _degerlendir
+    _degerlendir : _degerlendir,
+    _kabul       : _kabul,
+    _saveAdres   : _saveAdres,
+    _pickBelge   : _pickBelge,
+    _pickFoto    : _pickFoto
   };
 
 })();

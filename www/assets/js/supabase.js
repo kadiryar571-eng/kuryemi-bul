@@ -36,7 +36,8 @@
       seviye: p.seviye || "standart", puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0, dogrulama: p.dogrulama || "none", tamamlanan: p.tamamlanan || 0,
       sertifikalar: p.sertifikalar || [], calistigi: p.calistigi || [], referanslar: [],
       bolge: (p.bolgeler && p.bolgeler[0]) || "", tur: p.tur, acikIlan: p.acik_ilan || 0, ihtiyac: p.ihtiyac,
-      kapasite: p.kapasite || 0, hizmetler: p.hizmetler || []
+      kapasite: p.kapasite || 0, hizmetler: p.hizmetler || [],
+      adres: p.adres || "", belgeler: p.belgeler || [], fotograflar: p.fotograflar || []
     };
   }
 
@@ -222,6 +223,27 @@
     var up = await client.storage.from("kyc_documents").upload(path, file, { upsert: true });
     if (up.error) throw up.error;
     return path;
+  }
+  // Kurye firması belgesi yükle (özel bucket) → yalnız dosya yolu döner
+  async function uploadFirmaBelge(file) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var ext = ((file.name || "belge").split(".").pop() || "pdf").toLowerCase();
+    var path = u.id + "/" + Date.now() + "." + ext;
+    var up = await client.storage.from("firma_belgeler").upload(path, file, { upsert: true });
+    if (up.error) throw up.error;
+    return path;
+  }
+  // Kurye firması fotoğrafı yükle (açık bucket) → herkese açık URL döner
+  async function uploadFirmaFoto(file) {
+    var u = await getUser();
+    if (!u) throw new Error("oturum yok");
+    var ext = ((file.name || "img").split(".").pop() || "jpg").toLowerCase();
+    var path = u.id + "/" + Date.now() + "." + ext;
+    var up = await client.storage.from("firma_fotograflar").upload(path, file, { upsert: true });
+    if (up.error) throw up.error;
+    var pub = client.storage.from("firma_fotograflar").getPublicUrl(path);
+    return (pub && pub.data && pub.data.publicUrl) || "";
   }
 
   // Bir profilin iletişim bilgisi (RLS: yalnız sahip veya KABUL edilmiş teklifin karşı tarafı görür)
@@ -839,6 +861,7 @@
     verifyEmail: verifyEmail, resendVerification: resendVerification,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
     uploadAvatar: uploadAvatar, uploadKycDoc: uploadKycDoc,
+    uploadFirmaBelge: uploadFirmaBelge, uploadFirmaFoto: uploadFirmaFoto,
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
