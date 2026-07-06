@@ -972,8 +972,8 @@ window.KuryeScreens = (function () {
   }
 
   function _basLabel(durum) {
-    if (durum === 'accepted') return '<span style="background:rgba(34,197,94,.15);color:#22C55E;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">Kabul Edildi</span>';
-    if (durum === 'rejected') return '<span style="background:rgba(239,68,68,.12);color:#EF4444;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">Reddedildi</span>';
+    if (durum === 'accepted') return '<span style="background:rgba(34,197,94,.15);color:#15803D;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">Kabul Edildi</span>';
+    if (durum === 'rejected') return '<span style="background:rgba(239,68,68,.12);color:#DC2626;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">Reddedildi</span>';
     return '<span style="background:rgba(108,77,255,.12);color:#6C4DFF;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px">İnceleniyor</span>';
   }
 
