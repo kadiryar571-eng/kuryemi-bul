@@ -58,7 +58,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script src="assets/js/notifications.js"></script>
   <script src="assets/js/app.js"></script>
@@ -68,32 +68,26 @@
   (function () {
     'use strict';
 
+    /* Bildirimler TAMAMEN veritabanından gelir (public.notifications).
+       Sahte/örnek bildirim yoktur; her satır gerçek bir olaydan doğar. */
     var ACTIVE_FILTER = 'all';
-    var UID = null;
+    var CACHE = [];
 
-    function getUid() {
-      if (UID) return UID;
-      try { var s = window.KB && KB.STATE && KB.STATE.user; if (s && s.id) return (UID = s.id); } catch (e) {}
-      try { var s2 = JSON.parse(localStorage.getItem('kb_session') || 'null'); if (s2 && s2.user && s2.user.id) return (UID = s2.user.id); } catch (e) {}
-      return (UID = localStorage.getItem('kb_demo_uid') || 'demo_user');
-    }
-
-    function renderStats(uid) {
-      var all    = KBNotif.getAll(uid);
-      var unread = all.filter(function (n) { return !n.read; }).length;
+    function renderStats() {
+      var unread = CACHE.filter(function (n) { return !n.read; }).length;
       var el = document.getElementById('notifStats');
       if (!el) return;
       el.innerHTML =
-        '<div class="iv-stat"><div class="iv-stat__num">' + all.length + '</div><div class="iv-stat__lbl">Toplam</div></div>' +
+        '<div class="iv-stat"><div class="iv-stat__num">' + CACHE.length + '</div><div class="iv-stat__lbl">Toplam</div></div>' +
         '<div class="iv-stat"><div class="iv-stat__num">' + unread + '</div><div class="iv-stat__lbl">Okunmamış</div></div>' +
-        '<div class="iv-stat"><div class="iv-stat__num">' + (all.length - unread) + '</div><div class="iv-stat__lbl">Okunmuş</div></div>';
+        '<div class="iv-stat"><div class="iv-stat__num">' + (CACHE.length - unread) + '</div><div class="iv-stat__lbl">Okunmuş</div></div>';
     }
 
-    function renderList(uid) {
-      var opts = ACTIVE_FILTER !== 'all' ? { type: ACTIVE_FILTER } : {};
-      var list = KBNotif.getAll(uid, opts);
-      var el   = document.getElementById('notifList');
+    function renderList() {
+      var el = document.getElementById('notifList');
       if (!el) return;
+      var list = ACTIVE_FILTER === 'all'
+        ? CACHE : CACHE.filter(function (n) { return n.type === ACTIVE_FILTER; });
 
       if (!list.length) {
         el.innerHTML =
@@ -104,22 +98,19 @@
           '</div>';
         return;
       }
-
       el.innerHTML = '<div class="notif-list">' + list.map(function (n) {
         return KBNotif.renderItem(n);
       }).join('') + '</div>';
     }
 
-    function render() {
-      var uid = getUid();
-      renderStats(uid);
-      renderList(uid);
+    async function render() {
+      CACHE = await KBNotif.getAll();
+      renderStats();
+      renderList();
     }
 
     function wire() {
-      var uid = getUid();
-
-      /* Filter pills */
+      /* Filtre */
       document.getElementById('notifFilterBar').addEventListener('click', function (e) {
         var pill = e.target.closest('[data-filter]');
         if (!pill) return;
@@ -127,62 +118,54 @@
         document.querySelectorAll('.iv-filter-pill').forEach(function (p) {
           p.classList.toggle('is-active', p.dataset.filter === ACTIVE_FILTER);
         });
-        renderList(uid);
+        renderList();
       });
 
-      /* List actions: read, delete, link */
-      document.getElementById('notifList').addEventListener('click', function (e) {
+      /* Liste aksiyonları */
+      document.getElementById('notifList').addEventListener('click', async function (e) {
         var readBtn = e.target.closest('[data-read]');
         var delBtn  = e.target.closest('[data-del]');
         var item    = e.target.closest('.notif-item--link');
 
         if (readBtn) {
-          KBNotif.markRead(uid, readBtn.dataset.read);
-          readBtn.closest('.notif-item').classList.remove('notif-item--unread');
-          renderStats(uid);
+          await KBNotif.markRead(readBtn.dataset.read);
+          await render();
           return;
         }
         if (delBtn) {
-          KBNotif.remove(uid, delBtn.dataset.del);
-          render();
+          await KBNotif.remove(delBtn.dataset.del);
+          await render();
           return;
         }
-        if (item && !readBtn && !delBtn) {
+        if (item) {
           var href = item.dataset.href;
-          KBNotif.markRead(uid, item.dataset.nid);
+          await KBNotif.markRead(item.dataset.nid);
           if (href) window.location.href = href;
         }
       });
 
-      /* Mark all read */
-      document.getElementById('btnMarkAll').addEventListener('click', function () {
-        KBNotif.markAllRead(uid);
-        render();
+      document.getElementById('btnMarkAll').addEventListener('click', async function () {
+        await KBNotif.markAllRead();
+        await render();
       });
 
-      /* Clear all */
-      document.getElementById('btnClearAll').addEventListener('click', function () {
+      document.getElementById('btnClearAll').addEventListener('click', async function () {
         if (!confirm('Tüm bildirimler silinecek. Emin misiniz?')) return;
-        KBNotif.clear(uid);
-        render();
+        await KBNotif.clear();
+        await render();
       });
     }
 
-    function boot() {
-      var uid = getUid();
-      KBNotif.seedDemoData(uid);
-      /* Mark all as read on open */
-      render();
+    async function boot() {
+      await render();
       wire();
-      /* Update topbar badge to 0 after viewing */
-      setTimeout(function () {
-        KBNotif.markAllRead(uid);
-        KBNotif.updateBadge(uid);
-      }, 2000);
+      /* CANLI: yeni bildirim gelince liste anında güncellenir */
+      if (KBNotif.onNew) KBNotif.onNew(function () { render(); });
+      if (KBNotif.subscribe) KBNotif.subscribe();
     }
 
-    if (window.KB && KB.ready && KB.ready.then) {
-      KB.ready.then(boot);
+    if (window.KB && KB.ready) {
+      KB.ready().then(boot).catch(boot);
     } else {
       document.addEventListener('DOMContentLoaded', boot);
     }

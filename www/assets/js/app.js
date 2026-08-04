@@ -315,6 +315,8 @@
 
       hideSplash();
 
+      startPresence();          // oturum açık → çevrimiçi işaretle
+
       var dest = '/' + APP.role + '/panel';
       Router.go(dest);
 
@@ -324,6 +326,36 @@
       Router.go('/login');
     }
   }
+
+  /* ── PRESENCE — gerçek çevrimiçi durumu ────────────────
+     Giriş yapılınca ve uygulama önplandayken heartbeat atılır.
+     Çıkış, arka plana alma ve kapanışta offline'a düşülür.
+     Sunucuda 2 dk heartbeat gelmezse otomatik offline sayılır. */
+  var _hb = null;
+  function startPresence() {
+    if (!window.SB || !SB.isOn() || !SB.presencePing) return;
+    stopPresence();
+    SB.presencePing();
+    _hb = setInterval(function () {
+      if (document.hidden) return;          // arka planda pil/veri harcama
+      SB.presencePing();
+    }, 45000);
+  }
+  function stopPresence() {
+    if (_hb) { clearInterval(_hb); _hb = null; }
+  }
+  async function goOffline() {
+    stopPresence();
+    if (window.SB && SB.isOn() && SB.presenceOffline) {
+      try { await SB.presenceOffline(); } catch (e) {}
+    }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { goOffline(); }
+    else if (APP.user) { startPresence(); }
+  });
+  window.addEventListener('pagehide', goOffline);
+  window.KBPresenceApp = { start: startPresence, stop: goOffline };
 
   function hideSplash() {
     $splash.style.display = 'none';
@@ -341,6 +373,7 @@
 
   /* ── Sign out ─────────────────────────────────────────── */
   window.signOut = async function () {
+    await goOffline();                       // önce çevrimdışı işaretle
     try { await SB.signOut(); } catch (e) {}
     APP.user = APP.profile = APP.role = null;
     document.body.removeAttribute('data-role');
@@ -470,7 +503,7 @@
 
   /* ── DOMContentLoaded ─────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
-    window.renderNav = renderNav; /* demo mode için expose */
+    window.renderNav = renderNav;
     registerRoutes();
     boot().then(function () { initNativePush(); });
   });

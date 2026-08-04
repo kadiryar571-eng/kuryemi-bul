@@ -309,139 +309,7 @@
     return Math.abs(h);
   }
 
-  function seedDemoThreads(uid) {
-    if (getThreads(uid).length > 0) return;
-
-    var now = Date.now();
-    var demo = [
-      {
-        id:          'thread_demo_job1_kurye1',
-        jobId:       'demo_job1',
-        jobTitle:    'Moto Kurye Aranıyor',
-        kuryeId:     'demo_kurye1',
-        kurye:       { id: 'demo_kurye1', ad: 'Ali Veli', avatar: '' },
-        isletmeId:   uid,
-        isletme:     { id: uid, ad: 'Terra Pizza', avatar: '' },
-        appStatus:   'inceleniyor',
-        chatStatus:  'aktif',
-        lastMsg:     'Başvurunuzu aldık, profilinizi inceliyoruz.',
-        lastMsgTime: new Date(now - 2 * 3600000).toISOString(),
-        unread:      { kurye: 0, isletme: 2 },
-        archived:    false,
-        createdAt:   new Date(now - 2 * 86400000).toISOString()
-      },
-      {
-        id:          'thread_demo_job1_kurye2',
-        jobId:       'demo_job1',
-        jobTitle:    'Moto Kurye Aranıyor',
-        kuryeId:     'demo_kurye2',
-        kurye:       { id: 'demo_kurye2', ad: 'Mehmet Kaya', avatar: '' },
-        isletmeId:   uid,
-        isletme:     { id: uid, ad: 'Terra Pizza', avatar: '' },
-        appStatus:   'mulakat',
-        chatStatus:  'gorusme',
-        lastMsg:     'Mülakata davet edildiniz. Esnaf sizinle görüşmek istiyor.',
-        lastMsgTime: new Date(now - 5 * 3600000).toISOString(),
-        unread:      { kurye: 1, isletme: 0 },
-        archived:    false,
-        createdAt:   new Date(now - 3 * 86400000).toISOString()
-      },
-      {
-        id:          'thread_demo_job2_kurye3',
-        jobId:       'demo_job2',
-        jobTitle:    'Bisiklet Kurye — Hafta Sonu',
-        kuryeId:     'demo_kurye3',
-        kurye:       { id: 'demo_kurye3', ad: 'Fatma Şen', avatar: '' },
-        isletmeId:   uid,
-        isletme:     { id: uid, ad: 'Getir Market', avatar: '' },
-        appStatus:   'kabul',
-        chatStatus:  'sonuclandi',
-        lastMsg:     'Tebrikler! Başvurunuz kabul edildi.',
-        lastMsgTime: new Date(now - 86400000).toISOString(),
-        unread:      { kurye: 0, isletme: 0 },
-        archived:    false,
-        createdAt:   new Date(now - 5 * 86400000).toISOString()
-      },
-      {
-        id:          'thread_demo_job3_kurye4',
-        jobId:       'demo_job3',
-        jobTitle:    'Araç Kurye — Tam Zamanlı',
-        kuryeId:     'demo_kurye4',
-        kurye:       { id: 'demo_kurye4', ad: 'Kerim Aslan', avatar: '' },
-        isletmeId:   uid,
-        isletme:     { id: uid, ad: 'Hızlı Kargo A.Ş.', avatar: '' },
-        appStatus:   'beklemede',
-        chatStatus:  'yeni',
-        lastMsg:     'Merhaba, ilanınıza başvurmak istiyorum.',
-        lastMsgTime: new Date(now - 30 * 60000).toISOString(),
-        unread:      { kurye: 0, isletme: 1 },
-        archived:    false,
-        createdAt:   new Date(now - 30 * 60000).toISOString()
-      }
-    ];
-
-    saveThreads(uid, demo);
-
-    /* Seed messages for each thread */
-    var seed = [
-      [
-        demo[0].id,
-        [
-          { from: 'kurye',   content: 'Merhaba, ilanınızı gördüm ve ilgileniyorum.' },
-          { from: 'isletme', content: 'Merhaba Ali Bey! Profilinizi inceliyoruz.' },
-          { from: 'kurye',   content: 'Teşekkür ederim. Bekliyorum.' },
-          { from: 'isletme', content: 'Başvurunuzu aldık, profilinizi inceliyoruz.' }
-        ],
-        [now - 2 * 86400000, now - 2 * 86400000 + 3600000, now - 3 * 3600000, now - 2 * 3600000]
-      ],
-      [
-        demo[1].id,
-        [
-          { from: 'kurye',   content: 'Merhaba, moto kurye ilanına başvurmak istiyorum.' },
-          { from: 'isletme', content: 'Merhaba Mehmet Bey! Profiliniz çok uygun görünüyor.' },
-          { from: 'isletme', content: 'Sizi mülakata davet etmek istiyoruz. Uygun musunuz?' },
-          { from: 'system',  content: 'Mülakata davet edildiniz. Esnaf sizinle görüşmek istiyor.', type: 'system' }
-        ],
-        [now - 3 * 86400000, now - 2 * 86400000, now - 6 * 3600000, now - 5 * 3600000]
-      ],
-      [
-        demo[2].id,
-        [
-          { from: 'kurye',   content: 'Merhaba, bisiklet kurye pozisyonuna başvurmak istiyorum.' },
-          { from: 'isletme', content: 'Merhaba Fatma Hanım! Profiliniz çok güçlü, görüşelim.' },
-          { from: 'kurye',   content: 'Teşekkürler! Görüşme için uygunum.' },
-          { from: 'system',  content: 'Tebrikler! Başvurunuz kabul edildi.', type: 'system' }
-        ],
-        [now - 5 * 86400000, now - 3 * 86400000, now - 2 * 86400000, now - 86400000]
-      ],
-      [
-        demo[3].id,
-        [
-          { from: 'kurye', content: 'Merhaba, ilanınıza başvurmak istiyorum.' }
-        ],
-        [now - 30 * 60000]
-      ]
-    ];
-
-    seed.forEach(function (s) {
-      var tid  = s[0];
-      var rows = s[1];
-      var times = s[2];
-      var msgs = rows.map(function (r, i) {
-        return {
-          id:       'msg_seed_' + simpleHash(tid + i),
-          threadId: tid,
-          from:     r.from,
-          type:     r.type || 'text',
-          content:  r.content,
-          ts:       new Date(times[i]).toISOString(),
-          read:     true
-        };
-      });
-      saveMsgs(tid, msgs);
-    });
-  }
-
+  /* Demo/örnek veri üreticisi kaldırıldı — üretimde sahte kayıt oluşturulmaz. */
   /* ─── Interview & decision storage ────────────────────────────── */
   function getInterview(tid) {
     try { return JSON.parse(localStorage.getItem('kb_interview_' + tid) || 'null'); } catch (e) { return null; }
@@ -483,9 +351,7 @@
     getUnreadCount:   getUnreadCount,
     /* render */
     renderBadge:      renderBadge,
-    /* demo */
-    seedDemoThreads:  seedDemoThreads,
-    /* interview + decision */
+    /* demo */    /* interview + decision */
     getInterview:     getInterview,
     saveInterview:    saveInterview,
     getDecision:      getDecision,

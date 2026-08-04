@@ -10,23 +10,12 @@ window.FirmaScreens = (function () {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  var MOCK_ILANLAR = [
-    { id: '1', title: 'Motorlu Kurye', type: 'Tam Zamanlı', salary: '25.000 - 35.000 ₺', basvuru: 8,  active: true  },
-    { id: '2', title: 'Yaya Kurye',    type: 'Part Time',   salary: '15.000 - 22.000 ₺', basvuru: 14, active: true  },
-    { id: '3', title: 'Araçlı Kurye',  type: 'Tam Zamanlı', salary: '28.000 - 34.000 ₺', basvuru: 3,  active: false }
-  ];
+  /* Ekran verisi TAMAMEN Supabase'den gelir; örnek kayıt yoktur. */
+  var ILANLAR = [];
 
-  var MOCK_ADAYLAR = [
-    { id: '1', name: 'Mehmet Kaya',   score: '4.8', exp: '3.5 yıl deneyim', loc: 'Kadıköy, İstanbul', status: 'pending'   },
-    { id: '2', name: 'Ayşe Demir',    score: '4.7', exp: '2 yıl deneyim',   loc: 'Beşiktaş, İstanbul', status: 'reviewed' },
-    { id: '3', name: 'Can Bağlar',    score: '4.6', exp: '1 yıl deneyim',   loc: 'Ümraniye, İstanbul', status: 'pending'  },
-    { id: '4', name: 'Deniz Aksoy',   score: '4.9', exp: '4 yıl deneyim',   loc: 'Kartal, İstanbul',   status: 'accepted' }
-  ];
+  var ADAYLAR = [];
 
-  var MOCK_MESAJLAR = [
-    { id: '1', name: 'Mehmet Kaya', preview: 'Merhaba, profilimi incelemenizi...', time: '15:20', unread: 1 },
-    { id: '2', name: 'Ayşe Demir', preview: 'Görüşme için uygun saatler...', time: '13:45', unread: 0 }
-  ];
+  var MESAJLAR = [];
 
   var _ilanlarimCache = [];
   var _editIlanId = null;
@@ -60,7 +49,9 @@ window.FirmaScreens = (function () {
       heroRoute:    '/firma/profil',
       heroBadge:    ICON.star + ' Kurye Firması',
       heroTitle:    'Kurye Firması Puanınız',
-      heroScoreBig: '4.6',
+      // Puan gerçek profilden; değerlendirme yoksa "—"
+      heroScoreBig: (Number((APP.profile || {}).puan) > 0
+                      ? Number(APP.profile.puan).toFixed(1) : '—'),
       heroDenom:    '/ 5.0',
       heroDesc:     'Puanınız arttıkça en iyi kuryeler sizinle çalışmak ister',
       heroCtaLabel: 'Profilimi Gör',
@@ -77,16 +68,15 @@ window.FirmaScreens = (function () {
           '<div class="kb-section-title">Son Başvurular</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
         '</div>' +
-        _fCandCard('1', 'Mehmet Kaya', '3.5 yıl deneyim', 'Kadıköy',  '4.8') +
-        _fCandCard('2', 'Ayşe Demir',  '2 yıl deneyim',   'Beşiktaş', '4.7') +
+        /* Son başvurular ve son mesajlar GERÇEK kayıtlardan doldurulur */
+        '<div id="firma-son-basvuru"><div style="padding:16px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
 
         '<div class="kb-section-head">' +
           '<div class="kb-section-title">Son Mesajlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/firma/mesajlar\')">Tümünü Gör</button>' +
         '</div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          _fMiniMsg('Mehmet Kaya', 'Merhaba, profilimi incelemenizi...', '15:20', 1) +
-          _fMiniMsg('Ayşe Demir',  'Görüşme için uygun saatler...',       '13:45', 0) +
+        '<div id="firma-son-mesaj" class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          '<div style="padding:16px 0;text-align:center"><div class="kb-spinner"></div></div>' +
         '</div>' +
 
         '<div class="kb-section-head"><div class="kb-section-title">Hızlı İşlemler</div></div>' +
@@ -104,19 +94,63 @@ window.FirmaScreens = (function () {
     setTimeout(function () { _loadFirmaPanelStats(); }, 130);
   }
 
+  /* CANLI panel sayaçları + son başvuru/mesaj listeleri — hepsi veritabanından */
   async function _loadFirmaPanelStats() {
     if (!window.SB || !SB.isOn()) return;
+    var set = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+
+    /* Sayaçlar — tek RPC ile gerçek değerler */
     try {
-      var results = await Promise.allSettled([SB.myListings(), SB.myConvs()]);
-      var ilanlar = results[0].status === 'fulfilled' ? results[0].value : [];
-      var convs   = results[1].status === 'fulfilled' ? results[1].value : [];
-      var acikIlanlar = ilanlar.filter(function(il){ return (il.durum || '') === 'acik'; }).length;
-      var unread = convs.reduce(function(s,c){ return s + (c.unread || 0); }, 0);
-      var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
-      set('fps-ilan',  acikIlanlar);
-      set('fps-bas',   ilanlar.length);
-      set('fps-mesaj', unread || convs.length);
-    } catch(e) {}
+      var ds = SB.myDashboardStats ? await SB.myDashboardStats() : null;
+      if (ds) {
+        set('fps-ilan',    ds.acik_ilanim || 0);
+        set('fps-bas',     ds.yeni_basvuru || 0);
+        set('fps-mesaj',   ds.okunmamis_mesaj || 0);
+        set('fps-goruntu', ds.goruntulenme || 0);
+      }
+    } catch (e) {}
+
+    /* Son başvurular — gerçek adaylar */
+    try {
+      var el = document.getElementById('firma-son-basvuru');
+      if (el) {
+        var apps = (await SB.allMyListingApplications()) || [];
+        _basCache = apps;
+        var top = apps.slice(0, 2);
+        el.innerHTML =
+          '<div class="kb-section-head" style="margin-top:4px">' +
+            '<div class="kb-section-title">Son Başvurular</div>' +
+            '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
+          '</div>' +
+          (top.length
+            ? top.map(function (a) {
+                return _fCandCard(a.id, a.ad || a.name || 'Aday',
+                  (a.deneyim ? a.deneyim + ' yıl deneyim' : 'Deneyim belirtilmemiş'),
+                  a.sehir || '—',
+                  (Number(a.puan) > 0 ? Number(a.puan).toFixed(1) : '—'));
+              }).join('')
+            : '<div class="kb-empty" style="padding:16px"><div class="kb-empty__icon">📋</div>' +
+              '<div class="kb-empty__title">Henüz başvuru yok</div></div>');
+      }
+    } catch (e) { console.warn('son basvuru:', e); }
+
+    /* Son mesajlar — gerçek konuşmalar */
+    try {
+      var mEl = document.getElementById('firma-son-mesaj');
+      if (mEl) {
+        var convs = (await SB.myConvs()) || [];
+        var t2 = convs.slice(0, 2);
+        mEl.innerHTML = t2.length
+          ? t2.map(function (c) {
+              var time = '';
+              if (c.lastMessageAt) {
+                try { time = new Date(c.lastMessageAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); } catch (e2) {}
+              }
+              return _fMiniMsg(c.otherName || 'Kullanıcı', c.lastMessage || 'Yeni konuşma', time, c.unread || 0);
+            }).join('')
+          : '<div style="padding:16px 0;color:var(--muted);font-size:.82rem;text-align:center">Henüz mesajınız yok</div>';
+      }
+    } catch (e) { console.warn('son mesaj:', e); }
   }
 
   /* ── Kurye Firması dashboard helpers ─────────────────────────────── */
@@ -527,7 +561,7 @@ window.FirmaScreens = (function () {
     if (!el) return;
 
     if (!window.SB || !SB.isOn()) {
-      el.innerHTML = MOCK_ADAYLAR.map(function(a) { return _adayCard(a, 'firma'); }).join('');
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvurular yüklenemedi</div><div class="kb-empty__sub">Bağlantını kontrol et</div></div>';   // örnek aday değil, boş durum
       return;
     }
 
@@ -539,7 +573,7 @@ window.FirmaScreens = (function () {
         : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Henüz başvuru yok</div><div class="kb-empty__sub">İlan oluşturun, başvurular burada görünür.</div></div>';
     } catch(e) {
       console.warn('_loadBasvurularAsync:', e);
-      el.innerHTML = MOCK_ADAYLAR.map(function(a) { return _adayCard(a, 'firma'); }).join('');
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvurular yüklenemedi</div><div class="kb-empty__sub">Bağlantını kontrol et</div></div>';   // örnek aday değil, boş durum
     }
   }
 
@@ -547,7 +581,7 @@ window.FirmaScreens = (function () {
     document.querySelectorAll('#firma-bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
 
-    var list = _basCache.length ? _basCache : MOCK_ADAYLAR;
+    var list = _basCache;
     var filtered = list;
     if (type === 'yeni')  filtered = list.filter(function (a) { return (a.durum || a.status) === 'pending' || !(a.durum || a.status); });
     if (type === 'deger') filtered = list.filter(function (a) { return (a.durum || a.status) === 'reviewed'; });
@@ -585,7 +619,7 @@ window.FirmaScreens = (function () {
         : '<div class="kb-empty"><div class="kb-empty__icon">🤝</div><div class="kb-empty__title">Henüz anlaştığınız kurye yok</div><div class="kb-empty__sub">Başvurulardan bir adayı kabul edince burada görünür.</div></div>';
     }
 
-    if (!window.SB || !SB.isOn()) { render(MOCK_ADAYLAR); return; }
+    if (!window.SB || !SB.isOn()) { render([]); return; }
 
     try {
       var apps = await Promise.race([
@@ -597,16 +631,15 @@ window.FirmaScreens = (function () {
       render(_basCache);
     } catch (e) {
       console.warn('_loadCalisanlarAsync:', e);
-      render(MOCK_ADAYLAR);
+      render([]);
     }
   }
 
   /* ── 6. ADAY DETAY ──────────────────────────────────────── */
   function adayDetay(ctx) {
     var id = ctx.params.id;
-    var a  = _basCache.find(function(x) { return x.id === id; }) ||
-             MOCK_ADAYLAR.find(function(x) { return x.id === id; }) ||
-             MOCK_ADAYLAR[0];
+    var a  = _basCache.find(function(x) { return x.id === id; });
+    if (!a) { toast('Aday bulunamadı'); Router.back(); return; }
 
     var name  = a.ad || a.name || 'Kurye';
     var score = a.puan != null && a.puan > 0 ? Number(a.puan).toFixed(1) : (a.score || '—');
@@ -690,8 +723,7 @@ window.FirmaScreens = (function () {
       var idx = _basCache.findIndex(function(x) { return x.id === id; });
       if (idx >= 0) _basCache[idx].durum = 'accepted';
     } else {
-      var mi = MOCK_ADAYLAR.findIndex(function(x) { return x.id === id; });
-      if (mi >= 0) MOCK_ADAYLAR[mi].status = 'accepted';
+
     }
     toast('Kurye ekibinize katıldı! ✓');
     setTimeout(function () { Router.back(); }, 700);
@@ -749,7 +781,7 @@ window.FirmaScreens = (function () {
 
   /* ── 7. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
-    SharedScreens.sharedMesajlar('firma', MOCK_MESAJLAR);
+    SharedScreens.sharedMesajlar('firma');
   }
 
   /* ── 7b. CHAT ───────────────────────────────────────────── */

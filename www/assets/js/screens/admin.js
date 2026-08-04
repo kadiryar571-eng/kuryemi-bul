@@ -30,11 +30,12 @@ window.AdminScreens = (function () {
           '</div>' +
         '</div>' +
 
+        /* Sayaçların TAMAMI canlı veritabanı değeridir (platform_stats). */
         '<div class="admin-stat-grid">' +
-          '<div class="admin-stat"><div class="admin-stat__val">24.580</div><div class="admin-stat__lbl">Toplam Kullanıcı</div></div>' +
-          '<div class="admin-stat"><div class="admin-stat__val">8.742</div><div class="admin-stat__lbl">Toplam İlan</div></div>' +
-          '<div class="admin-stat"><div class="admin-stat__val">5.431</div><div class="admin-stat__lbl">Aktif Başvuru</div></div>' +
-          '<div class="admin-stat"><div class="admin-stat__val">98</div><div class="admin-stat__lbl">Bekleyen Onay</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="as-user">—</div><div class="admin-stat__lbl">Toplam Kullanıcı</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="as-ilan">—</div><div class="admin-stat__lbl">Açık İlan</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="as-bas">—</div><div class="admin-stat__lbl">Toplam Başvuru</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="as-online">—</div><div class="admin-stat__lbl">Çevrimiçi</div></div>' +
         '</div>' +
 
         /* System health */
@@ -43,7 +44,7 @@ window.AdminScreens = (function () {
           _healthRow('Veritabanı',    'Aktif',   'success') +
           _healthRow('API Sunucusu',  'Aktif',   'success') +
           _healthRow('Bildirimler',   'Aktif',   'success') +
-          _healthRow('Depolama',      '%78 dolu','warning') +
+          _healthRow('Realtime',      'Aktif',   'success') +
         '</div>' +
 
         /* Quick nav */
@@ -60,14 +61,65 @@ window.AdminScreens = (function () {
           '<div class="kb-section-title">Son Kayıtlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/admin/kullanicilar\')">Tümü</button>' +
         '</div>' +
-        '<div class="kb-card" style="padding:0 16px">' +
-          _adminUserRow('Mehmet Kaya',      'Kurye',   'Aktif') +
-          _adminUserRow('Lezzet Dükkanım',  'Esnaf', 'Aktif') +
-          _adminUserRow('XYZ Kargo',        'Kurye Firması',   'Doğrulama Bekliyor') +
-          _adminUserRow('Aday Kurye',       'Kurye',   'Askıda') +
+        '<div class="kb-card" id="admin-recent" style="padding:0 16px">' +
+          '<div style="padding:20px 0;text-align:center"><div class="kb-spinner"></div></div>' +
         '</div>' +
       '</div>'
     );
+
+    setTimeout(function () { _loadAdminPanel(); }, 130);
+  }
+
+  /* Admin paneli — sayaçlar ve son kayıtlar GERÇEK veritabanından */
+  async function _loadAdminPanel() {
+    if (!window.SB || !SB.isOn()) return;
+    var set = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+
+    try {
+      var ps = SB.platformStats ? await SB.platformStats() : null;
+      if (ps) {
+        set('as-user',   (ps.kurye || 0) + (ps.isletme || 0) + (ps.firma || 0));
+        set('as-ilan',   ps.acik_ilan || 0);
+        set('as-bas',    ps.basvuru || 0);
+        set('as-online', ps.online || 0);
+      }
+    } catch (e) { console.warn('admin stats:', e); }
+
+    try {
+      var el = document.getElementById('admin-recent');
+      if (!el) return;
+      var users = await _fetchUsers(4);
+      el.innerHTML = users.length
+        ? users.map(function (u) { return _adminUserRow(u.name, u.role, u.statusLabel); }).join('')
+        : '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:.82rem">Henüz kayıtlı kullanıcı yok.</div>';
+    } catch (e) { console.warn('admin recent:', e); }
+  }
+
+  /* Gerçek kullanıcı listesi (profiles tablosu) */
+  var ROLE_LABEL = { kurye: 'Kurye', isletme: 'Esnaf', firma: 'Kurye Firması' };
+  async function _fetchUsers(limit) {
+    if (!window.SB || !SB.isOn() || !SB.raw) return [];
+    var c = SB.raw();
+    if (!c) return [];
+    var q = c.from('profiles')
+      .select('id,ad,role,dogrulama,yayinda,created_at')
+      .not('user_id', 'is', null)
+      .order('created_at', { ascending: false });
+    if (limit) q = q.limit(limit);
+    var r = await q;
+    if (r.error) { console.warn('_fetchUsers:', r.error); return []; }
+    return (r.data || []).map(function (p) {
+      var st = p.dogrulama === 'verified' ? 'active'
+             : p.dogrulama === 'pending'  ? 'pending' : (p.yayinda ? 'active' : 'pending');
+      return {
+        id: p.id,
+        name: p.ad || '(isim girilmemiş)',
+        role: ROLE_LABEL[p.role] || p.role,
+        roleLow: p.role,
+        status: st,
+        statusLabel: st === 'active' ? 'Aktif' : 'Doğrulama Bekliyor'
+      };
+    });
   }
 
   function _healthRow(label, val, type) {
@@ -106,15 +158,6 @@ window.AdminScreens = (function () {
     showBottomNav();
     setActiveNav('kullanicilar');
 
-    var users = [
-      { name: 'Mehmet Kaya',     role: 'Kurye',   status: 'active'   },
-      { name: 'ABC Lojistik',    role: 'Kurye Firması',   status: 'active'   },
-      { name: 'Lezzet Dükkanım', role: 'Esnaf', status: 'active'   },
-      { name: 'Ayşe Demir',      role: 'Kurye',   status: 'active'   },
-      { name: 'XYZ Kargo',       role: 'Kurye Firması',   status: 'pending'  },
-      { name: 'Deneme Kullanıcı',role: 'Kurye',   status: 'suspended'}
-    ];
-
     renderScreen(
       '<div class="kb-screen-inner">' +
         '<div class="kb-search">' + ICON.search + '<input type="text" placeholder="Kullanıcı ara..."></div>' +
@@ -125,20 +168,24 @@ window.AdminScreens = (function () {
           '<button class="kb-tab"        onclick="AdminScreens._userFilter(\'isletme\',this)">Esnaf</button>' +
         '</div>' +
         '<div id="usr-list" class="kb-card" style="padding:0 16px">' +
-          users.map(function (u) { return _userRow(u); }).join('') +
+          '<div style="padding:20px 0;text-align:center"><div class="kb-spinner"></div></div>' +
         '</div>' +
       '</div>'
     );
+
+    setTimeout(function () { _loadAllUsers(); }, 130);
   }
 
-  var _allUsers = [
-    { name: 'Mehmet Kaya',     role: 'Kurye',   roleLow: 'kurye',   status: 'active'    },
-    { name: 'ABC Lojistik',    role: 'Kurye Firması',   roleLow: 'firma',   status: 'active'    },
-    { name: 'Lezzet Dükkanım', role: 'Esnaf', roleLow: 'isletme', status: 'active'    },
-    { name: 'Ayşe Demir',      role: 'Kurye',   roleLow: 'kurye',   status: 'active'    },
-    { name: 'XYZ Kargo',       role: 'Kurye Firması',   roleLow: 'firma',   status: 'pending'   },
-    { name: 'Deneme',          role: 'Kurye',   roleLow: 'kurye',   status: 'suspended' }
-  ];
+  /* Kullanıcı listesi GERÇEK profiles tablosundan gelir */
+  var _allUsers = [];
+  async function _loadAllUsers() {
+    var el = document.getElementById('usr-list');
+    if (!el) return;
+    _allUsers = await _fetchUsers(200);
+    el.innerHTML = _allUsers.length
+      ? _allUsers.map(function (u) { return _userRow(u); }).join('')
+      : '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:.82rem">Kayıtlı kullanıcı yok.</div>';
+  }
 
   function _userRow(u) {
     var sc = u.status === 'active' ? 'kb-chip--success' : u.status === 'pending' ? 'kb-chip--warning' : 'kb-chip--danger';
@@ -175,14 +222,6 @@ window.AdminScreens = (function () {
     showBottomNav();
     setActiveNav('ilanlar');
 
-    var listings = [
-      { title: 'Motorlu Kurye',  owner: 'ABC Lojistik',    status: 'approved' },
-      { title: 'Yaya Kurye',     owner: 'Lezzet Dükkanım', status: 'pending'  },
-      { title: 'Araçlı Kurye',   owner: 'XYZ Kargo',       status: 'approved' },
-      { title: 'Motorlu Kurye',  owner: 'Hızlı Kargo',     status: 'rejected' },
-      { title: 'Yaya Kurye',     owner: 'Kasap Ali',       status: 'pending'  }
-    ];
-
     renderScreen(
       '<div class="kb-screen-inner">' +
         '<div class="kb-tabs" id="ilan-dn-tabs">' +
@@ -192,12 +231,46 @@ window.AdminScreens = (function () {
           '<button class="kb-tab"        onclick="AdminScreens._ilanDnFilter(\'rejected\',this)">Reddedildi</button>' +
         '</div>' +
         '<div id="ilan-dn-list">' +
-          listings.map(function (l) { return _ilanRow(l); }).join('') +
+          '<div style="padding:24px 0;text-align:center"><div class="kb-spinner"></div></div>' +
         '</div>' +
       '</div>'
     );
 
-    window._adminIlanData = listings;
+    setTimeout(function () { _loadAdminIlanlar(); }, 130);
+  }
+
+  /* İlan denetimi listesi GERÇEK listings tablosundan gelir.
+     Örnek/uydurma ilan gösterilmez. */
+  async function _loadAdminIlanlar() {
+    var el = document.getElementById('ilan-dn-list');
+    if (!el) return;
+    if (!window.SB || !SB.isOn() || !SB.raw) {
+      el.innerHTML = '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:.82rem">İlanlar yüklenemedi.</div>';
+      return;
+    }
+    try {
+      var c = SB.raw();
+      var r = await c.from('listings')
+        .select('id,baslik,durum,created_at, owner:owner_id(ad)')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (r.error) throw r.error;
+      var listings = (r.data || []).map(function (l) {
+        return {
+          id: l.id,
+          title: l.baslik || 'İlan',
+          owner: (l.owner && l.owner.ad) || 'Bilinmiyor',
+          status: l.durum === 'acik' ? 'approved' : 'rejected'
+        };
+      });
+      window._adminIlanData = listings;
+      el.innerHTML = listings.length
+        ? listings.map(function (l) { return _ilanRow(l); }).join('')
+        : '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:.82rem">Henüz yayınlanmış ilan yok.</div>';
+    } catch (e) {
+      console.warn('_loadAdminIlanlar:', e);
+      el.innerHTML = '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:.82rem">İlanlar yüklenemedi.</div>';
+    }
   }
 
   function _ilanRow(l) {
@@ -241,11 +314,39 @@ window.AdminScreens = (function () {
   }
 
   /* ── 4. RAPORLAR ────────────────────────────────────────── */
+  /* Rapor ekranı — gerçek sayılar ve gerçek rol dağılımı */
+  async function _loadRaporlar() {
+    if (!window.SB || !SB.isOn() || !SB.platformStats) return;
+    var set = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+    try {
+      var ps = await SB.platformStats();
+      if (!ps) return;
+      var k = ps.kurye || 0, i = ps.isletme || 0, fr = ps.firma || 0;
+      var toplam = k + i + fr;
+      set('rp-user', toplam);
+      set('rp-ilan', ps.bugun_ilan || 0);
+      set('rp-bas',  ps.bugun_basvuru || 0);
+      set('rp-dog',  ps.dogrulanmis || 0);
+
+      var el = document.getElementById('rp-dagilim');
+      if (el) {
+        var pct = function (n) { return toplam ? Math.round(n * 100 / toplam) : 0; };
+        el.innerHTML = toplam
+          ? _barRow('Kurye',         pct(k),  'var(--c-kurye)') +
+            _barRow('Kurye Firması', pct(fr), 'var(--c-firma)') +
+            _barRow('Esnaf',         pct(i),  'var(--c-isletme)')
+          : '<div style="padding:16px 0;text-align:center;color:var(--muted);font-size:.82rem">Henüz kayıtlı kullanıcı yok.</div>';
+      }
+    } catch (e) { console.warn('_loadRaporlar:', e); }
+  }
+
   function raporlar() {
     if (!_guard()) return;
     showAppBar('Raporlar', true);
     showBottomNav();
     setActiveNav('raporlar');
+
+    setTimeout(function () { _loadRaporlar(); }, 130);
 
     renderScreen(
       '<div class="kb-screen-inner">' +
@@ -256,19 +357,18 @@ window.AdminScreens = (function () {
           '<button class="kb-chip">Bu Yıl</button>' +
         '</div>' +
 
+        /* Tüm rapor değerleri canlı veritabanından okunur; sabit sayı yoktur. */
         '<div class="kb-section-head"><div class="kb-section-title">Genel Bakış</div></div>' +
         '<div class="admin-stat-grid">' +
-          '<div class="admin-stat"><div class="admin-stat__val">+842</div><div class="admin-stat__lbl">Yeni Kullanıcı (7g)</div></div>' +
-          '<div class="admin-stat"><div class="admin-stat__val">+156</div><div class="admin-stat__lbl">Yeni İlan (7g)</div></div>' +
-          '<div class="admin-stat"><div class="admin-stat__val">+2.3K</div><div class="admin-stat__lbl">Başvuru (7g)</div></div>' +
-          '<div class="admin-stat"><div class="admin-stat__val">%87</div><div class="admin-stat__lbl">Eşleşme Oranı</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="rp-user">—</div><div class="admin-stat__lbl">Kayıtlı Kullanıcı</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="rp-ilan">—</div><div class="admin-stat__lbl">Bugün Yeni İlan</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="rp-bas">—</div><div class="admin-stat__lbl">Bugün Başvuru</div></div>' +
+          '<div class="admin-stat"><div class="admin-stat__val" id="rp-dog">—</div><div class="admin-stat__lbl">Doğrulanmış</div></div>' +
         '</div>' +
 
         '<div class="kb-section-head"><div class="kb-section-title">Kullanıcı Dağılımı</div></div>' +
-        '<div class="kb-card">' +
-          _barRow('Kurye',   65, 'var(--c-kurye)') +
-          _barRow('Kurye Firması',   20, 'var(--c-firma)') +
-          _barRow('Esnaf', 15, 'var(--c-isletme)') +
+        '<div class="kb-card" id="rp-dagilim">' +
+          '<div style="padding:16px 0;text-align:center"><div class="kb-spinner"></div></div>' +
         '</div>' +
 
         '<div class="kb-section-head"><div class="kb-section-title">Aktivite Grafiği</div></div>' +
@@ -295,11 +395,9 @@ window.AdminScreens = (function () {
     showAppBar('Şikayetler', true);
     showBottomNav();
 
-    var complaints = [
-      { id: '1', reporter: 'Mehmet Kaya',   target: 'ABC Lojistik',   type: 'Spam',          time: '2 saat önce' },
-      { id: '2', reporter: 'Ayşe Demir',    target: 'XYZ Kargo',      type: 'Yanıltıcı İlan', time: '5 saat önce' },
-      { id: '3', reporter: 'Can Bağlar',    target: 'Hub Dağıtım',    type: 'Hakaret',        time: 'Dün'         }
-    ];
+    /* Şikayet tablosu henüz üretimde yok — sahte kayıt GÖSTERİLMEZ.
+       Şikayet özelliği eklendiğinde buraya gerçek sorgu bağlanacak. */
+    var complaints = [];
 
     renderScreen(
       '<div class="kb-screen-inner">' +

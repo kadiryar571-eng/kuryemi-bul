@@ -1,7 +1,8 @@
 /* ============================================================
    Kuryemi Bul — supabase.js
    Supabase istemcisi + auth + veri katmani.
-   Anahtar yoksa veya kutuphane yuklenmezse demo (KB_DATA) moduna duser.
+   TEK veri kaynagi budur. Demo/mock fallback YOKTUR — baglanti kurulamazsa
+   ekranlar bos durum (empty state) gosterir, uydurma veri gostermez.
    CDN (@supabase/supabase-js@2) bu dosyadan ONCE yuklenmelidir.
    ============================================================ */
 (function () {
@@ -860,8 +861,71 @@
     };
   }
 
+  /* ============================================================
+     CANLI SİSTEM — presence, istatistik, realtime (migration-18)
+     ============================================================ */
+  async function presencePing()    { if (!client) return; try { await client.rpc("presence_ping"); } catch (e) {} }
+  async function presenceOffline() { if (!client) return; try { await client.rpc("presence_offline"); } catch (e) {} }
+  async function onlineCount() {
+    if (!client) return 0;
+    var r = await client.rpc("online_users_count");
+    return r.error ? 0 : (Number(r.data) || 0);
+  }
+  async function presenceOf(ids) {
+    if (!client || !ids || !ids.length) return {};
+    var r = await client.from("profile_presence").select("profile_id,online").in("profile_id", ids);
+    if (r.error) return {};
+    var out = {}; (r.data || []).forEach(function (x) { out[x.profile_id] = !!x.online; });
+    return out;
+  }
+  // Ana ekran sayaçları — hepsi veritabanından, hiçbiri sabit değil
+  async function platformStats() {
+    if (!client) return null;
+    var r = await client.rpc("platform_stats");
+    if (r.error) { console.warn("platformStats:", r.error); return null; }
+    return r.data || null;
+  }
+  async function myDashboardStats() {
+    if (!client) return null;
+    var r = await client.rpc("my_dashboard_stats");
+    if (r.error) { console.warn("myDashboardStats:", r.error); return null; }
+    return r.data || null;
+  }
+  async function listingAppCounts(ids) {
+    if (!client || !ids || !ids.length) return {};
+    var r = await client.rpc("listing_application_counts", { p_ids: ids });
+    if (r.error) return {};
+    var out = {}; (r.data || []).forEach(function (x) { out[x.listing_id] = x.adet; });
+    return out;
+  }
+  async function recordProfileView(id) { if (!client || !id) return; try { await client.rpc("record_profile_view", { p_profile_id: id }); } catch (e) {} }
+  async function recordListingView(id) { if (!client || !id) return; try { await client.rpc("record_listing_view", { p_listing_id: id }); } catch (e) {} }
+
+  function _sub(name, table, events, cb) {
+    if (!client) return function () {};
+    var ch = client.channel("kb-" + name + "-" + Math.random().toString(36).slice(2));
+    (events || ["INSERT", "UPDATE", "DELETE"]).forEach(function (ev) {
+      ch.on("postgres_changes", { event: ev, schema: "public", table: table },
+        function (p) { try { cb(p); } catch (e) {} });
+    });
+    ch.subscribe();
+    return function () { try { client.removeChannel(ch); } catch (e) {} };
+  }
+  function subscribeListings(cb)      { return _sub("listings", "listings", ["INSERT","UPDATE","DELETE"], cb); }
+  function subscribeApplications(cb)  { return _sub("apps", "applications", ["INSERT","UPDATE"], cb); }
+  function subscribeProfiles(cb)      { return _sub("profiles", "profiles", ["INSERT","UPDATE"], cb); }
+  function subscribeConversations(cb) { return _sub("convs", "conversations", ["INSERT","UPDATE"], cb); }
+
   window.SB = {
     isOn: isOn,
+    raw: function () { return client; },
+    presencePing: presencePing, presenceOffline: presenceOffline,
+    onlineCount: onlineCount, presenceOf: presenceOf,
+    platformStats: platformStats, myDashboardStats: myDashboardStats,
+    listingAppCounts: listingAppCounts,
+    recordProfileView: recordProfileView, recordListingView: recordListingView,
+    subscribeListings: subscribeListings, subscribeApplications: subscribeApplications,
+    subscribeProfiles: subscribeProfiles, subscribeConversations: subscribeConversations,
     canMessage: canMessage, sendMessage: sendMessage, myConversations: myConversations,
     threadWith: threadWith, markThreadRead: markThreadRead, unreadMessageCount: unreadMessageCount, subscribeMessages: subscribeMessages,
     signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,

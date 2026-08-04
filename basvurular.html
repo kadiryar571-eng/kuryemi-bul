@@ -85,7 +85,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script src="assets/js/ilan-status.js"></script>
   <script src="assets/js/chat.js"></script>
@@ -103,6 +103,8 @@
     var FILTERS    = { bolge:'', arac:'', deneyim:'', belge:'', sort:'match', q:'' };
     var ALL_JOBS   = [];
     var CUR_APPS   = [];
+    var JOB_COUNTS = {};   // { listingId: gerçek başvuru adedi }
+    var LIVE_OFF   = null; // realtime aboneliğini kapatma fonksiyonu
 
     /* ── Helpers ── */
     function simpleHash(s) {
@@ -145,35 +147,28 @@
       return score >= 70 ? 'match-high' : score >= 45 ? 'match-mid' : 'match-low';
     }
 
-    /* ── Data helpers ── */
-    function loadJobs() {
-      var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
-      var ls = [];
-      try { ls = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + getUid())) || []; } catch(e) {}
-      ALL_JOBS = demo.concat(ls.filter(function(j) { return j.durum === 'yayinda'; }));
+    /* ── Data helpers — TAMAMI VERİTABANINDAN ──
+       Bu ekranda üretilmiş/örnek aday YOKTUR. İlanlar SB.myListings(),
+       başvuranlar SB.listingApplications() ile gerçek kayıtlardan gelir. */
+    async function loadJobs() {
+      ALL_JOBS = [];
+      if (!(window.SB && SB.isOn())) return;
+      try { ALL_JOBS = await SB.myListings(); } catch(e) { console.warn('myListings:', e); }
     }
 
     function getJob(id) {
-      for (var i = 0; i < ALL_JOBS.length; i++) { if (ALL_JOBS[i].id === id) return ALL_JOBS[i]; }
+      for (var i = 0; i < ALL_JOBS.length; i++) { if (String(ALL_JOBS[i].id) === String(id)) return ALL_JOBS[i]; }
       return null;
     }
 
-    function jobApplicants(jobId) {
-      var pool = (window.KB_DATA && KB_DATA.kuryeler) || [];
-      if (!pool.length) return [];
-      var h = simpleHash(jobId);
-      var count = (h % 4) + 4;
-      var result = [], used = {};
-      for (var i = 0; result.length < count && i < pool.length * 4; i++) {
-        var idx = (h + i * 7 + 3) % pool.length;
-        if (!used[idx]) { used[idx] = 1; result.push(pool[idx]); }
-      }
-      return result;
-    }
-
-    function mockDate(jobId, kId) {
-      var h = simpleHash(jobId + kId);
-      return new Date(Date.now() - ((h % 12) + 1) * 86400000).toISOString().slice(0, 10);
+    /* İlan başına gerçek başvuru adedi */
+    async function refreshJobCounts() {
+      JOB_COUNTS = {};
+      if (!(window.SB && SB.isOn()) || !ALL_JOBS.length) return;
+      try {
+        JOB_COUNTS = await SB.listingAppCounts(ALL_JOBS.map(function(j) { return j.id; }));
+      } catch(e) {}
+      ALL_JOBS.forEach(function(j) { if (JOB_COUNTS[j.id] == null) JOB_COUNTS[j.id] = 0; });
     }
 
     function profilePct(k) {
@@ -207,19 +202,42 @@
       return Math.min(100, s);
     }
 
-    function loadApps(jobId) {
-      var job   = getJob(jobId);
-      var pool  = jobApplicants(jobId);
+    /* Gerçek başvurular. DB'deki durum (pending/accepted/rejected) tek doğrudur;
+       "inceleniyor / mesaj gönderildi / kısa liste" gibi ara adımlar işverenin
+       kendi çalışma notudur ve GERÇEK başvuru id'si ile saklanır. */
+    function dbToUi(durum, sv) {
+      if (durum === 'accepted') return 'kabul';
+      if (durum === 'rejected') return 'red';
+      return sv && sv.status && ['inceleniyor','mesaj_gonderildi','kisa_listede','mulakat'].indexOf(sv.status) !== -1
+        ? sv.status : 'yeni';
+    }
+    async function loadApps(jobId) {
+      if (!(window.SB && SB.isOn()) || !jobId) return [];
+      var job = getJob(jobId);
+      var rows = [];
+      try { rows = await SB.listingApplications(jobId); }
+      catch(e) { console.warn('listingApplications:', e); return []; }
       var saved = {};
       try { saved = JSON.parse(localStorage.getItem('kb_apps_' + jobId)) || {}; } catch(e) {}
-      return pool.map(function(k) {
-        var sv = saved[k.id] || {};
+      return rows.map(function(r) {
+        var sv = saved[r.id] || {};
+        // Aday profili — tamamı DB'den
+        var k = {
+          id: r.applicantId, ad: r.ad, sehir: r.sehir, arac: r.arac,
+          bolgeler: r.bolgeler, deneyim: r.deneyim, seviye: r.seviye,
+          sertifikalar: r.sertifikalar, tamamlanan: r.tamamlanan, puan: r.puan,
+          aciklama: r.aciklama, avatar_url: r.avatar_url, dogrulama: r.dogrulama,
+          calistigi: r.calistigi, referanslar: []
+        };
         return {
+          appId:      r.id,           // gerçek applications.id
           k:          k,
           jobId:      jobId,
-          status:     sv.status     || 'yeni',
+          mesaj:      r.mesaj || '',
+          status:     dbToUi(r.durum, sv),
+          dbDurum:    r.durum,
           shortlisted:!!sv.shortlisted,
-          date:       sv.date       || mockDate(jobId, k.id),
+          date:       r.tarih,
           viewed:     !!sv.viewed,
           match:      calcMatch(k, job),
           pct:        profilePct(k),
@@ -228,10 +246,11 @@
       });
     }
 
-    function saveApp(jobId, kId, patch) {
+    /* İşverenin kendi iş akışı notu (kısa liste / görüldü) — gerçek başvuru id'si ile */
+    function saveApp(jobId, appId, patch) {
       var key = 'kb_apps_' + jobId, saved = {};
       try { saved = JSON.parse(localStorage.getItem(key)) || {}; } catch(e) {}
-      saved[kId] = Object.assign(saved[kId] || {}, patch);
+      saved[appId] = Object.assign(saved[appId] || {}, patch);
       try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e) {}
     }
 
@@ -242,18 +261,10 @@
       try { localStorage.setItem(key, JSON.stringify(log.slice(0, 200))); } catch(e) {}
     }
 
-    function notifyApplicant(kId, event, jobTitle) {
-      var MSGS = {
-        viewed:      { title: 'Başvuru Görüntülendi', body: '"' + jobTitle + '" ilanı için başvurunuz görüntülendi.', type: 'basvuru' },
-        shortlisted: { title: 'Kısa Liste',           body: '"' + jobTitle + '" ilanında kısa listeye alındınız.',   type: 'basvuru' },
-        kabul:       { title: 'Başvuru Kabul Edildi', body: '"' + jobTitle + '" ilanı için kabul aldınız!',           type: 'karar'   },
-        red:         { title: 'Başvuru Reddedildi',   body: '"' + jobTitle + '" ilanı için başvurunuz reddedildi.',  type: 'karar'   },
-        mulakat:     { title: 'Mülakat Daveti',        body: '"' + jobTitle + '" ilanı için mülakata davet edildiniz.', type: 'gorusme' },
-      };
-      var m = MSGS[event];
-      if (!m) return;
-      if (window.KBNotif) KBNotif.push(kId, m.type, m.title, m.body, { link: 'gorusmeler.html' });
-    }
+    /* Adaya bildirim GÖNDERİLMEZ (istemciden): başvuru kabul/red edildiğinde
+       bildirimi Supabase trigger'ı (kb_application_update) adayın kendi
+       hesabına üretir. Böylece bildirim gerçek olaydan doğar ve doğru
+       kullanıcıya ulaşır. */
 
     /* ── Filters ── */
     function applyFilters(apps) {
@@ -294,12 +305,11 @@
         return;
       }
       el.innerHTML = ALL_JOBS.map(function(j) {
-        var h       = simpleHash(j.id);
-        var count   = (h % 4) + 4;
-        var saved   = {};
-        try { saved = JSON.parse(localStorage.getItem('kb_apps_' + j.id)) || {}; } catch(e) {}
-        var newCnt  = 0;
-        Object.keys(saved).forEach(function(kid) { if (!saved[kid].status || saved[kid].status === 'yeni') newCnt++; });
+        // Gerçek başvuru adedi (SB.listingAppCounts ile dolduruldu)
+        var count  = JOB_COUNTS[j.id] != null ? JOB_COUNTS[j.id] : 0;
+        // Seçili ilanda gerçekten bekleyen (pending) başvuru sayısı
+        var newCnt = (String(SEL_JOB_ID) === String(j.id))
+          ? CUR_APPS.filter(function(a) { return a.dbDurum === 'pending'; }).length : 0;
         var statusBadge = window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'yayinda') : '';
         return '<button class="apc-job-btn' + (SEL_JOB_ID === j.id ? ' is-active' : '') + '" data-jobid="' + esc(j.id) + '">' +
           '<div>' +
@@ -438,12 +448,14 @@
       /* mark viewed & auto-update status */
       if (!app.viewed) {
         app.viewed = true;
-        saveApp(jobId, k.id, { viewed:true });
+        saveApp(jobId, app.appId, { viewed:true });
+        // Adayın profilini gerçekten görüntüledik → gerçek görüntülenme kaydı
+        // (sunucu adayın hesabına bildirim üretir)
+        if (window.SB && SB.recordProfileView) SB.recordProfileView(k.id);
         if (app.status === 'yeni') {
           app.status = 'inceleniyor';
-          saveApp(jobId, k.id, { status:'inceleniyor' });
-          logActivity(jobId, k.id, 'viewed', k.ad + ' profili incelendi');
-          notifyApplicant(k.id, 'viewed', job ? (job.baslik || '') : '');
+          saveApp(jobId, app.appId, { status:'inceleniyor' });
+          logActivity(jobId, app.appId, 'viewed', k.ad + ' profili incelendi');
           renderGrid();
           renderStats();
         }
@@ -558,31 +570,21 @@
     }
 
     /* Navigate to hiring decision page for this applicant */
-    function openDecision(kid, jobId) {
+    async function openDecision(kid, jobId) {
       var job = getJob(jobId);
       var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
       var k   = app ? app.k : { id: kid, ad: 'Kurye', avatar: '' };
       var uid = getUid();
 
-      /* Pre-create decision record so karar.html has data */
-      if (window.KBHiring && !KBHiring.getDecision(jobId, kid)) {
-        var thread = window.KBChat
-          ? KBChat.ensureThread(uid, jobId, kid, {
-              jobTitle: job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
-              kurye:     { id: kid, ad: k.ad || 'Kurye', avatar: '' },
-              isletmeId: uid,
-              isletme:   { id: uid, ad: (job && (job.isletme_adi || job.firma_adi)) || 'Esnaf', avatar: '' },
-              appStatus: app ? (app.status || 'inceleniyor') : 'inceleniyor',
-              createdAt: app ? (app.date || new Date().toISOString()) : new Date().toISOString()
-            })
-          : null;
-
-        KBHiring.makeDecision(uid, jobId, kid, 'beklemede', {
-          jobTitle:  job ? (job.baslik || job.poz_baslik || 'İlan') : 'İlan',
-          kuryeAd:   k.ad || 'Kurye',
-          isletmeAd: (job && (job.isletme_adi || job.firma_adi)) || 'Esnaf',
-          threadId:  thread ? thread.id : null
-        });
+      /* Karar kaydını veritabanında aç (yoksa) — karar.html oradan okur.
+         İsim/başlık gibi alanlar DB join'inden gelir, elle taşınmaz. */
+      if (window.KBHiring) {
+        await KBHiring.load();
+        if (!KBHiring.getDecision(jobId, kid)) {
+          await KBHiring.makeDecision(null, jobId, kid, 'beklemede', {
+            application_id: app ? app.appId : null
+          });
+        }
       }
 
       var params = '?job=' + encodeURIComponent(jobId) + '&kid=' + encodeURIComponent(kid);
@@ -591,15 +593,30 @@
     }
 
     /* ── Actions ── */
-    function setStatus(jobId, kid, status) {
+    /* Kabul/Red VERİTABANINA yazılır (applications.durum). Adayın bildirimi
+       ve konuşma akışı sunucu trigger'larıyla otomatik tetiklenir. */
+    async function setStatus(jobId, kid, status) {
       var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
       if (!app) return;
+
+      var dbMap = { kabul:'accepted', red:'rejected' };
+      if (dbMap[status]) {
+        if (!(window.SB && SB.isOn())) {
+          if (window.KBMotion) KBMotion.showErrorToast('Bağlantı yok — durum kaydedilemedi');
+          return;
+        }
+        var r = await SB.updateApplication(app.appId, dbMap[status]);
+        if (r && r.error) {
+          if (window.KBMotion) KBMotion.showErrorToast(r.error.message || 'Durum güncellenemedi');
+          return;
+        }
+        app.dbDurum = dbMap[status];
+      } else {
+        // Ara adımlar işverenin kendi çalışma notudur
+        saveApp(jobId, app.appId, { status:status });
+      }
       app.status = status;
-      saveApp(jobId, kid, { status:status });
-      logActivity(jobId, kid, status, '');
-      var job = getJob(jobId);
-      if (['kabul','red','mulakat'].indexOf(status) !== -1)
-        notifyApplicant(kid, status, job ? (job.baslik || '') : '');
+      logActivity(jobId, app.appId, status, '');
       renderStats();
       renderGrid();
       if (window.KBMotion) {
@@ -612,11 +629,9 @@
       var app = CUR_APPS.filter(function(a) { return a.k.id === kid; })[0];
       if (!app) return;
       app.shortlisted = !app.shortlisted;
-      saveApp(jobId, kid, { shortlisted:app.shortlisted });
+      saveApp(jobId, app.appId, { shortlisted:app.shortlisted });
       if (app.shortlisted) {
-        logActivity(jobId, kid, 'shortlist', app.k.ad + ' kısa listeye eklendi');
-        var job = getJob(jobId);
-        notifyApplicant(kid, 'shortlisted', job ? (job.baslik || '') : '');
+        logActivity(jobId, app.appId, 'shortlist', app.k.ad + ' kısa listeye eklendi');
         if (window.KBMotion) KBMotion.showSuccess('⭐ Kısa listeye eklendi', '', 1600);
       }
       renderStats();
@@ -642,14 +657,17 @@
     }
 
     /* ── Select job ── */
-    function selectJob(jobId) {
+    async function selectJob(jobId) {
       SEL_JOB_ID = jobId;
       try {
         var url = new URL(location.href);
         url.searchParams.set('job', jobId);
         history.replaceState({}, '', url.toString());
       } catch(e) {}
-      CUR_APPS = loadApps(jobId);
+      var grid = document.getElementById('apcGrid');
+      if (grid) grid.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">⏳</div><div class="apc-empty__t">Başvurular yükleniyor…</div></div>';
+      CUR_APPS = await loadApps(jobId);
+      await refreshJobCounts();
       renderJobBar();
       renderStats();
       populateFilters(CUR_APPS);
@@ -745,13 +763,33 @@
       }
     });
 
-    function boot() {
+    async function boot() {
       if (window.IlanStatus) IlanStatus.autoCheck(getUid());
-      loadJobs();
+      var bar = document.getElementById('apcJobBar');
+      if (bar) bar.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">⏳</div><div class="apc-empty__t">İlanlarınız yükleniyor…</div></div>';
+      await loadJobs();
+      await refreshJobCounts();
       renderJobBar();
       renderGrid();
       wire();
-      if (SEL_JOB_ID) { selectJob(SEL_JOB_ID); }
+      if (SEL_JOB_ID) { await selectJob(SEL_JOB_ID); }
+      wireLive();
+    }
+
+    /* CANLI: yeni başvuru gelince liste ve sayaçlar sayfa yenilemeden güncellenir */
+    function wireLive() {
+      if (LIVE_OFF || !(window.SB && SB.isOn() && SB.subscribeApplications)) return;
+      var pending = null;
+      LIVE_OFF = SB.subscribeApplications(function() {
+        if (pending) clearTimeout(pending);
+        pending = setTimeout(async function() {
+          await refreshJobCounts();
+          if (SEL_JOB_ID) CUR_APPS = await loadApps(SEL_JOB_ID);
+          renderJobBar();
+          renderStats();
+          renderGrid();
+        }, 500);
+      });
     }
 
   })();

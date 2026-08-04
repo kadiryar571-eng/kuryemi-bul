@@ -52,19 +52,13 @@
   }
 
   /* ── Eligibility ── */
+  /* Değerlendirme yalnız GERÇEK bir işe alımdan sonra yapılabilir.
+     Kaynak: public.hiring_decisions (KBHiring önbelleği).
+     Eski localStorage okuması kaldırıldı — o veri artık orada tutulmuyor. */
   function canSubmit(jobId, kuryeId) {
-    if (window.KBHiring) {
-      var dec = KBHiring.getDecision(jobId, kuryeId);
-      if (dec && (dec.status === 'kabul' || dec.status === 'tamamlandi')) return true;
-    }
-    try {
-      var raw = localStorage.getItem('kb_hiring_' + jobId + '_' + kuryeId);
-      if (raw) {
-        var d = JSON.parse(raw);
-        return d.status === 'kabul' || d.status === 'tamamlandi';
-      }
-    } catch(e) {}
-    return false;
+    if (!window.KBHiring) return false;
+    var dec = KBHiring.getDecision(jobId, kuryeId);
+    return !!(dec && (dec.status === 'kabul' || dec.status === 'tamamlandi'));
   }
 
   /* ── CRUD ── */
@@ -171,22 +165,16 @@
     try { return JSON.parse(localStorage.getItem(repKey(profileId))); } catch(e) { return null; }
   }
 
+  /* Bekleyen değerlendirmeler — gerçek işe alım kayıtlarından.
+     KBHiring.load() önceden çağrılmış olmalı. */
   function getPendingFeedbacks(uid, role) {
-    var pending = [];
+    if (!window.KBHiring || !KBHiring.getDecisionsRaw) return [];
     var isBiz = (role === 'isletme' || role === 'firma');
-    for (var k in localStorage) {
-      if (!k.startsWith('kb_hiring_') || k.includes('_ob_') || k.includes('_log_')) continue;
-      try {
-        var dec = JSON.parse(localStorage.getItem(k));
-        if (!dec) continue;
-        if (dec.status !== 'kabul' && dec.status !== 'tamamlandi') continue;
-        var relevantUid = isBiz ? dec.isletmeId : dec.kuryeId;
-        if (relevantUid !== uid) continue;
-        var myFbRole = isBiz ? 'isletme' : 'kurye';
-        if (!getFeedback(dec.jobId, dec.kuryeId, myFbRole)) pending.push(dec);
-      } catch(e) {}
-    }
-    return pending;
+    var myFbRole = isBiz ? 'isletme' : 'kurye';
+    return KBHiring.getDecisionsRaw().filter(function (dec) {
+      if (dec.status !== 'kabul' && dec.status !== 'tamamlandi') return false;
+      return !getFeedback(dec.jobId, dec.kuryeId, myFbRole);
+    });
   }
 
   /* ── Render helpers ── */
@@ -332,39 +320,7 @@
   }
 
   /* ── Demo seed ── */
-  function seedDemoData() {
-    var demoJob = 'job_demo1', demoKurye = 'demo_kurye', demoIsletme = 'demo';
-    var hiringKey = 'kb_hiring_' + demoJob + '_' + demoKurye;
-    if (!localStorage.getItem(hiringKey)) {
-      localStorage.setItem(hiringKey, JSON.stringify({
-        id:'hd_demo_fb', jobId:demoJob, kuryeId:demoKurye, isletmeId:demoIsletme,
-        status:'kabul', jobTitle:'Motosiklet Kurye', kuryeAd:'Ali Yılmaz', isletmeAd:'KuryemiBul Demo'
-      }));
-    }
-    if (!getFeedback(demoJob, demoKurye, 'isletme')) {
-      localStorage.setItem(fbKey(demoJob, demoKurye, 'isletme'), JSON.stringify({
-        id:'fb_demo1', jobId:demoJob, kuryeId:demoKurye, isletmeId:demoIsletme, role:'isletme',
-        ratings:{ dakiklik:5, iletisim:4, is_disiplini:5, bolge_hakimiyeti:4, genel_performans:5 },
-        text:'İletişimi güçlü ve zamanında teslimat yaptı.', avg:4.6,
-        submittedAt:new Date(Date.now()-2*24*60*60*1000).toISOString(),
-        editedAt:null, reported:false, reportReason:'', reportStatus:''
-      }));
-      logEvent(demoJob, demoKurye, 'submitted', 'isletme');
-    }
-    if (!getFeedback(demoJob, demoKurye, 'kurye')) {
-      localStorage.setItem(fbKey(demoJob, demoKurye, 'kurye'), JSON.stringify({
-        id:'fb_demo2', jobId:demoJob, kuryeId:demoKurye, isletmeId:demoIsletme, role:'kurye',
-        ratings:{ iletisim_kalitesi:4, is_acikliginin_dogrulugu:5, odeme_sureci:4, calisma_sartlari:4, genel_memnuniyet:4 },
-        text:'Şartlar netti, ödeme zamanında geldi.', avg:4.2,
-        submittedAt:new Date(Date.now()-2*24*60*60*1000).toISOString(),
-        editedAt:null, reported:false, reportReason:'', reportStatus:''
-      }));
-      logEvent(demoJob, demoKurye, 'submitted', 'kurye');
-    }
-    updateReputation(demoKurye, 'kurye');
-    updateReputation(demoIsletme, 'isletme');
-  }
-
+  /* Demo/örnek veri üreticisi kaldırıldı — üretimde sahte kayıt oluşturulmaz. */
   window.KBFeedback = {
     EMPLOYER_CRITERIA:     EMPLOYER_CRITERIA,
     COURIER_CRITERIA:      COURIER_CRITERIA,
@@ -384,7 +340,5 @@
     renderMiniCard:        renderMiniCard,
     renderLog:             renderLog,
     renderStarDisplay:     renderStarDisplay,
-    isEditable:            isEditable,
-    seedDemoData:          seedDemoData
-  };
+    isEditable:            isEditable,  };
 })();

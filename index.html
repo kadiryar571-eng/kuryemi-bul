@@ -747,6 +747,35 @@
       gap: 16px;
       margin-bottom: 0;
     }
+
+    /* Canlı çevrimiçi göstergesi — gerçek presence verisi */
+    .lp-live-online {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+    .lp-live-online[hidden] { display: none; }
+    .lp-live-online b { color: var(--text-1); font-weight: 700; }
+    .lp-live-online__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #16A34A;
+      box-shadow: 0 0 0 0 rgba(22,163,74,0.55);
+      animation: kbLivePulse 2s ease-out infinite;
+      flex: none;
+    }
+    @keyframes kbLivePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(22,163,74,0.55); }
+      70%  { box-shadow: 0 0 0 8px rgba(22,163,74,0); }
+      100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lp-live-online__dot { animation: none; }
+    }
     .lp-stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1348,27 +1377,35 @@
         <h2 class="lp-stats-sec__title">KuryemiBul'da Neler Oluyor?</h2>
         <p class="lp-stats-sec__sub">Her gün yeni iş ilanları yayınlanır ve kuryeler esnaflarla hızlıca buluşur.</p>
       </div>
+      <!-- Sayaçların TAMAMI canlı veritabanı değeridir (platform_stats).
+           data-stat anahtarı landing.js tarafından doldurulur; sabit sayı yoktur. -->
       <div class="lp-stat-grid">
         <div class="lp-stat-card">
           <div class="lp-stat-ic">📋</div>
-          <div class="lp-stat-value" data-target="1240" data-suffix="+">1.240+</div>
+          <div class="lp-stat-value" data-stat="acik_ilan">—</div>
           <div class="lp-stat-title">Aktif İlanlar</div>
         </div>
         <div class="lp-stat-card">
           <div class="lp-stat-ic">🛵</div>
-          <div class="lp-stat-value" data-target="8500" data-suffix="+">8.500+</div>
+          <div class="lp-stat-value" data-stat="kurye">—</div>
           <div class="lp-stat-title">Kayıtlı Kuryeler</div>
         </div>
         <div class="lp-stat-card">
           <div class="lp-stat-ic">✅</div>
-          <div class="lp-stat-value" data-target="420" data-suffix="+">420+</div>
+          <div class="lp-stat-value" data-stat="dogrulanmis">—</div>
           <div class="lp-stat-title">Doğrulanmış Esnaflar</div>
         </div>
         <div class="lp-stat-card">
           <div class="lp-stat-ic">⚡</div>
-          <div class="lp-stat-value" data-target="310" data-suffix="+">310+</div>
+          <div class="lp-stat-value" data-stat="bugun_basvuru">—</div>
           <div class="lp-stat-title">Bugün Yapılan Başvurular</div>
         </div>
+      </div>
+
+      <!-- Canlı çevrimiçi göstergesi — presence.js besler -->
+      <div class="lp-live-online" id="lpLiveOnline" hidden>
+        <span class="lp-live-online__dot" aria-hidden="true"></span>
+        <span>Şu anda <b data-online-count>0</b> kişi çevrimiçi</span>
       </div>
     </div>
 
@@ -1842,6 +1879,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script>
   (async function () {
@@ -1854,6 +1892,81 @@
         if (role && window.KB) location.href = KB.roleToPanel(role);
       }
     } catch (e) {}
+  })();
+  </script>
+
+  <!-- ── CANLI ANA SAYFA SAYAÇLARI ──────────────────────────────
+       Buradaki hiçbir sayı sabit değildir; hepsi platform_stats()
+       ile veritabanından okunur. Yeni ilan yayınlandığında, yeni
+       kullanıcı kaydolduğunda veya başvuru yapıldığında sayaçlar
+       sayfa yenilenmeden güncellenir (Supabase Realtime). -->
+  <script>
+  (function () {
+    'use strict';
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function countUp(el, target) {
+      target = Number(target) || 0;
+      // Animasyonsuz durumlar: hareket azaltma tercihi VEYA sayfa arka planda.
+      // Arka plandaki sekmede requestAnimationFrame çalışmaz; animasyona
+      // bırakılırsa sayaç "—" olarak takılı kalır. Bu yüzden doğrudan yazılır.
+      if (reduced || document.hidden) { el.textContent = target; return; }
+
+      var dur = 1100, t0 = null, from = 0, bitti = false;
+      function step(t) {
+        if (!t0) t0 = t;
+        var p = Math.min((t - t0) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(from + (target - from) * eased);
+        if (p < 1) requestAnimationFrame(step); else bitti = true;
+      }
+      requestAnimationFrame(step);
+      // Güvenlik ağı: rAF hiç çalışmazsa (sekme gizlendi vb.) değeri yine de yaz.
+      setTimeout(function () { if (!bitti) el.textContent = target; }, dur + 400);
+    }
+
+    var seen = false;
+    async function refreshStats() {
+      if (!(window.SB && SB.isOn() && SB.platformStats)) return;
+      var s = null;
+      try { s = await SB.platformStats(); } catch (e) { return; }
+      if (!s) return;
+      document.querySelectorAll('[data-stat]').forEach(function (el) {
+        var v = s[el.getAttribute('data-stat')];
+        if (v == null) return;
+        if (seen) el.textContent = Number(v) || 0; else countUp(el, v);
+      });
+      seen = true;
+      var live = document.getElementById('lpLiveOnline');
+      if (live) live.hidden = !(s.online > 0);
+    }
+
+    // Sayaçları hemen yükle. (Tek hafif RPC — ertelemeye değmez.)
+    // NOT: Eskiden IntersectionObserver + threshold:0.25 ile erteleniyordu;
+    // bölüm 1300px olduğu için dar/uzun ekranlarda eşik hiç karşılanmıyor ve
+    // sayaçlar sonsuza dek "—" kalıyordu. Eşiğe bağlı tetikleme kaldırıldı.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', refreshStats);
+    } else {
+      refreshStats();
+    }
+
+    // CANLI: ilan / kayıt / başvuru olaylarında sayaçlar tazelenir (polling yok)
+    if (window.SB && SB.isOn()) {
+      var deb = null;
+      function bump() { if (deb) clearTimeout(deb); deb = setTimeout(refreshStats, 700); }
+      if (SB.subscribeListings)     SB.subscribeListings(bump);
+      if (SB.subscribeProfiles)     SB.subscribeProfiles(bump);
+      if (SB.subscribeApplications) SB.subscribeApplications(bump);
+    }
+
+    // Çevrimiçi sayısı presence.js'ten gelir; 0 ise gösterge gizlenir
+    if (window.KBPresence && KBPresence.onCount) {
+      KBPresence.onCount(function (n) {
+        var live = document.getElementById('lpLiveOnline');
+        if (live) live.hidden = !(n > 0);
+      });
+    }
   })();
   </script>
 

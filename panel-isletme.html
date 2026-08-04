@@ -153,7 +153,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script src="assets/js/ilan-status.js"></script>
   <script src="assets/js/ilan-quality.js"></script>
@@ -215,16 +215,23 @@
     }
 
     function animateCount(el, target) {
-      var start = 0;
+      if (!el) return;
+      target = Number(target) || 0;
+      // Arka plandaki sekmede requestAnimationFrame çalışmaz; animasyona
+      // bırakılırsa sayaç "—" olarak takılı kalır. O yüzden doğrudan yazılır.
+      if (document.hidden) { el.textContent = target; return; }
       var duration = 900;
       var t0 = performance.now();
+      var bitti = false;
       function step(now) {
         var p = Math.min((now - t0) / duration, 1);
         var ease = 1 - Math.pow(1 - p, 3);
         el.textContent = Math.round(ease * target);
-        if (p < 1) requestAnimationFrame(step);
+        if (p < 1) requestAnimationFrame(step); else bitti = true;
       }
       requestAnimationFrame(step);
+      // Güvenlik ağı: rAF hiç tetiklenmezse değeri yine de yaz.
+      setTimeout(function () { if (!bitti) el.textContent = target; }, duration + 400);
     }
 
     document.addEventListener('DOMContentLoaded', async function () {
@@ -262,12 +269,13 @@
       /* Pending hiring decisions badge */
       if (window.KBHiring) {
         try {
-          var hdUid = 'demo';
-          try { var hdS = window.KB && KB.session && KB.session(); if (hdS && hdS.user && hdS.user.id) hdUid = hdS.user.id; } catch(e) {}
-          KBHiring.seedDemoData(hdUid);
-          var pending = KBHiring.getPendingDecisions(hdUid).length;
+          await KBHiring.load(true);
+          var pending = KBHiring.getPendingDecisions().length;
           var hdBadge = document.getElementById('panelHiringBadge');
-          if (hdBadge && pending > 0) { hdBadge.textContent = pending; hdBadge.style.display = 'inline'; }
+          if (hdBadge) {
+            if (pending > 0) { hdBadge.textContent = pending; hdBadge.style.display = 'inline'; }
+            else hdBadge.style.display = 'none';
+          }
         } catch(e) {}
       }
 
@@ -276,7 +284,6 @@
         try {
           var fbUid = 'demo';
           try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
-          KBFeedback.seedDemoData();
           var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'isletme').length;
           var fbBadge = document.getElementById('panelFbBadge');
           if (fbBadge && pendingFb > 0) { fbBadge.textContent = pendingFb; fbBadge.style.display = 'inline'; }
@@ -288,10 +295,10 @@
         try {
           var ivUid = 'demo';
           try { var ivS = window.KB && KB.session && KB.session(); if (ivS && ivS.user && ivS.user.id) ivUid = ivS.user.id; } catch(e) {}
-          KBInterview.seedDemoData(ivUid);
-          KBInterview.checkReminders(ivUid);
+          await KBInterview.load(true);
+          KBInterview.checkReminders();
           var ivEl = document.getElementById('panelIvUpcoming');
-          if (ivEl) ivEl.innerHTML = KBInterview.renderUpcomingWidget(ivUid, 'isletme', 3);
+          if (ivEl) ivEl.innerHTML = KBInterview.renderUpcomingWidget(null, 'isletme', 3);
           ivEl && ivEl.addEventListener('click', function(e) {
             var card = e.target.closest('.iv-mini-card');
             if (card) window.location.href = 'gorusmeler.html';
@@ -347,30 +354,40 @@
         var teklifEl = document.getElementById('statTeklif');
         var kuryeEl = document.getElementById('statKurye');
         var ilanSub = document.getElementById('statIlanSub');
+        /* CANLI SAYAÇLAR — hepsi veritabanından (my_dashboard_stats + platform_stats).
+           Hiçbiri sabit değil; localStorage tahmini kullanılmaz. */
         var ilanSayisi = 0, teklifSayisi = 0, kuryeSayisi = 0;
-        try {
-          var myOff = window.SB && SB.isOn() ? await SB.myOffers() : null;
-          if (myOff) {
-            ilanSayisi   = myOff.filter(function(o){ return o.sender_id   === (profile && profile.id); }).length;
-            teklifSayisi = myOff.filter(function(o){ return o.receiver_id === (profile && profile.id); }).length;
-          }
-          var pool = window.SB && SB.isOn() ? await SB.pool('kurye') : null;
-          kuryeSayisi = pool ? pool.length : 0;
-        } catch(e) {}
 
-        try {
-          var lsUid0 = 'demo';
-          try { var lsS0 = window.KB && KB.session && KB.session(); if (lsS0 && lsS0.user && lsS0.user.id) lsUid0 = lsS0.user.id; } catch(e) {}
-          var lsJobsCount = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + lsUid0)) || [];
-          var lsActive = lsJobsCount.filter(function(j) { return j.durum === 'yayinda'; }).length;
-          if (lsActive > ilanSayisi) ilanSayisi = lsActive;
-        } catch(e) {}
+        async function refreshIsletmeStats() {
+          try {
+            var ds = window.SB && SB.isOn() ? await SB.myDashboardStats() : null;
+            if (ds) {
+              ilanSayisi   = ds.acik_ilanim || 0;
+              teklifSayisi = ds.yeni_basvuru || 0;   // ilanlarıma gelen bekleyen başvuru
+            }
+            var ps = window.SB && SB.isOn() ? await SB.platformStats() : null;
+            if (ps) kuryeSayisi = ps.kurye || 0;     // havuzdaki gerçek kurye sayısı
+          } catch(e) {}
 
-        animateCount(ilanEl, ilanSayisi);
-        animateCount(teklifEl, teklifSayisi);
-        animateCount(kuryeEl, kuryeSayisi);
-        ilanSub.textContent = ilanSayisi === 1 ? '1 aktif ilan' : ilanSayisi + ' aktif ilan';
-        ilanSub.className = 'dash-stat__delta' + (ilanSayisi > 0 ? '' : ' is-neutral');
+          animateCount(ilanEl, ilanSayisi);
+          animateCount(teklifEl, teklifSayisi);
+          animateCount(kuryeEl, kuryeSayisi);
+          ilanSub.textContent = ilanSayisi === 1 ? '1 aktif ilan' : ilanSayisi + ' aktif ilan';
+          ilanSub.className = 'dash-stat__delta' + (ilanSayisi > 0 ? '' : ' is-neutral');
+        }
+        await refreshIsletmeStats();
+
+        /* CANLI: yeni ilan / başvuru / kayıt olayında sayaçlar tazelenir */
+        if (window.SB && SB.isOn()) {
+          var _deb = null;
+          var _bump = function () {
+            if (_deb) clearTimeout(_deb);
+            _deb = setTimeout(refreshIsletmeStats, 700);
+          };
+          if (SB.subscribeListings)     SB.subscribeListings(_bump);
+          if (SB.subscribeApplications) SB.subscribeApplications(_bump);
+          if (SB.subscribeProfiles)     SB.subscribeProfiles(_bump);
+        }
 
       } catch(err) {
         console.warn('Welcome block error:', err);

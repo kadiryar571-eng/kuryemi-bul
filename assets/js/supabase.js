@@ -1,7 +1,8 @@
 /* ============================================================
    Kuryemi Bul — supabase.js
    Supabase istemcisi + auth + veri katmani.
-   Anahtar yoksa veya kutuphane yuklenmezse demo (KB_DATA) moduna duser.
+   TEK veri kaynagi budur. Demo/mock fallback YOKTUR — baglanti kurulamazsa
+   sayfalar bos durum (empty state) gosterir, uydurma veri gostermez.
    CDN (@supabase/supabase-js@2) bu dosyadan ONCE yuklenmelidir.
    ============================================================ */
 (function () {
@@ -232,14 +233,21 @@
   }
 
   /* ---------- HAVUZ / PROFİL ---------- */
+  // Havuz: yalnız GERÇEK, kayıtlı ve profili doldurulmuş kullanıcılar.
+  // İsimsiz (profilini hiç doldurmamış) kayıtlar havuzda gösterilmez.
   async function pool(role) {
-    var r = await client.from("profiles").select("*").eq("role", role).eq("yayinda", true).order("puan", { ascending: false });
+    var r = await client.from("profiles").select("*")
+      .eq("role", role).eq("yayinda", true)
+      .not("user_id", "is", null)     // seed/demo satırları (user_id null) asla gelmez
+      .neq("ad", "")
+      .order("puan", { ascending: false });
     if (r.error) throw r.error;
     return (r.data || []).map(fromDb);
   }
   async function poolCounts() {
     async function cnt(role) {
-      var r = await client.from("profiles").select("id", { count: "exact", head: true }).eq("role", role).eq("yayinda", true);
+      var r = await client.from("profiles").select("id", { count: "exact", head: true })
+        .eq("role", role).eq("yayinda", true).not("user_id", "is", null).neq("ad", "");
       return r.count || 0;
     }
     var rev = await client.from("reviews").select("id", { count: "exact", head: true });
@@ -465,12 +473,13 @@
       lng:              (l.owner && l.owner.lng != null) ? l.owner.lng : null,
       sahipAvatar:      (l.owner && l.owner.avatar_url) || "",
       sahipDogrulama:   (l.owner && l.owner.dogrulama)  || "none",
+      sahipAciklama:    (l.owner && l.owner.aciklama)   || "",
     };
   }
   async function listingById(id) {
     if (!id) return null;
     var r = await client.from("listings")
-      .select("*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng)")
+      .select("*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng,aciklama)")
       .eq("id", id).maybeSingle();
     if (r.error) { console.warn("listingById:", r.error); return null; }
     return r.data ? listingFromDb(r.data) : null;
@@ -547,8 +556,15 @@
     if (r.error) { console.warn("myListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
+  // Yayında olan ilanlar: yalnız açık VE son başvuru tarihi geçmemiş olanlar.
+  // Süresi dolmuş ilan iş akışında görünmez.
   async function openListings() {
-    var r = await client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik").order("created_at", { ascending: false });
+    var today = new Date().toISOString().slice(0, 10);
+    var r = await client.from("listings")
+      .select("*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng,aciklama)")
+      .eq("durum", "acik")
+      .or("son_basvuru.is.null,son_basvuru.gte." + today)
+      .order("created_at", { ascending: false });
     if (r.error) { console.warn("openListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
@@ -590,15 +606,27 @@
     var r = await client.from("applications").select("listing_id").eq("applicant_user", u.id);
     return (r.data || []).map(function (x) { return x.listing_id; });
   }
+  // Bir ilana gelen başvurular — aday profilinin tamamı ile birlikte.
+  // Başvuru ekranındaki her alan (araç, deneyim, bölge, belge, puan) buradan gelir.
   async function listingApplications(listingId) {
     var r = await client.from("applications")
-      .select("*, applicant:applicant_id(id,ad,role,puan,sehir)")
+      .select("*, applicant:applicant_id(id,ad,role,puan,degerlendirme,sehir,arac,bolgeler,deneyim,seviye,sertifikalar,tamamlanan,aciklama,avatar_url,dogrulama,calistigi,lat,lng)")
       .eq("listing_id", listingId).order("created_at", { ascending: false });
     if (r.error) { console.warn("listingApplications:", r.error); return []; }
     return (r.data || []).map(function (a) {
-      return { id: a.id, durum: a.durum, mesaj: a.mesaj, tarih: (a.created_at || "").slice(0, 10),
-        applicantId: a.applicant && a.applicant.id, ad: (a.applicant && a.applicant.ad) || "Kullanıcı",
-        rol: a.applicant && a.applicant.role, puan: (a.applicant && Number(a.applicant.puan)) || 0, sehir: a.applicant && a.applicant.sehir };
+      var p = a.applicant || {};
+      return {
+        id: a.id, durum: a.durum, mesaj: a.mesaj,
+        tarih: (a.created_at || "").slice(0, 10), created_at: a.created_at,
+        applicantId: p.id, ad: p.ad || "Kullanıcı", rol: p.role,
+        puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0,
+        sehir: p.sehir || "", arac: p.arac || "", bolgeler: p.bolgeler || [],
+        deneyim: p.deneyim || 0, seviye: p.seviye || "standart",
+        sertifikalar: p.sertifikalar || [], tamamlanan: p.tamamlanan || 0,
+        aciklama: p.aciklama || "", avatar_url: p.avatar_url || "",
+        dogrulama: p.dogrulama || "none", calistigi: p.calistigi || [],
+        lat: p.lat, lng: p.lng
+      };
     });
   }
   async function updateApplication(id, durum) {
@@ -708,57 +736,199 @@
     return ch;
   }
 
-  /* ---- İşe Alım Omurgası (migration-16) ---- */
-  async function myPid2() { var u = await getUser(); if (!u) return null; var r = await client.from('profiles').select('id').eq('user_id', u.id).maybeSingle(); return r.data ? r.data.id : null; }
+  /* ============================================================
+     İŞE ALIM OMURGASI (migration-16 + 19)
+     Görüşmeler, işe alım kararları ve onboarding — TAMAMI veritabanında.
+     Eskiden localStorage'daydı; karşı taraf kaydı hiç göremiyordu.
+     ============================================================ */
+  async function myPid2() {
+    var u = await getUser(); if (!u) return null;
+    var r = await client.from('profiles').select('id').eq('user_id', u.id).maybeSingle();
+    return r.data ? r.data.id : null;
+  }
 
-  /* Görüşmeler */
+  // Görüşme satırı → ekranların (KBInterview.renderCard) beklediği nesne
+  function interviewFromDb(r) {
+    var er = r.interviewer || {}, ee = r.interviewee || {}, l = r.listing || {};
+    return {
+      id: r.id,
+      listingId: r.listing_id, applicationId: r.application_id,
+      interviewerId: r.interviewer_id, intervieweeId: r.interviewee_id,
+      // renderCard iç içe kurye/isletme nesnesi bekliyor
+      kuryeId:  r.interviewee_id,
+      kurye:    { id: ee.id || r.interviewee_id, ad: ee.ad || 'Kurye',  avatar: ee.avatar_url || '' },
+      isletmeId: r.interviewer_id,
+      isletme:  { id: er.id || r.interviewer_id, ad: er.ad || 'İşveren', avatar: er.avatar_url || '' },
+      jobId: r.listing_id, jobTitle: l.baslik || '',
+      date: r.date || '', time: r.time || '',
+      type: r.type || 'yüz yüze', location: r.location || '',
+      meetingLink: r.meeting_link || '',
+      note: r.note || '',
+      status: r.status || 'bekliyor',
+      // reschedule_req jsonb → { date, time, type, location, reason, status }
+      rescheduleRequest: r.reschedule_req || null,
+      postNote: r.post_note || '', decision: r.decision || null,
+      reminderSent: !!r.reminder_sent,
+      createdAt: r.created_at, updatedAt: r.updated_at
+    };
+  }
+  var IV_SELECT = '*, interviewer:interviewer_id(id,ad,role,avatar_url),' +
+                  ' interviewee:interviewee_id(id,ad,role,avatar_url),' +
+                  ' listing:listing_id(id,baslik,sehir)';
+
   async function createInterview(data) {
-    var pid = await myPid2(); if (!pid) return { error: 'auth' };
-    var r = await client.from('interviews').insert(Object.assign({ interviewer_id: pid }, data)).select().maybeSingle();
-    return r.error ? { error: r.error.message } : r.data;
+    var pid = await myPid2(); if (!pid) return { error: 'Önce profilini oluştur.' };
+    var row = {
+      interviewer_id: pid,
+      interviewee_id: data.interviewee_id || data.kuryeId,
+      listing_id:     data.listing_id || data.jobId || null,
+      application_id: data.application_id || null,
+      date:           data.date || null,
+      time:           data.time || '',
+      type:           data.type || 'yüz yüze',
+      location:       data.location || '',
+      meeting_link:   data.meetingLink || data.meeting_link || '',
+      note:           data.note || '',
+      status:         data.status || 'bekliyor'
+    };
+    if (!row.interviewee_id) return { error: 'Görüşülecek kişi belirtilmedi.' };
+    var r = await client.from('interviews').insert(row).select(IV_SELECT).maybeSingle();
+    return r.error ? { error: r.error.message } : interviewFromDb(r.data);
   }
   async function myInterviews(opts) {
     var pid = await myPid2(); if (!pid) return [];
     opts = opts || {};
-    var q = client.from('interviews').select('*').or('interviewer_id.eq.' + pid + ',interviewee_id.eq.' + pid).order('date', { ascending: true });
+    var q = client.from('interviews').select(IV_SELECT)
+      .or('interviewer_id.eq.' + pid + ',interviewee_id.eq.' + pid)
+      .order('date', { ascending: true });
     if (opts.status) q = q.eq('status', opts.status);
-    var r = await q; return r.data || [];
+    var r = await q;
+    if (r.error) { console.warn('myInterviews:', r.error); return []; }
+    return (r.data || []).map(interviewFromDb);
+  }
+  async function interviewById(id) {
+    if (!id) return null;
+    var r = await client.from('interviews').select(IV_SELECT).eq('id', id).maybeSingle();
+    if (r.error) { console.warn('interviewById:', r.error); return null; }
+    return r.data ? interviewFromDb(r.data) : null;
   }
   async function updateInterview(id, patch) {
-    var r = await client.from('interviews').update(patch).eq('id', id).select().maybeSingle();
-    return r.error ? { error: r.error.message } : r.data;
+    var r = await client.from('interviews').update(patch).eq('id', id).select(IV_SELECT).maybeSingle();
+    return r.error ? { error: r.error.message } : interviewFromDb(r.data);
   }
+  function subscribeInterviews(cb) { return _sub('iv', 'interviews', ['INSERT', 'UPDATE'], cb); }
 
-  /* İşe Alım Kararları */
+  /* ---- İŞE ALIM KARARLARI ---- */
+  function decisionFromDb(r) {
+    var emp = r.employer || {}, app = r.applicant || {}, l = r.listing || {};
+    return {
+      id: r.id,
+      jobId: r.listing_id, listingId: r.listing_id,
+      applicationId: r.application_id, interviewId: r.interview_id,
+      isletmeId: r.employer_id, employerId: r.employer_id,
+      kuryeId: r.applicant_id, applicantId: r.applicant_id,
+      isletmeAd: emp.ad || '', kuryeAd: app.ad || '',
+      kuryeAvatar: app.avatar_url || '',
+      jobTitle: l.baslik || '',
+      status: r.status || 'beklemede',
+      note: r.note || '', reason: r.reason || '',
+      createdAt: r.created_at, updatedAt: r.updated_at
+    };
+  }
+  var HD_SELECT = '*, employer:employer_id(id,ad,role),' +
+                  ' applicant:applicant_id(id,ad,role,avatar_url),' +
+                  ' listing:listing_id(id,baslik)';
+
   async function createHiringDecision(data) {
-    var pid = await myPid2(); if (!pid) return { error: 'auth' };
-    var r = await client.from('hiring_decisions').insert(Object.assign({ employer_id: pid }, data)).select().maybeSingle();
-    return r.error ? { error: r.error.message } : r.data;
+    var pid = await myPid2(); if (!pid) return { error: 'Önce profilini oluştur.' };
+    var row = {
+      employer_id:    pid,
+      applicant_id:   data.applicant_id || data.kuryeId,
+      listing_id:     data.listing_id || data.jobId || null,
+      application_id: data.application_id || null,
+      interview_id:   data.interview_id || null,
+      status:         data.status || 'beklemede',
+      note:           data.note || null,
+      reason:         data.reason || null
+    };
+    if (!row.applicant_id) return { error: 'Aday belirtilmedi.' };
+    // Aynı ilan+aday için tek kayıt (migration-16'daki unique index)
+    var r = await client.from('hiring_decisions')
+      .upsert(row, { onConflict: 'listing_id,applicant_id' })
+      .select(HD_SELECT).maybeSingle();
+    if (r.error) return { error: r.error.message };
+    return decisionFromDb(r.data);
   }
   async function myHiringDecisions(opts) {
     var pid = await myPid2(); if (!pid) return [];
     opts = opts || {};
-    var q = client.from('hiring_decisions').select('*').or('employer_id.eq.' + pid + ',applicant_id.eq.' + pid).order('updated_at', { ascending: false });
+    var q = client.from('hiring_decisions').select(HD_SELECT)
+      .or('employer_id.eq.' + pid + ',applicant_id.eq.' + pid)
+      .order('updated_at', { ascending: false });
     if (opts.status) q = q.eq('status', opts.status);
-    var r = await q; return r.data || [];
+    var r = await q;
+    if (r.error) { console.warn('myHiringDecisions:', r.error); return []; }
+    return (r.data || []).map(decisionFromDb);
+  }
+  // Belirli ilan + aday için karar kaydı
+  async function hiringDecisionFor(listingId, applicantId) {
+    if (!applicantId) return null;
+    var q = client.from('hiring_decisions').select(HD_SELECT).eq('applicant_id', applicantId);
+    q = listingId ? q.eq('listing_id', listingId) : q.is('listing_id', null);
+    var r = await q.maybeSingle();
+    if (r.error) { console.warn('hiringDecisionFor:', r.error); return null; }
+    return r.data ? decisionFromDb(r.data) : null;
   }
   async function updateHiringDecision(id, patch) {
-    var r = await client.from('hiring_decisions').update(patch).eq('id', id).select().maybeSingle();
-    return r.error ? { error: r.error.message } : r.data;
+    var r = await client.from('hiring_decisions').update(patch).eq('id', id).select(HD_SELECT).maybeSingle();
+    return r.error ? { error: r.error.message } : decisionFromDb(r.data);
   }
+  function subscribeHiringDecisions(cb) { return _sub('hd', 'hiring_decisions', ['INSERT', 'UPDATE'], cb); }
 
-  /* Onboarding */
-  async function saveOnboarding(decisionId, data) {
-    var pid = await myPid2(); if (!pid) return { error: 'auth' };
-    var r = await client.from('onboarding').upsert(
-      Object.assign({ decision_id: decisionId, employer_id: pid }, data),
-      { onConflict: 'decision_id' }
-    ).select().maybeSingle();
-    return r.error ? { error: r.error.message } : r.data;
+  /* ---- ONBOARDING (işe başlangıç) ---- */
+  function onboardingFromDb(r) {
+    if (!r) return null;
+    return {
+      id: r.id, decisionId: r.decision_id,
+      employerId: r.employer_id, applicantId: r.applicant_id,
+      startDate: r.start_date || '', startPoint: r.start_point || '',
+      contactPerson: r.contact_person || '', contactPhone: r.contact_phone || '',
+      workDetails: r.work_details || '', firstDayNotes: r.first_day_notes || '',
+      completed: !!r.completed, completedAt: r.completed_at,
+      sentAt: r.created_at, updatedAt: r.updated_at
+    };
+  }
+  async function saveOnboarding(decisionId, applicantId, data) {
+    var pid = await myPid2(); if (!pid) return { error: 'Önce profilini oluştur.' };
+    if (!decisionId) return { error: 'Karar kaydı yok.' };
+    var row = {
+      decision_id:     decisionId,
+      employer_id:     pid,
+      applicant_id:    applicantId,
+      start_date:      data.startDate || data.start_date || null,
+      start_point:     data.startPoint || data.start_point || '',
+      contact_person:  data.contactPerson || data.contact_person || '',
+      contact_phone:   data.contactPhone || data.contact_phone || '',
+      work_details:    data.workDetails || data.work_details || '',
+      first_day_notes: data.firstDayNotes || data.first_day_notes || ''
+    };
+    var r = await client.from('onboarding')
+      .upsert(row, { onConflict: 'decision_id' }).select().maybeSingle();
+    return r.error ? { error: r.error.message } : onboardingFromDb(r.data);
   }
   async function getOnboarding(decisionId) {
+    if (!decisionId) return null;
     var r = await client.from('onboarding').select('*').eq('decision_id', decisionId).maybeSingle();
-    return r.data || null;
+    if (r.error) { console.warn('getOnboarding:', r.error); return null; }
+    return onboardingFromDb(r.data);
+  }
+  // Aday "işe başlangıcı tamamladım" der
+  async function completeOnboarding(decisionId) {
+    if (!decisionId) return { error: 'Karar kaydı yok.' };
+    var r = await client.from('onboarding')
+      .update({ completed: true, completed_at: new Date().toISOString() })
+      .eq('decision_id', decisionId).select().maybeSingle();
+    return r.error ? { error: r.error.message } : onboardingFromDb(r.data);
   }
 
   /* ---- Push Subscription ---- */
@@ -790,6 +960,36 @@
     }, { onConflict: "user_id,token" });
   }
 
+  /* ---- FİLO: gerçekten işe alınan kuryeler ----
+     "Filo" = kendi ilanlarıma KABUL EDİLMİŞ başvuru sahipleri.
+     Uydurma bir kadro listesi tutulmaz. */
+  async function myFleet() {
+    var u = await getUser();
+    if (!u) return [];
+    var lr = await client.from("listings").select("id").eq("owner_user", u.id);
+    var ids = (lr.data || []).map(function (x) { return x.id; });
+    if (!ids.length) return [];
+    var ar = await client.from("applications")
+      .select("created_at, applicant:applicant_id(id,ad,sehir,seviye,puan,arac,avatar_url,dogrulama,tamamlanan)")
+      .in("listing_id", ids).eq("durum", "accepted")
+      .order("created_at", { ascending: false });
+    if (ar.error) { console.warn("myFleet:", ar.error); return []; }
+    var seen = {}, out = [];
+    (ar.data || []).forEach(function (a) {
+      var p = a.applicant;
+      if (!p || seen[p.id]) return;
+      seen[p.id] = 1;
+      out.push({
+        id: p.id, ad: p.ad || "Kurye", sehir: p.sehir || "",
+        seviye: p.seviye || "standart", puan: Number(p.puan) || 0,
+        arac: p.arac || "", avatar_url: p.avatar_url || "",
+        dogrulama: p.dogrulama || "none", tamamlanan: p.tamamlanan || 0,
+        baslangic: (a.created_at || "").slice(0, 10)
+      });
+    });
+    return out;
+  }
+
   /* ---- Esnaf Analitik ---- */
   async function myListingStats() {
     var u = await getUser();
@@ -811,8 +1011,142 @@
     };
   }
 
+  /* ============================================================
+     CANLI SİSTEM — presence, istatistik, realtime abonelikler
+     (migration-18-production.sql)
+     ============================================================ */
+
+  /* ---- PRESENCE (gerçek çevrimiçi durumu) ---- */
+  async function presencePing() {
+    if (!client) return;
+    try { await client.rpc("presence_ping"); } catch (e) {}
+  }
+  async function presenceOffline(useBeacon) {
+    if (!client) return;
+    // Sekme kapanırken normal fetch iptal edilir; keepalive ile son isteği garantile.
+    if (useBeacon) {
+      try {
+        var s = await client.auth.getSession();
+        var tok = s && s.data && s.data.session && s.data.session.access_token;
+        if (!tok) return;
+        return fetch(SUPABASE_URL + "/rest/v1/rpc/presence_offline", {
+          method: "POST", keepalive: true,
+          headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON, Authorization: "Bearer " + tok },
+          body: "{}"
+        });
+      } catch (e) { return; }
+    }
+    try { await client.rpc("presence_offline"); } catch (e) {}
+  }
+  // Aynı eksik RPC için tekrar tekrar uyarı basma (konsol gürültüsü)
+  var _warned = {};
+  function warnOnce(key, err) {
+    if (_warned[key]) return;
+    _warned[key] = 1;
+    console.warn(key + ":", (err && err.message) || err);
+  }
+
+  // Anlık çevrimiçi kullanıcı sayısı (misafirler de görebilir)
+  async function onlineCount() {
+    if (!client) return 0;
+    var r = await client.rpc("online_users_count");
+    if (r.error) { warnOnce("onlineCount", r.error); return 0; }
+    return Number(r.data) || 0;
+  }
+  async function onlineByRole() {
+    if (!client) return {};
+    var r = await client.rpc("online_counts_by_role");
+    if (r.error) return {};
+    var out = {};
+    (r.data || []).forEach(function (x) { out[x.role] = x.adet; });
+    return out;
+  }
+  // Profil kartlarındaki çevrimiçi rozeti — { profileId: true/false }
+  async function presenceOf(ids) {
+    if (!client || !ids || !ids.length) return {};
+    var r = await client.from("profile_presence").select("profile_id,online").in("profile_id", ids);
+    if (r.error) return {};
+    var out = {};
+    (r.data || []).forEach(function (x) { out[x.profile_id] = !!x.online; });
+    return out;
+  }
+
+  /* ---- CANLI İSTATİSTİKLER ---- */
+  // Ana sayfa / havuz sayaçları — hepsi veritabanından, hiçbiri sabit değil.
+  async function platformStats() {
+    if (!client) return null;
+    var r = await client.rpc("platform_stats");
+    if (r.error) { warnOnce("platformStats", r.error); return null; }
+    return r.data || null;
+  }
+  // Kullanıcıya özel dashboard sayaçları (tek çağrı)
+  async function myDashboardStats() {
+    if (!client) return null;
+    var u = await getUser();
+    if (!u) return null;
+    var r = await client.rpc("my_dashboard_stats");
+    if (r.error) { warnOnce("myDashboardStats", r.error); return null; }
+    return r.data || null;
+  }
+  // İlan kartlarındaki gerçek başvuru adedi — { listingId: n }
+  async function listingAppCounts(ids) {
+    if (!client || !ids || !ids.length) return {};
+    var r = await client.rpc("listing_application_counts", { p_ids: ids });
+    if (r.error) { warnOnce("listingAppCounts", r.error); return {}; }
+    var out = {};
+    (r.data || []).forEach(function (x) { out[x.listing_id] = x.adet; });
+    return out;
+  }
+  // Profil görüntülendi — gerçek olay kaydı (24 saatte bir kez sayılır)
+  async function recordProfileView(profileId) {
+    if (!client || !profileId) return;
+    try { await client.rpc("record_profile_view", { p_profile_id: profileId }); } catch (e) {}
+  }
+  // İlan görüntülendi — gerçek olay kaydı (6 saatte bir kez sayılır)
+  async function recordListingView(listingId) {
+    if (!client || !listingId) return;
+    try { await client.rpc("record_listing_view", { p_listing_id: listingId }); } catch (e) {}
+  }
+  // Bir ilanın gerçek istatistikleri: görüntülenme / başvuru / kabul
+  async function listingStats(listingId) {
+    if (!client || !listingId) return { views: 0, apps: 0, pending: 0, accepted: 0, rejected: 0 };
+    var r = await client.rpc("listing_stats", { p_listing_id: listingId });
+    if (r.error) { warnOnce("listingStats", r.error); return { views: 0, apps: 0, pending: 0, accepted: 0, rejected: 0 }; }
+    return r.data || { views: 0, apps: 0, pending: 0, accepted: 0, rejected: 0 };
+  }
+
+  /* ---- REALTIME ABONELİKLER ---- */
+  // Ortak yardımcı: bir tabloyu dinle, unsubscribe fonksiyonu döndür.
+  function _sub(name, table, events, cb) {
+    if (!client) return function () {};
+    var ch = client.channel("kb-" + name + "-" + Math.random().toString(36).slice(2));
+    (events || ["INSERT", "UPDATE", "DELETE"]).forEach(function (ev) {
+      ch.on("postgres_changes", { event: ev, schema: "public", table: table },
+        function (payload) { try { cb(payload); } catch (e) {} });
+    });
+    ch.subscribe();
+    return function () { try { client.removeChannel(ch); } catch (e) {} };
+  }
+  // Yeni ilan yayınlanınca / kapanınca — ilan listesi ve sayaçlar anında güncellenir
+  function subscribeListings(cb) { return _sub("listings", "listings", ["INSERT", "UPDATE", "DELETE"], cb); }
+  // Yeni başvuru — işveren dashboard'u anında güncellenir
+  function subscribeApplications(cb) { return _sub("apps", "applications", ["INSERT", "UPDATE"], cb); }
+  // Yeni kayıt / profil yayına alınma — havuz sayaçları anında güncellenir
+  function subscribeProfiles(cb) { return _sub("profiles", "profiles", ["INSERT", "UPDATE"], cb); }
+  function subscribeOffers(cb) { return _sub("offers", "offers", ["INSERT", "UPDATE"], cb); }
+  function subscribeConversations(cb) { return _sub("convs", "conversations", ["INSERT", "UPDATE"], cb); }
+
   window.SB = {
     isOn: isOn,
+    raw: function () { return client; },   // realtime presence kanalı için ham istemci
+    presencePing: presencePing, presenceOffline: presenceOffline,
+    onlineCount: onlineCount, onlineByRole: onlineByRole, presenceOf: presenceOf,
+    platformStats: platformStats, myDashboardStats: myDashboardStats,
+    listingAppCounts: listingAppCounts, recordProfileView: recordProfileView,
+    recordListingView: recordListingView, listingStats: listingStats,
+    subscribeListings: subscribeListings, subscribeApplications: subscribeApplications,
+    subscribeProfiles: subscribeProfiles, subscribeOffers: subscribeOffers,
+    subscribeConversations: subscribeConversations,
     canMessage: canMessage, sendMessage: sendMessage, myConversations: myConversations,
     threadWith: threadWith, markThreadRead: markThreadRead, unreadMessageCount: unreadMessageCount, subscribeMessages: subscribeMessages,
     signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
@@ -835,9 +1169,12 @@
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
-    myListingStats: myListingStats,
+    myListingStats: myListingStats, myFleet: myFleet,
     createInterview: createInterview, myInterviews: myInterviews, updateInterview: updateInterview,
-    createHiringDecision: createHiringDecision, myHiringDecisions: myHiringDecisions, updateHiringDecision: updateHiringDecision,
-    saveOnboarding: saveOnboarding, getOnboarding: getOnboarding
+    interviewById: interviewById, subscribeInterviews: subscribeInterviews,
+    createHiringDecision: createHiringDecision, myHiringDecisions: myHiringDecisions,
+    updateHiringDecision: updateHiringDecision, hiringDecisionFor: hiringDecisionFor,
+    subscribeHiringDecisions: subscribeHiringDecisions,
+    saveOnboarding: saveOnboarding, getOnboarding: getOnboarding, completeOnboarding: completeOnboarding
   };
 })();

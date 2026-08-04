@@ -100,7 +100,7 @@
 <script src="assets/js/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase.js"></script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/presence.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/chat.js"></script>
 <script src="assets/js/interview.js"></script>
@@ -122,14 +122,21 @@
     return (UID = localStorage.getItem('kb_demo_uid') || 'demo_user');
   }
 
-  function getRole() {
+  /* Rol gerçek profilden gelir; localStorage yalnız ilk çizim için ipucu. */
+  async function resolveRole() {
+    if (window.SB && SB.isOn()) {
+      try {
+        var p = await SB.myProfile();
+        if (p && p.role) return p.role;
+      } catch (e) {}
+    }
     return localStorage.getItem('kb_rol') || 'kurye';
   }
 
   function isBiz() { return ROLE === 'isletme' || ROLE === 'firma'; }
 
   function filteredList() {
-    var all = KBInterview.getAll(getUid());
+    var all = KBInterview.getAll();
     if (filterStatus !== 'hepsi') all = all.filter(function (iv) { return iv.status === filterStatus; });
     if (searchQ) {
       var q = searchQ.toLowerCase();
@@ -144,7 +151,7 @@
   }
 
   function renderStats() {
-    var s = KBInterview.getStats(getUid());
+    var s = KBInterview.getStats();
     document.getElementById('ivStats').innerHTML =
       '<div class="iv-stat"><div class="iv-stat__num">' + s.toplam + '</div><div class="iv-stat__lbl">Toplam</div></div>'
       + '<div class="iv-stat"><div class="iv-stat__num">' + s.bekliyor + '</div><div class="iv-stat__lbl">Bekliyor</div></div>'
@@ -156,7 +163,14 @@
     var list = filteredList();
     var el = document.getElementById('ivList');
     if (!list.length) {
-      el.innerHTML = '<p style="color:var(--text-3);font-size:0.85rem;padding:32px 0;text-align:center;">Görüşme bulunamadı.</p>';
+      var hicYok = KBInterview.getAll().length === 0;
+      el.innerHTML = hicYok
+        ? '<div class="kb-empty" style="padding:32px 0"><div class="kb-empty__ic">📅</div>' +
+          '<div class="kb-empty__t">Henüz görüşme yok</div>' +
+          '<div class="kb-empty__d">' + (isBiz()
+            ? 'Bir adayı görüşmeye davet ettiğinizde burada görünecek.'
+            : 'Bir işveren sizi görüşmeye davet ettiğinde burada görünecek.') + '</div></div>'
+        : '<p style="color:var(--text-3);font-size:0.85rem;padding:32px 0;text-align:center;">Bu filtreye uyan görüşme yok.</p>';
       return;
     }
     el.innerHTML = list.map(function (iv) { return KBInterview.renderCard(iv, ROLE); }).join('');
@@ -165,48 +179,36 @@
   function renderAll() { renderStats(); renderList(); }
 
   // Actions
-  function doAction(action, ivId) {
-    var uid = getUid();
-    if (action === 'onayla') {
-      KBInterview.respond(uid, ivId, 'onayla');
-      if (window.KBMotion) KBMotion.showSuccess('Onaylandı!', 'Görüşmeyi onayladınız.');
-      renderAll();
-    } else if (action === 'reddet') {
-      KBInterview.respond(uid, ivId, 'reddet');
-      if (window.KBMotion) KBMotion.showSuccess('Reddedildi', 'Görüşme daveti reddedildi.');
-      renderAll();
-    } else if (action === 'reschedule') {
+  /* Tüm yazma işlemleri veritabanına gider; DB onaylamadan ekran güncellenmez. */
+  async function doAction(action, ivId) {
+    if (action === 'reschedule') {
       document.getElementById('rsIvId').value = ivId;
       document.getElementById('ivRescheduleModal').style.display = 'flex';
-    } else if (action === 'accept-reschedule') {
-      KBInterview.acceptReschedule(uid, ivId);
-      if (window.KBMotion) KBMotion.showSuccess('Kabul Edildi', 'Yeni tarih planlamaya alındı.');
-      renderAll();
-    } else if (action === 'complete') {
-      KBInterview.complete(uid, ivId);
-      if (window.KBMotion) KBMotion.showSuccess('Tamamlandı', 'Görüşme tamamlandı olarak işaretlendi.');
-      renderAll();
-    } else if (action === 'cancel') {
-      if (!confirm('Görüşmeyi iptal etmek istediğinize emin misiniz?')) return;
-      KBInterview.cancelInterview(uid, ivId);
-      renderAll();
-    } else if (action === 'add-note') {
-      document.getElementById('noteIvId').value = ivId;
-      var iv = KBInterview.getOne(uid, ivId);
-      document.getElementById('noteText').value = iv ? (iv.postNote || '') : '';
-      document.getElementById('ivNoteModal').style.display = 'flex';
-    } else if (action === 'decide-kabul') {
-      KBInterview.makeDecision(uid, ivId, 'kabul');
-      if (window.KBMotion) KBMotion.showSuccess('Kabul!', 'Aday kabul edildi.');
-      renderAll();
-    } else if (action === 'decide-red') {
-      KBInterview.makeDecision(uid, ivId, 'red');
-      renderAll();
-    } else if (action === 'decide-sonraki') {
-      KBInterview.makeDecision(uid, ivId, 'sonraki_asama');
-      if (window.KBMotion) KBMotion.showSuccess('Sonraki Aşama', 'Aday sonraki aşamaya taşındı.');
-      renderAll();
+      return;
     }
+    if (action === 'add-note') {
+      document.getElementById('noteIvId').value = ivId;
+      var iv0 = KBInterview.getOne(ivId);
+      document.getElementById('noteText').value = iv0 ? (iv0.postNote || '') : '';
+      document.getElementById('ivNoteModal').style.display = 'flex';
+      return;
+    }
+    if (action === 'cancel' && !confirm('Görüşmeyi iptal etmek istediğinize emin misiniz?')) return;
+
+    var res = null, ok = null;
+    if (action === 'onayla')                 { res = await KBInterview.respond(null, ivId, 'onayla');  ok = ['Onaylandı!', 'Görüşmeyi onayladınız.']; }
+    else if (action === 'reddet')            { res = await KBInterview.respond(null, ivId, 'reddet');  ok = ['Reddedildi', 'Görüşme daveti reddedildi.']; }
+    else if (action === 'accept-reschedule') { res = await KBInterview.acceptReschedule(null, ivId);   ok = ['Kabul Edildi', 'Yeni tarih planlamaya alındı.']; }
+    else if (action === 'complete')          { res = await KBInterview.complete(null, ivId);           ok = ['Tamamlandı', 'Görüşme tamamlandı olarak işaretlendi.']; }
+    else if (action === 'cancel')            { res = await KBInterview.cancelInterview(null, ivId);    ok = ['İptal Edildi', '']; }
+    else if (action === 'decide-kabul')      { res = await KBInterview.makeDecision(null, ivId, 'kabul');         ok = ['Kabul!', 'Aday kabul edildi.']; }
+    else if (action === 'decide-red')        { res = await KBInterview.makeDecision(null, ivId, 'red');           ok = ['Reddedildi', '']; }
+    else if (action === 'decide-sonraki')    { res = await KBInterview.makeDecision(null, ivId, 'sonraki_asama'); ok = ['Sonraki Aşama', 'Aday sonraki aşamaya taşındı.']; }
+    else return;
+
+    if (!res) return;                     // hata mesajı KBInterview içinde gösterildi
+    if (ok && window.KBMotion) KBMotion.showSuccess(ok[0], ok[1] || '', 2000);
+    renderAll();
   }
 
   function wire() {
@@ -237,9 +239,8 @@
     document.getElementById('ivList').addEventListener('click', function (e) {
       var card = e.target.closest('.iv-mini-card');
       if (card && !e.target.closest('[data-iv-action]')) {
-        var id = card.dataset.ivId;
-        var iv = KBInterview.getOne(getUid(), id);
-        if (iv && iv.threadId) window.location.href = 'mesaj-detay.html?tid=' + encodeURIComponent(iv.threadId);
+        var iv = KBInterview.getOne(card.dataset.ivId);
+        if (iv && iv.jobId) window.location.href = 'ilan.html?id=' + encodeURIComponent(iv.jobId);
       }
     });
 
@@ -247,7 +248,7 @@
     document.getElementById('rsCancel').addEventListener('click', function () {
       document.getElementById('ivRescheduleModal').style.display = 'none';
     });
-    document.getElementById('rsSubmit').addEventListener('click', function () {
+    document.getElementById('rsSubmit').addEventListener('click', async function () {
       var ivId = document.getElementById('rsIvId').value;
       var date = document.getElementById('rsDate').value;
       var time = document.getElementById('rsTime').value;
@@ -255,12 +256,13 @@
         if (window.KBMotion) KBMotion.showErrorToast('Lütfen tarih ve saat seçin.');
         return;
       }
-      KBInterview.requestReschedule(getUid(), ivId, {
+      var r = await KBInterview.requestReschedule(null, ivId, {
         date: date, time: time,
         type: document.getElementById('rsType').value,
         location: document.getElementById('rsLocation').value,
         reason: document.getElementById('rsReason').value
       });
+      if (!r) return;
       document.getElementById('ivRescheduleModal').style.display = 'none';
       if (window.KBMotion) KBMotion.showSuccess('Talep Gönderildi', 'Yeniden planlama talebiniz iletildi.');
       renderAll();
@@ -270,10 +272,11 @@
     document.getElementById('noteCancel').addEventListener('click', function () {
       document.getElementById('ivNoteModal').style.display = 'none';
     });
-    document.getElementById('noteSubmit').addEventListener('click', function () {
+    document.getElementById('noteSubmit').addEventListener('click', async function () {
       var ivId = document.getElementById('noteIvId').value;
       var note = document.getElementById('noteText').value.trim();
-      KBInterview.addPostNote(getUid(), ivId, note);
+      var r = await KBInterview.addPostNote(null, ivId, note);
+      if (!r) return;
       document.getElementById('ivNoteModal').style.display = 'none';
       if (window.KBMotion) KBMotion.showSuccess('Not Kaydedildi');
       renderAll();
@@ -287,13 +290,18 @@
     });
   }
 
-  function boot() {
-    ROLE = getRole();
-    var uid = getUid();
-    KBInterview.seedDemoData(uid);
-    KBInterview.checkReminders(uid);
+  async function boot() {
+    var el = document.getElementById('ivList');
+    if (el) el.innerHTML = '<div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div>';
+
+    ROLE = await resolveRole();
+    await KBInterview.load(true);      // veritabanından gerçek görüşmeler
+    KBInterview.checkReminders();
     renderAll();
     wire();
+
+    /* CANLI: karşı taraf onaylar/iptal ederse ekran kendini yeniler */
+    KBInterview.subscribe(function () { renderAll(); });
   }
 
   if (document.readyState === 'loading') {

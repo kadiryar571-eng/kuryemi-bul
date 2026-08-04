@@ -74,7 +74,7 @@
 <script src="assets/js/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase.js"></script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/presence.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/ilan-status.js"></script>
 <script src="assets/js/chat.js"></script>
@@ -154,10 +154,18 @@
     thread = threads.find(function(t) { return t.id === TID; });
     if (!thread) { window.location.href = 'mesajlar.html'; return false; }
 
-    var demoJobs = (window.KB_DATA && KB_DATA.ilanlar) || [];
-    var lsJobs   = [];
-    try { lsJobs = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + (thread.isletmeId||uid)) || '[]'); } catch(e) {}
-    job = demoJobs.concat(lsJobs).find(function(j) { return j.id === thread.jobId; }) || null;
+    /* İlan bilgisi yalnız gerçek kayıtlardan (listings) gelir — örnek ilan yok.
+       IlanStatus önbelleği veritabanından senkronlanır. */
+    var jobs = [];
+    try { jobs = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + (thread.isletmeId || uid)) || '[]'); } catch(e) {}
+    job = jobs.find(function(j) { return String(j.id) === String(thread.jobId); }) || null;
+
+    /* Önbellekte yoksa doğrudan veritabanından çek */
+    if (!job && thread.jobId && window.SB && SB.isOn() && SB.listingById) {
+      SB.listingById(thread.jobId).then(function(l) {
+        if (l) { job = l; try { renderHeader(); } catch(e) {} }
+      }).catch(function() {});
+    }
     return true;
   }
 
@@ -416,6 +424,7 @@
     if (!el) return;
 
     if (window.KBHiring && thread.jobId && thread.kuryeId) {
+      /* Karar ve başlangıç bilgisi veritabanı önbelleğinden (KBHiring.load) */
       var hdDec = KBHiring.getDecision(thread.jobId, thread.kuryeId);
       var hdOb  = KBHiring.getOnboarding(thread.jobId, thread.kuryeId);
       el.innerHTML = KBHiring.renderDecisionCard(hdDec, hdOb, role, thread.jobId, thread.kuryeId);
@@ -539,7 +548,7 @@
   }
 
   /* ─── Schedule interview (delegates to KBInterview) ─────────── */
-  function scheduleInterview() {
+  async function scheduleInterview() {
     var date = (document.getElementById('ivDate')||{}).value;
     var time = (document.getElementById('ivTime')||{}).value;
     var type = (document.getElementById('ivType')||{}).value || 'online';
@@ -551,13 +560,14 @@
       return;
     }
 
+    // Görüşme kaydı VERİTABANINA yazılır; kurye kendi hesabından görür.
     var newIv = window.KBInterview
-      ? KBInterview.create(uid, {
-          threadId: TID, jobId: thread.jobId, jobTitle: thread.jobTitle,
-          kuryeId: thread.kuryeId, kurye: thread.kurye, isletme: thread.isletme,
+      ? await KBInterview.create({
+          jobId: thread.jobId, kuryeId: thread.kuryeId,
           date: date, time: time, type: type, location: loc, note: note
         })
       : null;
+    if (!newIv) return;   // hata mesajı KBInterview içinde gösterildi
 
     var legacyIv = { tid:TID, date:date, time:time, type:type, location:loc, notes:note,
                      ivId: newIv ? newIv.id : '',
@@ -581,10 +591,10 @@
   }
 
   /* ─── Interview: confirm / cancel / reschedule ──────────────── */
-  function confirmInterview() {
+  async function confirmInterview() {
     var legacyIv = KBChat.getInterview(TID);
     if (!legacyIv) return;
-    if (window.KBInterview && legacyIv.ivId) KBInterview.respond(uid, legacyIv.ivId, 'onayla');
+    if (window.KBInterview && legacyIv.ivId) await KBInterview.respond(null, legacyIv.ivId, 'onayla');
     legacyIv.status = 'confirmed'; legacyIv.updatedAt = new Date().toISOString();
     KBChat.saveInterview(TID, legacyIv);
     KBChat.sendMessage(uid, TID, 'system', 'system', '✅ Mülakat onaylandı: ' + formatDatetime(legacyIv.date, legacyIv.time));
@@ -594,11 +604,11 @@
     if (window.KBMotion) KBMotion.showSuccess('Mülakat onaylandı!', '', 2000);
   }
 
-  function cancelInterview() {
+  async function cancelInterview() {
     if (!confirm('Mülakatı iptal etmek istiyor musunuz?')) return;
     var legacyIv = KBChat.getInterview(TID);
     if (!legacyIv) return;
-    if (window.KBInterview && legacyIv.ivId) KBInterview.cancelInterview(uid, legacyIv.ivId);
+    if (window.KBInterview && legacyIv.ivId) await KBInterview.cancelInterview(null, legacyIv.ivId);
     legacyIv.status = 'cancelled'; legacyIv.updatedAt = new Date().toISOString();
     KBChat.saveInterview(TID, legacyIv);
     KBChat.sendMessage(uid, TID, 'system', 'system', '❌ Mülakat iptal edildi.');
@@ -614,7 +624,7 @@
   }
 
   /* ─── Decision ──────────────────────────────────────────────── */
-  function setDecision(status) {
+  async function setDecision(status) {
     var noteVal = '';
     if (status === 'red') {
       var n = prompt('Reddetme sebebi (isteğe bağlı):');
@@ -624,7 +634,7 @@
     var hiringStatus = { beklemede: 'beklemede', degerlendiriliyor: 'kisa_listede', kabul: 'kabul', red: 'reddedildi' }[status] || status;
 
     if (window.KBHiring && thread.jobId && thread.kuryeId) {
-      KBHiring.makeDecision(uid, thread.jobId, thread.kuryeId, hiringStatus, {
+      await KBHiring.makeDecision(null, thread.jobId, thread.kuryeId, hiringStatus, {
         jobTitle: thread.jobTitle,
         kuryeAd:  thread.kurye  && thread.kurye.ad,
         isletmeAd: thread.isletme && thread.isletme.ad,
@@ -760,7 +770,7 @@
 
   /* ─── Wire events ───────────────────────────────────────────── */
   function wire() {
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', async function(e) {
       var hdBtn = e.target.closest('[data-hd-action]');
       if (!hdBtn || !window.KBHiring) return;
       var act = hdBtn.dataset.hdAction;
@@ -769,7 +779,7 @@
       var hdStatus = { shortlist: 'kisa_listede', accept: 'kabul', reject: 'reddedildi' }[act];
       if (hdStatus) {
         if (act === 'reject' && !confirm('Bu başvuruyu reddetmek istiyor musunuz?')) return;
-        KBHiring.makeDecision(uid, jobId, kuryeId, hdStatus, {
+        await KBHiring.makeDecision(null, jobId, kuryeId, hdStatus, {
           jobTitle: thread && thread.jobTitle, kuryeAd: thread && thread.kurye && thread.kurye.ad,
           isletmeAd: thread && thread.isletme && thread.isletme.ad, threadId: TID
         });
@@ -844,14 +854,11 @@
     var user = window.KB && KB.STATE && KB.STATE.user;
     uid  = user ? user.id : ('demo_' + role);
 
-    KBChat.seedDemoThreads(uid);
 
     if (window.KBCommStatus) {
-      try { KBCommStatus.seedDemoData(uid); } catch(e) {}
     }
 
     if (window.KBFeedback) {
-      try { KBFeedback.seedDemoData(); } catch(e) {}
     }
 
     if (!loadData()) return;

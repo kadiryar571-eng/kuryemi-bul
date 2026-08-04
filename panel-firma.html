@@ -214,7 +214,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script src="assets/js/chat.js"></script>
   <script src="assets/js/interview.js"></script>
@@ -276,67 +276,79 @@
 
     function animateCount(el, target) {
       if (!el) return;
+      target = Number(target) || 0;
+      // Arka plandaki sekmede requestAnimationFrame çalışmaz; animasyona
+      // bırakılırsa sayaç "—" olarak takılı kalır. O yüzden doğrudan yazılır.
+      if (document.hidden) { el.textContent = target; return; }
+      var duration = 900;
       var t0 = performance.now();
-      var dur = 900;
-      (function tick(now) {
-        var p = Math.min((now - t0) / dur, 1);
-        el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target);
-        if (p < 1) requestAnimationFrame(tick);
-      })(t0);
+      var bitti = false;
+      function step(now) {
+        var p = Math.min((now - t0) / duration, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target);
+        if (p < 1) requestAnimationFrame(step); else bitti = true;
+      }
+      requestAnimationFrame(step);
+      // Güvenlik ağı: rAF hiç tetiklenmezse değeri yine de yaz.
+      setTimeout(function () { if (!bitti) el.textContent = target; }, duration + 400);
     }
 
     /* ── Demo filo data ───────────────────────────────────── */
-    function seedFiloDemo(uid) {
-      var key = 'kb_filo_' + uid;
-      if (localStorage.getItem(key)) return;
-      var demo = [
-        { id: 'k1', ad: 'Ahmet Demir',  sehir: 'İstanbul', seviye: 'Deneyimli', durum: 'aktif',   baslangic: '2025-01-10', puan: 4.8 },
-        { id: 'k2', ad: 'Selin Yıldız', sehir: 'İstanbul', seviye: 'Orta',      durum: 'aktif',   baslangic: '2025-02-15', puan: 4.5 },
-        { id: 'k3', ad: 'Murat Kaya',   sehir: 'İstanbul', seviye: 'Yeni',      durum: 'izinli',  baslangic: '2025-03-01', puan: 4.2 },
-        { id: 'k4', ad: 'Elif Şahin',   sehir: 'Ankara',   seviye: 'Deneyimli', durum: 'aktif',   baslangic: '2024-11-20', puan: 4.9 },
-      ];
-      localStorage.setItem(key, JSON.stringify(demo));
-    }
-
-    function getFilo(uid) {
-      try { return JSON.parse(localStorage.getItem('kb_filo_' + uid) || '[]'); } catch (e) { return []; }
-    }
-
-    function renderFilo(uid) {
-      var list = getFilo(uid);
+    /* ── Filo: GERÇEK işe alımlar ──────────────────────────
+       Filo = kendi ilanlarına kabul edilmiş başvuru sahipleri.
+       Uydurma kadro listesi yoktur; kayıt yoksa boş durum gösterilir.
+       "Çevrimiçi" rozeti gerçek presence verisinden gelir. */
+    async function renderFilo() {
       var el = document.getElementById('filoList');
       if (!el) return;
+      var list = [];
+      if (window.SB && SB.isOn() && SB.myFleet) {
+        try { list = await SB.myFleet(); } catch (e) { console.warn('myFleet:', e); }
+      }
+      animateCount(document.getElementById('statFilo'), list.length);
+      animateCount(document.getElementById('metAktif'), list.length);
+
       if (!list.length) {
-        el.innerHTML = '<div class="empty" style="text-align:center;padding:32px 0"><p style="color:var(--text-3)">Filo üyesi yok. Kuryeler bölümünden kurye ekleyin.</p><a href="kuryeler.html" class="btn btn--primary btn--sm" style="margin-top:12px">Kurye Bul</a></div>';
+        document.getElementById('statFiloSub').textContent = 'Henüz işe alım yok';
+        el.innerHTML = '<div class="empty" style="text-align:center;padding:32px 0"><p style="color:var(--text-3)">Filonuzda henüz kurye yok. Bir ilana gelen başvuruyu kabul ettiğinizde kurye burada görünür.</p><a href="kuryeler.html" class="btn btn--primary btn--sm" style="margin-top:12px">Kurye Bul</a></div>';
         return;
       }
-      var aktif = list.filter(function (k) { return k.durum === 'aktif'; }).length;
-      animateCount(document.getElementById('statFilo'), aktif);
-      animateCount(document.getElementById('metAktif'), aktif);
-      document.getElementById('statFiloSub').textContent = aktif + ' aktif üye';
 
-      var durumMap = { aktif: { label: 'Aktif', cls: 'is-active' }, izinli: { label: 'İzinli', cls: 'is-warn' }, pasif: { label: 'Pasif', cls: 'is-muted' } };
+      // Gerçek çevrimiçi durumu
+      var pres = {};
+      if (SB.presenceOf) {
+        try { pres = await SB.presenceOf(list.map(function (k) { return k.id; })); } catch (e) {}
+      }
+      var online = list.filter(function (k) { return pres[k.id]; }).length;
+      document.getElementById('statFiloSub').textContent =
+        list.length + ' kurye · ' + online + ' çevrimiçi';
+
       el.innerHTML = list.map(function (k) {
-        var d = durumMap[k.durum] || { label: k.durum, cls: '' };
-        var ava = k.ad.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+        var isOn = !!pres[k.id];
+        var ava = (k.ad || '?').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+        var avaHtml = k.avatar_url
+          ? '<div class="hd-applicant__avatar"><img src="' + k.avatar_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
+          : '<div class="hd-applicant__avatar" style="background:var(--primary-light);color:var(--primary)">' + ava + '</div>';
         var baslangic = k.baslangic ? new Date(k.baslangic).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-        return '<div class="hd-applicant" style="cursor:default">' +
-          '<div class="hd-applicant__avatar" style="background:var(--primary-light);color:var(--primary)">' + ava + '</div>' +
+        return '<a class="hd-applicant" href="profil-kurye.html?id=' + k.id + '" style="text-decoration:none;color:inherit">' + avaHtml +
           '<div style="flex:1;min-width:0">' +
             '<div class="hd-applicant__name">' + k.ad + '</div>' +
-            '<div class="hd-applicant__job">' + k.sehir + ' · ' + k.seviye + '</div>' +
-            '<div style="font-size:0.75rem;color:var(--text-3)">Başlangıç: ' + baslangic + ' · Puan: ⭐ ' + (k.puan || '—') + '</div>' +
+            '<div class="hd-applicant__job">' + (k.sehir || '—') + (k.arac ? ' · ' + k.arac : '') + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--text-3)">Başlangıç: ' + baslangic +
+              (k.puan ? ' · ⭐ ' + k.puan.toFixed(1) : '') + '</div>' +
           '</div>' +
-          '<span class="hd-chip hd-chip--' + d.cls + '">' + d.label + '</span>' +
-        '</div>';
+          '<span class="hd-chip hd-chip--' + (isOn ? 'is-active' : 'is-muted') + '">' + (isOn ? 'Çevrimiçi' : 'Çevrimdışı') + '</span>' +
+        '</a>';
       }).join('');
     }
 
     /* ── Pending decisions ────────────────────────────────── */
-    function renderPendingDecisions(uid) {
+    async function renderPendingDecisions() {
       var el = document.getElementById('firmaPendingDecisions');
       if (!el) return;
-      var pending = (window.KBHiring ? KBHiring.getPendingDecisions(uid) : []).slice(0, 4);
+      if (window.KBHiring) await KBHiring.load(true);
+      var pending = (window.KBHiring ? KBHiring.getPendingDecisions() : []).slice(0, 4);
       if (!pending.length) {
         el.innerHTML = '<p style="color:var(--text-3);font-size:0.82rem;">Bekleyen karar yok.</p>';
         return;
@@ -397,45 +409,62 @@
         }
       } catch (e) {}
 
-      /* Filo */
-      seedFiloDemo(uid);
-      renderFilo(uid);
+      /* Filo — gerçek işe alımlar */
+      await renderFilo();
 
-      /* Kurye pool count */
-      try {
-        var pool = window.SB && SB.isOn() ? await SB.pool('kurye') : (window.KB_DATA && KB_DATA.kuryeler) || [];
-        animateCount(document.getElementById('statKurye'), pool.length);
-      } catch (e) { animateCount(document.getElementById('statKurye'), 128); }
-
-      /* Metrics */
-      animateCount(document.getElementById('metIseAl'), 2);
-      document.getElementById('metPuan').textContent = '4.7';
-
-      /* Unread messages badge */
-      if (window.KBChat) {
+      /* CANLI SAYAÇLAR — hepsi veritabanından, hiçbiri sabit değil */
+      async function refreshStats() {
+        if (!(window.SB && SB.isOn())) return;
         try {
-          var unread = KBChat.getUnreadCount(uid, 'firma');
-          var mb = document.getElementById('panelMsgBadge');
-          if (mb && unread > 0) { mb.textContent = unread; mb.style.display = 'inline'; }
+          var ps = await SB.platformStats();
+          if (ps) animateCount(document.getElementById('statKurye'), ps.kurye || 0);
+        } catch (e) {}
+        try {
+          var ds = await SB.myDashboardStats();
+          if (ds) {
+            animateCount(document.getElementById('statBasvuru'), ds.yeni_basvuru || 0);
+            animateCount(document.getElementById('metIseAl'), ds.kabul_basvurum != null ? ds.kabul_basvurum : 0);
+            var hb = document.getElementById('panelHiringBadge');
+            if (hb) {
+              if (ds.yeni_basvuru > 0) { hb.textContent = ds.yeni_basvuru; hb.style.display = 'inline'; }
+              else hb.style.display = 'none';
+            }
+            var mb = document.getElementById('panelMsgBadge');
+            if (mb) {
+              if (ds.okunmamis_mesaj > 0) { mb.textContent = ds.okunmamis_mesaj; mb.style.display = 'inline'; }
+              else mb.style.display = 'none';
+            }
+          }
         } catch (e) {}
       }
+      await refreshStats();
 
-      /* Hiring */
+      /* Firma puanı — gerçek değerlendirmelerden */
+      try {
+        var mp = window.SB && SB.isOn() ? await SB.myProfile() : null;
+        var pEl = document.getElementById('metPuan');
+        if (pEl) pEl.textContent = (mp && mp.puan) ? Number(mp.puan).toFixed(1) : '—';
+      } catch (e) {}
+
+      /* CANLI: yeni başvuru / ilan olayında sayaçlar kendini tazeler */
+      if (window.SB && SB.isOn()) {
+        var deb = null;
+        function live() {
+          if (deb) clearTimeout(deb);
+          deb = setTimeout(async function () { await refreshStats(); await renderFilo(); }, 600);
+        }
+        if (SB.subscribeApplications) SB.subscribeApplications(live);
+        if (SB.subscribeListings)     SB.subscribeListings(live);
+      }
+
+      /* Hiring — bekleyen kararlar */
       if (window.KBHiring) {
-        try {
-          KBHiring.seedDemoData(uid);
-          var pending = KBHiring.getPendingDecisions(uid).length;
-          animateCount(document.getElementById('statBasvuru'), pending);
-          var hb = document.getElementById('panelHiringBadge');
-          if (hb && pending > 0) { hb.textContent = pending; hb.style.display = 'inline'; }
-          renderPendingDecisions(uid);
-        } catch (e) {}
+        try { await renderPendingDecisions(); } catch (e) {}
       }
 
       /* Feedback badge */
       if (window.KBFeedback) {
         try {
-          KBFeedback.seedDemoData();
           var pfb = KBFeedback.getPendingFeedbacks(uid, 'firma').length;
           var fb = document.getElementById('panelFbBadge');
           if (fb && pfb > 0) { fb.textContent = pfb; fb.style.display = 'inline'; }
@@ -445,11 +474,11 @@
       /* Upcoming interviews */
       if (window.KBInterview) {
         try {
-          KBInterview.seedDemoData(uid);
-          KBInterview.checkReminders(uid);
+          await KBInterview.load(true);
+          KBInterview.checkReminders();
           var ivEl = document.getElementById('panelIvUpcoming');
           if (ivEl) {
-            ivEl.innerHTML = KBInterview.renderUpcomingWidget(uid, 'firma', 3);
+            ivEl.innerHTML = KBInterview.renderUpcomingWidget(null, 'firma', 3);
             ivEl.addEventListener('click', function (e) {
               if (e.target.closest('.iv-mini-card')) window.location.href = 'gorusmeler.html';
             });

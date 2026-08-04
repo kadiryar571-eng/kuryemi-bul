@@ -6,15 +6,10 @@
 window.IsletmeScreens = (function () {
   'use strict';
 
-  var MOCK_ADAYLAR = [
-    { id: '1', name: 'Ayşe Demir',   score: '4.7', exp: '1.5 yıl yaya kurye', loc: 'Kadıköy',  time: '5 dk önce'  },
-    { id: '2', name: 'Can Bağlar',   score: '4.5', exp: '1 yıl deneyim',      loc: 'Beşiktaş', time: '10 dk önce' },
-    { id: '3', name: 'Fatma Yıldız', score: '4.8', exp: '3 yıl deneyim',      loc: 'Üsküdar',  time: '25 dk önce' }
-  ];
+  /* Ekran verisi TAMAMEN Supabase'den gelir; örnek kayıt yoktur. */
+  var ADAYLAR = [];
 
-  var MOCK_MESAJLAR = [
-    { id: '1', name: 'Ayşe Demir', preview: 'Merhaba, ilanınızı gördüm...', time: '14:30', unread: 1 }
-  ];
+  var MESAJLAR = [];
 
   var _basCache = [];
   var _ilanlarimCache = [];
@@ -48,7 +43,9 @@ window.IsletmeScreens = (function () {
       heroRoute:    '/isletme/profil',
       heroBadge:    ICON.star + ' Esnaf',
       heroTitle:    'Esnaf Puanınız',
-      heroScoreBig: '4.7',
+      // Puan gerçek profilden; değerlendirme yoksa "—"
+      heroScoreBig: (Number((APP.profile || {}).puan) > 0
+                      ? Number(APP.profile.puan).toFixed(1) : '—'),
       heroDenom:    '/ 5.0',
       heroDesc:     'Puanınız arttıkça daha nitelikli kuryeler başvurur',
       heroCtaLabel: 'Profilimi Gör',
@@ -65,16 +62,15 @@ window.IsletmeScreens = (function () {
           '<div class="kb-section-title">Son Başvurular</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/isletme/basvurular\')">Tümünü Gör</button>' +
         '</div>' +
-        _iCandCard('1', 'Ayşe Demir', '1.5 yıl yaya kurye', 'Kadıköy',  '4.7') +
-        _iCandCard('2', 'Can Bağlar', '1 yıl deneyim',       'Beşiktaş', '4.5') +
+        /* Son başvurular ve son mesajlar GERÇEK kayıtlardan doldurulur */
+        '<div id="isl-son-basvuru"><div style="padding:16px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
 
         '<div class="kb-section-head">' +
           '<div class="kb-section-title">Son Mesajlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/isletme/mesajlar\')">Tümünü Gör</button>' +
         '</div>' +
-        '<div class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
-          _iMiniMsg('Ayşe Demir', 'Merhaba, ilanınızı gördüm...', '14:30', 1) +
-          _iMiniMsg('Can Bağlar', 'Yarın başlayabilirim.',         'Dün',   0) +
+        '<div id="isl-son-mesaj" class="kb-card" style="background:var(--surface2);border-color:var(--border);padding:0 16px;margin-bottom:12px">' +
+          '<div style="padding:16px 0;text-align:center"><div class="kb-spinner"></div></div>' +
         '</div>' +
 
         '<div class="kb-section-head"><div class="kb-section-title">Hızlı İşlemler</div></div>' +
@@ -92,19 +88,62 @@ window.IsletmeScreens = (function () {
     setTimeout(function () { _loadIsletmePanelStats(); }, 130);
   }
 
+  /* CANLI panel sayaçları + son başvuru/mesaj listeleri — hepsi veritabanından */
   async function _loadIsletmePanelStats() {
     if (!window.SB || !SB.isOn()) return;
+    var set = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+
     try {
-      var results = await Promise.allSettled([SB.myListings(), SB.myConvs()]);
-      var ilanlar = results[0].status === 'fulfilled' ? results[0].value : [];
-      var convs   = results[1].status === 'fulfilled' ? results[1].value : [];
-      var acikIlanlar = ilanlar.filter(function(il){ return (il.durum || '') === 'acik'; }).length;
-      var unread = convs.reduce(function(s,c){ return s + (c.unread || 0); }, 0);
-      var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
-      set('ips-ilan',  acikIlanlar);
-      set('ips-bas',   ilanlar.length);
-      set('ips-mesaj', unread || convs.length);
-    } catch(e) {}
+      var ds = SB.myDashboardStats ? await SB.myDashboardStats() : null;
+      if (ds) {
+        set('ips-ilan',  ds.acik_ilanim || 0);
+        set('ips-bas',   ds.gelen_basvuru || 0);
+        set('ips-mesaj', ds.okunmamis_mesaj || 0);
+        set('ips-puan',  ds.goruntulenme || 0);
+      }
+    } catch (e) {}
+
+    /* Son başvurular — gerçek adaylar */
+    try {
+      var el = document.getElementById('isl-son-basvuru');
+      if (el) {
+        var apps = (await SB.allMyListingApplications()) || [];
+        _basCache = apps;
+        var top = apps.slice(0, 2);
+        el.innerHTML =
+          '<div class="kb-section-head" style="margin-top:4px">' +
+            '<div class="kb-section-title">Son Başvurular</div>' +
+            '<button class="kb-section-link" onclick="Router.go(\'/isletme/basvurular\')">Tümünü Gör</button>' +
+          '</div>' +
+          (top.length
+            ? top.map(function (a) {
+                return _iCandCard(a.id, a.ad || a.name || 'Aday',
+                  (a.deneyim ? a.deneyim + ' yıl deneyim' : 'Deneyim belirtilmemiş'),
+                  a.sehir || '—',
+                  (Number(a.puan) > 0 ? Number(a.puan).toFixed(1) : '—'));
+              }).join('')
+            : '<div class="kb-empty" style="padding:16px"><div class="kb-empty__icon">📋</div>' +
+              '<div class="kb-empty__title">Henüz başvuru yok</div></div>');
+      }
+    } catch (e) { console.warn('son basvuru:', e); }
+
+    /* Son mesajlar — gerçek konuşmalar */
+    try {
+      var mEl = document.getElementById('isl-son-mesaj');
+      if (mEl) {
+        var convs = (await SB.myConvs()) || [];
+        var t2 = convs.slice(0, 2);
+        mEl.innerHTML = t2.length
+          ? t2.map(function (c) {
+              var time = '';
+              if (c.lastMessageAt) {
+                try { time = new Date(c.lastMessageAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); } catch (e2) {}
+              }
+              return _iMiniMsg(c.otherName || 'Kullanıcı', c.lastMessage || 'Yeni konuşma', time, c.unread || 0);
+            }).join('')
+          : '<div style="padding:16px 0;color:var(--muted);font-size:.82rem;text-align:center">Henüz mesajınız yok</div>';
+      }
+    } catch (e) { console.warn('son mesaj:', e); }
   }
 
   /* ── Esnaf dashboard helpers ──────────────────────────── */
@@ -507,7 +546,7 @@ window.IsletmeScreens = (function () {
     if (!el) return;
 
     if (!window.SB || !SB.isOn()) {
-      el.innerHTML = MOCK_ADAYLAR.map(_adayCard).join('');
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvurular yüklenemedi</div><div class="kb-empty__sub">Bağlantını kontrol et</div></div>';   // örnek aday değil, boş durum
       return;
     }
 
@@ -519,7 +558,7 @@ window.IsletmeScreens = (function () {
         : '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Henüz başvuru yok</div><div class="kb-empty__sub">İlan oluşturun, başvurular burada görünür.</div></div>';
     } catch(e) {
       console.warn('_loadBasvurularAsync:', e);
-      el.innerHTML = MOCK_ADAYLAR.map(_adayCard).join('');
+      el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📋</div><div class="kb-empty__title">Başvurular yüklenemedi</div><div class="kb-empty__sub">Bağlantını kontrol et</div></div>';   // örnek aday değil, boş durum
     }
   }
 
@@ -527,7 +566,7 @@ window.IsletmeScreens = (function () {
     document.querySelectorAll('#isletme-bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
 
-    var list = _basCache.length ? _basCache : MOCK_ADAYLAR;
+    var list = _basCache;
     var filtered = list;
     if (type === 'yeni')  filtered = list.filter(function (a) { return (a.durum || a.status) === 'pending' || !(a.durum || a.status); });
     if (type === 'deger') filtered = list.filter(function (a) { return (a.durum || a.status) === 'reviewed'; });
@@ -541,9 +580,8 @@ window.IsletmeScreens = (function () {
   /* ── 5. ADAY DETAY ──────────────────────────────────────── */
   function adayDetay(ctx) {
     var id = ctx.params.id;
-    var a  = _basCache.find(function(x) { return x.id === id; }) ||
-             MOCK_ADAYLAR.find(function(x) { return x.id === id; }) ||
-             MOCK_ADAYLAR[0];
+    var a  = _basCache.find(function(x) { return x.id === id; });
+    if (!a) { toast('Aday bulunamadı'); Router.back(); return; }
 
     var name  = a.ad || a.name || 'Kurye';
     var score = a.puan != null && a.puan > 0 ? Number(a.puan).toFixed(1) : (a.score || '—');
@@ -619,7 +657,7 @@ window.IsletmeScreens = (function () {
 
   /* ── 6. MESAJLAR ────────────────────────────────────────── */
   function mesajlar() {
-    SharedScreens.sharedMesajlar('isletme', MOCK_MESAJLAR);
+    SharedScreens.sharedMesajlar('isletme');
   }
 
   /* ── 6b. CHAT ───────────────────────────────────────────── */

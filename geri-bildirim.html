@@ -121,7 +121,7 @@
 <script src="assets/js/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase.js"></script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/presence.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/ilan-status.js"></script>
 <script src="assets/js/chat.js"></script>
@@ -148,27 +148,20 @@
   function isBiz()  { var r = getRole(); return r === 'isletme' || r === 'firma'; }
 
   /* ── Hire list ── */
-  function getCompletedHires(uid, role) {
-    var result = [];
-    var biz = (role === 'isletme' || role === 'firma');
-    for (var k in localStorage) {
-      if (!k.startsWith('kb_hiring_') || k.includes('_ob_') || k.includes('_log_')) continue;
-      try {
-        var dec = JSON.parse(localStorage.getItem(k));
-        if (!dec || (dec.status !== 'kabul' && dec.status !== 'tamamlandi')) continue;
-        if (biz  && dec.isletmeId !== uid) continue;
-        if (!biz && dec.kuryeId   !== uid) continue;
-        result.push(dec);
-      } catch(e) {}
-    }
-    return result;
+  /* Tamamlanmış işe alımlar VERİTABANINDAN gelir (hiring_decisions).
+     RLS zaten yalnız tarafı olduğunuz kayıtları döndürür. */
+  function getCompletedHires() {
+    if (!window.KBHiring || !KBHiring.getDecisionsRaw) return [];
+    return KBHiring.getDecisionsRaw().filter(function (dec) {
+      return dec.status === 'kabul' || dec.status === 'tamamlandi';
+    });
   }
 
   function renderHireList() {
     var uid  = getUid();
     var role = getRole();
     var biz  = isBiz();
-    var hires = getCompletedHires(uid, role);
+    var hires = getCompletedHires();
     var el    = document.getElementById('fbHireList');
 
     if (!hires.length) {
@@ -365,8 +358,6 @@
     var role = getRole();
 
     /* Seed demo data */
-    if (window.KBHiring)   KBHiring.seedDemoData(uid);
-    if (window.KBFeedback) KBFeedback.seedDemoData();
 
     /* URL params: direct link to a specific hire */
     var params = new URLSearchParams(window.location.search);

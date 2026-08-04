@@ -125,7 +125,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script src="assets/js/ilan-status.js"></script>
   <script src="assets/js/ilan-quality.js"></script>
@@ -155,11 +155,9 @@
       return diff;
     }
 
-    /* ── Load jobs ── */
-    function loadJobs() {
-      var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
-      var ls   = IS.getJobs(getUid());
-      ALL_JOBS = ls.concat(demo.filter(function(j) { return !ls.some(function(l) { return l.id === j.id; }); }));
+    /* ── İlanlar: yalnız veritabanından (kullanıcının kendi ilanları) ── */
+    async function loadJobs() {
+      ALL_JOBS = IS ? await IS.syncFromDb(getUid()) : [];
     }
     function getJob(id) {
       for (var i = 0; i < ALL_JOBS.length; i++) { if (ALL_JOBS[i].id === id) return ALL_JOBS[i]; }
@@ -218,10 +216,11 @@
     }
 
     /* ── Stats ── */
-    function renderStats(job) {
+    async function renderStats(job) {
       var el = document.getElementById('ildsStats');
       if (!el) return;
-      var st = IS.getStats(job.id);
+      // Gerçek istatistikler: listing_views + applications tablolarından
+      var st = await IS.getStats(job.id);
       el.innerHTML =
         '<div class="ilds-stat ilds-stat--blue"><div class="ilds-stat__val">' + st.views + '</div><div class="ilds-stat__lbl">👁 Görüntülenme</div></div>' +
         '<div class="ilds-stat"><div class="ilds-stat__val">' + st.apps + '</div><div class="ilds-stat__lbl">📋 Başvuru</div></div>' +
@@ -266,46 +265,33 @@
         '</div>';
     }
 
-    /* ── Applicant snapshot ── */
-    function renderAppsSnap(job) {
+    /* ── Başvuran özeti — TAMAMI GERÇEK BAŞVURULARDAN ── */
+    async function renderAppsSnap(job) {
       var el = document.getElementById('ildsAppsSnap');
       if (!el) return;
-      var pool = (window.KB_DATA && KB_DATA.kuryeler) || [];
-      var saved = {};
-      try { saved = JSON.parse(localStorage.getItem('kb_apps_' + job.id)) || {}; } catch(e) {}
-      var kIds = Object.keys(saved);
-      if (!kIds.length) {
-        /* Demo: show deterministic applicants */
-        var h = Math.abs(String(job.id).split('').reduce(function(a,c) { return (Math.imul(31,a)+c.charCodeAt(0))|0; }, 0));
-        var count = (h % 3) + 2;
-        var shown = [];
-        for (var i = 0; shown.length < count && i < pool.length; i++) {
-          shown.push(pool[(h + i * 7) % pool.length]);
-        }
-        el.innerHTML = shown.map(function(k) {
-          var inits = (k.ad||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
-          return '<div class="ilds-apps-row">' +
-            '<div class="ilds-apps-av">' + inits + '</div>' +
-            '<div class="ilds-apps-info"><div class="ilds-apps-name">' + esc(k.ad||'—') + '</div><div class="ilds-apps-sub">📍 ' + esc(k.sehir||'') + ' · 🛵 ' + esc(k.arac||'') + '</div></div>' +
-            '<span class="chip chip--muted">Demo</span>' +
-            '</div>';
-        }).join('') + '<div style="font-size:0.78rem;color:var(--text-3);padding-top:10px">Demo verisi — gerçek başvurular Supabase üzerinden gelir.</div>';
+      if (!(window.SB && SB.isOn())) {
+        el.innerHTML = '<span style="font-size:0.875rem;color:var(--text-3)">Başvurular yüklenemedi</span>';
         return;
       }
-      var html = kIds.slice(0, 5).map(function(kId) {
-        var app = saved[kId];
-        var k = pool.filter(function(x){ return x.id === kId; })[0];
-        if (!k) return '';
-        var inits = (k.ad||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
-        var STATUS_LBLS = { yeni:'Yeni', inceleniyor:'İnceleniyor', mesaj_gonderildi:'Mesaj', mulakat:'Mülakat', kabul:'Kabul', red:'Red' };
-        var stLbl = STATUS_LBLS[app.status] || app.status;
-        return '<div class="ilds-apps-row">' +
-          '<div class="ilds-apps-av">' + inits + '</div>' +
-          '<div class="ilds-apps-info"><div class="ilds-apps-name">' + esc(k.ad||'—') + '</div><div class="ilds-apps-sub">📍 ' + esc(k.sehir||'') + ' · ' + esc(k.arac||'') + '</div></div>' +
-          '<span class="chip">' + stLbl + '</span>' +
+      var rows = [];
+      try { rows = await SB.listingApplications(job.id); } catch(e) {}
+      if (!rows.length) {
+        el.innerHTML = '<span style="font-size:0.875rem;color:var(--text-3)">Bu ilana henüz başvuru yok.</span>';
+        return;
+      }
+      var STATUS_LBLS = { pending:'Yeni', accepted:'Kabul', rejected:'Red' };
+      el.innerHTML = rows.slice(0, 5).map(function(r) {
+        var inits = (r.ad||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+        var av = r.avatar_url
+          ? '<div class="ilds-apps-av"><img src="' + esc(r.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
+          : '<div class="ilds-apps-av">' + inits + '</div>';
+        return '<div class="ilds-apps-row">' + av +
+          '<div class="ilds-apps-info"><div class="ilds-apps-name">' + esc(r.ad||'—') + '</div>' +
+          '<div class="ilds-apps-sub">📍 ' + esc(r.sehir||'') + (r.arac ? ' · 🛵 ' + esc(r.arac) : '') + '</div></div>' +
+          '<span class="chip">' + (STATUS_LBLS[r.durum] || r.durum) + '</span>' +
           '</div>';
-      }).join('');
-      el.innerHTML = html || '<span style="font-size:0.875rem;color:var(--text-3)">Başvuru yok</span>';
+      }).join('') +
+      (rows.length > 5 ? '<a href="basvurular.html?job=' + esc(job.id) + '" class="btn btn--ghost btn--sm" style="margin-top:10px">Tüm ' + rows.length + ' başvuruyu gör →</a>' : '');
     }
 
     /* ── Activity log ── */
@@ -400,12 +386,10 @@
     }
 
     /* ── Job bar ── */
-    function renderJobBar() {
+    async function renderJobBar() {
       var el = document.getElementById('ildsJobBar');
       if (!el) return;
-      var lsJobs  = IS.getJobs(getUid());
-      var demoJobs = (window.KB_DATA && KB_DATA.ilanlar) || [];
-      var combined = lsJobs.concat(demoJobs.filter(function(j) { return !lsJobs.some(function(l){ return l.id === j.id; }); }));
+      var combined = ALL_JOBS;
 
       if (!combined.length) {
         document.getElementById('ildsJobBar').style.display  = 'none';
@@ -413,9 +397,14 @@
         document.getElementById('ildsPrompt').style.display  = 'none';
         return;
       }
+      // Gerçek başvuru adetleri (tek sorguda)
+      var counts = {};
+      if (window.SB && SB.isOn() && SB.listingAppCounts) {
+        try { counts = await SB.listingAppCounts(combined.map(function(j) { return j.id; })); } catch(e) {}
+      }
       el.innerHTML = combined.map(function(j) {
-        var d    = IS.getDef(j.durum || 'taslak');
-        var stat = IS.getStats(j.id);
+        var d = IS.getDef(j.durum || 'taslak');
+        var n = counts[j.id] != null ? counts[j.id] : 0;
         return '<button class="apc-job-btn' + (SEL_JOB_ID === j.id ? ' is-active' : '') + '" data-jobid="' + esc(j.id) + '" style="position:relative">' +
           '<div>' +
             '<div class="apc-job-btn__name">' + esc(j.baslik || 'İsimsiz İlan') + '</div>' +
@@ -423,13 +412,13 @@
               '<span class="ilds-badge ' + d.cls + '" style="font-size:0.68rem;padding:2px 7px">' + d.ico + ' ' + d.lbl + '</span>' +
             '</div>' +
           '</div>' +
-          '<span class="apc-job-btn__count">' + stat.apps + ' başvuru</span>' +
+          '<span class="apc-job-btn__count">' + n + ' başvuru</span>' +
         '</button>';
       }).join('');
     }
 
     /* ── Select job ── */
-    function selectJob(jobId) {
+    async function selectJob(jobId) {
       SEL_JOB_ID = jobId;
       try {
         var url = new URL(location.href);
@@ -437,7 +426,7 @@
         history.replaceState({}, '', url.toString());
       } catch(e) {}
 
-      loadJobs();
+      await loadJobs();
       var job = getJob(jobId);
       document.getElementById('ildsPrompt').style.display = 'none';
       document.getElementById('ildsEmpty').style.display  = 'none';
@@ -448,7 +437,7 @@
       }
       document.getElementById('ildsMain').style.display = '';
       renderJob(job);
-      renderJobBar();
+      await renderJobBar();
     }
 
     /* ── Confirm dialog ── */
@@ -471,15 +460,15 @@
       document.body.style.overflow = '';
       pendingAction = null;
     }
-    function executeAction(actionKey, jobId) {
-      var ok = IS.doAction(jobId, actionKey, getUid());
-      if (!ok && window.KBMotion) { KBMotion.showErrorToast('İşlem yapılamadı'); return; }
-      loadJobs();
+    async function executeAction(actionKey, jobId) {
+      var ok = await IS.doAction(jobId, actionKey, getUid());
+      if (!ok) { if (window.KBMotion) KBMotion.showErrorToast('İşlem yapılamadı — bağlantıyı kontrol edin'); return; }
+      await loadJobs();
       var job = getJob(jobId);
       var a   = IS.ACTION_DEFS[actionKey];
       if (job) {
         renderJob(job);
-        renderJobBar();
+        await renderJobBar();
       }
       if (window.KBMotion) {
         var msgs = {
@@ -530,13 +519,14 @@
     }
 
     /* ── Boot ── */
-    function boot() {
-      IS.autoCheck(getUid());
-      loadJobs();
-      renderJobBar();
+    async function boot() {
+      await loadJobs();
+      await IS.autoCheck(getUid());
+      await loadJobs();
+      await renderJobBar();
       wire();
       if (SEL_JOB_ID) {
-        selectJob(SEL_JOB_ID);
+        await selectJob(SEL_JOB_ID);
       }
     }
 

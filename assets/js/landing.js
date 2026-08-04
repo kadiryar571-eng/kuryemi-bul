@@ -208,21 +208,64 @@
     var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(resize, 200); });
   })();
 
-  /* ---------- Real stats from Supabase ---------- */
-  function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n); }
-  if (window.SB && SB.isOn && SB.isOn() && SB.poolCounts) {
-    SB.poolCounts().then(function (c) {
-      var map = { 'st-kurye': c.kurye, 'st-isletme': c.isletme, 'st-firma': c.firma };
-      Object.keys(map).forEach(function (id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.dataset.count = map[id] || 0;
-        el.dataset.suffix = (map[id] >= 1000) ? '' : '';
-        el.dataset.done = '';            // allow (re)count
-        el.textContent = '0';
-        countUp(el);
-      });
-    }).catch(function () {});
+  /* ---------- CANLI İSTATİSTİKLER ----------
+     Ana sayfadaki her sayı veritabanından gelir. Sabit/uydurma değer yoktur.
+     Yeni ilan yayınlandığında, yeni kurye kaydolduğunda veya başvuru
+     yapıldığında sayaçlar sayfa yenilenmeden güncellenir. */
+  function paintStat(el, value) {
+    var n = Number(value) || 0;
+    el.dataset.count = n;
+    el.dataset.suffix = '';
+    el.dataset.done = '';        // yeniden saymaya izin ver
+    el.textContent = '0';
+    countUp(el);
+  }
+
+  async function refreshStats() {
+    if (!(window.SB && SB.isOn && SB.isOn() && SB.platformStats)) return;
+    var s = null;
+    try { s = await SB.platformStats(); } catch (e) { return; }
+    if (!s) return;
+
+    /* Ana sayfa istatistik kartları */
+    $$('[data-stat]').forEach(function (el) {
+      var key = el.getAttribute('data-stat');
+      if (s[key] == null) return;
+      paintStat(el, s[key]);
+    });
+
+    /* Havuz sayaçları (varsa) */
+    var poolMap = { 'st-kurye': s.kurye, 'st-isletme': s.isletme, 'st-firma': s.firma };
+    Object.keys(poolMap).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && poolMap[id] != null) paintStat(el, poolMap[id]);
+    });
+
+    /* Çevrimiçi göstergesini yalnız gerçek bir değer varsa göster */
+    var live = document.getElementById('lpLiveOnline');
+    if (live) live.hidden = !(s.online > 0);
+  }
+
+  refreshStats();
+
+  /* Yeni ilan / yeni kayıt / yeni başvuru → sayaçlar anında tazelenir */
+  if (window.SB && SB.isOn && SB.isOn()) {
+    var statDeb = null;
+    function bumpStats() {
+      if (statDeb) clearTimeout(statDeb);
+      statDeb = setTimeout(refreshStats, 700);
+    }
+    if (SB.subscribeListings)     SB.subscribeListings(bumpStats);
+    if (SB.subscribeProfiles)     SB.subscribeProfiles(bumpStats);
+    if (SB.subscribeApplications) SB.subscribeApplications(bumpStats);
+  }
+
+  /* Çevrimiçi sayısı değişince göstergeyi aç/kapat */
+  if (window.KBPresence && KBPresence.onCount) {
+    KBPresence.onCount(function (n) {
+      var live = document.getElementById('lpLiveOnline');
+      if (live) live.hidden = !(n > 0);
+    });
   }
 
   /* ---------- Home = Dashboard: landing yalnız guest'e ---------- */

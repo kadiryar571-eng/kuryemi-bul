@@ -48,11 +48,6 @@ window.IlanStatus = (function () {
   };
 
   /* ─── Helpers ────────────────────────────────────────────────── */
-  function simpleHash(s) {
-    var h = 0, str = String(s);
-    for (var i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    return Math.abs(h);
-  }
   function getUid() {
     try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
     return 'demo';
@@ -66,12 +61,51 @@ window.IlanStatus = (function () {
     return d + ' gün önce';
   }
 
-  /* ─── LocalStorage job CRUD ──────────────────────────────────── */
+  /* ─── İlan kaynağı: VERİTABANI ────────────────────────────────
+     İlanlar public.listings tablosundan gelir. localStorage yalnız
+     son çekilen kaydın önbelleği ve işverenin ayrıntılı durum
+     etiketi (taslak / durduruldu / doldu) için kullanılır — ilanın
+     kendisi asla yerelde uydurulmaz.
+     Herkese açık görünürlük DB'deki durum alanıdır: acik | kapali. */
+  var UI_TO_DB = {
+    yayinda:'acik', taslak:'kapali', inceleniyor:'kapali',
+    durduruldu:'kapali', doldu:'kapali', suresi_doldu:'kapali', iptal:'kapali'
+  };
+
   function getJobs(uid) {
     try { return JSON.parse(localStorage.getItem('kb_my_ilanlar_' + (uid || getUid()))) || []; } catch(e) { return []; }
   }
   function saveJobs(jobs, uid) {
     try { localStorage.setItem('kb_my_ilanlar_' + (uid || getUid()), JSON.stringify(jobs)); } catch(e) {}
+  }
+
+  /* Veritabanından gerçek ilanları çek, önbelleği tazele.
+     Sayfalar render'dan önce bunu await eder. */
+  async function syncFromDb(uid) {
+    if (!(window.SB && SB.isOn() && SB.myListings)) return getJobs(uid);
+    var rows = [];
+    try { rows = await SB.myListings(); } catch(e) { console.warn('syncFromDb:', e); return getJobs(uid); }
+    var prev = {}, today = new Date().toISOString().slice(0, 10);
+    getJobs(uid).forEach(function(j) { prev[j.id] = j; });
+    var jobs = rows.map(function(l) {
+      var old = prev[l.id] || {};
+      var durum;
+      if (l.durum === 'acik') {
+        durum = (l.son_basvuru && l.son_basvuru < today) ? 'suresi_doldu' : 'yayinda';
+      } else {
+        // DB kapalı: işverenin daha ayrıntılı etiketi varsa onu koru
+        durum = ['taslak','durduruldu','doldu','iptal','suresi_doldu'].indexOf(old.durum) !== -1
+          ? old.durum : 'taslak';
+      }
+      return Object.assign({}, l, {
+        durum: durum,
+        ihtiyac_sayisi: l.kontenjan || 0,
+        created_at: l.created_at || l.tarih,
+        updated_at: old.updated_at || l.tarih
+      });
+    });
+    saveJobs(jobs, uid);
+    return jobs;
   }
   function getJob(jobId, uid) {
     var jobs = getJobs(uid);
@@ -102,91 +136,69 @@ window.IlanStatus = (function () {
     try { return JSON.parse(localStorage.getItem('kb_ilan_log_' + jobId)) || []; } catch(e) { return []; }
   }
 
-  /* ─── Notification sender ────────────────────────────────────── */
-  function notify(uid, msg, link) {
-    var key = 'kb_notifications_' + uid, notes = [];
-    try { notes = JSON.parse(localStorage.getItem(key)) || []; } catch(e) {}
-    notes.unshift({ msg: msg, link: link || '', date: new Date().toISOString(), read: false });
-    try { localStorage.setItem(key, JSON.stringify(notes.slice(0, 100))); } catch(e) {}
-  }
+  /* ─── Bildirimler ─────────────────────────────────────────────
+     İstemci tarafında bildirim ÜRETİLMEZ. Eski sürüm, alıcının
+     kullanıcı kimliğiyle localStorage'a yazıyordu — bu bildirim asla
+     karşı tarafa ulaşmıyordu, yani sahte bir bildirimdi.
+     İlan/başvuru olaylarının bildirimleri Supabase trigger'ları ile
+     gerçek alıcının hesabına üretilir (bkz. migration-12, migration-18). */
+  function sendStatusNotification() { /* sunucu tarafında üretilir */ }
 
-  function sendStatusNotification(job, logEvent) {
-    var uid   = getUid();
-    var title = job.baslik || 'İlanınız';
-    var OWNER = {
-      published:    '🚀 "' + title + '" ilanın yayınlandı. Başvurular alınıyor.',
-      paused:       '⏸ "' + title + '" ilanın durduruldu.',
-      filled:       '🎉 "' + title + '" ilanın doldu! Tebrikler.',
-      canceled:     '❌ "' + title + '" ilanın iptal edildi.',
-      resumed:      '🔄 "' + title + '" ilanın yeniden yayınlandı.',
-      auto_expired: '⌛ "' + title + '" ilanının başvuru süresi doldu. Yeniden yayınlayabilirsin.',
-      auto_filled:  '🎉 "' + title + '" ilanı kontenjanı doldu!'
-    };
-    if (OWNER[logEvent]) notify(uid, OWNER[logEvent], 'ilan-durum.html?job=' + job.id);
-
-    /* Notify applicants when closed */
-    if (['filled','canceled','auto_expired','auto_filled','paused'].indexOf(logEvent) !== -1) {
-      var saved = {};
-      try { saved = JSON.parse(localStorage.getItem('kb_apps_' + job.id)) || {}; } catch(e) {}
-      var APP_MSG = {
-        filled:       'Başvurduğun "' + title + '" ilanı doldu.',
-        canceled:     'Başvurduğun "' + title + '" ilanı kaldırıldı.',
-        auto_expired: 'Başvurduğun "' + title + '" ilanının süresi doldu.',
-        auto_filled:  'Başvurduğun "' + title + '" ilanı doldu.',
-        paused:       'Başvurduğun "' + title + '" ilanı geçici olarak durduruldu.'
-      };
-      var msg = APP_MSG[logEvent];
-      if (msg) {
-        Object.keys(saved).forEach(function(kId) {
-          notify(kId, msg, 'ilanlar.html');
-        });
-      }
-    }
-  }
-
-  /* ─── Stats helpers ──────────────────────────────────────────── */
-  function getAcceptedCount(jobId) {
+  /* ─── Stats — TAMAMI VERİTABANINDAN ───────────────────────────
+     Uydurma görüntülenme/başvuru sayısı üretilmez. Değerler
+     SB.listingStats() ile gerçek listing_views ve applications
+     tablolarından gelir. Kısa liste, işverenin kendi çalışma notudur. */
+  function shortlistCount(jobId) {
     try {
       var saved = JSON.parse(localStorage.getItem('kb_apps_' + jobId)) || {};
-      return Object.keys(saved).filter(function(k) { return saved[k].status === 'kabul'; }).length;
+      return Object.keys(saved).filter(function(k) { return saved[k].shortlisted; }).length;
     } catch(e) { return 0; }
   }
-  function getStats(jobId) {
-    var views = 0, appCount = 0, shortlisted = 0, accepted = getAcceptedCount(jobId);
-    try { views = parseInt(localStorage.getItem('kb_job_views_' + jobId) || '0', 10); } catch(e) {}
-    if (!views) views = 20 + (simpleHash(jobId + 'v') % 80);
+  async function getStats(jobId) {
+    var out = { views: 0, apps: 0, shortlisted: shortlistCount(jobId), accepted: 0, pending: 0 };
+    if (!(window.SB && SB.isOn() && SB.listingStats)) return out;
     try {
-      var saved = JSON.parse(localStorage.getItem('kb_apps_' + jobId)) || {};
-      appCount   = Object.keys(saved).length;
-      shortlisted = Object.keys(saved).filter(function(k) { return saved[k].shortlisted; }).length;
+      var s = await SB.listingStats(jobId);
+      out.views = s.views || 0;
+      out.apps = s.apps || 0;
+      out.accepted = s.accepted || 0;
+      out.pending = s.pending || 0;
     } catch(e) {}
-    if (!appCount) appCount = 4 + (simpleHash(jobId) % 4);
-    return { views: views, apps: appCount, shortlisted: shortlisted, accepted: accepted };
+    return out;
+  }
+  async function getAcceptedCount(jobId) {
+    var s = await getStats(jobId);
+    return s.accepted;
   }
 
   /* ─── Auto-check (run on page load) ─────────────────────────── */
-  function autoCheck(uid) {
+  /* Süresi dolan / kontenjanı dolan ilanları kapat.
+     Kabul sayısı gerçek applications tablosundan okunur. */
+  async function autoCheck(uid) {
     var jobs = getJobs(uid), now = new Date(), changed = false;
-    jobs.forEach(function(job) {
-      if (job.durum !== 'yayinda') return;
+    for (var i = 0; i < jobs.length; i++) {
+      var job = jobs[i];
+      if (job.durum !== 'yayinda') continue;
       /* Deadline check */
       if (job.son_basvuru && new Date(job.son_basvuru + 'T23:59:59') < now) {
         updateJob(job.id, { durum: 'suresi_doldu' }, uid);
         logActivity(job.id, 'auto_expired', '');
         sendStatusNotification(job, 'auto_expired');
         changed = true;
+        continue;
       }
-      /* Filled check */
-      if (job.ihtiyac_sayisi && parseInt(job.ihtiyac_sayisi, 10) > 0) {
-        var acc = getAcceptedCount(job.id);
-        if (acc >= parseInt(job.ihtiyac_sayisi, 10)) {
+      /* Filled check — gerçek kabul sayısı */
+      var need = parseInt(job.ihtiyac_sayisi, 10) || 0;
+      if (need > 0) {
+        var acc = await getAcceptedCount(job.id);
+        if (acc >= need) {
           updateJob(job.id, { durum: 'doldu' }, uid);
           logActivity(job.id, 'auto_filled', '');
           sendStatusNotification(job, 'auto_filled');
           changed = true;
         }
       }
-    });
+    }
     return changed;
   }
 
@@ -197,14 +209,27 @@ window.IlanStatus = (function () {
     return (ALLOWED[status] || []).map(function(k) { return Object.assign({ key: k }, ACTION_DEFS[k]); });
   }
 
-  function doAction(jobId, actionKey, uid) {
+  /* Durum değişikliği ÖNCE veritabanına yazılır; ancak DB kabul ederse
+     yerel etiket güncellenir. Böylece iş akışı ile herkese açık
+     görünürlük hiçbir zaman ayrışmaz. */
+  async function doAction(jobId, actionKey, uid) {
     var actDef = ACTION_DEFS[actionKey];
     if (!actDef) return false;
     var job = getJob(jobId, uid);
     if (!job) return false;
+
+    var dbDurum = UI_TO_DB[actDef.toStatus] || 'kapali';
+    if (window.SB && SB.isOn() && SB.updateListingStatus) {
+      try {
+        var r = await SB.updateListingStatus(jobId, dbDurum);
+        if (r && r.error) { console.warn('updateListingStatus:', r.error); return false; }
+      } catch (e) { console.warn('updateListingStatus:', e); return false; }
+    } else {
+      return false;   // bağlantı yoksa durum değiştirilemez
+    }
+
     updateJob(jobId, { durum: actDef.toStatus }, uid);
     logActivity(jobId, actDef.logEvent, '');
-    sendStatusNotification(Object.assign({}, job), actDef.logEvent);
     return true;
   }
 
@@ -268,6 +293,7 @@ window.IlanStatus = (function () {
     courierLabel:       courierLabel,
     getEventLabel:      getEventLabel,
     getStats:           getStats,
+    syncFromDb:         syncFromDb,
     renderBadge:        renderBadge,
     renderCourierBadge: renderCourierBadge,
     findAppliedJobs:    findAppliedJobs,

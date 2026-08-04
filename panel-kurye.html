@@ -331,7 +331,7 @@
   <script src="assets/js/i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script src="assets/js/ilan-status.js"></script>
   <script src="assets/js/chat.js"></script>
@@ -354,16 +354,9 @@
     }
 
     /* ─── Job Feed ──────────────────────────────────────────── */
-    var MOCK_JOBS = [
-      { id:'j1', sirket:'Hepsiburada Lojistik', baslik:'Motokurye Aranıyor',       sehir:'İstanbul', ilce:'Kadıköy',    tipler:['Tam Zamanlı','Motorlu'],  odeme:'Maaşlı',    maas_min:15000, maas_max:18000, saat:'08:00–18:00', bolge:'Anadolu Yakası', prim:true,  badge:'yeni',  ts: Date.now()-7200000   },
-      { id:'j2', sirket:'Getir',                baslik:'Bisiklet Kurye',            sehir:'İstanbul', ilce:'Beşiktaş',  tipler:['Part Time','Yaya'],        odeme:'Paket Başı', maas_min:null,  maas_max:null,  saat:'Esnek',      bolge:'Avrupa Yakası', prim:false, badge:'uygun', ts: Date.now()-3600000   },
-      { id:'j3', sirket:'Yemeksepeti',          baslik:'Motokurye (Acil)',          sehir:'Ankara',   ilce:'Çankaya',   tipler:['Tam Zamanlı','Motorlu'],  odeme:'Maaşlı',    maas_min:14000, maas_max:17000, saat:'12:00–00:00', bolge:'Çankaya',       prim:true,  badge:'acil',  ts: Date.now()-1800000   },
-      { id:'j4', sirket:'Trendyol Express',     baslik:'Dağıtım Kurye',            sehir:'İzmir',    ilce:'Konak',     tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:16000, maas_max:20000, saat:'09:00–18:00', bolge:'Konak',          prim:true,  badge:'',      ts: Date.now()-86400000  },
-      { id:'j5', sirket:'MNG Kargo',            baslik:'Kargo Kurye',              sehir:'İstanbul', ilce:'Şişli',     tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:13000, maas_max:15000, saat:'08:00–17:00', bolge:'Avrupa Yakası', prim:false, badge:'',      ts: Date.now()-172800000 },
-      { id:'j6', sirket:'CargoX',               baslik:'Motokurye (Hafta Sonu)',   sehir:'İstanbul', ilce:'Üsküdar',   tipler:['Part Time','Motorlu'],    odeme:'Paket Başı', maas_min:null,  maas_max:null,  saat:'Esnek',      bolge:'Anadolu Yakası', prim:true,  badge:'yeni',  ts: Date.now()-900000    },
-      { id:'j7', sirket:'Sürat Kargo',          baslik:'Bölge Kurye',              sehir:'Bursa',    ilce:'Osmangazi', tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:14500, maas_max:16500, saat:'08:00–18:00', bolge:'Osmangazi',      prim:true,  badge:'',      ts: Date.now()-259200000 },
-      { id:'j8', sirket:'Aras Kargo',           baslik:'Dağıtım Görevlisi',        sehir:'İstanbul', ilce:'Bağcılar',  tipler:['Tam Zamanlı','Araçlı'],   odeme:'Maaşlı',    maas_min:12000, maas_max:14000, saat:'07:00–16:00', bolge:'Avrupa Yakası', prim:false, badge:'',      ts: Date.now()-345600000 },
-    ];
+    /* İş akışı GERÇEK açık ilanlardan doldurulur (loadRealJobs).
+       Örnek/markalı sahte ilan YOKTUR. */
+    var FEED_JOBS = [];
 
     var jobUserCity = '';
     var jobActiveFilter = 'all';
@@ -371,7 +364,7 @@
     var JOB_PER_PAGE = 4;
 
     function getFilteredJobs(filter) {
-      var jobs = MOCK_JOBS.slice();
+      var jobs = FEED_JOBS.slice();
       if (filter === 'yakin' && jobUserCity) {
         jobs = jobs.filter(function(j){ return j.sehir === jobUserCity; });
       } else if (filter === 'yeni') {
@@ -435,7 +428,7 @@
         '</div>' +
         '<div class="job-card__tags">' + tagsHtml + '</div>' +
         '<div class="job-card__details">' +
-          '<div class="job-drow"><span class="job-dlabel">Maaş</span><span class="job-dval">' + fmtMaas(job.maas_min, job.maas_max) + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Maaş</span><span class="job-dval">' + (job.maas_txt || fmtMaas(job.maas_min, job.maas_max)) + '</span></div>' +
           '<div class="job-drow"><span class="job-dlabel">Çalışma Saati</span><span class="job-dval">' + job.saat + '</span></div>' +
           '<div class="job-drow"><span class="job-dlabel">Bölge</span><span class="job-dval">' + job.bolge + '</span></div>' +
           '<div class="job-drow"><span class="job-dlabel">Prim</span>' +
@@ -467,9 +460,61 @@
       if (moreBtn) moreBtn.style.display = slice.length < jobs.length ? '' : 'none';
     }
 
+    /* Gerçek açık ilanları çek → FEED_JOBS'u doldur → yeniden çiz.
+       Bu tamamlanana dek iskelet gösterilir; uydurma ilan asla basılmaz. */
+    async function loadRealFeedJobs() {
+      if (!(window.SB && SB.isOn())) {
+        var el0 = document.getElementById('jobFeedList');
+        if (el0) el0.innerHTML = '<div class="job-feed__empty">İlanlar yüklenemedi. Bağlantını kontrol et.</div>';
+        return;
+      }
+      try {
+        var list = await SB.openListings();
+        FEED_JOBS.length = 0;
+        (list || []).forEach(function (l) {
+          FEED_JOBS.push({
+            id:       l.id,
+            sirket:   l.sahip || 'Esnaf',
+            baslik:   l.baslik || 'İlan',
+            sehir:    l.sehir || '',
+            ilce:     l.bolge || '',
+            tipler:   [l.vardiya_tipi, l.arac].filter(Boolean),
+            odeme:    l.maas_modeli || 'Belirtilmemiş',
+            maas_min: l.maas_min || null,
+            maas_max: l.maas_max || null,
+            maas_txt: l.maas_aralik || '',
+            saat:     l.calisma_saatleri || 'Belirtilmemiş',
+            bolge:    l.teslimat_bolge || l.bolge || '—',
+            prim:     !!l.bonus && l.bonus !== 'Yok',
+            badge:    l.oncelik === 'acil' ? 'acil' : '',
+            ts:       l.created_at ? new Date(l.created_at).getTime() : Date.now()
+          });
+        });
+        renderJobFeed(jobActiveFilter, jobPage);
+        wireLiveJobFeed();
+      } catch (e) {
+        console.warn('loadRealFeedJobs:', e);
+        var el = document.getElementById('jobFeedList');
+        if (el) el.innerHTML = '<div class="job-feed__empty">İlanlar yüklenemedi.</div>';
+      }
+    }
+
+    /* CANLI: yeni ilan yayınlanınca akış kendini yeniler (sayfa yenilemeden) */
+    var _liveFeedOff = null;
+    function wireLiveJobFeed() {
+      if (_liveFeedOff || !(window.SB && SB.isOn() && SB.subscribeListings)) return;
+      var deb = null;
+      _liveFeedOff = SB.subscribeListings(function () {
+        if (deb) clearTimeout(deb);
+        deb = setTimeout(function () {
+          if (document.getElementById('jobFeedList')) loadRealFeedJobs();
+        }, 700);
+      });
+    }
+
     function initJobFeed(userCity) {
       jobUserCity = userCity || '';
-      renderJobFeed('all', 1);
+      loadRealFeedJobs();
 
       document.querySelectorAll('.jf-pill').forEach(function(btn) {
         btn.addEventListener('click', function() {
@@ -514,15 +559,8 @@
     }
 
     /* ─── Activity Timeline ─────────────────────────────────── */
-    var MOCK_TIMELINE = [
-      { id:'t1', type:'msg',     text:'Yeni mesaj aldın.',                               href:'mesajlar.html',     ts: Date.now()-1800000   },
-      { id:'t2', type:'view',    text:'Başvurun Terra Pizza tarafından görüntülendi.',    href:'eslesme.html',      ts: Date.now()-3600000   },
-      { id:'t3', type:'apply',   text:'Terra Pizza ilanına başvurdun.',                   href:'ilanlar.html',      ts: Date.now()-7200000   },
-      { id:'t4', type:'profile', text:'Profilin 3 işletme tarafından görüntülendi.',      href:'profil-kurye.html', ts: Date.now()-86400000  },
-      { id:'t5', type:'save',    text:'Bir ilanı kaydettin.',                             href:'havuzum.html',      ts: Date.now()-172800000 },
-      { id:'t6', type:'apply',   text:'Getir ilanına başvurdun.',                         href:'ilanlar.html',      ts: Date.now()-259200000 },
-      { id:'t7', type:'profile', text:'Profilin 7 işletme tarafından görüntülendi.',      href:'profil-kurye.html', ts: Date.now()-345600000 },
-    ];
+    /* Aktivite akışı gerçek olaylardan (bildirimler + başvurular) üretilir. */
+    var TIMELINE = [];
 
     var ATL_SHOW = 4;
     var atlExpanded = false;
@@ -587,9 +625,40 @@
       if (moreWrap) moreWrap.style.display = (items.length > ATL_SHOW && !atlExpanded) ? '' : 'none';
     }
 
+    /* Aktivite akışı GERÇEK olaylardan üretilir: sunucu tarafında
+       tetiklenmiş bildirimler (başvuru, mesaj, profil görüntülenme,
+       teklif, karar). Uydurma hareket yazılmaz. */
+    var NOTIF_TO_TL = {
+      new_message: 'msg', mesaj: 'msg',
+      profile_view: 'profile',
+      application_new: 'apply', new_application: 'apply', basvuru: 'apply',
+      application_accepted: 'apply', application_rejected: 'apply',
+      offer_new: 'view', offer: 'view', teklif: 'view',
+      listing_match: 'save', ilan: 'save'
+    };
+    async function loadRealTimeline() {
+      if (!(window.SB && SB.isOn())) { renderTimeline([]); return; }
+      try {
+        var rows = await SB.myNotifications(40);
+        TIMELINE.length = 0;
+        (rows || []).forEach(function (n) {
+          TIMELINE.push({
+            id:   n.id,
+            type: NOTIF_TO_TL[n.type] || 'view',
+            text: n.body || n.title || 'Etkinlik',
+            href: n.link || 'bildirimler.html',
+            ts:   n.created_at ? new Date(n.created_at).getTime() : Date.now()
+          });
+        });
+        renderTimeline(TIMELINE.slice().sort(function (a, b) { return b.ts - a.ts; }));
+      } catch (e) {
+        console.warn('loadRealTimeline:', e);
+        renderTimeline([]);
+      }
+    }
+
     function initTimeline() {
-      var sorted = MOCK_TIMELINE.slice().sort(function(a, b){ return b.ts - a.ts; });
-      renderTimeline(sorted);
+      loadRealTimeline();
       var moreBtn = document.getElementById('atlMoreBtn');
       if (moreBtn) {
         moreBtn.addEventListener('click', function() {
@@ -603,19 +672,10 @@
     }
 
     /* ─── Smart Suggestions ─────────────────────────────────── */
-    var SUGG_ILANLAR = [
-      { id:'si1', sirket:'Getir',            baslik:'Motokurye',        sehir:'İstanbul', ilce:'Beşiktaş',  maas_min:14000, maas_max:17000, tip:'Tam Zamanlı', tag:'uygun' },
-      { id:'si2', sirket:'Trendyol Express', baslik:'Dağıtım Kurye',    sehir:'İstanbul', ilce:'Kadıköy',   maas_min:15000, maas_max:19000, tip:'Part Time',   tag:'yakın' },
-      { id:'si3', sirket:'Yemeksepeti',      baslik:'Bisiklet Kurye',   sehir:'İstanbul', ilce:'Şişli',     maas_min:null,  maas_max:null,  tip:'Paket Başı',  tag:'yeni'  },
-      { id:'si4', sirket:'Hepsiburada',      baslik:'Kurye',            sehir:'İstanbul', ilce:'Üsküdar',   maas_min:13000, maas_max:16000, tip:'Tam Zamanlı', tag:'uygun' },
-      { id:'si5', sirket:'CargoX',           baslik:'Motokurye (Gece)', sehir:'İstanbul', ilce:'Bağcılar',  maas_min:null,  maas_max:null,  tip:'Paket Başı',  tag:'yeni'  },
-    ];
-    var SUGG_ISLETMELER = [
-      { id:'sb1', ad:'Getir Lojistik',   ilan:4, bolge:'Avrupa Yakası',   son: Date.now()-3600000,   ava:'G' },
-      { id:'sb2', ad:'Trendyol Express', ilan:2, bolge:'Anadolu Yakası',  son: Date.now()-86400000,  ava:'T' },
-      { id:'sb3', ad:'Terra Pizza',      ilan:1, bolge:'Kadıköy',         son: Date.now()-7200000,   ava:'T' },
-      { id:'sb4', ad:'MNG Kargo',        ilan:3, bolge:'İstanbul Geneli', son: Date.now()-172800000, ava:'M' },
-    ];
+    /* Öneriler gerçek açık ilanlardan doldurulur. */
+    var SUGG_ILANLAR = [];
+    /* Öneriler gerçek, yayında esnaf profillerinden doldurulur. */
+    var SUGG_ISLETMELER = [];
     var SUGG_TAGS = {
       uygun: '<span class="job-badge job-badge--match">Sana Uygun</span>',
       yakın: '<span class="job-badge job-badge--new">Yakınında</span>',
@@ -667,7 +727,43 @@
       return el;
     }
 
-    function initSmartSugg(userCity) {
+    /* Öneriler GERÇEK verilerden: açık ilanlar + yayında esnaf profilleri */
+    async function loadRealSuggestions(userCity) {
+      if (!(window.SB && SB.isOn())) return;
+      try {
+        var list = await SB.openListings();
+        SUGG_ILANLAR.length = 0;
+        (list || []).slice(0, 8).forEach(function (l) {
+          SUGG_ILANLAR.push({
+            id: l.id, sirket: l.sahip || 'Esnaf', baslik: l.baslik || 'İlan',
+            sehir: l.sehir || '', ilce: l.bolge || '',
+            maas_min: l.maas_min || null, maas_max: l.maas_max || null,
+            maas_txt: l.maas_aralik || '',
+            tip: l.vardiya_tipi || l.calisma_sekli || '—',
+            tag: (userCity && l.sehir === userCity) ? 'yakın'
+               : (l.oncelik === 'acil' ? 'uygun' : 'yeni')
+          });
+        });
+      } catch (e) { console.warn('sugg ilan:', e); }
+
+      try {
+        var biz = await SB.pool('isletme');
+        SUGG_ISLETMELER.length = 0;
+        (biz || []).slice(0, 6).forEach(function (p) {
+          SUGG_ISLETMELER.push({
+            id: p.id, ad: p.ad || 'Esnaf',
+            ilan: p.acikIlan || 0,
+            bolge: p.bolge || p.sehir || '—',
+            son: Date.now(),
+            ava: (p.ad || '?').charAt(0).toUpperCase()
+          });
+        });
+      } catch (e) { console.warn('sugg isletme:', e); }
+    }
+
+    async function initSmartSugg(userCity) {
+      await loadRealSuggestions(userCity);
+
       var ilanList = document.getElementById('suggIlanList');
       if (ilanList) {
         var items = SUGG_ILANLAR.slice();
@@ -675,6 +771,10 @@
           items.sort(function(a, b) {
             return (b.sehir === userCity ? 1 : 0) - (a.sehir === userCity ? 1 : 0);
           });
+        }
+        ilanList.innerHTML = '';
+        if (!items.length) {
+          ilanList.innerHTML = '<div class="job-feed__empty">Şu an açık ilan yok.</div>';
         }
         var frag = document.createDocumentFragment();
         items.forEach(function(j) { frag.appendChild(buildSuggIlan(j)); });
@@ -692,6 +792,10 @@
 
       var bizList = document.getElementById('suggBizList');
       if (bizList) {
+        bizList.innerHTML = '';
+        if (!SUGG_ISLETMELER.length) {
+          bizList.innerHTML = '<div class="job-feed__empty">Henüz yayında esnaf yok.</div>';
+        }
         var bfrag = document.createDocumentFragment();
         SUGG_ISLETMELER.slice()
           .sort(function(a, b) { return b.ilan - a.ilan; })
@@ -711,16 +815,8 @@
     }
 
     /* ─── Bildirimler Merkezi ─────────────────────────────────── */
-    var MOCK_NOTIFS = [
-      { id: 'n1', type: 'ilan',       text: 'Sana uygun yeni bir ilan yayınlandı: "İstanbul Avrupa Kurye"',             ts: Date.now() - 1000 * 60 * 8,    unread: true,  href: 'ilanlar.html' },
-      { id: 'n2', type: 'basvuru',    text: 'Başvurunuz görüntülendi: "Kadıköy Şube Kurye Pozisyonu"',                  ts: Date.now() - 1000 * 60 * 45,   unread: true,  href: 'eslesme.html' },
-      { id: 'n3', type: 'mesaj',      text: "Kurye Ekspres'ten yeni bir mesajınız var.",                                 ts: Date.now() - 1000 * 60 * 90,   unread: true,  href: 'mesajlar.html' },
-      { id: 'n4', type: 'profil',     text: 'Profilini tamamla: Araç bilgilerin eksik, görünürlüğünü artır.',           ts: Date.now() - 1000 * 3600 * 3,  unread: false, href: 'profil-duzenle.html' },
-      { id: 'n5', type: 'basvuru',    text: 'Teklif aldınız: Hızlı Lojistik A.Ş. profilinizi inceledi.',               ts: Date.now() - 1000 * 3600 * 6,  unread: false, href: 'eslesme.html' },
-      { id: 'n6', type: 'hatirlatma', text: 'Kaydettiğiniz "Üsküdar Motor Kurye" ilanı 2 gün içinde sona eriyor.',     ts: Date.now() - 1000 * 3600 * 12, unread: false, href: 'ilanlar.html' },
-      { id: 'n7', type: 'mesaj',      text: 'Ünlü Nakliyat\'tan yanıt bekliyorsunuz, mesajlarınızı kontrol edin.',     ts: Date.now() - 1000 * 3600 * 24, unread: false, href: 'mesajlar.html' },
-      { id: 'n8', type: 'ilan',       text: '"Beşiktaş Bölgesi Moto Kurye" ilanı — bölgen ile eşleşti.',               ts: Date.now() - 1000 * 3600 * 30, unread: false, href: 'ilanlar.html' },
-    ];
+    /* Bildirimler veritabanından (public.notifications) gelir. */
+    var NOTIFS = [];
     var NOTIF_CFG = {
       ilan:       { label: 'Yeni İlan',    cat: 'sistem' },
       basvuru:    { label: 'Başvuru',      cat: 'basvurular' },
@@ -764,7 +860,7 @@
     function updateNotifBadge() {
       var badge = document.getElementById('notifCountBadge');
       if (!badge) return;
-      var unread = MOCK_NOTIFS.filter(function(n){ return n.unread && notifDismissed.indexOf(n.id) === -1; }).length;
+      var unread = NOTIFS.filter(function(n){ return n.unread && notifDismissed.indexOf(n.id) === -1; }).length;
       badge.textContent = unread;
       badge.style.display = unread > 0 ? '' : 'none';
     }
@@ -772,7 +868,7 @@
     function renderNotifList() {
       var list = document.getElementById('notifList');
       if (!list) return;
-      var items = MOCK_NOTIFS.filter(function(n) {
+      var items = NOTIFS.filter(function(n) {
         if (notifDismissed.indexOf(n.id) !== -1) return false;
         if (notifActiveFilter === 'tumu') return true;
         var cfg = NOTIF_CFG[n.type] || {};
@@ -788,8 +884,43 @@
       updateNotifBadge();
     }
 
+    /* Bildirimler VERİTABANINDAN (public.notifications).
+       Bunlar yalnız gerçek olaylardan sunucu trigger'larıyla üretilir. */
+    var NOTIF_TYPE_MAP = {
+      listing_match: 'ilan', ilan: 'ilan',
+      application_new: 'basvuru', new_application: 'basvuru',
+      application_accepted: 'basvuru', application_rejected: 'basvuru',
+      offer_new: 'basvuru', offer_accepted: 'basvuru', offer_rejected: 'basvuru',
+      new_message: 'mesaj', mesaj: 'mesaj',
+      profile_view: 'profil', kyc_verified: 'profil', kyc_rejected: 'profil',
+      review_new: 'hatirlatma', gorusme: 'hatirlatma'
+    };
+    async function loadRealNotifs() {
+      if (!(window.SB && SB.isOn())) { renderNotifList(); return; }
+      try {
+        var rows = await SB.myNotifications(50);
+        NOTIFS.length = 0;
+        (rows || []).forEach(function (n) {
+          NOTIFS.push({
+            id:     n.id,
+            type:   NOTIF_TYPE_MAP[n.type] || 'profil',
+            text:   n.body || n.title || '',
+            ts:     n.created_at ? new Date(n.created_at).getTime() : Date.now(),
+            unread: !n.read_at,
+            href:   n.link || 'bildirimler.html'
+          });
+        });
+        renderNotifList();
+        updateNotifBadge();
+      } catch (e) { console.warn('loadRealNotifs:', e); renderNotifList(); }
+    }
+
     function initNotifCenter() {
-      renderNotifList();
+      loadRealNotifs();
+      /* CANLI: yeni bildirim gelince liste ve rozet anında güncellenir */
+      if (window.SB && SB.isOn() && SB.subscribeNotifications) {
+        SB.subscribeNotifications(function () { loadRealNotifs(); });
+      }
       var filters = document.getElementById('notifFilters');
       if (filters) {
         filters.addEventListener('click', function(e) {
@@ -814,7 +945,7 @@
           var item = e.target.closest('.notif-item');
           if (item) {
             var id = item.dataset.id;
-            var n = MOCK_NOTIFS.filter(function(x){ return x.id === id; })[0];
+            var n = NOTIFS.filter(function(x){ return x.id === id; })[0];
             if (n) { n.unread = false; }
             item.classList.remove('is-unread');
             updateNotifBadge();
@@ -825,7 +956,7 @@
       var clearBtn = document.getElementById('notifClearBtn');
       if (clearBtn) {
         clearBtn.addEventListener('click', function() {
-          MOCK_NOTIFS.forEach(function(n){ n.unread = false; });
+          NOTIFS.forEach(function(n){ n.unread = false; });
           updateNotifBadge();
           renderNotifList();
         });
@@ -887,16 +1018,23 @@
     }
 
     function animateCount(el, target) {
-      var start = 0;
+      if (!el) return;
+      target = Number(target) || 0;
+      // Arka plandaki sekmede requestAnimationFrame çalışmaz; animasyona
+      // bırakılırsa sayaç "—" olarak takılı kalır. O yüzden doğrudan yazılır.
+      if (document.hidden) { el.textContent = target; return; }
       var duration = 900;
       var t0 = performance.now();
+      var bitti = false;
       function step(now) {
         var p = Math.min((now - t0) / duration, 1);
         var ease = 1 - Math.pow(1 - p, 3);
         el.textContent = Math.round(ease * target);
-        if (p < 1) requestAnimationFrame(step);
+        if (p < 1) requestAnimationFrame(step); else bitti = true;
       }
       requestAnimationFrame(step);
+      // Güvenlik ağı: rAF hiç tetiklenmezse değeri yine de yaz.
+      setTimeout(function () { if (!bitti) el.textContent = target; }, duration + 400);
     }
 
     document.addEventListener('DOMContentLoaded', async function () {
@@ -905,7 +1043,6 @@
       /* Seed feedback demo data */
       if (window.KBFeedback) {
         try {
-          KBFeedback.seedDemoData();
           var fbUid = 'demo';
           try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
           var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'kurye').length;
@@ -917,7 +1054,7 @@
       /* Show unread message count on quick-access card */
       if (window.KBChat) {
         try {
-          var msgUid = 'demo_kurye';
+          var msgUid = null;
           try { var ms = window.KB && KB.session && KB.session(); if (ms && ms.user && ms.user.id) msgUid = ms.user.id; } catch(e) {}
           var unreadCount = KBChat.getUnreadCount(msgUid, 'kurye');
           var badge = document.getElementById('qaMsgBadge');
@@ -928,12 +1065,10 @@
       /* Upcoming interviews widget */
       if (window.KBInterview) {
         try {
-          var ivUid = 'demo_kurye';
-          try { var ivS = window.KB && KB.session && KB.session(); if (ivS && ivS.user && ivS.user.id) ivUid = ivS.user.id; } catch(e) {}
-          KBInterview.seedDemoData(ivUid);
-          KBInterview.checkReminders(ivUid);
+          await KBInterview.load(true);
+          KBInterview.checkReminders();
           var ivEl = document.getElementById('kuryeIvUpcoming');
-          if (ivEl) ivEl.innerHTML = KBInterview.renderUpcomingWidget(ivUid, 'kurye', 3);
+          if (ivEl) ivEl.innerHTML = KBInterview.renderUpcomingWidget(null, 'kurye', 3);
           ivEl && ivEl.addEventListener('click', function(e) {
             var card = e.target.closest('.iv-mini-card');
             if (card) window.location.href = 'gorusmeler.html';
@@ -944,7 +1079,7 @@
       /* Sync comm statuses */
       if (window.KBCommStatus && window.KBChat) {
         try {
-          var csUid = 'demo_kurye';
+          var csUid = null;
           try { var csS = window.KB && KB.session && KB.session(); if (csS && csS.user && csS.user.id) csUid = csS.user.id; } catch(e) {}
           KBCommStatus.observe(csUid);
         } catch(e) {}
@@ -1008,13 +1143,16 @@
         var ilanEl = document.getElementById('statYeniIlan');
         var basvuruSub = document.getElementById('statBasvuruSub');
 
-        var basvuruSayisi = 0;
-        var goruntulenme = profile && profile.goruntulenme ? profile.goruntulenme : 0;
-        var yeniIlan = 0;
+        /* CANLI SAYAÇLAR — hepsi veritabanından (my_dashboard_stats + platform_stats) */
+        var basvuruSayisi = 0, goruntulenme = 0, yeniIlan = 0;
         try {
-          var myOff = window.SB && SB.isOn() ? await SB.myOffers() : null;
-          basvuruSayisi = myOff ? myOff.filter(function(o){ return o.sender_id === (profile && profile.id); }).length : 0;
-          yeniIlan = myOff ? myOff.filter(function(o){ return o.receiver_id === (profile && profile.id); }).length : 0;
+          var ds = window.SB && SB.isOn() ? await SB.myDashboardStats() : null;
+          if (ds) {
+            basvuruSayisi = ds.basvurum || 0;
+            goruntulenme  = ds.goruntulenme || 0;
+          }
+          var ps = window.SB && SB.isOn() ? await SB.platformStats() : null;
+          if (ps) yeniIlan = ps.acik_ilan || 0;   // şu an açık gerçek ilan sayısı
         } catch(e) {}
 
         animateCount(basvuruEl, basvuruSayisi);
@@ -1030,7 +1168,7 @@
         initTimeline();
         initSmartSugg(profile ? profile.sehir : '');
         initNotifCenter();
-        renderAppliedJobs(profile);
+        renderAppliedJobs();
 
       } catch(err) {
         console.warn('Welcome block error:', err);
@@ -1038,72 +1176,43 @@
         initTimeline();
         initSmartSugg('');
         initNotifCenter();
-        renderAppliedJobs(null);
+        renderAppliedJobs();
       }
     });
 
-    function renderAppliedJobs(profile) {
+    /* ── Başvurduğum ilanlar — TAMAMI VERİTABANINDAN ──
+       Örnek/demo ilan gösterilmez. Kullanıcının gerçek başvuruları
+       (applications tablosu) listelenir. */
+    async function renderAppliedJobs() {
       var el = document.getElementById('kuryeBasvuru');
-      if (!el || !window.IlanStatus) return;
-
-      var IS  = window.IlanStatus;
-      var uid = 'demo';
-      try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) uid = s.user.id; } } catch(e) {}
-
-      var applied = IS.findAppliedJobs(uid);
-
-      if (!applied.length) {
-        var demo = (window.KB_DATA && KB_DATA.ilanlar) || [];
-        var sample = demo.slice(0, 3);
-        if (!sample.length) {
-          el.innerHTML = '<div class="empty">Henüz başvurulan ilan yok. <a href="ilanlar.html">İlanları İncele →</a></div>';
-          return;
-        }
-        el.innerHTML = '<div class="ilds-alert ilds-alert--paused" style="margin-bottom:14px">Demo mod — gerçek başvurular Supabase üzerinden gösterilir.</div>' +
-          sample.map(function(job) {
-            var d = IS.getDef(job.durum || 'yayinda');
-            return '<div class="ilds-applied-item">' +
-              '<div class="ilds-applied-ico">🛵</div>' +
-              '<div class="ilds-applied-body">' +
-                '<div class="ilds-applied-title">' + (job.baslik || 'İsimsiz İlan') + '</div>' +
-                '<div class="ilds-applied-meta">' +
-                  (job.sehir ? '📍 ' + job.sehir + ' · ' : '') +
-                  IS.renderBadge(job.durum || 'yayinda') +
-                  (d.accepting ? '' : '<span class="ilds-alert ilds-alert--closed" style="margin:0;padding:4px 8px;font-size:0.75rem">' + IS.courierLabel(job.durum) + '</span>') +
-                '</div>' +
-              '</div>' +
-              '<a href="ilan.html?id=' + job.id + '" class="btn btn--ghost btn--sm">İncele</a>' +
-            '</div>';
-          }).join('');
+      if (!el) return;
+      if (!(window.SB && SB.isOn())) {
+        el.innerHTML = '<div class="empty">Başvurular yüklenemedi.</div>';
         return;
       }
-
-      var allJobs = IS.getJobs(uid).concat((window.KB_DATA && KB_DATA.ilanlar) || []);
-      function findJob(id) { for (var i = 0; i < allJobs.length; i++) { if (allJobs[i].id === id) return allJobs[i]; } return null; }
-      var STATUS_KURYE_LBLS = { yeni:'Başvurunuz inceleniyor', inceleniyor:'İnceleniyor', mesaj_gonderildi:'İşveren mesaj gönderdi', mulakat:'Mülakat daveti', kabul:'✅ Başvurunuz kabul edildi', red:'Başvurunuz reddedildi' };
-
-      el.innerHTML = applied.slice(0, 8).map(function(item) {
-        var job = findJob(item.jobId);
-        if (!job) return '';
-        var jStatus  = job.durum || 'yayinda';
-        var jd       = IS.getDef(jStatus);
-        var appSt    = item.app.status || 'yeni';
-        var appLbl   = STATUS_KURYE_LBLS[appSt] || appSt;
-        var alertCls = jStatus === 'doldu' ? 'ilds-alert--filled' : jStatus === 'durduruldu' ? 'ilds-alert--paused' : jStatus === 'iptal' || jStatus === 'suresi_doldu' ? 'ilds-alert--closed' : '';
+      var apps = [];
+      try { apps = await SB.myApplications(); } catch (e) { console.warn('myApplications:', e); }
+      if (!apps.length) {
+        el.innerHTML = '<div class="empty">Henüz başvurulan ilan yok. <a href="ilanlar.html">İlanları İncele →</a></div>';
+        return;
+      }
+      var LBL = { pending:'Başvurunuz inceleniyor', accepted:'✅ Başvurunuz kabul edildi', rejected:'Başvurunuz reddedildi' };
+      el.innerHTML = apps.slice(0, 8).map(function (a) {
+        var kapali = a.ilanDurum && a.ilanDurum !== 'acik';
         return '<div class="ilds-applied-item">' +
           '<div class="ilds-applied-ico">🛵</div>' +
           '<div class="ilds-applied-body">' +
-            '<div class="ilds-applied-title">' + (job.baslik || 'İsimsiz İlan') + '</div>' +
+            '<div class="ilds-applied-title">' + (a.baslik || 'İsimsiz İlan') + '</div>' +
             '<div class="ilds-applied-meta">' +
-              (job.sehir ? '<span>📍 ' + job.sehir + '</span>' : '') +
-              IS.renderBadge(jStatus) +
-              (alertCls ? '<span class="ilds-alert ' + alertCls + '" style="margin:0;padding:3px 8px;font-size:0.73rem">' + IS.courierLabel(jStatus) + '</span>' : '') +
+              (a.firma ? '<span>' + a.firma + '</span>' : '') +
+              (a.ilanSehir ? '<span>📍 ' + a.ilanSehir + '</span>' : '') +
+              (kapali ? '<span class="ilds-alert ilds-alert--closed" style="margin:0;padding:3px 8px;font-size:0.73rem">İlan kapandı</span>' : '') +
             '</div>' +
-            '<div style="font-size:0.78rem;color:var(--text-2);margin-top:4px">' + appLbl + '</div>' +
+            '<div style="font-size:0.78rem;color:var(--text-2);margin-top:4px">' + (LBL[a.durum] || a.durum) + ' · ' + a.tarih + '</div>' +
           '</div>' +
-          '<a href="ilan.html?id=' + job.id + '" class="btn btn--ghost btn--sm">İncele</a>' +
+          '<a href="ilan.html?id=' + a.listingId + '" class="btn btn--ghost btn--sm">İncele</a>' +
         '</div>';
-      }).filter(Boolean).join('') || '<div class="empty">Başvurular yükleniyor...</div>';
+      }).join('');
     }
   </script>
 </body>

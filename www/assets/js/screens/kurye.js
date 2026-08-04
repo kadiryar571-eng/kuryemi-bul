@@ -6,26 +6,14 @@
 window.KuryeScreens = (function () {
   'use strict';
 
-  /* ── Mock data (Supabase dolmadan gösterilir) ───────────── */
-  var MOCK_ILANLAR = [
-    { id: '1', title: 'Motorlu Kurye', company: 'ABC Lojistik', salary: '28.000 - 33.000 ₺/ay', type: 'Tam Zamanlı', location: 'Kadıköy, İstanbul', cat: 'motorlu' },
-    { id: '2', title: 'Yaya Kurye',    company: 'XYZ Kargo',    salary: '15.000 - 22.000 ₺/ay', type: 'Part Time',   location: 'Beşiktaş, İstanbul', cat: 'yaya' },
-    { id: '3', title: 'Araçlı Kurye',  company: 'Hub Dağıtım',  salary: '25.000 - 32.000 ₺/ay', type: 'Tam Zamanlı', location: 'Ümraniye, İstanbul', cat: 'aracli' },
-    { id: '4', title: 'Motorlu Kurye', company: 'Hızlı Kargo',  salary: '30.000 - 36.000 ₺/ay', type: 'Tam Zamanlı', location: 'Bağcılar, İstanbul', cat: 'motorlu' },
-    { id: '5', title: 'Yaya Kurye',    company: 'Lezzet Dükkânı', salary: '13.000 - 18.000 ₺/ay', type: 'Part Time', location: 'Kadıköy, İstanbul', cat: 'yaya' }
-  ];
+  /* ── Ekran verisi — TAMAMI Supabase'den doldurulur ────────
+     Bu diziler boş başlar; içerikleri yalnız gerçek veritabanı
+     kayıtlarıyla dolar. Sabit/örnek kayıt YOKTUR. */
+  var ILANLAR_BASIT = [];
 
-  var MOCK_BASVURULAR = [
-    { id: '1', company: 'ABC Lojistik', role: 'Motorlu Kurye', date: '16.05.2024', status: 'review'   },
-    { id: '2', company: 'XYZ Kargo',    role: 'Araçlı Kurye',  date: '14.05.2024', status: 'approved' },
-    { id: '3', company: 'Aday Kurye',   role: 'Yaya Kurye',    date: '13.05.2024', status: 'rejected' }
-  ];
+  var BASVURULAR = [];
 
-  var MOCK_MESAJLAR = [
-    { id: '1', name: 'ABC Lojistik',   preview: 'Merhaba, başvurunuzu inceliyoruz...',  time: '14:32', unread: 2 },
-    { id: '2', name: 'XYZ Kargo',      preview: 'Görüşme tarihimizi belirleyelim.',       time: '12:10', unread: 0 },
-    { id: '3', name: 'Hub Dağıtım',    preview: 'Belgelerinizi gönderebildiniz mi?',      time: 'Dün',   unread: 1 }
-  ];
+  var MESAJLAR = [];
 
   function _statusLabel(s) {
     var map = {
@@ -61,7 +49,16 @@ window.KuryeScreens = (function () {
     setActiveNav('panel');
 
     var profile = APP.profile || {};
-    var score   = profile.score ? String(profile.score) : '4.8';
+    // Puan gerçek değerlendirmelerden gelir; hiç değerlendirme yoksa "—" gösterilir.
+    var puanNum = Number(profile.puan != null ? profile.puan : profile.score) || 0;
+    var score   = puanNum > 0 ? puanNum.toFixed(1) : '—';
+    var degSay  = Number(profile.degerlendirme) || 0;
+    // Yıldızlar gerçek puana göre çizilir (sabit 4/5 değil)
+    var starsHtml = '';
+    for (var _si = 1; _si <= 5; _si++) {
+      starsHtml += '<span class="prem-hero__star' +
+        (_si <= Math.round(puanNum) ? '' : ' prem-hero__star--dim') + '">★</span>';
+    }
 
     renderScreen(
       '<div class="prem-dash">' +
@@ -71,21 +68,21 @@ window.KuryeScreens = (function () {
           '<div class="prem-hero__deco1"></div>' +
           '<div class="prem-hero__deco2"></div>' +
           '<div class="prem-hero__shine"></div>' +
-          '<div class="prem-hero__badge">' + ICON.star + ' Top Kurye</div>' +
+          /* Rozet yalnız gerçekten yüksek puanlı ve değerlendirilmiş kuryeye çıkar */
+          (puanNum >= 4.5 && degSay >= 3
+            ? '<div class="prem-hero__badge">' + ICON.star + ' Top Kurye</div>' : '') +
           '<div class="prem-hero__body">' +
             '<div class="prem-hero__label">Profil Puanın</div>' +
             '<div class="prem-hero__score-row">' +
               '<span class="prem-hero__score-big">' + score + '</span>' +
-              '<span class="prem-hero__score-denom">/ 5.0</span>' +
+              (puanNum > 0 ? '<span class="prem-hero__score-denom">/ 5.0</span>' : '') +
             '</div>' +
-            '<div class="prem-hero__stars">' +
-              '<span class="prem-hero__star">★</span>' +
-              '<span class="prem-hero__star">★</span>' +
-              '<span class="prem-hero__star">★</span>' +
-              '<span class="prem-hero__star">★</span>' +
-              '<span class="prem-hero__star prem-hero__star--dim">★</span>' +
-            '</div>' +
-            '<p class="prem-hero__desc">Puanın yükseldikçe daha fazla premium fırsata erişirsin</p>' +
+            '<div class="prem-hero__stars">' + starsHtml + '</div>' +
+            '<p class="prem-hero__desc">' +
+              (degSay > 0
+                ? degSay + ' değerlendirmeye göre'
+                : 'Henüz değerlendirilmedin — ilk işini tamamla') +
+            '</p>' +
             '<button class="prem-hero__cta" onclick="event.stopPropagation();Router.go(\'/kurye/profil\')">' +
               'Profilimi Gör ' + ICON.chevron +
             '</button>' +
@@ -115,14 +112,49 @@ window.KuryeScreens = (function () {
           '<div class="kb-section-title">Sana Özel İlanlar</div>' +
           '<button class="kb-section-link" onclick="Router.go(\'/kurye/ilanlar\')">Tümünü Gör</button>' +
         '</div>' +
-        _premJobCard('1', '🏢', 'Motorlu Kurye',     'ABC Lojistik',   '28.000 – 33.000 ₺/ay', '2.4 km', '2s önce',  'rgba(61,150,255,.13)')  +
-        _premJobCard('2', '🚀', 'Araçlı Kurye',      'Hub Dağıtım',    '25.000 – 32.000 ₺/ay', '5.1 km', '5s önce',  'rgba(16,217,123,.12)')  +
-        _premJobCard('3', '⚡', 'Yaya Kurye · Part', 'Lezzet Dükkânı', '13.000 – 18.000 ₺/ay', '1.2 km', '1g önce',  'rgba(255,209,102,.12)') +
+        /* Sana Özel İlanlar — gerçek açık ilanlardan doldurulur.
+           Uydurma örnek ilan basılmaz. */
+        '<div id="prem-suggested">' +
+          '<div style="padding:24px 0;text-align:center"><div class="kb-spinner"></div></div>' +
+        '</div>' +
 
       '</div>'
     );
 
-    setTimeout(function () { _loadPanelStats(); }, 130);
+    setTimeout(function () { _loadPanelStats(); _loadSuggested(); }, 130);
+  }
+
+  /* Panel "Sana Özel İlanlar" — gerçek açık ilanlar */
+  async function _loadSuggested() {
+    var el = document.getElementById('prem-suggested');
+    if (!el) return;
+    if (!window.SB || !SB.isOn()) { el.innerHTML = ''; return; }
+    try {
+      var list = await SB.openListings();
+      var me   = APP.profile || {};
+      // Aynı şehirdekiler öne alınır (gerçek eşleşme kriteri)
+      if (me.sehir) {
+        list.sort(function (a, b) {
+          var as = (a.sehir === me.sehir) ? 0 : 1, bs = (b.sehir === me.sehir) ? 0 : 1;
+          return as - bs;
+        });
+      }
+      var top = list.slice(0, 3);
+      if (!top.length) {
+        el.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div>' +
+          '<div class="kb-empty__title">Şu an açık ilan yok</div>' +
+          '<div class="kb-empty__sub">Yeni ilan yayınlandığında burada görünecek.</div></div>';
+        return;
+      }
+      el.innerHTML = top.map(function (l) {
+        var j = _dbListingToIlan(l);
+        return _premJobCard(j.id, j.emoji, j.title, j.company,
+          j.salary, j.location || '', j.time || '', 'rgba(61,150,255,.13)');
+      }).join('');
+    } catch (e) {
+      console.warn('_loadSuggested:', e);
+      el.innerHTML = '';
+    }
   }
 
   async function _loadPanelStats() {
@@ -145,8 +177,31 @@ window.KuryeScreens = (function () {
       set('ps-ilanlar', ilanlar.length);
       set('ps-basvuru', pending);
       set('ps-gorusme', accepted);
-      set('ps-mesaj',   unread || convs.length);
+      set('ps-mesaj',   unread);
     } catch(e) {}
+
+    /* CANLI: yeni ilan / başvuru / mesaj olayında sayaçlar kendini tazeler.
+       Polling yok — Supabase Realtime olayları tetikler. */
+    _wireLivePanel();
+  }
+
+  var _livePanelOff = null;
+  function _wireLivePanel() {
+    if (_livePanelOff || !window.SB || !SB.isOn() || !SB.subscribeListings) return;
+    var deb = null;
+    function bump() {
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () {
+        if (!document.getElementById('ps-ilanlar')) return;   // panelden çıkıldı
+        _loadPanelStats();
+        _loadSuggested();
+      }, 700);
+    }
+    var offs = [];
+    offs.push(SB.subscribeListings(bump));
+    if (SB.subscribeApplications)  offs.push(SB.subscribeApplications(bump));
+    if (SB.subscribeConversations) offs.push(SB.subscribeConversations(bump));
+    _livePanelOff = function () { offs.forEach(function (f) { try { f(); } catch (e) {} }); };
   }
 
   /* ── Premium Dashboard helpers ─────────────────────────── */
@@ -250,12 +305,7 @@ window.KuryeScreens = (function () {
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */
-  var MOCK_MAP_ILANLAR = [
-    { id: '1', emoji: '🛵', title: 'Motorlu Kurye', company: 'ABC Lojistik', salary: '32.000 ₺/ay', dist: '0.4 km', time: '2 saat önce', tags: ['Tam Zamanlı', 'Sigortalı'], match: 92, avatarBg: '#6C4DFF' },
-    { id: '2', emoji: '🏢', title: 'Araçlı Kurye',  company: 'Hub Dağıtım',  salary: '28.500 ₺/ay', dist: '1.1 km', time: '5 saat önce', tags: ['Tam Zamanlı', 'Araç Sağlanır'], match: 85, avatarBg: '#22C55E' },
-    { id: '3', emoji: '⚡', title: 'Premium Kurye', company: 'Hızlı Kargo',  salary: '38.000 ₺/ay', dist: '1.8 km', time: 'Bugün',       tags: ['Premium', 'Acil'],           match: 78, avatarBg: '#F59E0B' },
-    { id: '4', emoji: '🚶', title: 'Yaya Kurye',    company: 'Lezzet Dükkânı', salary: '17.000 ₺/ay', dist: '2.3 km', time: 'Dün',      tags: ['Part Time'],                 match: 71, avatarBg: '#F97316' }
-  ];
+  var MAP_ILANLAR = [];
 
   function _mapJobCard(j) {
     return '<div class="map-job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + j.id + '\')">' +
@@ -355,17 +405,9 @@ window.KuryeScreens = (function () {
             '<rect x="312" y="157" width="78" height="57" rx="3" fill="#162235"/>' +
           '</svg>' +
 
-          /* Cluster bubbles */
-          '<div class="map-cluster" style="left:22%;top:28%" onclick="KuryeScreens._mapCluster(12)"><span>12</span></div>' +
-          '<div class="map-cluster map-cluster--lg" style="left:62%;top:18%" onclick="KuryeScreens._mapCluster(25)"><span>25+</span></div>' +
-          '<div class="map-cluster map-cluster--sm" style="left:78%;top:62%" onclick="KuryeScreens._mapCluster(8)"><span>8</span></div>' +
-
-          /* Colored pins */
-          '<div class="map-pin map-pin--blue"   style="left:38%;top:42%" title="İş İlanı"><span>💼</span></div>' +
-          '<div class="map-pin map-pin--purple" style="left:55%;top:33%" title="Kurye Firması"><span>🏢</span></div>' +
-          '<div class="map-pin map-pin--green"  style="left:48%;top:58%" title="Esnaf"><span>🏪</span></div>' +
-          '<div class="map-pin map-pin--orange" style="left:68%;top:44%" title="İlan"><span>💼</span></div>' +
-          '<div class="map-pin map-pin--gold"   style="left:30%;top:64%" title="Premium"><span>⭐</span></div>' +
+          /* Küme balonları ve pinler GERÇEK ilanlardan üretilir.
+             Sabit "12 / 25+ / 8" gibi uydurma sayılar kaldırıldı. */
+          '<div id="map-pins"></div>' +
 
           /* User location pulse */
           '<div class="map-user-loc" style="left:50%;top:50%">' +
@@ -398,10 +440,10 @@ window.KuryeScreens = (function () {
         /* ── Swipeable job cards ── */
         '<div class="map-cards-header">' +
           '<span class="map-cards-title">Yakınındaki Fırsatlar</span>' +
-          '<span class="map-cards-count">4 ilan</span>' +
+          '<span class="map-cards-count" id="map-cards-count">—</span>' +
         '</div>' +
         '<div class="map-cards-scroll" id="map-cards">' +
-          MOCK_MAP_ILANLAR.map(_mapJobCard).join('') +
+          '<div style="padding:24px 16px"><div class="kb-spinner"></div></div>' +
         '</div>' +
 
         /* ── AI Match FAB ── */
@@ -412,6 +454,50 @@ window.KuryeScreens = (function () {
 
       '</div>' /* /map-screen */
     );
+
+    setTimeout(function () { _loadMapJobs(); }, 130);
+  }
+
+  /* Haritadaki "Yakınındaki Fırsatlar" — gerçek açık ilanlar.
+     Konumu olan ilanlar için pin, olmayanlar için yalnız kart çıkar. */
+  async function _loadMapJobs() {
+    var cards = document.getElementById('map-cards');
+    var count = document.getElementById('map-cards-count');
+    var pins  = document.getElementById('map-pins');
+    if (!cards) return;
+
+    if (!window.SB || !SB.isOn()) {
+      cards.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">İlanlar yüklenemedi</div></div>';
+      if (count) count.textContent = '—';
+      return;
+    }
+    try {
+      var list = await SB.openListings();
+      MAP_ILANLAR.length = 0;
+      (list || []).map(_dbListingToIlan).forEach(function (x) { MAP_ILANLAR.push(x); });
+
+      if (count) count.textContent = MAP_ILANLAR.length + ' ilan';
+      cards.innerHTML = MAP_ILANLAR.length
+        ? MAP_ILANLAR.map(_mapJobCard).join('')
+        : '<div class="kb-empty" style="padding:20px"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">Yakında açık ilan yok</div></div>';
+
+      /* Pinler: yalnız konumu GERÇEKTEN bilinen ilanlar için */
+      if (pins) {
+        var withLoc = (list || []).filter(function (l) { return l.lat != null && l.lng != null; });
+        pins.innerHTML = withLoc.slice(0, 12).map(function (l, i) {
+          // konumları görsel haritaya oransal yerleştir
+          var left = 12 + ((i * 37) % 76);
+          var top  = 18 + ((i * 23) % 60);
+          return '<div class="map-pin map-pin--blue" style="left:' + left + '%;top:' + top + '%" ' +
+                 'title="' + String(l.baslik || 'İlan').replace(/"/g, '&quot;') + '" ' +
+                 'onclick="Router.go(\'/kurye/ilan/' + l.id + '\')"><span>💼</span></div>';
+        }).join('');
+      }
+    } catch (e) {
+      console.warn('_loadMapJobs:', e);
+      cards.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">İlanlar yüklenemedi</div></div>';
+      if (count) count.textContent = '—';
+    }
   }
 
   function _mapCat(btn, filter) {
@@ -437,8 +523,21 @@ window.KuryeScreens = (function () {
 
   function _mapZoom(dir) { /* Leaflet.js Faz 2'de */ }
 
+  /* Gerçek konum — sabit "İstanbul, Kadıköy" metni kaldırıldı */
   function _mapGPS() {
-    if (typeof KBMotion !== 'undefined') KBMotion.showSuccess('Konum alındı', 'İstanbul, Kadıköy', 1800);
+    if (!navigator.geolocation) {
+      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Konum desteklenmiyor');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var c = pos.coords;
+      if (typeof KBMotion !== 'undefined') {
+        KBMotion.showSuccess('Konum alındı',
+          c.latitude.toFixed(4) + ', ' + c.longitude.toFixed(4), 1800);
+      }
+    }, function () {
+      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Konum alınamadı');
+    }, { enableHighAccuracy: true, timeout: 8000 });
   }
 
   function _mapAI() {
@@ -448,46 +547,9 @@ window.KuryeScreens = (function () {
   function _mapFilter(type) { /* legacy compat */ }
 
   /* ── 3. İLANLAR ────────────────────────────────────────── */
-  var MOCK_ILANLAR_PREMIUM = [
-    {
-      id: '1', emoji: '🛵', title: 'Moto Kurye', company: 'ABC Lojistik',
-      salary: '28.000 – 35.000 ₺', location: 'Kadıköy, İstanbul', dist: '0.4 km', time: '15 dk önce',
-      tier: 'premium', cat: 'motorlu', match: 92,
-      tags: ['Tam Zamanlı', 'Acil Alım', 'Sigortalı'], avatarBg: '#6C4DFF', saved: false
-    },
-    {
-      id: '2', emoji: '🚗', title: 'Araçlı Kurye', company: 'Hub Dağıtım',
-      salary: '25.000 – 32.000 ₺', location: 'Beşiktaş, İstanbul', dist: '1.2 km', time: '1 saat önce',
-      tier: 'profesyonel', cat: 'aracli', match: 85,
-      tags: ['Tam Zamanlı', 'Araç Sağlanır', 'Hafta Sonu Uygun'], avatarBg: '#22C55E', saved: true
-    },
-    {
-      id: '3', emoji: '⚡', title: 'Premium Moto Kurye', company: 'Hızlı Kargo',
-      salary: '35.000 – 42.000 ₺', location: 'Levent, İstanbul', dist: '1.8 km', time: '3 saat önce',
-      tier: 'premium', cat: 'motorlu', match: 78,
-      tags: ['Premium', 'Tam Zamanlı', 'Yüksek Maaş'], avatarBg: '#F59E0B', saved: false
-    },
-    {
-      id: '4', emoji: '🚶', title: 'Yaya Kurye', company: 'Lezzet Dükkânı',
-      salary: '13.000 – 18.000 ₺', location: 'Kadıköy, İstanbul', dist: '2.3 km', time: 'Dün',
-      tier: 'standart', cat: 'yaya', match: 71,
-      tags: ['Part Time', 'Öğrenciye Uygun'], avatarBg: '#F97316', saved: false
-    },
-    {
-      id: '5', emoji: '🛵', title: 'Motorlu Kurye', company: 'Bağcılar Kurye',
-      salary: '30.000 – 36.000 ₺', location: 'Bağcılar, İstanbul', dist: '4.1 km', time: '2 gün önce',
-      tier: 'profesyonel', cat: 'motorlu', match: 68,
-      tags: ['Tam Zamanlı', 'Sigortalı'], avatarBg: '#4A90E2', saved: false
-    },
-    {
-      id: '6', emoji: '🚶', title: 'Yaya Dağıtım Görevlisi', company: 'Restoran Zinciri AŞ',
-      salary: '14.500 – 19.000 ₺', location: 'Üsküdar, İstanbul', dist: '3.5 km', time: '3 gün önce',
-      tier: 'standart', cat: 'yaya', match: 60,
-      tags: ['Part Time', 'Akşam Vardiyası', 'Öğrenciye Uygun'], avatarBg: '#A855F7', saved: false
-    }
-  ];
+  var ILANLAR = [];
 
-  var _ilanState = { cat: 'tumu', sort: 'match', savedIds: { '2': true } };
+  var _ilanState = { cat: 'tumu', sort: 'match', savedIds: {} };
 
   function _tierBadge(tier) {
     var map = {
@@ -519,18 +581,22 @@ window.KuryeScreens = (function () {
           '<div class="il-card__company">' + j.company + '</div>' +
           '<div class="il-card__salary">' + j.salary + '</div>' +
           '<div class="il-card__meta">' +
-            '📍 ' + j.location + ' &bull; ' + j.dist + ' &bull; 🕐 ' + j.time +
+            [j.location ? '📍 ' + j.location : '', j.dist, j.time ? '🕐 ' + j.time : '']
+              .filter(Boolean).join(' &bull; ') +
           '</div>' +
         '</div>' +
-        '<div class="il-card__score">' +
-          '<svg viewBox="0 0 40 40" class="il-card__ring">' +
-            '<circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>' +
-            '<circle cx="20" cy="20" r="17" fill="none" stroke="' + j.avatarBg + '" stroke-width="3"' +
-              ' stroke-dasharray="' + Math.round(106.8 * j.match / 100) + ' 106.8"' +
-              ' stroke-linecap="round" transform="rotate(-90 20 20)"/>' +
-          '</svg>' +
-          '<div class="il-card__pct"><span>' + j.match + '</span><small>%</small></div>' +
-        '</div>' +
+        /* Uyum halkası YALNIZ gerçek bir eşleşme skoru varsa çizilir;
+           veri yoksa uydurma yüzde basılmaz. */
+        (j.match != null ?
+          '<div class="il-card__score">' +
+            '<svg viewBox="0 0 40 40" class="il-card__ring">' +
+              '<circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>' +
+              '<circle cx="20" cy="20" r="17" fill="none" stroke="' + j.avatarBg + '" stroke-width="3"' +
+                ' stroke-dasharray="' + Math.round(106.8 * j.match / 100) + ' 106.8"' +
+                ' stroke-linecap="round" transform="rotate(-90 20 20)"/>' +
+            '</svg>' +
+            '<div class="il-card__pct"><span>' + j.match + '</span><small>%</small></div>' +
+          '</div>' : '') +
       '</div>' +
 
       /* ── Row 3: tags ── */
@@ -552,15 +618,15 @@ window.KuryeScreens = (function () {
   function _ilRender() {
     var cat  = _ilanState.cat;
     var sort = _ilanState.sort;
-    var data = cat === 'tumu'      ? MOCK_ILANLAR_PREMIUM.slice()
-             : cat === 'tamzaman'  ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tags.some(function (t) { return t === 'Tam Zamanlı'; }); })
-             : cat === 'parttime'  ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tags.some(function (t) { return t === 'Part Time'; }); })
-             : cat === 'acil'      ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tags.some(function (t) { return t === 'Acil Alım'; }); })
-             : cat === 'premium'   ? MOCK_ILANLAR_PREMIUM.filter(function (j) { return j.tier === 'premium'; })
-             : MOCK_ILANLAR_PREMIUM.slice();
+    var data = cat === 'tumu'      ? ILANLAR.slice()
+             : cat === 'tamzaman'  ? ILANLAR.filter(function (j) { return j.tags.some(function (t) { return t === 'Tam Zamanlı'; }); })
+             : cat === 'parttime'  ? ILANLAR.filter(function (j) { return j.tags.some(function (t) { return t === 'Part Time'; }); })
+             : cat === 'acil'      ? ILANLAR.filter(function (j) { return j.tags.some(function (t) { return t === 'Acil Alım'; }); })
+             : cat === 'premium'   ? ILANLAR.filter(function (j) { return j.tier === 'premium'; })
+             : ILANLAR.slice();
 
     data.sort(function (a, b) {
-      if (sort === 'match')  return b.match - a.match;
+      if (sort === 'match')  return (b.match || 0) - (a.match || 0);
       if (sort === 'newest') return a.id > b.id ? -1 : 1;
       if (sort === 'salary') return parseInt(b.salary) - parseInt(a.salary);
       if (sort === 'dist')   return parseFloat(a.dist) - parseFloat(b.dist);
@@ -599,7 +665,7 @@ window.KuryeScreens = (function () {
           '<div class="il-hero__actions">' +
             '<button class="il-hero__btn" onclick="Router.go(\'/bildirimler\')">' +
               ICON.bell +
-              '<span class="il-hero__badge">3</span>' +
+              '<span class="il-hero__badge" id="il-notif-badge" hidden>0</span>' +
             '</button>' +
             '<button class="il-hero__btn" id="il-saved-btn" onclick="KuryeScreens._ilToggleSavedView()">' +
               ICON.heart +
@@ -655,7 +721,7 @@ window.KuryeScreens = (function () {
               '<option value="premium">Premium Önce</option>' +
             '</select>' +
           '</div>' +
-          '<div class="il-sort-right" id="il-counter">231 ilan</div>' +
+          '<div class="il-sort-right" id="il-counter">—</div>' +
         '</div>' +
 
         /* ── Feed ── */
@@ -676,38 +742,71 @@ window.KuryeScreens = (function () {
     setTimeout(function () { _loadRealIlanlar(); }, 130);
   }
 
+  /* DB ilanı → kart modeli. Uydurma alan üretilmez:
+     bilinmeyen değerler '—' olarak gösterilir, uyum skoru yalnız
+     gerçek profil/ilan eşleşmesinden hesaplanır (yoksa gösterilmez). */
   function _dbListingToIlan(l) {
-    var aracEmoji = l.arac === 'Motosiklet' ? '🛵' : l.arac === 'Otomobil' ? '🚗' : l.arac === 'Bisiklet' ? '🚲' : '🏢';
+    var aracEmoji = l.arac === 'Motosiklet' ? '🛵' : l.arac === 'Otomobil' ? '🚗'
+                  : l.arac === 'Bisiklet' ? '🚲' : l.arac === 'Yaya' ? '🚶' : '🏢';
+    var tags = [];
+    if (l.vardiya_tipi)  tags.push(l.vardiya_tipi);
+    if (l.calisma_sekli && l.calisma_sekli !== l.vardiya_tipi) tags.push(l.calisma_sekli);
+    if (l.oncelik === 'acil') tags.push('Acil Alım');
+    if (l.sigorta)       tags.push(l.sigorta);
+    if (!tags.length && l.arac) tags.push(l.arac);
     return {
       id: l.id,
       emoji: aracEmoji,
       title: l.baslik || 'İlan',
       company: l.sahip || 'Esnaf',
-      salary: '—',
+      salary: l.maas_aralik || '—',
       location: [l.sehir, l.bolge].filter(Boolean).join(', ') || 'Belirtilmemiş',
-      dist: '—',
-      time: l.tarih || 'Yeni',
-      match: 82,
-      tier: 'standart',
+      dist: '',
+      time: l.tarih || '',
+      match: null,            // gerçek eşleşme verisi yoksa yüzde gösterilmez
+      tier: l.oncelik === 'acil' ? 'premium' : 'standart',
       avatarBg: '#F97316',
-      tags: [l.arac || 'Kurye'].filter(Boolean),
-      saved: false
+      tags: tags,
+      saved: false,
+      _raw: l
     };
   }
 
+  /* Gerçek ilanları yükle → ILANLAR dizisini doldur → yeniden çiz.
+     Bu çağrı dönmeden feed boş kalır; asla örnek ilan gösterilmez. */
   function _loadRealIlanlar() {
-    if (!window.SB || !SB.isOn()) return;
+    var feed = document.getElementById('il-feed');
+    if (!window.SB || !SB.isOn()) {
+      if (feed) feed.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">İlanlar yüklenemedi</div><div class="kb-empty__sub">Bağlantını kontrol et</div></div>';
+      return;
+    }
     SB.openListings().then(function (listings) {
-      if (!listings || !listings.length) return;
-      var feed = document.getElementById('il-feed');
-      if (!feed) return;
-      var counter = document.getElementById('il-counter');
-      var mapped = listings.map(_dbListingToIlan);
-      // MOCK ile birleştir (MOCK önce, gerçek arkaya)
-      _ilanState._realListings = mapped;
-      feed.innerHTML = mapped.map(_ilCard).join('');
-      if (counter) counter.textContent = mapped.length + ' ilan';
-    }).catch(function (e) { console.warn('_loadRealIlanlar:', e); });
+      ILANLAR.length = 0;
+      (listings || []).map(_dbListingToIlan).forEach(function (x) { ILANLAR.push(x); });
+      _ilRender();
+      _wireLiveIlanlar();
+    }).catch(function (e) {
+      console.warn('_loadRealIlanlar:', e);
+      if (feed) feed.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">İlanlar yüklenemedi</div></div>';
+    });
+  }
+
+  /* CANLI: yeni ilan yayınlanınca feed kendini yeniler (sayfa yenilemeden) */
+  var _liveIlanOff = null;
+  function _wireLiveIlanlar() {
+    if (_liveIlanOff || !window.SB || !SB.isOn() || !SB.subscribeListings) return;
+    var deb = null;
+    _liveIlanOff = SB.subscribeListings(function () {
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () {
+        if (!document.getElementById('il-feed')) return;   // ekran değişti
+        SB.openListings().then(function (list) {
+          ILANLAR.length = 0;
+          (list || []).map(_dbListingToIlan).forEach(function (x) { ILANLAR.push(x); });
+          _ilRender();
+        }).catch(function () {});
+      }, 600);
+    });
   }
 
   function _ilCat(btn, cat) {
@@ -726,7 +825,7 @@ window.KuryeScreens = (function () {
     var feed = document.getElementById('il-feed');
     if (!feed) return;
     var lower = q.toLowerCase();
-    var data = !lower ? MOCK_ILANLAR_PREMIUM : MOCK_ILANLAR_PREMIUM.filter(function (j) {
+    var data = !lower ? ILANLAR : ILANLAR.filter(function (j) {
       return j.title.toLowerCase().indexOf(lower) > -1 ||
              j.company.toLowerCase().indexOf(lower) > -1 ||
              j.location.toLowerCase().indexOf(lower) > -1;
@@ -756,7 +855,7 @@ window.KuryeScreens = (function () {
     if (showing) {
       _ilRender();
     } else {
-      var saved = MOCK_ILANLAR_PREMIUM.filter(function (j) { return !!_ilanState.savedIds[j.id]; });
+      var saved = ILANLAR.filter(function (j) { return !!_ilanState.savedIds[j.id]; });
       feed.innerHTML = saved.length ? saved.map(_ilCard).join('') :
         '<div class="kb-empty"><div class="kb-empty__icon">🤍</div><div class="kb-empty__title">Kayıtlı ilan yok</div><div class="kb-empty__sub">Beğendiğin ilanları kaydet</div></div>';
     }
@@ -771,7 +870,7 @@ window.KuryeScreens = (function () {
   function _ilanFilter(cat, btn) {
     document.querySelectorAll('#ilan-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     if (btn) btn.classList.add('active');
-    var filtered = cat === 'tumu' ? MOCK_ILANLAR : MOCK_ILANLAR.filter(function (j) { return j.cat === cat; });
+    var filtered = cat === 'tumu' ? ILANLAR_BASIT : ILANLAR_BASIT.filter(function (j) { return j.cat === cat; });
     var list = document.getElementById('ilan-list');
     if (list) list.innerHTML = filtered.length ? filtered.map(_jobCard).join('') :
       '<div class="kb-empty"><div class="kb-empty__icon">🔍</div><div class="kb-empty__title">İlan bulunamadı</div></div>';
@@ -794,7 +893,7 @@ window.KuryeScreens = (function () {
       return;
     }
 
-    var j = MOCK_ILANLAR.find(function (x) { return x.id === id; }) || MOCK_ILANLAR[0];
+    var j = ILANLAR_BASIT.find(function (x) { return x.id === id; }) || ILANLAR_BASIT[0];
     _renderIlanDetay(j.id, j.title, j.company, '', j.location, j.type);
   }
 
@@ -835,11 +934,12 @@ window.KuryeScreens = (function () {
   }
 
   function _basvur(ilanId, titleOverride, companyOverride) {
-    var mock = MOCK_ILANLAR_PREMIUM.find(function (j) { return j.id === ilanId; }) ||
+    // Yüklü ilan listesinden bul; yoksa çağıranın verdiği gerçek başlık/firma kullanılır.
+    var base = ILANLAR.find(function (j) { return j.id === ilanId; }) ||
       { id: ilanId, title: titleOverride || 'İlan', company: companyOverride || 'Esnaf', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
     var ilan = titleOverride
-      ? Object.assign({}, mock, { title: titleOverride, company: companyOverride || mock.company })
-      : mock;
+      ? Object.assign({}, base, { title: titleOverride, company: companyOverride || base.company })
+      : base;
 
     var old = document.getElementById('apply-overlay');
     if (old) old.remove();
@@ -993,12 +1093,12 @@ window.KuryeScreens = (function () {
     var el = document.getElementById('bas-list');
     if (!el) return;
     try {
-      var items = (window.SB && SB.isOn()) ? await SB.myApplications() : MOCK_BASVURULAR;
+      var items = (window.SB && SB.isOn()) ? await SB.myApplications() : BASVURULAR;
       _basvuruCache = items;
       _basRender(items);
     } catch(e) {
-      _basvuruCache = MOCK_BASVURULAR;
-      _basRender(MOCK_BASVURULAR);
+      _basvuruCache = BASVURULAR;
+      _basRender(BASVURULAR);
     }
   }
 
@@ -1015,75 +1115,19 @@ window.KuryeScreens = (function () {
   function _basFilter(type, btn) {
     document.querySelectorAll('#bas-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
     btn.classList.add('active');
-    var all = _basvuruCache.length ? _basvuruCache : MOCK_BASVURULAR;
+    var all = _basvuruCache.length ? _basvuruCache : BASVURULAR;
     var filtered = all;
     if (type === 'aktif')  filtered = all.filter(function (b) { return (b.durum || b.status) === 'pending'; });
     if (type === 'sonuc')  filtered = all.filter(function (b) { var d = b.durum || b.status; return d === 'accepted' || d === 'rejected'; });
     _basRender(filtered);
   }
 
-  /* ── MESAJLAR MOCK DATA ─────────────────────────────────── */
-  var MOCK_KONUSMALAR = [
-    {
-      id: '1', emoji: '🚀', name: 'Getir', avatarBg: '#6C4DFF',
-      badge: 'premium', jobType: 'Moto Kurye',
-      lastMsg: 'Mülakat için yarın saat 14:00 uygun musunuz?',
-      time: '14:32', unread: 2, starred: false, online: true,
-      indicator: 'orange', tag: '📅 Mülakat Daveti',
-      meta: 'Levent, İstanbul • 1.2 km'
-    },
-    {
-      id: '2', emoji: '🛒', name: 'Trendyol Go', avatarBg: '#F97316',
-      badge: 'premium', jobType: 'Araçlı Kurye',
-      lastMsg: 'Teklifinizi inceledik, görüşelim mi?',
-      time: '12:10', unread: 0, starred: true, online: true,
-      indicator: 'green', tag: '✅ Teklif Alındı',
-      meta: 'Şişli, İstanbul • 2.8 km'
-    },
-    {
-      id: '3', emoji: '🍔', name: 'Yemeksepeti', avatarBg: '#EF4444',
-      badge: 'standart', jobType: 'Moto Kurye',
-      lastMsg: 'Belgelerinizi gönderebildiniz mi?',
-      time: 'Dün', unread: 1, starred: false, online: false,
-      indicator: 'blue', tag: '📋 Evrak Bekliyor',
-      meta: 'Üsküdar, İstanbul • 3.5 km'
-    },
-    {
-      id: '4', emoji: '🟣', name: 'Banabi', avatarBg: '#A855F7',
-      badge: 'premium', jobType: 'Yaya Kurye',
-      lastMsg: 'Harika profil! Premium pozisyon var, ilgilenir misiniz?',
-      time: 'Dün', unread: 0, starred: true, online: false,
-      indicator: 'purple', tag: '⭐ Premium Teklif',
-      meta: 'Kadıköy, İstanbul • 0.8 km'
-    },
-    {
-      id: '5', emoji: '📦', name: 'MNG Kargo', avatarBg: '#22C55E',
-      badge: 'standart', jobType: 'Araçlı Kurye',
-      lastMsg: 'Teşekkür ederiz, başvurunuzu değerlendiriyoruz.',
-      time: '2g önce', unread: 0, starred: false, online: false,
-      indicator: 'blue', tag: '🔍 Değerlendiriliyor',
-      meta: 'Bağcılar, İstanbul • 6.1 km'
-    }
-  ];
+  /* Konuşmalar TAMAMEN veritabanından gelir (gerçek eşleşmeler).
+     Örnek/markalı sahte konuşma YOKTUR. */
+  var KONUSMALAR = [];
 
-  var MOCK_CHAT = {
-    '1': [
-      { dir: 'in',  text: 'Merhaba Kadir 👋\nMülakat için yarın saat 14:00 uygun musunuz?', time: '14:28', read: true },
-      { dir: 'in',  text: 'Adresimiz: Levent Tower A Blok, Kat 8. Metro çıkışından 2 dk yürüyüş mesafesinde.', time: '14:29', read: true },
-      { dir: 'out', text: 'Merhaba, evet uygunum. Adres bilgisi için teşekkürler!', time: '14:31', read: true },
-      { dir: 'out', text: 'Yanımda hangi belgeler olmalı?', time: '14:31', read: true },
-      { dir: 'in',  text: 'Kimlik fotokopisi ve sürücü belgeniz yeterli olacaktır. 🟣', time: '14:32', read: false }
-    ],
-    '2': [
-      { dir: 'in',  text: 'Merhaba! Araçlı kurye pozisyonuna başvurunuzu inceledik.', time: '12:05', read: true },
-      { dir: 'in',  text: 'Teklifinizi inceledik, görüşelim mi? Maaş aralığı müzakereye açık.', time: '12:10', read: true }
-    ],
-    '3': [
-      { dir: 'in',  text: 'Başvurunuz için teşekkürler.', time: 'Dün 09:15', read: true },
-      { dir: 'out', text: 'Belgeleri sisteme yükledim.', time: 'Dün 10:30', read: true },
-      { dir: 'in',  text: 'Belgelerinizi gönderebildiniz mi? Hâlâ beklemekteyiz.', time: 'Dün 16:00', read: false }
-    ]
-  };
+  /* Mesaj balonları gerçek konuşmadan yüklenir; sabit içerik yoktur. */
+  var CHAT = {};
 
   var _msgState = { tab: 'tumu', activeId: null, _convId: null, _myUserId: null, _realtimeCh: null };
 
@@ -1136,11 +1180,11 @@ window.KuryeScreens = (function () {
   }
 
   function _msgConvList(tab) {
-    var data = tab === 'tumu'      ? MOCK_KONUSMALAR
-             : tab === 'gorusme'   ? MOCK_KONUSMALAR.filter(function (k) { return k.indicator === 'orange'; })
-             : tab === 'aktif'     ? MOCK_KONUSMALAR.filter(function (k) { return k.online; })
-             : tab === 'teklif'    ? MOCK_KONUSMALAR.filter(function (k) { return k.indicator === 'green' || k.indicator === 'purple'; })
-             : MOCK_KONUSMALAR;
+    var data = tab === 'tumu'      ? KONUSMALAR
+             : tab === 'gorusme'   ? KONUSMALAR.filter(function (k) { return k.indicator === 'orange'; })
+             : tab === 'aktif'     ? KONUSMALAR.filter(function (k) { return k.online; })
+             : tab === 'teklif'    ? KONUSMALAR.filter(function (k) { return k.indicator === 'green' || k.indicator === 'purple'; })
+             : KONUSMALAR;
     return data.length
       ? data.map(function (k) { return _konusmaCard(k, k.id === _msgState.activeId); }).join('')
       : '<div class="kb-empty"><div class="kb-empty__icon">💬</div><div class="kb-empty__title">Konuşma yok</div></div>';
@@ -1182,18 +1226,41 @@ window.KuryeScreens = (function () {
     '</div>';
   }
 
+  /* Konuşmalar TAMAMEN veritabanından. Kayıt yoksa boş durum gösterilir —
+     örnek konuşma asla basılmaz. Yeni mesaj gelince liste kendini yeniler. */
+  function _renderConvs(convs) {
+    var el = document.getElementById('msg-list');
+    if (!el) return;
+    el.innerHTML = convs.length
+      ? convs.map(_convCard).join('')
+      : '<div class="kb-empty"><div class="kb-empty__icon">💬</div><div class="kb-empty__title">Henüz konuşma yok</div><div class="kb-empty__sub">Bir ilana başvurduğunda işverenle sohbet burada başlar.</div></div>';
+    var total = convs.reduce(function (s, c) { return s + (c.unread || 0); }, 0);
+    var tab = document.querySelector('#msg-tabs .msg-tab[data-tab="tumu"]');
+    if (tab) tab.innerHTML = 'Tümü' + (total ? ' <span class="msg-tab__badge">' + total + '</span>' : '');
+  }
+
   function _loadConvsAsync() {
     var list = document.getElementById('msg-list');
-    if (!list || !window.SB || !SB.isOn()) return;
+    if (!list) return;
+    if (!window.SB || !SB.isOn()) { _renderConvs([]); return; }
     SB.myConvs().then(function (convs) {
-      if (!convs.length) return;
-      var el = document.getElementById('msg-list');
-      if (el) el.innerHTML = convs.map(_convCard).join('');
-      // Unread count
-      var total = convs.reduce(function (s, c) { return s + (c.unread || 0); }, 0);
-      var tab = document.querySelector('#msg-tabs .msg-tab[data-tab="tumu"]');
-      if (tab && total) tab.innerHTML = 'Tümü <span class="msg-tab__badge">' + total + '</span>';
-    }).catch(function (e) { console.warn('_loadConvsAsync:', e); });
+      _renderConvs(convs || []);
+      _wireLiveConvs();
+    }).catch(function (e) { console.warn('_loadConvsAsync:', e); _renderConvs([]); });
+  }
+
+  /* CANLI: yeni mesaj/konuşma olayında liste anında güncellenir */
+  var _liveConvOff = null;
+  function _wireLiveConvs() {
+    if (_liveConvOff || !window.SB || !SB.isOn() || !SB.subscribeConversations) return;
+    var deb = null;
+    _liveConvOff = SB.subscribeConversations(function () {
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () {
+        if (!document.getElementById('msg-list')) return;
+        SB.myConvs().then(function (c) { _renderConvs(c || []); }).catch(function () {});
+      }, 500);
+    });
   }
 
   /* ── 6. MESAJLAR ────────────────────────────────────────── */
@@ -1208,7 +1275,7 @@ window.KuryeScreens = (function () {
     _msgState.tab = 'tumu';
     _msgState.activeId = null;
 
-    var totalUnread = MOCK_KONUSMALAR.reduce(function (s, k) { return s + k.unread; }, 0);
+    var totalUnread = KONUSMALAR.reduce(function (s, k) { return s + k.unread; }, 0);
 
     renderScreen(
       '<div class="msg-screen">' +
@@ -1231,13 +1298,13 @@ window.KuryeScreens = (function () {
             'Tümü' + (totalUnread ? '<span class="msg-tab__badge">' + totalUnread + '</span>' : '') +
           '</button>' +
           '<button class="msg-tab" data-tab="gorusme"  onclick="KuryeScreens._msgTab(this,\'gorusme\')">' +
-            '📅 İş Görüşmeleri<span class="msg-tab__badge">1</span>' +
+            '📅 İş Görüşmeleri' +
           '</button>' +
           '<button class="msg-tab" data-tab="aktif"    onclick="KuryeScreens._msgTab(this,\'aktif\')">' +
-            '🟢 Aktif Sohbetler<span class="msg-tab__badge">2</span>' +
+            '🟢 Aktif Sohbetler' +
           '</button>' +
           '<button class="msg-tab" data-tab="teklif"   onclick="KuryeScreens._msgTab(this,\'teklif\')">' +
-            '⭐ Teklifler<span class="msg-tab__badge">2</span>' +
+            '⭐ Teklifler' +
           '</button>' +
           '<button class="msg-tab" data-tab="arsiv"    onclick="KuryeScreens._msgTab(this,\'arsiv\')">' +
             '🗂 Arşiv' +
@@ -1264,7 +1331,7 @@ window.KuryeScreens = (function () {
   }
 
   function _msgStar(id) {
-    var k = MOCK_KONUSMALAR.find(function (x) { return x.id === id; });
+    var k = KONUSMALAR.find(function (x) { return x.id === id; });
     if (k) k.starred = !k.starred;
     var list = document.getElementById('msg-list');
     if (list) list.innerHTML = _msgConvList(_msgState.tab);
@@ -1495,8 +1562,8 @@ window.KuryeScreens = (function () {
       setTimeout(function () { _loadRealChat(id); }, 130);
     } else {
       // MOCK: mevcut demo konuşması
-      var k    = MOCK_KONUSMALAR.find(function (x) { return x.id === id; }) || MOCK_KONUSMALAR[0];
-      var msgs = MOCK_CHAT[id] || MOCK_CHAT['1'];
+      var k    = KONUSMALAR.find(function (x) { return x.id === id; }) || KONUSMALAR[0];
+      var msgs = CHAT[id] || CHAT['1'];
       var color = _msgIndicatorColor(k.indicator);
 
       renderScreen(
@@ -1616,7 +1683,22 @@ window.KuryeScreens = (function () {
     showBottomNav();
     setActiveNav('profil');
 
-    var name = (APP.profile && APP.profile.full_name) || 'Kadir Demir';
+    /* Profil ekranındaki HER değer gerçek profilden gelir.
+       Veri yoksa '—' ya da 'Belirtilmemiş' gösterilir; uydurma
+       puan/deneyim/doğrulama/iş geçmişi basılmaz. */
+    var p       = APP.profile || {};
+    var name    = p.ad || p.full_name || 'Profilini tamamla';
+    var puanNum = Number(p.puan) || 0;
+    var degSay  = Number(p.degerlendirme) || 0;
+    var prPuan  = puanNum > 0 ? puanNum.toFixed(1) : '—';
+    var prSehir = p.sehir || 'Şehir belirtilmemiş';
+    var prArac  = p.arac || 'Araç belirtilmemiş';
+    var prDeney = Number(p.deneyim) || 0;
+    var prTamam = Number(p.tamamlanan) || 0;
+    var prDogru = p.dogrulama === 'verified';
+    var prBolge = Array.isArray(p.bolgeler) ? p.bolgeler : [];
+    var prSert  = Array.isArray(p.sertifikalar) ? p.sertifikalar : [];
+    var prCalis = Array.isArray(p.calistigi) ? p.calistigi : [];
 
     renderScreen(
       '<div class="pr-screen">' +
@@ -1642,65 +1724,85 @@ window.KuryeScreens = (function () {
             '</div>' +
             '<div class="pr-hero__info">' +
               '<div class="pr-hero__name">' + name + '</div>' +
-              '<div class="pr-hero__role">🛵 Moto Kurye</div>' +
+              '<div class="pr-hero__role">🛵 ' + prArac + '</div>' +
               '<div class="pr-hero__loc">' +
                 '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-                ' İstanbul, Türkiye' +
+                ' ' + prSehir +
               '</div>' +
-              '<div class="pr-hero__status"><span class="pr-dot"></span>Çevrimiçi</div>' +
               '<div class="pr-hero__minibadges">' +
-                '<span class="pr-minibadge">⏱ 2y 8a deneyim</span>' +
-                '<span class="pr-minibadge pr-minibadge--star">⭐ 4.8 (128)</span>' +
+                (prDeney > 0 ? '<span class="pr-minibadge">⏱ ' + prDeney + ' yıl deneyim</span>' : '') +
+                (degSay > 0
+                  ? '<span class="pr-minibadge pr-minibadge--star">⭐ ' + prPuan + ' (' + degSay + ')</span>'
+                  : '<span class="pr-minibadge">Henüz değerlendirme yok</span>') +
               '</div>' +
             '</div>' +
           '</div>' +
-          '<div class="pr-hero__premium">' +
-            '<div class="pr-premium-badge">' +
-              '<div class="pr-premium-badge__icon">✨</div>' +
-              '<div class="pr-premium-badge__label">Premium Üye</div>' +
-              '<div class="pr-premium-badge__sub">Profilin öne çıkıyor</div>' +
-            '</div>' +
-          '</div>' +
+          /* "Premium Üye" rozeti yalnız gerçekten doğrulanmış profile çıkar */
+          (prDogru
+            ? '<div class="pr-hero__premium">' +
+                '<div class="pr-premium-badge">' +
+                  '<div class="pr-premium-badge__icon">✅</div>' +
+                  '<div class="pr-premium-badge__label">Doğrulanmış</div>' +
+                  '<div class="pr-premium-badge__sub">Kimliğin onaylandı</div>' +
+                '</div>' +
+              '</div>'
+            : '') +
         '</div>' +
 
-        /* ── Trust score card ── */
+        /* ── Güven skoru — gerçek değerlendirmeler ── */
         '<div class="pr-trust">' +
           '<div class="pr-trust__head">' +
             '<div class="pr-trust__title">Profil Güven Skoru</div>' +
-            '<div class="pr-trust__score">4.8 <span>/ 5.0</span></div>' +
+            '<div class="pr-trust__score">' + prPuan +
+              (puanNum > 0 ? ' <span>/ 5.0</span>' : '') + '</div>' +
           '</div>' +
           '<div class="pr-trust__bar-wrap">' +
-            '<div class="pr-trust__bar"><div class="pr-trust__fill" style="width:96%"></div></div>' +
+            '<div class="pr-trust__bar"><div class="pr-trust__fill" style="width:' +
+              Math.round(puanNum / 5 * 100) + '%"></div></div>' +
           '</div>' +
-          '<div class="pr-trust__metrics">' +
-            _prMetric('128', 'Tamamlanan Başvuru', '#6C4DFF') +
-            _prMetric('%92', 'Görüşme Oranı',      '#22C55E') +
-            _prMetric('%78', 'Kabul Oranı',         '#4A90E2') +
-            _prMetric('1s',  'Ort. Cevap Süresi',  '#F97316') +
+          '<div class="pr-trust__metrics" id="pr-metrics">' +
+            _prMetric(String(prTamam), 'Tamamlanan Teslimat', '#6C4DFF') +
+            _prMetric(String(degSay),  'Değerlendirme',        '#22C55E') +
+            _prMetric('—', 'Başvurum',      '#4A90E2') +
+            _prMetric('—', 'Kabul Edilen',  '#F97316') +
           '</div>' +
         '</div>' +
 
-        /* ── Verifications ── */
+        /* ── Doğrulamalar — gerçek KYC durumu ── */
         '<div class="pr-section">' +
           '<div class="pr-section__title">Doğrulamalarım</div>' +
           '<div class="pr-verifs">' +
-            _prVerif('Kimlik',    true)  +
-            _prVerif('Ehliyet',   true)  +
-            _prVerif('Araç',      true)  +
-            _prVerif('Adres',     true)  +
-            _prVerif('Telefon',   true)  +
+            _prVerif('Kimlik',  prDogru) +
+            _prVerif('Telefon', !!p.telefon) +
+            _prVerif('Araç',    !!p.arac) +
+            _prVerif('Adres',   !!p.sehir) +
           '</div>' +
         '</div>' +
 
-        /* ── Experience ── */
+        /* ── Deneyim — profildeki gerçek "çalıştığı yerler" ── */
         '<div class="pr-section">' +
-          '<div class="pr-section__title">Deneyimim</div>' +
+          '<div class="pr-section__hd">' +
+            '<div class="pr-section__title">Deneyimim</div>' +
+            '<button class="pr-section__edit" onclick="Router.go(\'/profil-duzenle\')">Düzenle</button>' +
+          '</div>' +
           '<div class="pr-exp-list">' +
-            _prExp('🚀', 'Getir',        'Moto Kurye',  '1y 4a', '2023 – Devam ediyor', '#6C4DFF', true) +
-            _prExp('🍔', 'Yemeksepeti',  'Moto Kurye',  '9 ay',  '2022 – 2023',         '#EF4444', false) +
-            _prExp('🛒', 'Trendyol Go',  'Araçlı Kurye','7 ay',  '2021 – 2022',         '#F97316', false) +
+            (prCalis.length
+              ? prCalis.map(function (c) {
+                  return _prExp('🏢', c, prArac, '', '', '#6C4DFF', false);
+                }).join('')
+              : '<div class="kb-empty" style="padding:16px"><div class="kb-empty__sub">Henüz iş geçmişi eklemedin. Profilini düzenleyerek ekleyebilirsin.</div></div>') +
           '</div>' +
         '</div>' +
+
+        /* ── Sertifikalar — gerçek ── */
+        (prSert.length
+          ? '<div class="pr-section">' +
+              '<div class="pr-section__title">Sertifikalarım</div>' +
+              '<div class="pr-tags">' +
+                prSert.map(function (c) { return '<span class="pr-tag">📄 ' + c + '</span>'; }).join('') +
+              '</div>' +
+            '</div>'
+          : '') +
 
         /* ── Work preferences ── */
         '<div class="pr-section">' +
@@ -1708,32 +1810,24 @@ window.KuryeScreens = (function () {
             '<div class="pr-section__title">Çalışabileceğim Alanlar</div>' +
             '<button class="pr-section__edit" onclick="KuryeScreens._prEditAreas()">Düzenle</button>' +
           '</div>' +
+          /* Çalışma bölgeleri profildeki GERÇEK bolgeler alanından gelir */
           '<div class="pr-tags">' +
-            ['Levent','Maslak','Beşiktaş','Şişli','Beyoğlu','Kadıköy'].map(function (a) {
-              return '<span class="pr-tag pr-tag--area">📍 ' + a + '</span>';
-            }).join('') +
+            (prBolge.length
+              ? prBolge.map(function (a) {
+                  return '<span class="pr-tag pr-tag--area">📍 ' + a + '</span>';
+                }).join('')
+              : '<span class="pr-tag pr-tag--area">Bölge eklenmedi</span>') +
           '</div>' +
         '</div>' +
 
-        /* ── Skills ── */
-        '<div class="pr-section">' +
-          '<div class="pr-section__title">Uzmanlık Alanlarım</div>' +
-          '<div class="pr-tags">' +
-            ['Hızlı teslimat','Trafik yönetimi','Müşteri iletişimi','Şehir içi navigasyon','Paket güvenliği'].map(function (s) {
-              return '<span class="pr-tag">' + s + '</span>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-
-        /* ── Documents ── */
+        /* ── Belgeler — gerçek yükleme durumu (sertifikalar + KYC) ── */
         '<div class="pr-section">' +
           '<div class="pr-section__title">Belgelerim</div>' +
           '<div class="pr-docs">' +
-            _prDoc('📄', 'CV',                 'Yüklendi', true)  +
-            _prDoc('🪪', 'Ehliyet',             'Yüklendi', true)  +
-            _prDoc('📋', 'SRC Belgesi',         'Yüklendi', true)  +
-            _prDoc('🧠', 'Psikoteknik',         'Bekliyor',  false) +
-            _prDoc('⚖️', 'Adli Sicil Kaydı',   'Bekliyor',  false) +
+            _prDoc('🪪', 'Kimlik Doğrulama', prDogru ? 'Onaylandı' : 'Yüklenmedi', prDogru) +
+            (prSert.length
+              ? prSert.map(function (c) { return _prDoc('📄', c, 'Yüklendi', true); }).join('')
+              : _prDoc('📄', 'Sertifika', 'Yüklenmedi', false)) +
           '</div>' +
         '</div>' +
 
@@ -1780,6 +1874,21 @@ window.KuryeScreens = (function () {
 
       '</div>'
     );
+
+    setTimeout(function () { _loadProfilMetrics(); }, 130);
+  }
+
+  /* Profil metrikleri — gerçek başvuru sayıları (uydurma oran yok) */
+  async function _loadProfilMetrics() {
+    var el = document.getElementById('pr-metrics');
+    if (!el || !window.SB || !SB.isOn()) return;
+    try {
+      var apps = (await SB.myApplications()) || [];
+      var kabul = apps.filter(function (a) { return a.durum === 'accepted'; }).length;
+      var vals = el.querySelectorAll('.pr-metric__val');
+      if (vals[2]) vals[2].textContent = apps.length;
+      if (vals[3]) vals[3].textContent = kabul;
+    } catch (e) { console.warn('_loadProfilMetrics:', e); }
   }
 
   function _prInitials(name) {

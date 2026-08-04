@@ -5565,3 +5565,20 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 [data-theme="dark"] textarea      { background: var(--surface-2); color: var(--text); border-color: var(--border); }
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder { color: var(--text-3); }
+
+/* ── Gerçek çevrimiçi rozeti (presence) ─────────────────────────
+   Havuz kartlarında eski uydurma "%N Uyum" rozetinin yerini alır.
+   Yalnız kullanıcı GERÇEKTEN çevrimiçiyken basılır. */
+.online-dot {
+  position: absolute; top: 14px; right: 14px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: .01em;
+  color: #16A34A; background: rgba(22,163,74,0.10);
+  border: 1px solid rgba(22,163,74,0.22);
+  padding: 2px 8px; border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+[data-theme="dark"] .online-dot {
+  color: #4ADE80; background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25);
+}
+.cards-grid--list .talent-card .online-dot { position: static; order: -1; align-self: flex-start; }

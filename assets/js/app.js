@@ -1,11 +1,13 @@
 /* ============================================================
    Kuryemi Bul — app.js
    Sayfa mantığı: havuz/filtre, profil, harita, panel, teklif modalı.
-   i18n.js, data.js ve components.js bu dosyadan önce yüklenmelidir.
+   i18n.js, supabase.js ve components.js bu dosyadan önce yüklenmelidir.
+
+   ÜRETİM NOTU: Bu dosyada demo/mock veri YOKTUR. Tüm içerik Supabase'den gelir.
+   Bağlantı yoksa veya sonuç boşsa uydurma veri değil, boş durum gösterilir.
    ============================================================ */
 (function () {
   'use strict';
-  var D = window.KB_DATA;
   var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
   // Aksan/Türkçe-İ bağımsız normalize (arama için): "İstanbul" ~ "istanbul", "Şişli" ~ "sisli"
   function norm(s) {
@@ -32,23 +34,24 @@
     return KB.initials((x && x.ad) || "?");
   }
 
-  /* ============ VERİ KATMANI (online=Supabase / offline=demo) ============ */
+  /* ============ VERİ KATMANI — tek kaynak: Supabase ============ */
+  // Fallback veri yoktur. Bağlantı kurulamazsa boş dizi/null döner ve
+  // çağıran taraf boş durum (empty state) gösterir.
   function online() { return !!(window.KB && KB.isOnline && KB.isOnline()); }
   async function loadPool(type) {
     if (window.KB && KB.ready) await KB.ready();
-    if (online()) { try { return await SB.pool(type); } catch (e) { console.warn("pool:", e); } }
-    return type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
+    if (!online()) return [];
+    try { return await SB.pool(type); } catch (e) { console.warn("pool:", e); return []; }
   }
   async function loadProfile(type, id) {
     if (window.KB && KB.ready) await KB.ready();
-    if (online()) { try { var p = await SB.profileById(id); if (p) return p; } catch (e) { console.warn("profile:", e); } }
-    var src = type === "kurye" ? D.kuryeler : type === "isletme" ? D.isletmeler : D.firmalar;
-    return KB.findById(src, id) || src[0];
+    if (!online() || !id) return null;
+    try { return await SB.profileById(id); } catch (e) { console.warn("profile:", e); return null; }
   }
   async function loadOffers() {
     if (window.KB && KB.ready) await KB.ready();
-    if (online()) { try { return await SB.myOffers(); } catch (e) { console.warn("offers:", e); } return []; }
-    return D.teklifler.concat(KB.getTeklifler());
+    if (!online()) return [];
+    try { return await SB.myOffers(); } catch (e) { console.warn("offers:", e); return []; }
   }
 
   /* ============ HAVUZUM (kayıtlı profiller) ============ */
@@ -223,10 +226,13 @@
     var owner   = l.owner_id === myPid;
     var applied = appliedSet[l.id];
     var loc     = [l.sehir, l.bolge].filter(Boolean).join(" / ");
+    // Uyum skoru YALNIZ kullanıcının gerçek tercihleri varsa hesaplanır.
+    // Tercih yoksa skor gösterilmez (uydurma yüzde basılmaz).
     var prefScore  = (window.KBPrefs && KBPrefs.hasPrefs()) ? KBPrefs.matchScore(l) : null;
-    var score      = prefScore !== null ? prefScore : talentScore(l.id);
     var scoreClass = prefScore !== null
       ? (prefScore >= 70 ? ' is-match-high' : prefScore < 40 ? ' is-match-low' : '') : '';
+    var scoreHtml  = prefScore !== null
+      ? '<span class="match-score' + scoreClass + '">%' + prefScore + ' Uyum</span>' : '';
     var saved = isSavedJob(l.id);
     var fresh = isFresh(l.tarih);
 
@@ -310,11 +316,15 @@
       descHtml = '<p class="jc-desc">' + KB.esc(descText) + '</p>';
     }
 
-    /* ── Aktivite bilgisi ───────────────────────────────────── */
+    /* ── Aktivite bilgisi — başvuru sayısı GERÇEK veriden gelir ──
+       APP_COUNTS, listeyi çizen fonksiyon tarafından
+       SB.listingAppCounts() ile doldurulur. Henüz gelmediyse hiç basılmaz. */
+    var nApp = APP_COUNTS[l.id];
     var actHtml = '<div class="jc-activity">' +
       '<span>' + timeAgo(l.tarih) + '</span>' +
-      '<span class="jc-activity__dot"></span>' +
-      '<span>' + appCount(l.id) + ' başvuru</span>' +
+      (nApp != null
+        ? '<span class="jc-activity__dot"></span><span data-appcount="' + l.id + '">' + nApp + ' başvuru</span>'
+        : '<span class="jc-activity__dot" hidden></span><span data-appcount="' + l.id + '"></span>') +
       (l.kontenjan > 1 ? '<span class="jc-activity__dot"></span><span>' + l.kontenjan + ' pozisyon</span>' : '') +
     '</div>';
 
@@ -375,7 +385,7 @@
       actHtml +
       '<div class="job-card__foot">' +
         actionHtml +
-        '<span class="match-score' + scoreClass + '">%' + score + ' Uyum</span>' +
+        scoreHtml +
       '</div>' +
     '</article>';
   }
@@ -396,6 +406,31 @@
   }
   // İlan listesi modül durumu — handler hep güncel veriyi okur (re-render güvenli)
   var JOBS = { list: [], appliedSet: {}, myPid: null };
+  // Gerçek başvuru sayıları { listingId: n } — SB.listingAppCounts() doldurur
+  var APP_COUNTS = {};
+  // Gerçek çevrimiçi durumu { profileId: true/false } — SB.presenceOf() doldurur
+  var PRESENCE = {};
+
+  /* İlan listesi için gerçek başvuru sayılarını çek ve karta işle.
+     Kartlar önce sayısız çizilir, sayılar gelince yerine oturur — böylece
+     hiçbir anda uydurma bir rakam görünmez. */
+  async function loadAppCounts(list) {
+    if (!online() || !list || !list.length) return;
+    try {
+      var counts = await SB.listingAppCounts(list.map(function (x) { return x.id; }));
+      Object.keys(counts).forEach(function (k) { APP_COUNTS[k] = counts[k]; });
+      paintAppCounts();
+    } catch (e) {}
+  }
+  function paintAppCounts() {
+    document.querySelectorAll("[data-appcount]").forEach(function (el) {
+      var n = APP_COUNTS[el.getAttribute("data-appcount")];
+      if (n == null) return;
+      el.textContent = n + " başvuru";
+      var dot = el.previousElementSibling;
+      if (dot && dot.classList.contains("jc-activity__dot")) dot.hidden = false;
+    });
+  }
 
   /* ---- akıllı arama: son aramalar + öneriler ---- */
   function getRecentSearches() { try { return JSON.parse(localStorage.getItem("kb_recent_searches")) || []; } catch (e) { return []; } }
@@ -477,8 +512,12 @@
     });
     out.sort(function (a, b) {
       if (sort === "match") {
-        var usePrefs = window.KBPrefs && KBPrefs.hasPrefs();
-        return (usePrefs ? KBPrefs.matchScore(b) : talentScore(b.id)) - (usePrefs ? KBPrefs.matchScore(a) : talentScore(a.id));
+        // Uyum sıralaması yalnız gerçek tercih verisiyle anlamlıdır;
+        // tercih yoksa en yeni ilan sıralamasına düşer.
+        if (!(window.KBPrefs && KBPrefs.hasPrefs())) {
+          var ta0 = a.tarih || "", tb0 = b.tarih || ""; return ta0 < tb0 ? 1 : ta0 > tb0 ? -1 : 0;
+        }
+        return KBPrefs.matchScore(b) - KBPrefs.matchScore(a);
       }
       var da = a.tarih || "", db = b.tarih || "";
       return sort === "old" ? (da < db ? -1 : da > db ? 1 : 0) : (da < db ? 1 : da > db ? -1 : 0);
@@ -505,17 +544,9 @@
     if (window.KB && KB.ready) await KB.ready();
     grid.innerHTML = skeletonCards(6);
     if (!online()) {
-      JOBS.list = (window.KB_DATA && KB_DATA.ilanlar) ? KB_DATA.ilanlar : [];
-      var citySel2 = document.getElementById("jobCity");
-      var vehSel2 = document.getElementById("jobVehicle");
-      fillFilterSelect(citySel2, uniqVals(JOBS.list, function (x) { return x.sehir; }), T("ilan.allCities"));
-      fillFilterSelect(vehSel2, uniqVals(JOBS.list, function (x) { return x.arac; }), T("ilan.allVehicles"));
-      if (countEl) countEl.textContent = JOBS.list.length ? T("ilan.count", { n: JOBS.list.length }) : "";
-      ["jobSearch", "jobCity", "jobVehicle", "jobSort"].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el && !el._wired) { el._wired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", applyJobFilters); }
-      });
-      applyJobFilters();
+      JOBS.list = [];
+      grid.innerHTML = emptyState("📭", T("ilan.none"), "", false);
+      if (countEl) countEl.textContent = "";
       return;
     }
     var list = await SB.openListings();
@@ -558,6 +589,32 @@
       document.addEventListener("click", function (e) { if (!sugg.contains(e.target) && e.target !== searchEl) sugg.classList.remove("is-open"); });
     }
     applyJobFilters();
+    // Gerçek başvuru sayıları (kartlar çizildikten sonra yerine oturur)
+    loadAppCounts(list);
+    // CANLI: yeni ilan yayınlanınca / kapanınca liste kendini yeniler
+    wireLiveListings();
+  }
+
+  /* Canlı ilan akışı — sayfa yenilemeden güncellenir.
+     Aynı sayfada tek abonelik tutulur. */
+  var _liveJobs = null;
+  function wireLiveListings() {
+    if (_liveJobs || !online() || !SB.subscribeListings) return;
+    var pending = null;
+    _liveJobs = SB.subscribeListings(function () {
+      // Kısa debounce: art arda gelen olaylarda tek yenileme yapılır
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(async function () {
+        try {
+          var fresh = await SB.openListings();
+          JOBS.list = fresh;
+          var cEl = document.getElementById("listingsCount");
+          if (cEl) cEl.textContent = fresh.length ? T("ilan.count", { n: fresh.length }) : "";
+          applyJobFilters();
+          loadAppCounts(fresh);
+        } catch (e) {}
+      }, 400);
+    });
   }
 
   /* başvuru modalı */
@@ -808,19 +865,20 @@
     return '<a class="btn btn--primary btn--sm" href="' + page + '?id=' + id + '">' + T("btn.viewProfile") + '</a>';
   }
 
-  /* deterministik seed-based match score (veri değişmez, sadece görsel) */
-  function talentScore(id) {
-    var h = 0, s = String(id || "");
-    for (var i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-    return (Math.abs(h) % 28) + 72;
-  }
-  /* deterministik başvuru sayısı (demo) */
-  function appCount(id) {
-    var h = 0, s = String(id || "") + "_a";
-    for (var i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-    return (Math.abs(h) % 22) + 4;
-  }
+  /* Uydurma "uyum skoru" ve "başvuru sayısı" üreten hash fonksiyonları
+     kaldırıldı. Uyum skoru yalnız KBPrefs (kullanıcının gerçek tercihleri)
+     ile hesaplanır; başvuru sayısı APP_COUNTS'tan (gerçek DB sayımı) gelir;
+     çevrimiçi rozeti PRESENCE'tan (gerçek presence tablosu) gelir. */
   function xpFill(puan) { return Math.round((Number(puan) || 0) / 5 * 100); }
+  /* Gerçek çevrimiçi rozeti — presence verisi yoksa hiçbir şey basılmaz */
+  function onlineBadge(id) {
+    return PRESENCE[id] ? '<span class="online-dot" title="Çevrimiçi">● Çevrimiçi</span>' : '';
+  }
+  async function loadPresenceFor(list) {
+    PRESENCE = {};
+    if (!online() || !list || !list.length) return;
+    try { PRESENCE = await SB.presenceOf(list.map(function (x) { return x.id; })); } catch (e) {}
+  }
   function careerTrackHtml(seviye) {
     var levels = ["standart", "profesyonel", "premium"];
     var cur = levels.indexOf(seviye || "standart");
@@ -840,10 +898,9 @@
 
   function kuryeCard(k) {
     var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
-    var score = talentScore(k.id);
     var fill = xpFill(k.puan);
     return '<article class="talent-card">' + poolStar(k.id) +
-      '<span class="match-score">%' + score + ' Uyum</span>' +
+      onlineBadge(k.id) +
       '<div class="pcard__top"><div class="avatar">' + avInner(k) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(k.ad) + ' ' + verBadge(k.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
@@ -859,9 +916,8 @@
     '</article>';
   }
   function isletmeCard(i) {
-    var score = talentScore(i.id);
     return '<article class="talent-card">' + poolStar(i.id) +
-      '<span class="match-score">%' + score + ' Uyum</span>' +
+      onlineBadge(i.id) +
       '<div class="pcard__top"><div class="avatar avatar--blue">' + avInner(i) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(i.ad) + ' ' + verBadge(i.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
@@ -872,9 +928,8 @@
     '</article>';
   }
   function firmaCard(f) {
-    var score = talentScore(f.id);
     return '<article class="talent-card">' + poolStar(f.id) +
-      '<span class="match-score">%' + score + ' Uyum</span>' +
+      onlineBadge(f.id) +
       '<div class="pcard__top"><div class="avatar avatar--navy">' + avInner(f) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(f.ad) + ' ' + verBadge(f.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
@@ -917,9 +972,23 @@
       if (v2) { if (type === "kurye" && x.seviye !== v2) return false; if (type === "isletme" && x.tur !== v2) return false; }
       return true;
     });
-    grid.innerHTML = out.length ? out.map(POOLV.cardFn).join("") :
-      '<div class="empty" style="grid-column:1/-1">' + T("common.noResult") + '</div>';
-    if (countEl) countEl.textContent = T("common.results", { n: out.length });
+    if (out.length) {
+      grid.innerHTML = out.map(POOLV.cardFn).join("");
+    } else if (POOLV.src.length) {
+      // Kayıt var ama filtreye uymuyor → filtreleri gevşetmesini söyle
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.noResult") + '</div>';
+    } else {
+      // Havuz gerçekten boş → "filtreleri değiştir" demek yanıltıcı olur
+      var bosMetin = type === "kurye"   ? "Henüz yayında kurye yok."
+                   : type === "isletme" ? "Henüz yayında esnaf yok."
+                   :                      "Henüz yayında kurye firması yok.";
+      grid.innerHTML = '<div class="kb-empty" style="grid-column:1/-1">' +
+        '<div class="kb-empty__ic">👥</div>' +
+        '<div class="kb-empty__t">' + bosMetin + '</div>' +
+        '<div class="kb-empty__d">Yeni kayıtlar profillerini tamamladıkça burada görünecek.</div>' +
+        '</div>';
+    }
+    if (countEl) countEl.textContent = POOLV.src.length ? T("common.results", { n: out.length }) : "";
   }
   document.addEventListener("click", function (e) {
     var rm = e.target.closest("[data-rmpool]"); if (!rm) return;
@@ -953,6 +1022,7 @@
     grid.innerHTML = skeletonCards(6);
     var src = await loadPool(type);
     await loadPoolSet();
+    await loadPresenceFor(src);   // gerçek çevrimiçi rozetleri
     POOLV.src = src; POOLV.type = type;
     POOLV.cardFn = type === "kurye" ? kuryeCard : type === "isletme" ? isletmeCard : firmaCard;
     var sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
@@ -981,6 +1051,26 @@
       document.addEventListener("click", function (e) { if (!sugg.contains(e.target) && e.target !== search) sugg.classList.remove("is-open"); });
     }
     poolApply();
+    // CANLI: yeni kayıt / profil yayına alınınca havuz kendini tazeler
+    wireLivePool(type);
+  }
+
+  /* Canlı havuz — yeni kurye/işletme/firma kaydolunca liste ve sayaç güncellenir */
+  var _livePool = null;
+  function wireLivePool(type) {
+    if (_livePool || !online() || !SB.subscribeProfiles) return;
+    var pending = null;
+    _livePool = SB.subscribeProfiles(function () {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(async function () {
+        try {
+          var fresh = await loadPool(type);
+          await loadPresenceFor(fresh);
+          POOLV.src = fresh;
+          poolApply();
+        } catch (e) {}
+      }, 500);
+    });
   }
   function fillSelect(sel, values, labels) {
     sel.innerHTML = '<option value="">' + T("common.all") + '</option>' + values.map(function (v) {
@@ -1050,6 +1140,9 @@
     var x = await loadProfile(type, id);
     if (!x) { host.innerHTML = '<div class="empty">' + T("empty.generic") + '</div>'; return; }
     await loadPoolSet();
+    // Gerçek "profil görüntülendi" olayı — sahibine bildirim + dashboard sayacı.
+    // Aynı ziyaretçi 24 saatte bir kez sayılır (sunucu tarafında).
+    if (canPool() && SB.recordProfileView) SB.recordProfileView(x.id);
 
     /* ── Avatar ───────────────────────────────────────────── */
     var avHtml = x.avatar_url
@@ -2256,30 +2349,20 @@
       { lbl: "Yakın Metro / Durak", val: l.yakin_metro }
     ].filter(function(f) { return f.val; });
 
-    var compDesc = l.sahipRol === "firma"
+    // İşveren açıklaması: gerçek profil açıklaması (ilanla birlikte join'lenir).
+    // Yoksa yalnız nötr rol etiketi gösterilir — uydurma "hakkında" metni yazılmaz.
+    var compDesc = l.sahipAciklama || (l.sahipRol === "firma"
       ? "Kurye firması — platform üzerinden kurye istihdamı sağlar."
-      : "Kayıtlı işletme — platformumuz üzerinden kurye çalıştırır.";
-    if (l.sahipId && window.KB_DATA) {
-      var cArr = l.sahipRol === "firma" ? (KB_DATA.firmalar || []) : (KB_DATA.isletmeler || []);
-      for (var ci = 0; ci < cArr.length; ci++) {
-        if (cArr[ci].id === l.sahipId) { compDesc = cArr[ci].hakkinda || cArr[ci].bio || compDesc; break; }
-      }
-    }
+      : "Kayıtlı işletme — platformumuz üzerinden kurye çalıştırır.");
 
-    var relJobs = [];
-    if (window.KB_DATA && KB_DATA.ilanlar) {
-      for (var ri = 0; ri < KB_DATA.ilanlar.length && relJobs.length < 3; ri++) {
-        var rj = KB_DATA.ilanlar[ri];
-        if (rj.id !== l.id && rj.durum !== "kapali" && (rj.sehir === l.sehir || rj.kategori === l.kategori)) relJobs.push(rj);
-      }
-    }
+    // Benzer ilanlar gerçek DB'den gelir; renderJobDetail() opts.related ile geçirir.
+    var relJobs = (opts && opts.related) || [];
 
-    var score = 0;
-    if (window.KBPrefs && canPool()) { score = KBPrefs.matchScore(l); }
-    else { score = talentScore(l.id); }
-    score = Math.max(0, Math.min(100, score));
-    var scoreColor = score >= 70 ? "#16A34A" : score >= 45 ? "#D97706" : "#DC2626";
-    var scoreLbl = score >= 70 ? "Yüksek uyum — başvurabilirsiniz" : score >= 45 ? "Orta uyum — denemeye değer" : "Düşük uyum — tercihleri güncelleyin";
+    // Uyum skoru yalnız kullanıcının gerçek tercihleri varsa hesaplanır.
+    var score = (window.KBPrefs && canPool() && KBPrefs.hasPrefs()) ? KBPrefs.matchScore(l) : null;
+    if (score !== null) score = Math.max(0, Math.min(100, score));
+    var scoreColor = score === null ? "" : score >= 70 ? "#16A34A" : score >= 45 ? "#D97706" : "#DC2626";
+    var scoreLbl = score === null ? "" : score >= 70 ? "Yüksek uyum — başvurabilirsiniz" : score >= 45 ? "Orta uyum — denemeye değer" : "Düşük uyum — tercihleri güncelleyin";
 
     var eligHtml = "";
     if (canPool() && myProfile && myProfile.role === "kurye") {
@@ -2309,7 +2392,8 @@
           (loc ? '<span>📍 ' + KB.esc(loc) + '</span>' : '') +
           '<span>📅 ' + timeAgo(l.tarih) + ' yayınlandı</span>' +
           deadlineMeta +
-          '<span>👥 ' + appCount(l.id) + ' başvuru</span>' +
+          // Gerçek başvuru adedi — opts.appCount ile DB'den gelir, yoksa basılmaz
+          (opts && opts.appCount != null ? '<span>👥 ' + opts.appCount + ' başvuru</span>' : '') +
         '</div>' +
         '<div class="jd-hero__tags">' + tagHtml + '</div>' +
         '<div class="jd-hero__actions">' + applyBtn(false) + (owner ? '<a class="btn btn--primary btn--sm" href="basvurular.html?job=' + l.id + '">📋 Başvuruları Yönet</a>' : '') + favSmall + shareBtn + '</div>' +
@@ -2380,14 +2464,21 @@
             '<div class="jd-apply-card__act">' + applyBtn(true) + favLarge + '</div>' +
           '</div>' +
 
-          '<div class="jd-match-card">' +
-            '<div class="jd-match-card__head"><span class="jd-match-card__title">Uyum Skoru</span></div>' +
-            '<div class="jd-match-ring" style="background:conic-gradient(' + scoreColor + ' ' + (score * 3.6).toFixed(1) + 'deg,var(--border) 0%)">' +
-              '<div class="jd-match-ring__inner">%' + score + '</div>' +
-            '</div>' +
-            '<div style="text-align:center;font-size:0.78rem;color:var(--text-2);margin-bottom:12px">' + scoreLbl + '</div>' +
-            (!canPool() ? '<a href="profil-duzenle.html" class="btn btn--ghost btn--sm btn--block">Tercihlerimi Güncelle</a>' : '') +
-          '</div>' +
+          // Uyum skoru kartı: yalnız gerçek tercih verisi varsa gösterilir.
+          // Tercih yoksa uydurma yüzde yerine tercihleri doldurma çağrısı çıkar.
+          (score !== null
+            ? '<div class="jd-match-card">' +
+                '<div class="jd-match-card__head"><span class="jd-match-card__title">Uyum Skoru</span></div>' +
+                '<div class="jd-match-ring" style="background:conic-gradient(' + scoreColor + ' ' + (score * 3.6).toFixed(1) + 'deg,var(--border) 0%)">' +
+                  '<div class="jd-match-ring__inner">%' + score + '</div>' +
+                '</div>' +
+                '<div style="text-align:center;font-size:0.78rem;color:var(--text-2);margin-bottom:12px">' + scoreLbl + '</div>' +
+              '</div>'
+            : '<div class="jd-match-card">' +
+                '<div class="jd-match-card__head"><span class="jd-match-card__title">Uyum Skoru</span></div>' +
+                '<div style="text-align:center;font-size:0.78rem;color:var(--text-2);margin:8px 0 12px">İş tercihlerini belirtince bu ilanla uyumun hesaplanır.</div>' +
+                '<a href="profil-duzenle.html" class="btn btn--ghost btn--sm btn--block">Tercihlerimi Belirle</a>' +
+              '</div>') +
 
           '<div class="jd-company">' +
             '<div class="jd-company__head">' +
@@ -2412,26 +2503,39 @@
     host.innerHTML = jobDetailSkeleton();
     if (!id) { host.innerHTML = jobNotFound(); return; }
     var l = null;
-    if (!online()) {
-      l = (window.KB_DATA && KB_DATA.ilanlar || []).filter(function(x) { return x.id === id; })[0];
-      if (!l) { host.innerHTML = jobNotFound(); return; }
-    } else {
-      try { l = await SB.listingById(id); } catch(e) {}
-      if (!l) { host.innerHTML = jobNotFound(); return; }
-    }
+    if (!online()) { host.innerHTML = jobNotFound(); return; }
+    try { l = await SB.listingById(id); } catch (e) {}
+    if (!l) { host.innerHTML = jobNotFound(); return; }
+
     var applied = false, owner = false, myProfile = null;
     if (canPool()) {
       try { (await SB.appliedListingIds()).forEach(function(x) { if (String(x) === String(id)) applied = true; }); } catch(e) {}
       myProfile = KB.session() && KB.session().profile;
       owner = !!(myProfile && myProfile.id === l.owner_id);
     }
-    var result = buildJobDetailHtml(l, { applied: applied, owner: owner, saved: isSavedJob(l.id), myProfile: myProfile });
+
+    // Gerçek başvuru adedi
+    var nApp = null;
+    try { var c = await SB.listingAppCounts([l.id]); nApp = c[l.id] != null ? c[l.id] : 0; } catch (e) {}
+
+    // Benzer ilanlar — gerçek, açık, süresi dolmamış ilanlardan
+    var related = [];
+    try {
+      var all = await SB.openListings();
+      related = all.filter(function (r) {
+        return String(r.id) !== String(l.id) &&
+          ((r.sehir && r.sehir === l.sehir) || (r.kategori && r.kategori === l.kategori));
+      }).slice(0, 3);
+    } catch (e) {}
+
+    var result = buildJobDetailHtml(l, {
+      applied: applied, owner: owner, saved: isSavedJob(l.id),
+      myProfile: myProfile, related: related, appCount: nApp
+    });
     host.innerHTML = '<a class="jd-back" href="ilanlar.html">← İlanlara Dön</a>' + result.html;
     document.title = result.title;
-    try {
-      var vk = "kb_job_views_" + l.id;
-      localStorage.setItem(vk, (parseInt(localStorage.getItem(vk) || "0", 10) + 1));
-    } catch(e) {}
+    // Gerçek görüntülenme kaydı — ilan sahibinin istatistiklerine işlenir
+    if (SB.recordListingView) SB.recordListingView(l.id);
   }
 
   /* ============ KAYITLI İLANLAR (favoriler) ============ */
@@ -2491,59 +2595,11 @@
     var root = document.getElementById("msgRoot");
     if (!root) return;
     if (window.KB && KB.ready) await KB.ready();
+    // Oturum yoksa giriş çağrısı. Demo konuşma GÖSTERİLMEZ — mesajlar
+    // yalnız gerçek eşleşmelerden doğar.
     if (!(online() && KB.isAuthed && KB.isAuthed())) {
-      var mockConvs = (window.KB_DATA && KB_DATA.konusmalar) || [];
-      if (!mockConvs.length) {
-        root.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.loginRequired") + '</div>' +
-          '<a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
-        return;
-      }
-      var listEl0 = document.getElementById("msgConvList");
-      var mainEl0 = document.getElementById("msgMain");
-      if (listEl0) {
-        listEl0.innerHTML = mockConvs.map(function (c) {
-          var unreadBadge = c.unread ? '<span class="msg-conv__badge">' + (c.unread > 99 ? "99+" : c.unread) + '</span>' : '';
-          return '<button type="button" class="msg-conv' + (c.unread ? " msg-conv--unread" : "") + '" data-mockconv="' + KB.esc(c.profileId) + '">' +
-            '<div class="msg-conv__av msg-conv__av--ph">' + KB.initials(c.ad) + '</div>' +
-            '<div class="msg-conv__body">' +
-              '<div class="msg-conv__top"><span class="msg-conv__name">' + KB.esc(c.ad) + '</span><span class="msg-conv__time">' + msgTimeConv(c.lastAt) + '</span></div>' +
-              '<div class="msg-conv__bottom"><span class="msg-conv__last">' + (c.lastMine ? "Siz: " : "") + KB.esc(c.lastBody || "") + '</span>' + unreadBadge + '</div>' +
-            '</div></button>';
-        }).join("");
-        listEl0.addEventListener("click", function (e) {
-          var b = e.target.closest("[data-mockconv]");
-          if (!b || !mainEl0) return;
-          var cid = b.getAttribute("data-mockconv");
-          var conv = mockConvs.filter(function (x) { return x.profileId === cid; })[0];
-          if (!conv) return;
-          listEl0.querySelectorAll(".msg-conv").forEach(function (x) { x.classList.toggle("is-active", x.getAttribute("data-mockconv") === cid); });
-          root.classList.add("msg--threadopen");
-          var bubbles = (conv.mesajlar || []).map(function (m) {
-            var mine = m.from_user === "me";
-            return '<div class="msg-bubble' + (mine ? " msg-bubble--mine" : "") + '">' + KB.esc(m.body) +
-              '<span class="msg-bubble__t">' + msgTimeShort(m.created_at) + '</span></div>';
-          }).join("");
-          mainEl0.innerHTML =
-            '<div class="msg-thread">' +
-              '<div class="msg-thread__head">' +
-                '<button type="button" class="msg-back" id="msgBack0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>' +
-                '<div class="msg-thread__who"><div class="msg-thread__av">' + KB.initials(conv.ad || "?") + '</div>' +
-                '<div class="msg-thread__info"><div class="msg-thread__name">' + KB.esc(conv.ad) + '</div></div></div>' +
-              '</div>' +
-              '<div class="msg-thread__scroll" id="msgScroll0">' + (bubbles || '<div class="msg-thread__empty">Henüz mesaj yok.</div>') + '</div>' +
-              '<div class="msg-compose"><form id="msgForm0"><input id="msgInput0" autocomplete="off" placeholder="Demo modda mesaj gönderilemez…" disabled>' +
-                '<button type="submit" class="msg-send-btn" disabled><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>' +
-              '</form></div>' +
-            '</div>';
-          var s = document.getElementById("msgScroll0"); if (s) s.scrollTop = s.scrollHeight;
-          var backBtn = document.getElementById("msgBack0");
-          if (backBtn) backBtn.addEventListener("click", function () {
-            root.classList.remove("msg--threadopen");
-            listEl0.querySelectorAll(".msg-conv").forEach(function (x) { x.classList.remove("is-active"); });
-          });
-        });
-      }
-      if (mainEl0) mainEl0.innerHTML = '<div class="msg-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">Bir konuşma seçin</div><div class="kb-empty__d">Soldaki listeden bir konuşma açın.</div></div>';
+      root.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.loginRequired") + '</div>' +
+        '<a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
       return;
     }
     var listEl = document.getElementById("msgConvList");

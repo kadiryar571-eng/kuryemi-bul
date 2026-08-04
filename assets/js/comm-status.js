@@ -289,11 +289,7 @@
   }
 
   // ── Seed / init ────────────────────────────────────────────────────
-  function seedDemoData(uid) {
-    if (!window.KBChat) return;
-    observe(uid);
-  }
-
+  /* Demo/örnek veri üreticisi kaldırıldı — üretimde sahte kayıt oluşturulmaz. */
   window.KBCommStatus = {
     STATES: STATES,
     STEP_KEYS: STEP_KEYS,
@@ -310,7 +306,5 @@
     renderTimeline: renderTimeline,
     renderNextAction: renderNextAction,
     renderActivityLog: renderActivityLog,
-    renderStatusCard: renderStatusCard,
-    seedDemoData: seedDemoData
-  };
+    renderStatusCard: renderStatusCard,  };
 })();

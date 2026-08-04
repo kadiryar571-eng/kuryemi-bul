@@ -42,201 +42,208 @@
     } catch (e) { return ''; }
   }
 
-  // ── Storage ──────────────────────────────────────────────────────
-  function decKey(jobId, kuryeId)  { return 'kb_hiring_' + jobId + '_' + kuryeId; }
-  function obKey(jobId, kuryeId)   { return 'kb_hiring_ob_' + jobId + '_' + kuryeId; }
-  function logKey(jobId, kuryeId)  { return 'kb_hiring_log_' + jobId + '_' + kuryeId; }
-  function archKey(uid)            { return 'kb_archived_apps_' + uid; }
+  /* ============================================================
+     VERİ KATMANI — public.hiring_decisions + public.onboarding
+     (migration-16 + 19)
 
-  function getDecision(jobId, kuryeId) {
-    try { return JSON.parse(localStorage.getItem(decKey(jobId, kuryeId)) || 'null'); } catch (e) { return null; }
+     Eskiden localStorage'daydı: işveren kararı kendi tarayıcısında
+     kalıyordu, aday hiç göremiyordu. Artık tek kaynak veritabanı;
+     bildirimler de sunucu trigger'larıyla gerçek alıcıya gidiyor.
+
+     İmzalardaki ilk "uid" parametresi geriye dönük uyum için duruyor.
+     ============================================================ */
+  var _decs = [];        // işe alım kararları
+  var _obs  = {};        // decisionId -> onboarding
+  var _loaded = false;
+  var _loading = null;
+
+  function on() { return !!(window.SB && SB.isOn && SB.isOn()); }
+  function _toast(msg) {
+    if (window.KBMotion && KBMotion.showErrorToast) KBMotion.showErrorToast(msg);
+  }
+  function _err(r) { return r && r.error ? r.error : null; }
+
+  function load(force) {
+    if (!on()) { _loaded = true; return Promise.resolve([]); }
+    if (_loading) return _loading;
+    if (_loaded && !force) return Promise.resolve(_decs);
+    _loading = SB.myHiringDecisions()
+      .then(function (list) {
+        _decs = list || [];
+        // Kabul edilenlerin onboarding kayıtlarını da çek
+        var kabul = _decs.filter(function (d) { return d.status === 'kabul'; });
+        return Promise.all(kabul.map(function (d) {
+          return SB.getOnboarding(d.id).then(function (ob) { if (ob) _obs[d.id] = ob; });
+        }));
+      })
+      .catch(function (e) { console.warn('KBHiring.load:', e); })
+      .then(function () { _loaded = true; _loading = null; return _decs; });
+    return _loading;
   }
 
-  function saveDecision(jobId, kuryeId, dec) {
-    try { localStorage.setItem(decKey(jobId, kuryeId), JSON.stringify(dec)); } catch (e) {}
+  /* ---- Önbellekten okuma (senkron; önce load() çağır) ---- */
+  function _find(jobId, kuryeId) {
+    return _decs.filter(function (d) {
+      return String(d.kuryeId) === String(kuryeId) &&
+             (jobId ? String(d.jobId) === String(jobId) : !d.jobId);
+    })[0] || null;
   }
-
+  function getDecision(jobId, kuryeId) { return _find(jobId, kuryeId); }
   function getOnboarding(jobId, kuryeId) {
-    try { return JSON.parse(localStorage.getItem(obKey(jobId, kuryeId)) || 'null'); } catch (e) { return null; }
+    var d = _find(jobId, kuryeId);
+    return d ? (_obs[d.id] || null) : null;
   }
 
-  function saveOnboarding(jobId, kuryeId, ob) {
-    try { localStorage.setItem(obKey(jobId, kuryeId), JSON.stringify(Object.assign({}, ob, { updatedAt: new Date().toISOString() }))); } catch (e) {}
-  }
-
+  /* Etkinlik günlüğü ayrı tabloda tutulmuyor; karar kaydının
+     zaman damgalarından türetilir — uydurma kayıt üretilmez. */
   function getLog(jobId, kuryeId) {
-    try { return JSON.parse(localStorage.getItem(logKey(jobId, kuryeId)) || '[]'); } catch (e) { return []; }
-  }
-
-  function appendLog(jobId, kuryeId, event, detail) {
-    try {
-      var log = getLog(jobId, kuryeId);
-      log.push({ event: event, detail: detail || '', at: new Date().toISOString() });
-      localStorage.setItem(logKey(jobId, kuryeId), JSON.stringify(log));
-    } catch (e) {}
-  }
-
-  // ── Sync helpers ─────────────────────────────────────────────────
-  function syncAppStatus(jobId, kuryeId, status) {
-    try {
-      var apps = JSON.parse(localStorage.getItem('kb_apps_' + jobId) || '{}');
-      if (!apps[kuryeId]) apps[kuryeId] = {};
-      apps[kuryeId].status = status;
-      apps[kuryeId].updatedAt = new Date().toISOString();
-      localStorage.setItem('kb_apps_' + jobId, JSON.stringify(apps));
-    } catch (e) {}
-  }
-
-  function checkJobQuota(jobId) {
-    try {
-      var apps = JSON.parse(localStorage.getItem('kb_apps_' + jobId) || '{}');
-      var accepted = Object.values(apps).filter(function (a) { return a.status === 'kabul'; }).length;
-      var quota = 1;
-      if (window.KB_DATA && KB_DATA.ilanlar) {
-        var job = KB_DATA.ilanlar.find(function (j) { return String(j.id) === String(jobId); });
-        if (job) quota = job.kontenjan || job.adet || 1;
-      }
-      if (accepted >= quota) {
-        if (window.IlanStatus) {
-          try { IlanStatus.setStatus(jobId, 'doldu'); } catch (e2) {}
-        }
-        try {
-          var st = JSON.parse(localStorage.getItem('kb_ilan_status_' + jobId) || '{}');
-          st.durum = 'doldu'; st.updatedAt = new Date().toISOString();
-          localStorage.setItem('kb_ilan_status_' + jobId, JSON.stringify(st));
-        } catch (e3) {}
-      }
-    } catch (e) {}
-  }
-
-  function archiveApp(uid, jobId, kuryeId, dec) {
-    try {
-      var key = archKey(uid);
-      var list = JSON.parse(localStorage.getItem(key) || '[]');
-      var idx = list.findIndex(function (a) { return a.jobId === jobId && a.kuryeId === kuryeId; });
-      var entry = { jobId: jobId, kuryeId: kuryeId, dec: dec, archivedAt: new Date().toISOString() };
-      if (idx >= 0) list[idx] = entry; else list.unshift(entry);
-      localStorage.setItem(key, JSON.stringify(list.slice(0, 200)));
-    } catch (e) {}
-  }
-
-  function pushNotif(targetUid, type, data) {
-    try {
-      var key = 'kb_notifs_' + targetUid;
-      var notifs = JSON.parse(localStorage.getItem(key) || '[]');
-      notifs.unshift({ type: type, data: data, at: new Date().toISOString(), read: false });
-      localStorage.setItem(key, JSON.stringify(notifs.slice(0, 50)));
-    } catch (e) {}
-    if (window.KBMotion) {
-      var MAP = {
-        shortlisted: ['⭐ Kısa Listeye Alındınız!', (data.job || '') + ' — ' + (data.isletme || '')],
-        accepted:    ['🎉 Kabul Edildiniz!', (data.job || '') + ' pozisyonu için kabul edildiniz.'],
-        rejected:    ['Başvuru Sonucu', (data.job || '') + ' için olumsuz sonuç.']
-      };
-      var m = MAP[type];
-      if (m) KBMotion.showInAppNotif(m[0], m[1]);
+    var d = _find(jobId, kuryeId);
+    if (!d) return [];
+    var log = [{ event: 'beklemede', detail: '', at: d.createdAt }];
+    var EV = { kisa_listede: 'shortlisted', kabul: 'accepted', reddedildi: 'rejected',
+               mulakat_planli: 'beklemede', tamamlandi: 'accepted' };
+    if (d.status !== 'beklemede' && d.updatedAt) {
+      log.push({ event: EV[d.status] || d.status, detail: d.reason || d.note || '', at: d.updatedAt });
     }
+    var ob = _obs[d.id];
+    if (ob) log.push({ event: 'onboarding_started', detail: '', at: ob.sentAt || d.updatedAt });
+    return log;
   }
 
-  // ── Main action ──────────────────────────────────────────────────
-  function makeDecision(uid, jobId, kuryeId, status, opts) {
+  function _put(dec) {
+    if (!dec || !dec.id) return dec;
+    var i = _decs.findIndex(function (x) { return x.id === dec.id; });
+    if (i >= 0) _decs[i] = dec; else _decs.push(dec);
+    return dec;
+  }
+
+  /* ---- Başvuru durumunu da senkronla ----
+     Karar 'kabul'/'reddedildi' olduğunda applications.durum da güncellenir,
+     böylece başvurular ekranı ile karar ekranı ayrışmaz. */
+  async function _syncApplication(jobId, kuryeId, status) {
+    if (!on() || !jobId || !SB.listingApplications) return;
+    var db = { kabul: 'accepted', reddedildi: 'rejected' }[status];
+    if (!db) return;
+    try {
+      var apps = await SB.listingApplications(jobId);
+      var mine = (apps || []).filter(function (a) { return String(a.applicantId) === String(kuryeId); })[0];
+      if (mine && mine.durum !== db) await SB.updateApplication(mine.id, db);
+    } catch (e) { console.warn('_syncApplication:', e); }
+  }
+
+  /* ---- Kontenjan doldu mu? Gerçek kabul sayısına bakar ---- */
+  async function _checkQuota(jobId) {
+    if (!on() || !jobId || !SB.listingStats) return;
+    try {
+      var st = await SB.listingStats(jobId);
+      var jobs = (window.IlanStatus && IlanStatus.getJobs) ? IlanStatus.getJobs() : [];
+      var job = jobs.filter(function (j) { return String(j.id) === String(jobId); })[0];
+      var kota = (job && (job.kontenjan || job.ihtiyac_sayisi)) || 0;
+      if (kota > 0 && (st.accepted || 0) >= kota && SB.updateListingStatus) {
+        await SB.updateListingStatus(jobId, 'kapali');
+      }
+    } catch (e) { console.warn('_checkQuota:', e); }
+  }
+
+  /* ---- Ana işlem: karar ver ---- */
+  async function makeDecision(uid, jobId, kuryeId, status, opts) {
     opts = opts || {};
-    var now = new Date().toISOString();
-    var dec = getDecision(jobId, kuryeId) || {
-      jobId: jobId, kuryeId: kuryeId, isletmeId: uid,
-      status: 'beklemede', note: '', reason: '',
-      jobTitle: opts.jobTitle || '', kuryeAd: opts.kuryeAd || '', isletmeAd: opts.isletmeAd || '',
-      threadId: opts.threadId || null,
-      acceptedAt: null, rejectedAt: null, shortlistedAt: null,
-      createdAt: now, updatedAt: now
-    };
+    if (!on()) { _toast('Bağlantı yok — karar kaydedilemedi'); return null; }
+    if (!kuryeId) { _toast('Aday belirtilmedi'); return null; }
 
-    dec.status = status;
-    dec.updatedAt = now;
-    if (opts.note) dec.note = opts.note;
-    if (opts.reason) dec.reason = opts.reason;
-
-    if (status === 'kisa_listede') {
-      dec.shortlistedAt = now;
-      syncAppStatus(jobId, kuryeId, 'inceleniyor');
-      appendLog(jobId, kuryeId, 'shortlisted', dec.kuryeAd);
-      pushNotif(kuryeId, 'shortlisted', { job: dec.jobTitle, isletme: dec.isletmeAd });
-
-    } else if (status === 'mulakat_tamamlandi') {
-      appendLog(jobId, kuryeId, 'mulakat_tamamlandi', '');
-
-    } else if (status === 'kabul') {
-      dec.acceptedAt = now;
-      syncAppStatus(jobId, kuryeId, 'kabul');
-      checkJobQuota(jobId);
-      appendLog(jobId, kuryeId, 'accepted', dec.kuryeAd);
-      pushNotif(kuryeId, 'accepted', { job: dec.jobTitle, isletme: dec.isletmeAd });
-      if (dec.threadId && window.KBChat) {
-        KBChat.sendMessage(uid, dec.threadId, 'system', 'system', '🎉 Tebrikler! Başvurunuz kabul edildi.');
-      }
-
-    } else if (status === 'reddedildi') {
-      dec.rejectedAt = now;
-      syncAppStatus(jobId, kuryeId, 'red');
-      appendLog(jobId, kuryeId, 'rejected', dec.reason || dec.kuryeAd);
-      pushNotif(kuryeId, 'rejected', { job: dec.jobTitle, isletme: dec.isletmeAd });
-      archiveApp(uid, jobId, kuryeId, dec);
-      if (dec.threadId && window.KBChat) {
-        KBChat.sendMessage(uid, dec.threadId, 'system', 'system', '❌ Başvurunuz değerlendirildi, bu sefer uygun görülmedi.');
-      }
+    var mevcut = _find(jobId, kuryeId);
+    var r;
+    if (mevcut) {
+      var patch = { status: status };
+      if (opts.note   !== undefined) patch.note   = opts.note;
+      if (opts.reason !== undefined) patch.reason = opts.reason;
+      r = await SB.updateHiringDecision(mevcut.id, patch);
+    } else {
+      r = await SB.createHiringDecision({
+        applicant_id: kuryeId,
+        listing_id:   jobId || null,
+        application_id: opts.application_id || null,
+        interview_id:   opts.interview_id || null,
+        status: status,
+        note:   opts.note || null,
+        reason: opts.reason || null
+      });
     }
+    var e = _err(r);
+    if (e) { _toast('Karar kaydedilemedi: ' + e); return null; }
+    _put(r);
 
-    saveDecision(jobId, kuryeId, dec);
-    return dec;
-  }
-
-  function addNote(uid, jobId, kuryeId, note) {
-    var dec = getDecision(jobId, kuryeId) || makeDecision(uid, jobId, kuryeId, 'beklemede');
-    dec.note = note;
-    dec.updatedAt = new Date().toISOString();
-    saveDecision(jobId, kuryeId, dec);
-    appendLog(jobId, kuryeId, 'note_added', note.slice(0, 60));
-    return dec;
-  }
-
-  function setOnboarding(uid, jobId, kuryeId, data) {
-    saveOnboarding(jobId, kuryeId, Object.assign({}, data, { sentAt: new Date().toISOString() }));
-    appendLog(jobId, kuryeId, 'onboarding_started', '');
-    // Notify courier via chat thread
-    var dec = getDecision(jobId, kuryeId);
-    if (dec && dec.threadId && window.KBChat) {
-      KBChat.sendMessage(uid, dec.threadId, 'system', 'system', '📋 İşe başlangıç bilgilerin paylaşıldı. karar.html sayfanızı kontrol edin.');
+    /* Yan etkiler — hepsi gerçek veri üzerinde */
+    if (status === 'kabul' || status === 'reddedildi') {
+      await _syncApplication(jobId, kuryeId, status);
     }
+    if (status === 'kabul') await _checkQuota(jobId);
+
+    /* Adaya bildirim SUNUCUDA üretilir (migration-19 trigger'ları).
+       İstemciden sahte bildirim yazılmaz. */
+    return r;
   }
 
-  // ── Queries ──────────────────────────────────────────────────────
-  function getPendingDecisions(uid) {
-    var results = [];
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        if (!k || !k.startsWith('kb_hiring_') || k.includes('_ob_') || k.includes('_log_')) continue;
-        var d = JSON.parse(localStorage.getItem(k) || 'null');
-        if (d && d.isletmeId === uid && (d.status === 'beklemede' || d.status === 'kisa_listede')) results.push(d);
-      }
-    } catch (e) {}
-    return results;
+  async function addNote(uid, jobId, kuryeId, note) {
+    var dec = _find(jobId, kuryeId);
+    if (!dec) return makeDecision(uid, jobId, kuryeId, 'beklemede', { note: note });
+    if (!on()) { _toast('Bağlantı yok'); return null; }
+    var r = await SB.updateHiringDecision(dec.id, { note: note });
+    var e = _err(r);
+    if (e) { _toast('Not kaydedilemedi: ' + e); return null; }
+    return _put(r);
   }
 
-  function getStats(uid) {
-    var s = { beklemede: 0, kisa_listede: 0, kabul: 0, reddedildi: 0, toplam: 0 };
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        if (!k || !k.startsWith('kb_hiring_') || k.includes('_ob_') || k.includes('_log_')) continue;
-        var d = JSON.parse(localStorage.getItem(k) || 'null');
-        if (d && d.isletmeId === uid) {
-          s.toplam++;
-          if (s[d.status] !== undefined) s[d.status]++;
-        }
-      }
-    } catch (e) {}
+  /* ---- Onboarding (işe başlangıç bilgileri) ---- */
+  async function setOnboarding(uid, jobId, kuryeId, data) {
+    var dec = _find(jobId, kuryeId);
+    if (!dec) { _toast('Önce adayı kabul edin.'); return null; }
+    if (!on()) { _toast('Bağlantı yok'); return null; }
+    var r = await SB.saveOnboarding(dec.id, kuryeId, data);
+    var e = _err(r);
+    if (e) { _toast('Kaydedilemedi: ' + e); return null; }
+    _obs[dec.id] = r;
+    return r;
+  }
+
+  /* Aday "işe başlangıcı tamamladım" der */
+  async function setOnboardingComplete(jobId, kuryeId) {
+    var dec = _find(jobId, kuryeId);
+    if (!dec || !on()) return null;
+    var r = await SB.completeOnboarding(dec.id);
+    var e = _err(r);
+    if (e) { _toast('Kaydedilemedi: ' + e); return null; }
+    _obs[dec.id] = r;
+    return r;
+  }
+
+  /* ---- Sorgular (önbellekten) ---- */
+  /* Ham karar listesi (geri bildirim modülü kullanır) */
+  function getDecisionsRaw() { return _decs.slice(); }
+
+  function getPendingDecisions() {
+    return _decs.filter(function (d) {
+      return d.status === 'beklemede' || d.status === 'kisa_listede';
+    });
+  }
+  function getStats() {
+    var s = { beklemede: 0, kisa_listede: 0, kabul: 0, reddedildi: 0, toplam: _decs.length };
+    _decs.forEach(function (d) { if (s[d.status] !== undefined) s[d.status]++; });
     return s;
+  }
+
+  /* CANLI: karşı taraf karar verince önbellek tazelenir */
+  var _liveOff = null;
+  function subscribe(cb) {
+    if (_liveOff || !on() || !SB.subscribeHiringDecisions) return function () {};
+    var deb = null;
+    _liveOff = SB.subscribeHiringDecisions(function () {
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () {
+        load(true).then(function () { if (cb) try { cb(_decs); } catch (e) {} });
+      }, 400);
+    });
+    return _liveOff;
   }
 
   // ── Render helpers ────────────────────────────────────────────────
@@ -372,62 +379,24 @@
   }
 
   // ── Demo seed ─────────────────────────────────────────────────────
-  function seedDemoData(uid) {
-    if (localStorage.getItem(decKey('job_demo_1', 'k_demo_1'))) return;
-    var now = new Date();
-    function dAgo(d) { return new Date(now - 86400000 * d).toISOString(); }
-    function dFwd(d) { var x = new Date(now); x.setDate(x.getDate() + d); return x.toISOString().slice(0, 10); }
-
-    var demos = [
-      { jobId: 'job_demo_1', kuryeId: 'k_demo_1', isletmeId: uid, status: 'kabul',
-        jobTitle: 'Motor Kurye', kuryeAd: 'Ahmet Yılmaz', isletmeAd: 'Hızlı Lojistik A.Ş.',
-        note: 'Deneyimi uygun, haftaya başlayabilir.', reason: '',
-        acceptedAt: dAgo(1), rejectedAt: null, shortlistedAt: dAgo(3),
-        threadId: 'thread_demo_1', createdAt: dAgo(5), updatedAt: dAgo(1) },
-      { jobId: 'job_demo_2', kuryeId: 'k_demo_2', isletmeId: uid, status: 'kisa_listede',
-        jobTitle: 'Bisiklet Kurye', kuryeAd: 'Mehmet Demir', isletmeAd: 'Hızlı Lojistik A.Ş.',
-        note: '', reason: '',
-        acceptedAt: null, rejectedAt: null, shortlistedAt: dAgo(1),
-        threadId: 'thread_demo_2', createdAt: dAgo(2), updatedAt: dAgo(1) },
-      { jobId: 'job_demo_3', kuryeId: 'k_demo_3', isletmeId: uid, status: 'reddedildi',
-        jobTitle: 'Araçlı Kurye', kuryeAd: 'Ali Kaya', isletmeAd: 'Hızlı Lojistik A.Ş.',
-        note: '', reason: 'Ehliyet durumu uygun değil.',
-        acceptedAt: null, rejectedAt: dAgo(2), shortlistedAt: null,
-        threadId: 'thread_demo_3', createdAt: dAgo(4), updatedAt: dAgo(2) }
-    ];
-
-    demos.forEach(function (dec) {
-      saveDecision(dec.jobId, dec.kuryeId, dec);
-      appendLog(dec.jobId, dec.kuryeId, 'beklemede', '');
-      if (dec.shortlistedAt) appendLog(dec.jobId, dec.kuryeId, 'shortlisted', dec.kuryeAd);
-      if (dec.acceptedAt)    { appendLog(dec.jobId, dec.kuryeId, 'accepted', dec.kuryeAd); appendLog(dec.jobId, dec.kuryeId, 'onboarding_started', ''); }
-      if (dec.rejectedAt)    appendLog(dec.jobId, dec.kuryeId, 'rejected', dec.reason);
-    });
-
-    saveOnboarding('job_demo_1', 'k_demo_1', {
-      startDate:     dFwd(7),
-      startPoint:    'Levent, İstanbul — Merkez Ofis',
-      contactPerson: 'Zeynep Hanım (İK)',
-      contactPhone:  '+90 212 000 00 00',
-      workDetails:   'Pazartesi–Cumartesi, 09:00–18:00',
-      firstDayNotes: 'Nüfus cüzdanı, sürücü belgesi ve 1 adet fotoğraf getirin.',
-      sentAt:        dAgo(1)
-    });
-  }
-
+  /* Demo/örnek veri üreticisi kaldırıldı — üretimde sahte kayıt oluşturulmaz. */
   window.KBHiring = {
     STATES: STATES,
-    getDecision: getDecision,
-    saveDecision: saveDecision,
-    getOnboarding: getOnboarding,
-    saveOnboarding: saveOnboarding,
-    setOnboarding: setOnboarding,
-    getLog: getLog,
+    /* veri (async) */
+    load: load,
     makeDecision: makeDecision,
     addNote: addNote,
-    archiveApp: archiveApp,
+    setOnboarding: setOnboarding,
+    setOnboardingComplete: setOnboardingComplete,
+    subscribe: subscribe,
+    /* önbellekten (senkron) — önce load() çağır */
+    getDecision: getDecision,
+    getDecisionsRaw: getDecisionsRaw,
+    getOnboarding: getOnboarding,
+    getLog: getLog,
     getPendingDecisions: getPendingDecisions,
     getStats: getStats,
+    /* render */
     renderChip: renderChip,
     renderStatusBar: renderStatusBar,
     renderEmployerActions: renderEmployerActions,
@@ -435,7 +404,6 @@
     renderOnboardingBlock: renderOnboardingBlock,
     renderActivityLog: renderActivityLog,
     renderDecisionCard: renderDecisionCard,
-    seedDemoData: seedDemoData,
     fmtDate: fmtDate
   };
 })();

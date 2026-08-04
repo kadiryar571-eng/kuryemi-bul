@@ -204,56 +204,85 @@ window.SharedScreens = (function () {
   }
 
   /* ── Favoriler ──────────────────────────────────────────── */
+  /* Favoriler GERÇEK kayıtlardan gelir:
+       - kurye : kaydettiği ilanlar (id listesi → listings tablosu)
+       - esnaf/firma : havuzuna eklediği kuryeler (pool_members)
+     Örnek/uydurma favori gösterilmez. */
   function favoriler() {
     showAppBar('Favorilerim', true);
     showBottomNav();
 
-    var role = APP.role || 'kurye';
-
-    var ilanFavs = [
-      { id: '1', title: 'Motorlu Kurye', company: 'ABC Lojistik', salary: '28.000 - 33.000 ₺' },
-      { id: '2', title: 'Yaya Kurye',    company: 'XYZ Kargo',    salary: '15.000 - 22.000 ₺' }
-    ];
-
-    var adayFavs = [
-      { id: '1', name: 'Mehmet Kaya', exp: '3 yıl motorlu kurye', score: '4.8' },
-      { id: '2', name: 'Ayşe Demir', exp: '2 yıl yaya kurye',    score: '4.7' }
-    ];
-
-    var isKurye = role === 'kurye';
-    var items   = isKurye ? ilanFavs : adayFavs;
-
     renderScreen(
-      '<div class="kb-screen-inner">' +
-        (items.length === 0 ?
-          '<div class="kb-empty"><div class="kb-empty__icon">❤️</div><div class="kb-empty__title">Favori yok</div><div class="kb-empty__sub">Beğendiğin ilanları favorilere ekle.</div></div>' :
-          items.map(function (item) {
-            if (isKurye) {
-              return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + item.id + '\')">' +
-                '<div class="job-card__top">' +
-                  '<div class="job-card__avatar">🏢</div>' +
-                  '<div class="job-card__info">' +
-                    '<div class="job-card__title">' + item.title + '</div>' +
-                    '<div class="job-card__company">' + item.company + '</div>' +
-                  '</div>' +
-                  '<div class="job-card__salary">' + item.salary + '</div>' +
-                '</div>' +
-              '</div>';
-            } else {
-              return '<div class="person-card kb-card--pressable">' +
-                '<div class="kb-avatar">' + initials(item.name) + '</div>' +
-                '<div class="person-card__info">' +
-                  '<div class="person-card__name">' + item.name + '</div>' +
-                  '<div class="person-card__sub">' + item.exp + '</div>' +
-                  '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + item.score + '</span></div>' +
-                '</div>' +
-                ICON.chevron +
-              '</div>';
-            }
-          }).join('')
-        ) +
+      '<div class="kb-screen-inner" id="fav-root">' +
+        '<div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div>' +
       '</div>'
     );
+
+    setTimeout(function () { _loadFavoriler(); }, 130);
+  }
+
+  function _favEmpty(msg) {
+    return '<div class="kb-empty"><div class="kb-empty__icon">❤️</div>' +
+      '<div class="kb-empty__title">Favori yok</div>' +
+      '<div class="kb-empty__sub">' + msg + '</div></div>';
+  }
+
+  async function _loadFavoriler() {
+    var root = document.getElementById('fav-root');
+    if (!root) return;
+    var role = APP.role || 'kurye';
+
+    if (!window.SB || !SB.isOn()) {
+      root.innerHTML = _favEmpty('Favoriler yüklenemedi. Bağlantını kontrol et.');
+      return;
+    }
+
+    try {
+      if (role === 'kurye') {
+        var ids = [];
+        try { ids = JSON.parse(localStorage.getItem('kb_saved_jobs') || '[]'); } catch (e) {}
+        if (!ids.length) { root.innerHTML = _favEmpty('Beğendiğin ilanları favorilere ekle.'); return; }
+
+        var jobs = [];
+        for (var i = 0; i < ids.length; i++) {
+          try { var l = await SB.listingById(ids[i]); if (l) jobs.push(l); } catch (e) {}
+        }
+        if (!jobs.length) { root.innerHTML = _favEmpty('Kaydettiğin ilanlar artık yayında değil.'); return; }
+
+        root.innerHTML = jobs.map(function (l) {
+          return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + l.id + '\')">' +
+            '<div class="job-card__top">' +
+              '<div class="job-card__avatar">🏢</div>' +
+              '<div class="job-card__info">' +
+                '<div class="job-card__title">' + (l.baslik || 'İlan') + '</div>' +
+                '<div class="job-card__company">' + (l.sahip || 'Esnaf') + '</div>' +
+              '</div>' +
+              '<div class="job-card__salary">' + (l.maas_aralik || '—') + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+      } else {
+        var pool = (await SB.myPool()) || [];
+        if (!pool.length) { root.innerHTML = _favEmpty('Beğendiğin kuryeleri havuzuna ekle.'); return; }
+
+        root.innerHTML = pool.map(function (p) {
+          return '<div class="person-card kb-card--pressable">' +
+            '<div class="kb-avatar">' + initials(p.ad || '?') + '</div>' +
+            '<div class="person-card__info">' +
+              '<div class="person-card__name">' + (p.ad || 'Kurye') + '</div>' +
+              '<div class="person-card__sub">' + (p.deneyim ? p.deneyim + ' yıl deneyim' : 'Deneyim belirtilmemiş') + '</div>' +
+              '<div class="person-card__meta"><span class="kb-stars">' + ICON.star +
+                (Number(p.puan) > 0 ? Number(p.puan).toFixed(1) : '—') + '</span></div>' +
+            '</div>' +
+            ICON.chevron +
+          '</div>';
+        }).join('');
+      }
+    } catch (e) {
+      console.warn('_loadFavoriler:', e);
+      root.innerHTML = _favEmpty('Favoriler yüklenemedi.');
+    }
   }
 
   /* ── Ayarlar ────────────────────────────────────────────── */
@@ -384,7 +413,7 @@ window.SharedScreens = (function () {
     if (btn) { btn.disabled = true; btn.textContent = 'Gönderiliyor…'; }
 
     if (!window.SB || !SB.isOn()) {
-      toast('Kod gönderildi (demo)');
+      toast('Doğrulama kodu gönderildi');
       document.getElementById('sd-step2').style.display = '';
       if (btn) { btn.disabled = false; btn.textContent = isResend ? 'Kodu Tekrar Gönder' : 'Doğrulama Kodu Gönder'; }
       return;
@@ -865,7 +894,7 @@ window.SharedScreens = (function () {
     }).catch(function (e) { console.warn('sharedLoadRealChat:', e); });
   }
 
-  function sharedMesajlar(rolePrefix, mockConvs) {
+  function sharedMesajlar(rolePrefix) {
     if (typeof showAppBar === 'function') {
       showAppBar('', false, '');
       var bar = document.getElementById('kb-appbar');
@@ -874,17 +903,9 @@ window.SharedScreens = (function () {
     showBottomNav();
     setActiveNav('mesajlar');
 
-    var mockHtml = (mockConvs || []).map(function (m) {
-      return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + m.id + '\')">' +
-        '<div class="msg-conv__bar" style="background:var(--c-kurye)"></div>' +
-        '<div class="msg-conv__ava" style="background:var(--c-kurye)">🛵</div>' +
-        '<div class="msg-conv__body">' +
-          '<div class="msg-conv__top"><div class="msg-conv__name">' + m.name + '</div><div class="msg-conv__time">' + m.time + '</div></div>' +
-          '<div class="msg-conv__preview">' + m.preview + '</div>' +
-        '</div>' +
-        (m.unread ? '<div class="msg-conv__unread">' + m.unread + '</div>' : '') +
-      '</div>';
-    }).join('') || '<div class="kb-empty"><div class="kb-empty__icon">💬</div><div class="kb-empty__title">Henüz mesajınız yok</div></div>';
+    /* Örnek konuşma YOK. Liste _sharedLoadConvsAsync ile gerçek
+       konuşmalardan doldurulur; o gelene kadar yükleniyor gösterilir. */
+    var initialHtml = '<div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div>';
 
     renderScreen(
       '<div class="msg-screen">' +
@@ -911,7 +932,7 @@ window.SharedScreens = (function () {
           '<button class="msg-tab" data-tab="aktif">🟢 Aktif</button>' +
           '<button class="msg-tab" data-tab="arsiv">🗂 Arşiv</button>' +
         '</div>' +
-        '<div class="msg-list" id="msg-list">' + mockHtml + '</div>' +
+        '<div class="msg-list" id="msg-list">' + initialHtml + '</div>' +
         '<div id="msg-search-empty" style="display:none;flex-direction:column;align-items:center;padding:40px 20px;gap:8px">' +
           '<div style="font-size:2rem">🔍</div>' +
           '<div style="color:var(--text);font-weight:700">Sonuç bulunamadı</div>' +
@@ -971,31 +992,24 @@ window.SharedScreens = (function () {
       setTimeout(_enableChatLayout, 130);
       _sharedLoadRealChat(id, rolePrefix);
     } else {
+      /* Geçerli bir konuşma kimliği yok → demo sohbet DEĞİL, boş durum.
+         Sahte mesaj balonu gösterilmez. */
       renderScreen(
         '<div class="chat-screen">' +
           '<div class="chat-hdr">' +
             '<button class="chat-hdr__back" onclick="Router.back?Router.back():Router.go(\'' + backRoute + '\')">' + ICON.back + '</button>' +
-            '<div class="chat-hdr__ava" style="background:#6C4DFF">🛵</div>' +
-            '<div class="chat-hdr__info"><div class="chat-hdr__name">Demo Konuşma</div><div class="chat-hdr__status">Demo</div></div>' +
+            '<div class="chat-hdr__info"><div class="chat-hdr__name">Konuşma</div></div>' +
             '<div class="chat-hdr__acts"></div>' +
           '</div>' +
-          '<div class="chat-context" style="border-color:#6C4DFF33">' +
-            '<div class="chat-context__dot" style="background:#6C4DFF"></div>' +
-            '<div class="chat-context__text"><span class="chat-context__role">Demo İlan</span></div>' +
-            '<span class="chat-context__tag" style="color:#6C4DFF">Başvuru</span>' +
-          '</div>' +
           '<div class="chat-msgs" id="chat-msgs">' +
-            '<div class="chat-date-sep"><span>Bugün</span></div>' +
-            '<div class="chat-bubble chat-bubble--in"><div class="chat-bubble__text">Merhaba, nasıl yardımcı olabilirim?</div><div class="chat-bubble__meta">10:00</div></div>' +
+            '<div class="kb-empty"><div class="kb-empty__icon">💬</div>' +
+              '<div class="kb-empty__title">Konuşma bulunamadı</div>' +
+              '<div class="kb-empty__sub">Bu konuşma silinmiş veya erişiminiz yok.</div>' +
+            '</div>' +
           '</div>' +
-          _sharedChatFooterHTML() +
         '</div>'
       );
-      setTimeout(function () {
-        _enableChatLayout();
-        var el = document.getElementById('chat-msgs');
-        if (el) el.scrollTop = el.scrollHeight;
-      }, 130);
+      setTimeout(_enableChatLayout, 130);
     }
   }
 

@@ -237,12 +237,9 @@
       themeBtn.addEventListener('click', function () { toggleTheme(); });
     }
 
-    /* Notification badge */
+    /* Bildirim rozeti — gerçek okunmamış sayısı (veritabanından) */
     if (window.KBNotif) {
-      try {
-        var nbUid = (SESSION.user && SESSION.user.id) || localStorage.getItem('kb_demo_uid') || 'demo_user';
-        KBNotif.updateBadge(nbUid);
-      } catch (e) {}
+      try { KBNotif.updateBadge(); } catch (e) {}
     }
   }
 

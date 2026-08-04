@@ -56,236 +56,176 @@
     } catch (e) { return date; }
   }
 
-  // Storage: per user (stored in BOTH isletme + kurye keys for two-way access)
-  function storageKey(uid) { return 'kb_ivs_' + uid; }
-  function logKey(ivId) { return 'kb_iv_log_' + ivId; }
+  /* ============================================================
+     VERİ KATMANI — public.interviews (migration-16 + 19)
+     Eskiden localStorage'daydı: işveren görüşme oluşturduğunda kayıt
+     yalnız kendi tarayıcısında kalıyordu, kurye hiç göremiyordu.
+     Artık tek kaynak veritabanı; her iki taraf da aynı satırı görür.
 
-  function getAll(uid) {
-    try { return JSON.parse(localStorage.getItem(storageKey(uid)) || '[]'); } catch (e) { return []; }
+     Not: fonksiyon imzalarındaki ilk "uid" parametresi geriye dönük
+     uyumluluk için duruyor, kullanılmıyor (kimlik auth.uid()'den gelir).
+     ============================================================ */
+  var _cache = [];      // son yüklenen görüşmeler
+  var _loaded = false;
+  var _loading = null;
+
+  function on() { return !!(window.SB && SB.isOn && SB.isOn()); }
+
+  /* Veritabanından tazele. Aynı anda birden çok çağrı gelirse tek istek atar. */
+  function load(force) {
+    if (!on()) { _loaded = true; return Promise.resolve([]); }
+    if (_loading) return _loading;
+    if (_loaded && !force) return Promise.resolve(_cache);
+    _loading = SB.myInterviews()
+      .then(function (list) { _cache = list || []; _loaded = true; return _cache; })
+      .catch(function (e) { console.warn('KBInterview.load:', e); return _cache; })
+      .then(function (r) { _loading = null; return r; });
+    return _loading;
   }
 
-  function saveAll(uid, list) {
-    try { localStorage.setItem(storageKey(uid), JSON.stringify(list)); } catch (e) {}
+  /* Render için senkron erişim — önce load() çağrılmış olmalı */
+  function getAll()      { return _cache.slice(); }
+  function getOne(a, b) {
+    var id = (b === undefined) ? a : b;          // getOne(id) veya getOne(uid, id)
+    for (var i = 0; i < _cache.length; i++) if (_cache[i].id === id) return _cache[i];
+    return null;
   }
-
-  function getOne(uid, id) {
-    return getAll(uid).find(function (iv) { return iv.id === id; }) || null;
+  function findByJob(a, b) {
+    var jobId = (b === undefined) ? a : b;
+    return _cache.filter(function (iv) { return String(iv.jobId) === String(jobId); });
   }
+  /* Sohbet thread'i localStorage kavramıydı; DB'de karşılığı ilan+aday.
+     Geriye dönük uyum için boş döner. */
+  function findByThread() { return []; }
+  function getLog() { return []; }   // ayrı log tablosu yok; durum geçmişi bildirimlerde
 
-  function upsertOne(uid, iv) {
-    var list = getAll(uid);
-    var idx = list.findIndex(function (x) { return x.id === iv.id; });
-    if (idx >= 0) list[idx] = iv; else list.push(iv);
-    saveAll(uid, list);
-  }
-
-  // Dual-party sync: write to both isletme and kurye keys
-  function syncInterview(iv) {
-    upsertOne(iv.isletmeId, iv);
-    upsertOne(iv.kuryeId, iv);
-  }
-
-  function logEvent(ivId, event) {
-    try {
-      var log = JSON.parse(localStorage.getItem(logKey(ivId)) || '[]');
-      log.push({ event: event, at: new Date().toISOString() });
-      localStorage.setItem(logKey(ivId), JSON.stringify(log));
-    } catch (e) {}
-  }
-
-  function getLog(ivId) {
-    try { return JSON.parse(localStorage.getItem(logKey(ivId)) || '[]'); } catch (e) { return []; }
-  }
-
-  // Create a new interview — called by employer
-  function create(isletmeId, data) {
-    var iv = {
-      id: makeId(),
-      threadId: data.threadId || '',
-      jobId: data.jobId || '',
-      jobTitle: data.jobTitle || '',
-      kuryeId: data.kuryeId || '',
-      kurye: data.kurye || { id: data.kuryeId, ad: 'Kurye', avatar: '' },
-      isletmeId: isletmeId,
-      isletme: data.isletme || { id: isletmeId, ad: 'Esnaf', avatar: '' },
-      date: data.date || '',
-      time: data.time || '',
-      type: data.type || 'yüz yüze',
-      location: data.location || '',
-      meetingLink: data.meetingLink || '',
-      note: data.note || '',
-      status: 'bekliyor',
-      postNote: '',
-      decision: null,
-      rescheduleHistory: [],
-      rescheduleRequest: null,
-      reminders: { sent24h: false, sent1h: false },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    syncInterview(iv);
-    logEvent(iv.id, 'created');
-    if (window.KBChat && data.threadId) {
-      KBChat.saveInterview(data.threadId, { id: iv.id, status: iv.status });
-    }
+  /* Yerel önbelleği güncelle (DB yanıtı ile) */
+  function _put(iv) {
+    if (!iv || !iv.id) return iv;
+    var i = _cache.findIndex(function (x) { return x.id === iv.id; });
+    if (i >= 0) _cache[i] = iv; else _cache.push(iv);
     return iv;
   }
-
-  function update(uid, id, patch) {
-    var iv = getOne(uid, id);
-    if (!iv) return null;
-    Object.assign(iv, patch, { updatedAt: new Date().toISOString() });
-    syncInterview(iv);
-    return iv;
+  function _err(r) { return r && r.error ? r.error : null; }
+  function _toast(msg) {
+    if (window.KBMotion && KBMotion.showErrorToast) KBMotion.showErrorToast(msg);
   }
 
-  function findByThread(uid, threadId) {
-    return getAll(uid).filter(function (iv) { return iv.threadId === threadId; });
+  /* ---- Görüşme oluştur (işveren) ---- */
+  async function create(uid, data) {
+    if (arguments.length === 1) { data = uid; }      // create(data) da desteklenir
+    if (!on()) { _toast('Bağlantı yok — görüşme oluşturulamadı'); return null; }
+    var r = await SB.createInterview({
+      interviewee_id: data.kuryeId || data.interviewee_id,
+      listing_id:     data.jobId || data.listing_id || null,
+      application_id: data.application_id || null,
+      date: data.date, time: data.time, type: data.type,
+      location: data.location, meetingLink: data.meetingLink, note: data.note,
+      status: 'bekliyor'
+    });
+    var e = _err(r);
+    if (e) { _toast('Görüşme oluşturulamadı: ' + e); return null; }
+    return _put(r);
   }
 
-  function findByJob(uid, jobId) {
-    return getAll(uid).filter(function (iv) { return iv.jobId === jobId; });
+  async function update(uid, id, patch) {
+    if (!on()) { _toast('Bağlantı yok'); return null; }
+    var r = await SB.updateInterview(id, patch);
+    var e = _err(r);
+    if (e) { _toast('Güncellenemedi: ' + e); return null; }
+    return _put(r);
   }
 
-  // Courier response: 'onayla' | 'reddet'
-  function respond(uid, id, action) {
-    var iv = getOne(uid, id);
-    if (!iv) return null;
-    var newStatus = action === 'onayla' ? 'onaylandi' : 'reddedildi';
-    iv.status = newStatus;
-    iv.updatedAt = new Date().toISOString();
-    syncInterview(iv);
-    logEvent(id, action === 'onayla' ? 'confirmed' : 'declined');
-    if (window.KBChat && iv.threadId) {
-      var msg = action === 'onayla'
-        ? '✅ Görüşme daveti onaylandı — ' + formatDatetime(iv.date, iv.time)
-        : '❌ Görüşme daveti reddedildi.';
-      KBChat.sendMessage(uid, iv.threadId, msg, 'system');
-    }
-    return iv;
+  /* ---- Kurye yanıtı: onayla / reddet ---- */
+  async function respond(uid, id, action) {
+    return update(uid, id, { status: action === 'onayla' ? 'onaylandi' : 'reddedildi' });
   }
 
-  // Courier requests reschedule
-  function requestReschedule(uid, id, data) {
-    var iv = getOne(uid, id);
-    if (!iv) return null;
-    var req = {
-      date: data.date,
-      time: data.time,
-      type: data.type || iv.type,
-      location: data.location || iv.location,
-      reason: data.reason || '',
-      requestedBy: uid,
-      requestedAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    iv.rescheduleRequest = req;
-    iv.status = 'yeniden_planlandi';
-    iv.updatedAt = new Date().toISOString();
-    syncInterview(iv);
-    logEvent(id, 'reschedule_requested');
-    return iv;
-  }
-
-  // Employer accepts reschedule request
-  function acceptReschedule(uid, id) {
-    var iv = getOne(uid, id);
-    if (!iv || !iv.rescheduleRequest) return null;
-    var req = iv.rescheduleRequest;
-    iv.rescheduleHistory.push({ from: { date: iv.date, time: iv.time }, to: { date: req.date, time: req.time }, reason: req.reason, at: req.requestedAt });
-    iv.date = req.date;
-    iv.time = req.time;
-    if (req.type) iv.type = req.type;
-    if (req.location) iv.location = req.location;
-    iv.rescheduleRequest = null;
-    iv.status = 'onaylandi';
-    iv.updatedAt = new Date().toISOString();
-    syncInterview(iv);
-    logEvent(id, 'reschedule_accepted');
-    if (window.KBChat && iv.threadId) {
-      KBChat.sendMessage(uid, iv.threadId, '📅 Yeniden planlama kabul edildi — ' + formatDatetime(iv.date, iv.time), 'system');
-    }
-    return iv;
-  }
-
-  // Employer marks interview complete
-  function complete(uid, id) {
-    return update(uid, id, { status: 'tamamlandi' });
-  }
-
-  // Employer cancels interview
-  function cancelInterview(uid, id) {
-    var iv = update(uid, id, { status: 'iptal' });
-    if (iv) logEvent(id, 'cancelled');
-    return iv;
-  }
-
-  // Post-interview note (both sides)
-  function addPostNote(uid, id, note) {
-    var iv = update(uid, id, { postNote: note });
-    if (iv) logEvent(id, 'note_added');
-    return iv;
-  }
-
-  // Employer makes hiring decision
-  function makeDecision(uid, id, decision) {
-    var iv = update(uid, id, { decision: decision });
-    if (iv) {
-      logEvent(id, 'decision_' + decision);
-      if (window.KBChat && iv.threadId) {
-        var label = DECISION[decision] ? DECISION[decision].label : decision;
-        KBChat.sendMessage(uid, iv.threadId, '📋 Görüşme kararı: ' + label, 'system');
+  /* ---- Kurye yeniden planlama talep eder ---- */
+  async function requestReschedule(uid, id, data) {
+    return update(uid, id, {
+      status: 'yeniden_planlandi',
+      reschedule_req: {
+        date: data.date, time: data.time,
+        type: data.type || null, location: data.location || null,
+        reason: data.reason || '',
+        requestedAt: new Date().toISOString(),
+        status: 'pending'
       }
-    }
-    return iv;
+    });
   }
 
-  // Reminder check — call on page load, returns list of due interviews
-  function checkReminders(uid) {
-    var now = Date.now();
-    var due = [];
-    var list = getAll(uid);
-    list.forEach(function (iv) {
-      if (iv.status !== 'onaylandi') return;
-      var ivTime = new Date(iv.date + 'T' + (iv.time || '09:00')).getTime();
-      if (ivTime < now) return;
-      var diff = ivTime - now;
-      if (diff <= 86400000 && !iv.reminders.sent24h) {
-        iv.reminders.sent24h = true;
-        syncInterview(iv);
-        due.push({ iv: iv, type: '24h' });
+  /* ---- İşveren yeniden planlamayı kabul eder ---- */
+  async function acceptReschedule(uid, id) {
+    var iv = getOne(id);
+    var req = iv && iv.rescheduleRequest;
+    if (!req) return null;
+    var patch = { status: 'onaylandi', reschedule_req: null, date: req.date, time: req.time };
+    if (req.type) patch.type = req.type;
+    if (req.location) patch.location = req.location;
+    return update(uid, id, patch);
+  }
+
+  async function complete(uid, id)        { return update(uid, id, { status: 'tamamlandi' }); }
+  async function cancelInterview(uid, id) { return update(uid, id, { status: 'iptal' }); }
+  async function addPostNote(uid, id, note) { return update(uid, id, { post_note: note }); }
+  async function makeDecision(uid, id, decision) { return update(uid, id, { decision: decision }); }
+
+  /* ---- Hatırlatıcılar ----
+     "Gösterildi" bilgisi kullanıcıya/cihaza özel bir arayüz durumudur,
+     localStorage'da tutulur. Görüşmenin kendisi veritabanındadır. */
+  function _remKey(id, kind) { return 'kb_iv_rem_' + id + '_' + kind; }
+  function checkReminders() {
+    var now = Date.now(), due = [];
+    _cache.forEach(function (iv) {
+      if (iv.status !== 'onaylandi' || !iv.date) return;
+      var t = new Date(iv.date + 'T' + (iv.time || '09:00')).getTime();
+      if (isNaN(t) || t < now) return;
+      var diff = t - now;
+      [['24h', 86400000], ['1h', 3600000]].forEach(function (p) {
+        if (diff > p[1]) return;
+        var k = _remKey(iv.id, p[0]);
+        if (localStorage.getItem(k)) return;
+        try { localStorage.setItem(k, '1'); } catch (e) {}
+        due.push({ iv: iv, type: p[0] });
         if (window.KBMotion) {
-          KBMotion.showInAppNotif('Yarın Görüşmen Var', iv.isletme.ad + ' — ' + formatDatetime(iv.date, iv.time));
+          KBMotion.showInAppNotif(
+            p[0] === '24h' ? 'Yarın görüşmen var' : '1 saat sonra görüşmen var!',
+            (iv.isletme && iv.isletme.ad ? iv.isletme.ad + ' — ' : '') + formatDatetime(iv.date, iv.time));
         }
-      }
-      if (diff <= 3600000 && !iv.reminders.sent1h) {
-        iv.reminders.sent1h = true;
-        syncInterview(iv);
-        due.push({ iv: iv, type: '1h' });
-        if (window.KBMotion) {
-          KBMotion.showInAppNotif('1 Saat Sonra Görüşmen Var!', iv.isletme.ad + ' — ' + iv.time);
-        }
-      }
+      });
     });
     return due;
   }
 
   function getUpcoming(uid, limit) {
-    var now = new Date().toISOString().slice(0, 10);
-    var list = getAll(uid).filter(function (iv) {
-      return (iv.status === 'onaylandi' || iv.status === 'bekliyor') && iv.date >= now;
+    if (typeof uid === 'number') { limit = uid; }   // getUpcoming(3) de çalışsın
+    var today = new Date().toISOString().slice(0, 10);
+    var list = _cache.filter(function (iv) {
+      return (iv.status === 'onaylandi' || iv.status === 'bekliyor') && iv.date && iv.date >= today;
     });
-    list.sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+    list.sort(function (a, b) { return (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')); });
     return limit ? list.slice(0, limit) : list;
   }
 
-  function getStats(uid) {
-    var list = getAll(uid);
-    var stats = { toplam: list.length, bekliyor: 0, onaylandi: 0, tamamlandi: 0, iptal: 0 };
-    list.forEach(function (iv) {
-      if (stats[iv.status] !== undefined) stats[iv.status]++;
+  function getStats() {
+    var st = { toplam: _cache.length, bekliyor: 0, onaylandi: 0, tamamlandi: 0, iptal: 0 };
+    _cache.forEach(function (iv) { if (st[iv.status] !== undefined) st[iv.status]++; });
+    return st;
+  }
+
+  /* CANLI: karşı taraf görüşmeyi güncelleyince önbellek tazelenir */
+  var _liveOff = null;
+  function subscribe(cb) {
+    if (_liveOff || !on() || !SB.subscribeInterviews) return function () {};
+    var deb = null;
+    _liveOff = SB.subscribeInterviews(function () {
+      if (deb) clearTimeout(deb);
+      deb = setTimeout(function () {
+        load(true).then(function () { if (cb) try { cb(_cache); } catch (e) {} });
+      }, 400);
     });
-    return stats;
+    return _liveOff;
   }
 
   // Render helpers
@@ -391,39 +331,11 @@
     return list.map(function (iv) { return renderCard(iv, role, { mini: true }); }).join('');
   }
 
-  function seedDemoData(uid) {
-    if (getAll(uid).length) return;
-    var now = new Date();
-    var d2 = new Date(now); d2.setDate(d2.getDate() + 2);
-    var d5 = new Date(now); d5.setDate(d5.getDate() + 5);
-    var dm3 = new Date(now); dm3.setDate(dm3.getDate() - 3);
-    function fmt(d) { return d.toISOString().slice(0, 10); }
-
-    var isletmeId = 'demo_isletme';
-    var kuryeId = uid;
-
-    var demos = [
-      { id: makeId(), threadId: 'thread_demo_1', jobId: 'job_1', jobTitle: 'Motor Kurye', kuryeId: kuryeId, kurye: { id: kuryeId, ad: 'Ahmet Yılmaz', avatar: '' }, isletmeId: isletmeId, isletme: { id: isletmeId, ad: 'Hızlı Lojistik A.Ş.', avatar: '' }, date: fmt(d2), time: '14:00', type: 'yüz yüze', location: 'Levent, İstanbul', meetingLink: '', note: 'Deneyimlerinizi görüşeceğiz.', status: 'onaylandi', postNote: '', decision: null, rescheduleHistory: [], rescheduleRequest: null, reminders: { sent24h: false, sent1h: false }, createdAt: new Date(now - 86400000 * 3).toISOString(), updatedAt: new Date().toISOString() },
-      { id: makeId(), threadId: 'thread_demo_2', jobId: 'job_2', jobTitle: 'Depo Sorumlusu', kuryeId: kuryeId, kurye: { id: kuryeId, ad: 'Ahmet Yılmaz', avatar: '' }, isletmeId: 'demo_isletme_2', isletme: { id: 'demo_isletme_2', ad: 'FastShip Kargo', avatar: '' }, date: fmt(d5), time: '10:30', type: 'online', location: '', meetingLink: 'https://meet.google.com/xyz', note: '', status: 'bekliyor', postNote: '', decision: null, rescheduleHistory: [], rescheduleRequest: null, reminders: { sent24h: false, sent1h: false }, createdAt: new Date(now - 86400000).toISOString(), updatedAt: new Date().toISOString() },
-      { id: makeId(), threadId: 'thread_demo_3', jobId: 'job_3', jobTitle: 'Kurye', kuryeId: kuryeId, kurye: { id: kuryeId, ad: 'Ahmet Yılmaz', avatar: '' }, isletmeId: 'demo_isletme_3', isletme: { id: 'demo_isletme_3', ad: 'Metro Teslimat', avatar: '' }, date: fmt(dm3), time: '11:00', type: 'yüz yüze', location: 'Kadıköy, İstanbul', meetingLink: '', note: '', status: 'tamamlandi', postNote: 'Çok iyi bir görüşmeydi, teknik sorular başarıyla yanıtlandı.', decision: 'kabul', rescheduleHistory: [], rescheduleRequest: null, reminders: { sent24h: true, sent1h: true }, createdAt: new Date(now - 86400000 * 10).toISOString(), updatedAt: new Date(now - 86400000 * 3).toISOString() }
-    ];
-
-    demos.forEach(function (iv) {
-      upsertOne(uid, iv);
-      logEvent(iv.id, 'created');
-      if (iv.status === 'onaylandi') logEvent(iv.id, 'confirmed');
-      if (iv.status === 'tamamlandi') { logEvent(iv.id, 'confirmed'); logEvent(iv.id, 'completed'); logEvent(iv.id, 'decision_' + iv.decision); }
-    });
-  }
-
   window.KBInterview = {
+    /* veri (async) */
+    load: load,
     create: create,
     update: update,
-    getAll: getAll,
-    getOne: getOne,
-    getLog: getLog,
-    findByThread: findByThread,
-    findByJob: findByJob,
     respond: respond,
     complete: complete,
     addPostNote: addPostNote,
@@ -431,13 +343,20 @@
     cancelInterview: cancelInterview,
     requestReschedule: requestReschedule,
     acceptReschedule: acceptReschedule,
-    checkReminders: checkReminders,
+    /* önbellekten (senkron) — önce load() çağır */
+    getAll: getAll,
+    getOne: getOne,
+    getLog: getLog,
+    findByThread: findByThread,
+    findByJob: findByJob,
     getUpcoming: getUpcoming,
     getStats: getStats,
+    checkReminders: checkReminders,
+    subscribe: subscribe,
+    /* render */
     renderBadge: renderBadge,
     renderCard: renderCard,
     renderUpcomingWidget: renderUpcomingWidget,
-    seedDemoData: seedDemoData,
     formatDatetime: formatDatetime,
     STATUS: STATUS
   };

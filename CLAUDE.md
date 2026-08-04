@@ -37,13 +37,19 @@ Her sayfa şu sırayı korumak zorunda:
 <script src="assets/js/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase.js"></script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/presence.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/motion.js"></script>
 ```
 
-`i18n.js` en önce çalışır (DOM hazır olmadan). `supabase.js` CDN'den sonra gelir. `components.js` global `KB` nesnesini oluşturur; `app.js` buna bağımlıdır.
+`i18n.js` en önce çalışır (DOM hazır olmadan). `supabase.js` CDN'den sonra gelir.
+`presence.js` `supabase.js`'e bağımlıdır (SB.presencePing / SB.raw kullanır).
+`components.js` global `KB` nesnesini oluşturur; `app.js` buna bağımlıdır.
+
+> **`data.js` KALDIRILDI.** Eskiden demo/mock veri (`window.KB_DATA`) sağlıyordu.
+> Üretimde mock veri yoktur; tek veri kaynağı Supabase'dir. Bağlantı yoksa
+> sayfalar boş durum gösterir, asla uydurma içerik göstermez.
 
 ### CSS Yüklenme Sırası (kritik)
 
@@ -63,18 +69,38 @@ Her sayfa şu sırayı korumak zorunda:
 
 - `window.KB` — `components.js` tarafından export edilir. Tüm paylaşılan helper'lar burada: `KB.isOnline()`, `KB.SESSION`, `KB.STATE`, `KB.esc()`, `KB.initials()`, `KB.ready()` (Promise — Supabase session yüklenince resolve)
 - `window.SB` — `supabase.js` tarafından export edilir. Tüm Supabase işlemleri: `SB.isOn()`, `SB.getUser()`, `SB.myProfile()`, `SB.pool(type)`, `SB.myOffers()`, `SB.addToPool()`, vb.
-- `window.KB_DATA` — `data.js` tarafından tanımlanır. Demo/offline modu için mock veriler.
+- `window.KBPresence` — `presence.js` tarafından export edilir. Gerçek çevrimiçi durumu:
+  `KBPresence.onCount(cb)`, `KBPresence.count()`, `KBPresence.refresh()`, `KBPresence.signOut()`.
+  `[data-online-count]` taşıyan elementleri otomatik günceller.
 - `window.KBI18N` — `i18n.js` tarafından export edilir. `KBI18N.t(key)`, `KBI18N.lang`, `KBI18N.setLang()`
 - `window.KBMotion` — `motion.js` tarafından export edilir. `KBMotion.showSuccess()`, `KBMotion.showError()`, `KBMotion.showErrorToast()`, `KBMotion.showInAppNotif()`, `KBMotion.initPTR()`
 
-### Online vs Demo Modu
+### Veri Kaynağı — YALNIZ Supabase (mock yok)
 
-`SB.isOn()` false döndüğünde (Supabase CDN yüklenemezse veya ANON key yoksa) tüm veri katmanı `KB_DATA` mock verisine düşer. `app.js` içindeki her async fonksiyon bu pattern'ı kullanır:
+Üretim kuralı: **görünen her şey veritabanından gelir.** Demo/mock fallback yoktur.
+`SB.isOn()` false döndüğünde (CDN yüklenemezse veya ANON key yoksa) veri katmanı
+boş döner ve çağıran taraf **boş durum (empty state)** gösterir — uydurma veri asla basılmaz.
 
 ```js
-if (online()) { try { return await SB.pool(type); } catch (e) {} }
-return KB_DATA.kuryeler; // fallback
+async function loadPool(type) {
+  if (!online()) return [];                       // fallback veri YOK
+  try { return await SB.pool(type); } catch (e) { return []; }
+}
 ```
+
+Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
+"uyum skoru" veya "başvuru sayısı" üretmek yasaktır.
+
+### Canlı Sistem (migration-18)
+
+- **Presence:** `presence_ping()` / `presence_offline()` RPC'leri + `user_presence` tablosu.
+  İstemci 45 sn'de bir heartbeat atar; 2 dk sessizlikte sunucu otomatik offline sayar.
+  Sayaç Supabase Realtime presence kanalıyla anlık gelir (polling yok).
+- **İstatistikler:** `platform_stats()` (ana sayfa/havuz) ve `my_dashboard_stats()`
+  (kullanıcıya özel) tek RPC'de tüm sayaçları döndürür.
+- **Realtime:** `SB.subscribeListings / subscribeApplications / subscribeProfiles /
+  subscribeConversations` — yeni ilan, başvuru, kayıt ve mesajda sayfa yenilemeden güncelleme.
+- **Gerçek olay sayaçları:** `listing_views`, `profile_views`, `listing_application_counts()`.
 
 ### Auth Akışı
 

@@ -156,7 +156,7 @@
 <script src="assets/js/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase.js"></script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/presence.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/hiring.js"></script>
 <script src="assets/js/notifications.js"></script>
@@ -328,16 +328,11 @@
     /* Complete button */
     var completeBtn = document.getElementById('btnCompleteOnboard');
     if (completeBtn) {
-      completeBtn.addEventListener('click', function () {
+      completeBtn.addEventListener('click', async function () {
         saveProgress();
-        /* Mark complete in hiring data */
+        /* "Tamamlandı" bilgisi veritabanına yazılır; işveren de görür. */
         if (window.KBHiring && JOB_ID && KURYE_ID) {
-          KBHiring.setOnboardingComplete(JOB_ID, KURYE_ID);
-        }
-        /* Send notification */
-        if (window.KBNotif) {
-          var uid = localStorage.getItem('kb_demo_uid') || 'demo_user';
-          KBNotif.push(uid, 'sistem', 'Onboarding Tamamlandı', 'İşe başlangıç sürecinizi başarıyla tamamladınız!', { link: 'panel-kurye.html' });
+          await KBHiring.setOnboardingComplete(JOB_ID, KURYE_ID);
         }
         goStep('tamamlandi');
         if (window.KBMotion) KBMotion.showSuccess('Tamamlandı!', 'Harika başarılar!', 2500);
@@ -355,22 +350,34 @@
   }
 
   /* ── Boot ─────────────────────────────────────────────── */
-  function boot() {
+  async function boot() {
     var params = new URLSearchParams(window.location.search);
     JOB_ID   = params.get('job');
     KURYE_ID = params.get('kid');
 
-    /* Lookup hiring decision */
+    /* İşe başlangıç bilgileri TAMAMEN veritabanından gelir.
+       Örnek/uydurma onboarding verisi GÖSTERİLMEZ — kayıt yoksa
+       kullanıcıya durumu açıklayan boş ekran çıkar. */
     var dec = null, ob = null;
     if (window.KBHiring && JOB_ID && KURYE_ID) {
+      await KBHiring.load(true);
       dec = KBHiring.getDecision(JOB_ID, KURYE_ID);
-      ob  = dec && dec.onboarding ? dec.onboarding : null;
+      ob  = KBHiring.getOnboarding(JOB_ID, KURYE_ID);
     }
 
-    /* If no real data, use demo */
     if (!dec) {
-      dec = { kuryeAd: 'Ahmet Demir', jobTitle: 'Dağıtım Kuryesi', isletmeAd: 'KuryemiBul A.Ş.' };
-      ob  = { startDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0], startPoint: 'Maslak Metro Çıkışı, İstanbul', contactPerson: 'Elif Hanım', contactPhone: '0555 000 00 01', workDetails: 'Hafta içi 09:00-18:00, motosiklet kullanımı zorunlu.', firstDayNotes: 'Sarı yelek ve KuryemiBul çantasını teslim alacaksınız. Kimliğinizi yanınızda getirin.' };
+      var root = document.querySelector('.app-content') || document.body;
+      root.innerHTML = '<div class="kb-empty" style="padding:48px 16px">' +
+        '<div class="kb-empty__ic">🚀</div>' +
+        '<div class="kb-empty__t">İşe başlangıç kaydı bulunamadı</div>' +
+        '<div class="kb-empty__d">Bir işveren sizi kabul edip başlangıç bilgilerini gönderdiğinde bu sayfa dolacak.</div>' +
+        '<a class="btn btn--primary btn--sm mt-24" href="gorusmeler.html">Görüşmelerim</a></div>';
+      return;
+    }
+    if (!ob) {
+      var el0 = document.getElementById('obInfoGrid');
+      if (el0) el0.innerHTML = '<p style="color:var(--text-3);font-size:0.85rem">' +
+        'İşveren henüz başlangıç bilgilerini göndermedi.</p>';
     }
 
     renderHero(dec, ob);
