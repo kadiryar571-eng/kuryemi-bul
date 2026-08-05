@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Havuz ve ilan sayfaları (kuryeler / isletmeler / firmalar / harita / ilanlar)
+  artık giriş gerektiriyor; giriş sayfasına yönlendikleri için sitemap'ten
+  çıkarıldı. Taranabilir olan yalnız ana sayfa, giriş ve yasal metinlerdir.
+  Alan adı kuryemibul.com (CNAME) olarak güncellendi.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://kadiryar571-eng.github.io/kuryemi-bul/</loc><priority>1.0</priority></url>
-  <url><loc>https://kadiryar571-eng.github.io/kuryemi-bul/kuryeler.html</loc><priority>0.8</priority></url>
-  <url><loc>https://kadiryar571-eng.github.io/kuryemi-bul/isletmeler.html</loc><priority>0.8</priority></url>
-  <url><loc>https://kadiryar571-eng.github.io/kuryemi-bul/firmalar.html</loc><priority>0.8</priority></url>
-  <url><loc>https://kadiryar571-eng.github.io/kuryemi-bul/harita.html</loc><priority>0.6</priority></url>
-  <url><loc>https://kadiryar571-eng.github.io/kuryemi-bul/giris.html</loc><priority>0.5</priority></url>
+  <url><loc>https://kuryemibul.com/</loc><priority>1.0</priority></url>
+  <url><loc>https://kuryemibul.com/giris.html</loc><priority>0.7</priority></url>
+  <url><loc>https://kuryemibul.com/guvenlik.html</loc><priority>0.4</priority></url>
+  <url><loc>https://kuryemibul.com/kvkk.html</loc><priority>0.3</priority></url>
+  <url><loc>https://kuryemibul.com/gizlilik.html</loc><priority>0.3</priority></url>
+  <url><loc>https://kuryemibul.com/sartlar.html</loc><priority>0.3</priority></url>
+  <url><loc>https://kuryemibul.com/cerez.html</loc><priority>0.2</priority></url>
 </urlset>

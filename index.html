@@ -1208,11 +1208,12 @@
   <!-- ── NAV ─────────────────────────────────────────── -->
   <nav class="public-nav">
     <a class="nav-brand" href="index.html">KuryemiBul</a>
+    <!-- data-gated: giriş yoksa link giris.html?next=... olur (aşağıdaki script) -->
     <div class="nav-links">
-      <a href="kuryeler.html">Kuryeler</a>
-      <a href="isletmeler.html">Esnaflar</a>
-      <a href="firmalar.html">Kurye Firmaları</a>
-      <a href="ilanlar.html">İlanlar</a>
+      <a href="kuryeler.html"   data-gated>Kuryeler</a>
+      <a href="isletmeler.html" data-gated>Esnaflar</a>
+      <a href="firmalar.html"   data-gated>Kurye Firmaları</a>
+      <a href="ilanlar.html"    data-gated>İlanlar</a>
     </div>
     <div class="nav-actions">
       <a href="giris.html" class="btn btn--ghost btn--sm">Giriş Yap</a>
@@ -1232,7 +1233,7 @@
           <p class="lp-hero__sub">KuryemiBul ile bulunduğunuz bölgedeki aktif kurye ilanlarını inceleyin, başvurun ve işverenlerle doğrudan iletişime geçin.</p>
           <div class="lp-hero__cta">
             <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hemen Başla</a>
-            <a href="ilanlar.html" class="btn btn--ghost btn--lg">İlanları İncele</a>
+            <a href="ilanlar.html" class="btn btn--ghost btn--lg" data-gated>İlanları İncele</a>
             <a href="/downloads/kuryemibul.apk" class="btn btn--ghost btn--lg" download id="heroApk">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Android APK İndir
@@ -1251,31 +1252,8 @@
                 <span class="lp-phone__bar-ic">🔍</span>
                 <span class="lp-phone__bar-title">İş İlanları</span>
               </div>
-              <div class="lp-jcard">
-                <div class="lp-jcard__title">Moto Kurye Aranıyor</div>
-                <div class="lp-jcard__row">
-                  <span>📍 Kadıköy, İst.</span>
-                </div>
-                <div class="lp-jcard__row" style="margin-top:3px">
-                  <span class="lp-jcard__tag">Motosiklet</span>
-                  <span class="lp-jcard__tag">Tam zamanlı</span>
-                </div>
-                <div class="lp-jcard__price">₺160/gün</div>
-                <div class="lp-jbtn">Başvur →</div>
-              </div>
-              <div class="lp-jcard">
-                <div class="lp-jcard__title">Bisiklet Kurye</div>
-                <div class="lp-jcard__row">📍 Beşiktaş, İst.</div>
-                <div class="lp-jcard__row" style="margin-top:3px">
-                  <span class="lp-jcard__tag">Bisiklet</span>
-                </div>
-                <div class="lp-jcard__price">₺130/gün</div>
-              </div>
-              <div class="lp-jcard">
-                <div class="lp-jcard__title">Kurye Aranıyor</div>
-                <div class="lp-jcard__row">📍 Çankaya, Ank.</div>
-                <div class="lp-jcard__price">₺145/gün</div>
-              </div>
+              <!-- Kartlar GERÇEK açık ilanlardan doldurulur (fillHero) -->
+              <div id="lp-jcards"></div>
             </div>
           </div>
 
@@ -1286,24 +1264,8 @@
               <div class="lp-phone__bar">
                 <span style="font-size:0.6rem;color:#6B7280">← Geri</span>
               </div>
-              <div class="lp-pav">AY</div>
-              <div class="lp-pname">Ali Yılmaz</div>
-              <div class="lp-pstars">★★★★★ 4.9 · 127 yorum</div>
-              <div class="lp-ptags">
-                <span class="lp-ptag">🛵 Moto</span>
-                <span class="lp-ptag">📍 İstanbul</span>
-                <span class="lp-ptag">3 yıl</span>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:5px;margin-top:10px">
-                <div style="display:flex;justify-content:space-between;background:#F4F5F7;border-radius:6px;padding:5px 8px">
-                  <span style="font-size:0.5rem;color:#6B7280">Tamamlanan İş</span>
-                  <span style="font-size:0.55rem;font-weight:700;color:#1A1A2E">248</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;background:#F4F5F7;border-radius:6px;padding:5px 8px">
-                  <span style="font-size:0.5rem;color:#6B7280">Yanıt Süresi</span>
-                  <span style="font-size:0.55rem;font-weight:700;color:#16A34A">&lt; 1 sa</span>
-                </div>
-              </div>
+              <!-- Profil GERÇEK havuz kaydından doldurulur -->
+              <div id="lp-pcard"></div>
               <div class="lp-pbtn">Teklif Gönder</div>
               <div class="lp-pbtn2">Mesaj Yaz</div>
             </div>
@@ -1453,21 +1415,7 @@
               <div class="sp-phone__body">
                 <div class="sp-ph-topbar">🔍 İş İlanları</div>
                 <div class="sp-ph-filter">📍 İstanbul &nbsp;▾</div>
-                <div class="sp-ph-jcard">
-                  <div class="sp-ph-jcard__t">Moto Kurye Aranıyor</div>
-                  <div class="sp-ph-jcard__s">Kadıköy, İst.</div>
-                  <div class="sp-ph-jcard__p">₺160/gün</div>
-                  <div class="sp-ph-jcard__btn">Başvur →</div>
-                </div>
-                <div class="sp-ph-jcard">
-                  <div class="sp-ph-jcard__t">Bisiklet Kurye</div>
-                  <div class="sp-ph-jcard__s">Beşiktaş, İst.</div>
-                  <div class="sp-ph-jcard__p">₺130/gün</div>
-                </div>
-                <div class="sp-ph-jcard">
-                  <div class="sp-ph-jcard__t">Kurye Aranıyor</div>
-                  <div class="sp-ph-jcard__s">Çankaya, Ank.</div>
-                </div>
+                <div id="sp-jcards"></div>
               </div>
             </div>
           </div>
@@ -1493,14 +1441,15 @@
                 <div class="sp-form__field">📍 İstanbul</div>
                 <div class="sp-form__field">₺150 / gün</div>
                 <div class="sp-form__submit">İlanı Yayınla</div>
-                <div class="sp-form__divider">Başvurular (3)</div>
+                <!-- Form önizlemesi: uydurma aday adı/sayısı yerine nötr yer tutucu -->
+                <div class="sp-form__divider">Gelen Başvurular</div>
                 <div class="sp-form__app">
-                  <div class="sp-form__av">AY</div>
-                  Ali Yılmaz — Görüntüle →
+                  <div class="sp-form__av">👤</div>
+                  Aday profili — Görüntüle →
                 </div>
                 <div class="sp-form__app">
-                  <div class="sp-form__av">MK</div>
-                  Mehmet K. — Görüntüle →
+                  <div class="sp-form__av">👤</div>
+                  Aday profili — Görüntüle →
                 </div>
               </div>
             </div>
@@ -1740,7 +1689,7 @@
           <div class="fin-foot__col-label">Platform</div>
           <div class="fin-foot__links">
             <a href="index.html">Ana Sayfa</a>
-            <a href="ilanlar.html">İlanlar</a>
+            <a href="ilanlar.html" data-gated>İlanlar</a>
             <a href="#finHiw">Nasıl Çalışır</a>
             <a href="giris.html">Giriş Yap</a>
           </div>
@@ -1882,16 +1831,30 @@
   <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
   <script>
+  /* Girişli kullanıcı landing'e gelirse doğrudan paneline gider.
+     Girişsiz ziyaretçide ise korumalı linkler (data-gated) giriş sayfasına
+     çevrilir; böylece önce sayfa açılıp sonra yönlendirilme yaşanmaz.
+     Sayfanın kendisi herkese açık kalır — yalnız linkler kapılanır. */
   (async function () {
-    if (!window.SB || !SB.isOn()) return;
+    function gateLinks() {
+      document.querySelectorAll('a[data-gated]').forEach(function (a) {
+        var hedef = a.getAttribute('href');
+        if (!hedef || hedef.indexOf('giris.html') === 0) return;
+        a.setAttribute('href', 'giris.html?next=' + encodeURIComponent(hedef));
+      });
+    }
+
+    if (!window.SB || !SB.isOn()) { gateLinks(); return; }
     try {
       var user = await SB.getUser();
       if (user) {
         var profile = await SB.myProfile();
         var role = profile && profile.role;
-        if (role && window.KB) location.href = KB.roleToPanel(role);
+        if (role && window.KB) { location.href = KB.roleToPanel(role); return; }
+        return;   // profili yarım kullanıcı: linklere dokunma, onboarding akışı devrede
       }
-    } catch (e) {}
+      gateLinks();   // oturum yok → kapıla
+    } catch (e) { gateLinks(); }
   })();
   </script>
 
@@ -1967,6 +1930,107 @@
         if (live) live.hidden = !(n > 0);
       });
     }
+
+    /* ── HERO MOCKUP — GERÇEK VERİ ────────────────────────────
+       Telefon görsellerindeki kartlar gerçek açık ilanlardan ve gerçek
+       havuz profilinden doldurulur. Uydurma fiyat/isim/puan basılmaz.
+       Veri yoksa ilgili telefon gizlenir — boş kart bozuk görünür. */
+    function esc(v) {
+      return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function konum(l) {
+      return [l.sehir, l.bolge].filter(Boolean).join(', ');
+    }
+    function gizlePhone(el) {
+      if (!el) return;
+      var phone = el.closest('.lp-phone') || el.closest('.sp-phone') || el.closest('.sp-mock');
+      if (phone) phone.style.display = 'none';
+    }
+
+    async function fillHero() {
+      if (!(window.SB && SB.isOn())) return;
+
+      /* --- İş ilanı kartları (masaüstü + küçük ekran) --- */
+      var jc = document.getElementById('lp-jcards');
+      var sp = document.getElementById('sp-jcards');
+      try {
+        var list = (await SB.openListings()) || [];
+        var top  = list.slice(0, 3);
+
+        if (!top.length) { gizlePhone(jc); gizlePhone(sp); }
+        else {
+          if (jc) {
+            jc.innerHTML = top.map(function (l, i) {
+              var loc = konum(l);
+              return '<div class="lp-jcard">' +
+                '<div class="lp-jcard__title">' + esc(l.baslik || 'İlan') + '</div>' +
+                (loc ? '<div class="lp-jcard__row"><span>📍 ' + esc(loc) + '</span></div>' : '') +
+                (l.arac || l.vardiya_tipi
+                  ? '<div class="lp-jcard__row" style="margin-top:3px">' +
+                    (l.arac ? '<span class="lp-jcard__tag">' + esc(l.arac) + '</span>' : '') +
+                    (l.vardiya_tipi ? '<span class="lp-jcard__tag">' + esc(l.vardiya_tipi) + '</span>' : '') +
+                    '</div>'
+                  : '') +
+                (l.maas_aralik ? '<div class="lp-jcard__price">' + esc(l.maas_aralik) + '</div>' : '') +
+                (i === 0 ? '<div class="lp-jbtn">Başvur →</div>' : '') +
+              '</div>';
+            }).join('');
+          }
+          if (sp) {
+            sp.innerHTML = top.map(function (l, i) {
+              var loc = konum(l);
+              return '<div class="sp-ph-jcard">' +
+                '<div class="sp-ph-jcard__t">' + esc(l.baslik || 'İlan') + '</div>' +
+                (loc ? '<div class="sp-ph-jcard__s">' + esc(loc) + '</div>' : '') +
+                (l.maas_aralik ? '<div class="sp-ph-jcard__p">' + esc(l.maas_aralik) + '</div>' : '') +
+                (i === 0 ? '<div class="sp-ph-jcard__btn">Başvur →</div>' : '') +
+              '</div>';
+            }).join('');
+          }
+        }
+      } catch (e) { gizlePhone(jc); gizlePhone(sp); }
+
+      /* --- Kurye profil kartı --- */
+      var pc = document.getElementById('lp-pcard');
+      if (!pc) return;
+      try {
+        var kuryeler = (await SB.pool('kurye')) || [];
+        var k = kuryeler[0];
+        if (!k) { gizlePhone(pc); return; }
+
+        var bas = (k.ad || '?').trim().split(/\s+/)
+          .slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+        var puan = Number(k.puan) || 0;
+        var deg  = Number(k.degerlendirme) || 0;
+
+        pc.innerHTML =
+          '<div class="lp-pav">' + esc(bas || '?') + '</div>' +
+          '<div class="lp-pname">' + esc(k.ad || 'Kurye') + '</div>' +
+          // Yıldız satırı YALNIZ gerçek değerlendirme varsa
+          (deg > 0
+            ? '<div class="lp-pstars">★ ' + puan.toFixed(1) + ' · ' + deg + ' değerlendirme</div>'
+            : '') +
+          '<div class="lp-ptags">' +
+            (k.arac  ? '<span class="lp-ptag">🛵 ' + esc(k.arac) + '</span>' : '') +
+            (k.sehir ? '<span class="lp-ptag">📍 ' + esc(k.sehir) + '</span>' : '') +
+            (k.deneyim > 0 ? '<span class="lp-ptag">' + k.deneyim + ' yıl</span>' : '') +
+          '</div>' +
+          // Tamamlanan teslimat gerçek alandan; 0 ise satır hiç basılmaz
+          (k.tamamlanan > 0
+            ? '<div style="display:flex;justify-content:space-between;background:#F4F5F7;' +
+              'border-radius:6px;padding:5px 8px;margin-top:10px">' +
+                '<span style="font-size:0.5rem;color:#6B7280">Tamamlanan Teslimat</span>' +
+                '<span style="font-size:0.55rem;font-weight:700;color:#1A1A2E">' + k.tamamlanan + '</span>' +
+              '</div>'
+            : '');
+      } catch (e) { gizlePhone(pc); }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fillHero);
+    } else { fillHero(); }
   })();
   </script>
 

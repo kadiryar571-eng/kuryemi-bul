@@ -172,10 +172,20 @@
     }
     function clearAlert() { alertEl.style.display = 'none'; alertEl.textContent = ''; }
 
-    /* ─── Giriş sonrası yönlendirme ─────────────────────────── */
+    /* ─── Giriş sonrası yönlendirme ───────────────────────────
+       Ziyaretçi korumalı bir sayfaya tıklayıp buraya yönlendirildiyse
+       (?next=ilanlar.html) giriş sonrası oraya döner; yoksa paneline gider.
+       next mantığı components.js'te tek yerde: URL'den okur, OAuth dönüşü
+       için sessionStorage'a yazar ve açık yönlendirmeye karşı doğrular. */
+    (function () { try { if (window.KB && KB.nextParam) KB.nextParam(); } catch (e) {} })();
+
     function afterAuth(profile) {
       var role = profile && profile.role;
       if (!role) { location.href = 'onboarding.html'; return; }
+
+      var next = (window.KB && KB.nextParam) ? KB.nextParam() : '';
+      if (next) { if (KB.clearNext) KB.clearNext(); location.href = next; return; }
+
       if (window.KB && KB.roleToPanel) { location.href = KB.roleToPanel(role); }
       else { location.href = 'panel-' + role + '.html'; }
     }

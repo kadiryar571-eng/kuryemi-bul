@@ -183,13 +183,26 @@
   /* ─── SAYFA TİPİ ───────────────────────────────────────────── */
   var AUTH_PAGES    = ['giris.html', 'verify-email.html', 'sifre-sifirla.html', 'onboarding.html', 'app-onboarding.html'];
   var LANDING_PAGES = ['index.html', '', '/'];
+  /* Giriş GEREKTİRMEYEN herkese açık sayfalar.
+     Yasal metinler burada olmak ZORUNDA: gizlilik.html Google Play Data Safety
+     formunda herkese açık URL olarak verildi; giriş isterse o bağlantı kırılır.
+     KVKK/şartlar/çerez sayfalarının da kimlik doğrulaması istemesi yanlış olur. */
+  var PUBLIC_PAGES  = ['404.html', 'kvkk.html', 'gizlilik.html', 'sartlar.html',
+                       'cerez.html', 'guvenlik.html'];
 
+  /* Sayfa adını HER ZAMAN ".html" uzantılı döndür.
+     serve.json'daki cleanUrls yerelde uzantıyı düşürüyor (/giris.html → /giris);
+     normalize etmezsek AUTH_PAGES / PUBLIC_PAGES / LANDING_PAGES eşleşmez ve
+     giriş sayfası bile "korumalı" sayılıp sonsuz yönlendirmeye girer. */
   function currentPage() {
     var path = location.pathname.split('/').pop() || 'index.html';
+    if (!path) return 'index.html';
+    if (path.indexOf('.') === -1) path += '.html';
     return path;
   }
   function isAuthPage()    { return AUTH_PAGES.indexOf(currentPage()) !== -1; }
   function isLandingPage() { return LANDING_PAGES.indexOf(currentPage()) !== -1; }
+  function isPublicPage()  { return PUBLIC_PAGES.indexOf(currentPage()) !== -1; }
 
   /* ─── TOPBAR RENDER ────────────────────────────────────────── */
   function renderTopbar() {
@@ -360,25 +373,64 @@
       '</footer>';
   }
 
-  /* ─── SESSION GUARD (panel sayfaları) ──────────────────────── */
+  /* ─── SESSION GUARD ────────────────────────────────────────────
+     Giriş yapmamış ziyaretçi uygulama sayfalarına (havuzlar, ilanlar,
+     paneller, mesajlar ...) erişemez; giris.html'e yönlendirilir ve
+     giriş sonrası gitmek istediği sayfaya döner (?next=).
+     Landing, auth ve yasal/statik sayfalar bu korumanın dışındadır. */
+
+  /* Açık yönlendirme (open redirect) koruması: yalnız aynı site içindeki
+     .html sayfalarına dönülür. Protokol, host veya dizin kaçışı reddedilir. */
+  function safeNext(value) {
+    if (!value) return '';
+    var v = String(value).trim();
+    if (v.indexOf('//') !== -1 || v.indexOf(':') !== -1 || v.indexOf('\\') !== -1) return '';
+    if (v.charAt(0) === '/' || v.indexOf('..') !== -1) return '';
+    if (!/^[A-Za-z0-9._-]+\.html(\?[^#]*)?$/.test(v)) return '';
+    return v;
+  }
+  /* Dönüş adresi URL'de taşınır; Google OAuth dönüşünde URL temizlendiği için
+     (Google giris.html'e sade döner) ayrıca sessionStorage'a da yazılır.
+     Böylece hem guard hem giris.html aynı değeri görür. */
+  var NEXT_KEY = 'kb_auth_next';
+  function nextParam() {
+    try {
+      var fromUrl = safeNext(new URLSearchParams(location.search).get('next'));
+      if (fromUrl) { try { sessionStorage.setItem(NEXT_KEY, fromUrl); } catch (e) {} return fromUrl; }
+      return safeNext(sessionStorage.getItem(NEXT_KEY));
+    } catch (e) { return ''; }
+  }
+  function clearNext() { try { sessionStorage.removeItem(NEXT_KEY); } catch (e) {} }
+
   async function runSessionGuard() {
+    /* Supabase yüklenemediyse yönlendirme yapma — aksi halde bağlantı
+       sorununda kullanıcı giriş sayfasına hapsolur. */
     if (!isOnline()) return;
     await _readyPromise;
     var page = currentPage();
 
-    /* Auth sayfasındayken oturum açıksa panele yönlendir */
+    /* Auth sayfasındayken oturum açıksa içeri al */
     if (isAuthPage() && page !== 'onboarding.html') {
       if (SESSION.user) {
         var role = (SESSION.profile && SESSION.profile.role) || null;
         if (!role) { location.href = 'onboarding.html'; return; }
-        location.href = roleToPanel(role);
+        var nx = nextParam();
+        if (nx) clearNext();
+        location.href = nx || roleToPanel(role);
       }
       return;
     }
 
-    /* Panel/app sayfasındayken oturum yoksa giris'e */
-    if (!isAuthPage() && !isLandingPage()) {
-      if (!SESSION.user) { location.href = 'giris.html'; return; }
+    /* Uygulama sayfasındayken oturum yoksa giriş/kayıt sayfasına.
+       Dönüş adresi hem URL'e hem sessionStorage'a yazılır: bazı statik
+       sunucular (ör. `serve` cleanUrls) .html uzantısını atarken query
+       string'i de düşürüyor; sessionStorage bu durumda yedek görevi görür. */
+    if (!isAuthPage() && !isLandingPage() && !isPublicPage()) {
+      if (!SESSION.user) {
+        var hedef = safeNext(page + location.search);
+        if (hedef) { try { sessionStorage.setItem(NEXT_KEY, hedef); } catch (e) {} }
+        location.replace('giris.html' + (hedef ? '?next=' + encodeURIComponent(hedef) : ''));
+      }
     }
   }
 
@@ -387,6 +439,7 @@
     renderHeader();
     renderFooter();
     initSession();
+    runSessionGuard();
   });
 
   async function initSession() {
@@ -433,6 +486,9 @@
     roleToPanel:    roleToPanel,
     panelHref:      panelHref,
     runSessionGuard: runSessionGuard,
+    safeNext:       safeNext,     // açık yönlendirme korumalı ?next= doğrulayıcı
+    nextParam:      nextParam,
+    clearNext:      clearNext,
 
     /* helpers */
     esc:            esc,
