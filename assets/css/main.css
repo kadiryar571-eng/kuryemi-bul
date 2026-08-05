@@ -525,6 +525,15 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   min-width: 0;
 }
 
+/* Yasal/statik sayfalar (kb-public-view): sidebar yok, içerik ortalanır.
+   Ziyaretçi giriş yapmış gibi bir uygulama kabuğu görmez. */
+.kb-public-view .app-content {
+  margin-left: 0;
+  max-width: 900px;
+  margin-inline: auto;
+  padding: 32px 24px 48px;
+}
+
 /* ─── 15. PUBLIC LAYOUT (landing / auth) ─────────────────────── */
 .public-nav {
   position: sticky;

@@ -327,11 +327,61 @@
   }
 
   /* ─── HEADER DISPATCH ──────────────────────────────────────── */
+  /* ─── PUBLIC NAV (yasal/statik sayfalar) ──────────────────────
+     Yasal metinler herkese açık. Bu sayfalarda uygulama kabuğu (sidebar +
+     topbar) gösterilirse ziyaretçi giriş yapmış gibi hisseder — landing ile
+     aynı public navbar kullanılır. Sağdaki butonlar oturum durumuna göre
+     "Giriş Yap / Kayıt Ol" ya da "Panelim" olur. */
+  var PUBLIC_NAV_LINKS = [
+    { href: 'kuryeler.html',   label: 'Kuryeler' },
+    { href: 'isletmeler.html', label: 'Esnaflar' },
+    { href: 'firmalar.html',   label: 'Kurye Firmaları' },
+    { href: 'ilanlar.html',    label: 'İlanlar' }
+  ];
+
+  function renderPublicNav() {
+    var nav = document.getElementById('kb-public-nav');
+    if (!nav) {
+      nav = document.createElement('nav');
+      nav.className = 'public-nav';
+      nav.id = 'kb-public-nav';
+      document.body.prepend(nav);
+    }
+    var authed = isAuthed();
+    var links = PUBLIC_NAV_LINKS.map(function (l) {
+      /* Havuz/ilan sayfaları giriş ister; oturumsuz ziyaretçiyi doğrudan
+         giriş sayfasına gönder (önce açılıp sonra yönlendirilme olmasın). */
+      var href = authed ? l.href : 'giris.html?next=' + encodeURIComponent(l.href);
+      return '<a href="' + href + '">' + esc(l.label) + '</a>';
+    }).join('');
+
+    var actions = authed
+      ? '<a href="' + panelHref() + '" class="btn btn--primary btn--sm">Panelim</a>'
+      : '<a href="giris.html" class="btn btn--ghost btn--sm">Giriş Yap</a>' +
+        '<a href="giris.html?mode=register" class="btn btn--primary btn--sm">Kayıt Ol</a>';
+
+    nav.innerHTML =
+      '<a class="nav-brand" href="index.html">KuryemiBul</a>' +
+      '<div class="nav-links">' + links + '</div>' +
+      '<div class="nav-actions">' + actions + '</div>';
+  }
+
   function renderHeader() {
     /* Kullanıcı tercihini uygula (i18n.js zaten erken apply eder, bu sadece garanti) */
     document.documentElement.setAttribute('data-theme', getTheme());
 
     if (isAuthPage() || isLandingPage()) return;
+
+    /* Yasal/statik sayfa: uygulama kabuğu YOK, public navbar VAR */
+    if (isPublicPage()) {
+      document.body.classList.add('kb-public-view');
+      ['app-topbar', 'app-sidebar', 'sidebar-overlay'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+      });
+      renderPublicNav();
+      return;
+    }
 
     /* Uygulama sayfası: topbar + sidebar + overlay */
     var body = document.body;
@@ -458,9 +508,11 @@
         } catch (e) { window._kbIsAdmin = false; }
       }
       resolveReady({ user: user, profile: profile });
-      /* Session güncellenirse topbar/sidebar'ı yenile */
-      renderTopbar();
-      renderSidebar();
+      /* Oturum çözülünce arayüzü tazele. Public sayfalarda yalnız navbar var:
+         ilk çizim "misafir" varsayar (yasal sayfa ziyaretçisi çoğunlukla öyle),
+         oturum doğrulanınca butonlar "Panelim"e döner. */
+      if (isPublicPage()) { renderPublicNav(); }
+      else { renderTopbar(); renderSidebar(); }
     } catch (e) {
       resolveReady({ user: null, profile: null });
     }
