@@ -9,15 +9,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npx serve .
 
 # Capacitor (sadece Android build gerektiğinde)
-npm run cap:sync        # web → native sync
+npm run cap:sync        # www/ → native sync
 npm run cap:add:android # ilk kez Android platform ekle
 ```
 
 Derleme adımı yoktur. Dosyayı kaydet → tarayıcıyı yenile.
 
+## İKİ AYRI UYGULAMA (önce bunu oku)
+
+Bu repo **iki bağımsız uygulama** barındırır. Karıştırma:
+
+| | Web sitesi | Mobil uygulama |
+|---|---|---|
+| Konum | Kök dizin | `www/` |
+| Yapı | 44 ayrı `.html` sayfası | Tek sayfa (SPA), kendi router'ı |
+| Yayın | GitHub Pages, `main` dalı → kuryemibul.com | Capacitor APK (paketlenmiş) |
+| Ekranlar | `kuryeler.html`, `panel-kurye.html`, … | `www/assets/js/screens/*.js` |
+
+`capacitor.config.json` → `"webDir": "www"`, **`server.url` YOK**. APK yerel
+`www/` klasörünü paketler; canlı siteyi yüklemez. Bu **bilinçli bir karardır**:
+çevrimdışı çalışsın ve Play Store'un *minimum functionality* politikasında
+"web sarmalayıcı" sayılmasın diye.
+
+**Sonuç:** kök dizinde yapılan bir düzeltme mobil uygulamaya YANSIMAZ. Aynı
+davranış gerekiyorsa `www/` içinde ayrıca uygulanmalı, sonra `npm run cap:sync`
+→ APK yeniden derleme → kullanıcı güncellemesi gerekir.
+
+Ortak olan tek şey **Supabase şemasıdır**. Bir migration çalıştırırken her iki
+istemcinin de etkileneceğini varsay. (Örn. migration-20 `profiles` tablosunu
+`authenticated`'a daralttı; `www/` SPA'sı zaten girişten sonra sorgu attığı
+için etkilenmedi — ama bu şans değil, kontrol edilmesi gereken bir şeydi.)
+
 ## Architecture Overview
 
-**Tamamen statik bir web uygulaması** — framework yok, build adımı yok. Capacitor 6 native kabuk olarak kullanılır; `capacitor.config.json`'da `"url": "https://kuryemibul.com"` ile canlı siteyi WebView'de yükler (yerel `www/` değil).
+**Tamamen statik bir web uygulaması** — framework yok, build adımı yok.
 
 ### Kullanıcı Rolleri ve Routing
 
@@ -72,6 +97,8 @@ Her sayfa şu sırayı korumak zorunda:
 - `window.KBPresence` — `presence.js` tarafından export edilir. Gerçek çevrimiçi durumu:
   `KBPresence.onCount(cb)`, `KBPresence.count()`, `KBPresence.refresh()`, `KBPresence.signOut()`.
   `[data-online-count]` taşıyan elementleri otomatik günceller.
+- `window.KBNotif` — `notifications.js`. **Yalnız okuma** — bildirimleri istemci üretmez, DB trigger'ları üretir.
+- `window.KBInterview` / `window.KBHiring` — `interviews`, `hiring_decisions`, `onboarding` tablolarına bağlı (localStorage değil).
 - `window.KBI18N` — `i18n.js` tarafından export edilir. `KBI18N.t(key)`, `KBI18N.lang`, `KBI18N.setLang()`
 - `window.KBMotion` — `motion.js` tarafından export edilir. `KBMotion.showSuccess()`, `KBMotion.showError()`, `KBMotion.showErrorToast()`, `KBMotion.showInAppNotif()`, `KBMotion.initPTR()`
 
@@ -91,6 +118,10 @@ async function loadPool(type) {
 Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 "uyum skoru" veya "başvuru sayısı" üretmek yasaktır.
 
+> **Sayaç animasyonu uyarısı:** `requestAnimationFrame` sekme arka plandayken
+> çalışmaz. Sayı animasyonu yazarken `document.hidden` ise hedef değeri doğrudan
+> bas — yoksa sayaç `—` olarak kalır.
+
 ### Canlı Sistem (migration-18)
 
 - **Presence:** `presence_ping()` / `presence_offline()` RPC'leri + `user_presence` tablosu.
@@ -102,7 +133,7 @@ Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
   subscribeConversations` — yeni ilan, başvuru, kayıt ve mesajda sayfa yenilemeden güncelleme.
 - **Gerçek olay sayaçları:** `listing_views`, `profile_views`, `listing_application_counts()`.
 
-### Auth Akışı
+### Auth Akışı ve Giriş Kapısı
 
 1. Kayıt: `giris.html` → `SB.signUp()` → email doğrulama → `verify-email.html`
 2. Google OAuth: Web'de aynı sekmede redirect; Native Capacitor'da `Capacitor.Plugins.Browser` ile sistem tarayıcısı açılır, deep-link `com.kuryemibul.app://callback` ile geri döner
@@ -110,12 +141,21 @@ Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 4. Rol ilk girişte `handle_new_user` Supabase trigger'ı ile `kurye` olarak atanır; kullanıcı `profil-duzenle.html`'de değiştirebilir
 5. Profil tamamlanmadan `yayinda: false` — havuzda görünmez
 
+**Giriş kapısı** `components.js` içinde:
+- `PUBLIC_PAGES` — misafire açık sayfalar (`index.html`, yasal sayfalar, `404.html`).
+  Bunlarda uygulama kabuğu (sidebar/topbar) değil `renderPublicNav()` render edilir.
+- Listede olmayan her sayfa giriş ister; `runSessionGuard()` `giris.html?next=…`'e yollar.
+- `safeNext()` yalnız aynı origin'deki `.html` yollarına izin verir (açık yönlendirme koruması).
+- `currentPage()` uzantısız yol gelirse `.html` ekler — `serve` `cleanUrls: true` ile
+  uzantıyı düşürdüğü için şart. Ayrıca cleanUrls 301'i query string'i düşürdüğünden
+  `?next=` değeri yönlendirmeden ÖNCE sessionStorage'a yazılır.
+
 ### Component Render Sistemi
 
 `components.js` sayfaya inject ederek çalışır — HTML sayfasında placeholder elementler gerekir:
 
 - `<div id="app-header"></div>` — Sayfa tipine göre farklı şey render eder:
-  - Landing (`index.html`): klasik navbar
+  - Landing (`index.html`) ve yasal sayfalar: public navbar
   - Auth sayfaları (`giris.html` vb.): hiçbir şey (kendi header'larını yönetirler)
   - Diğer tüm sayfalar: sidebar + topbar
 - `<div id="app-footer"></div>` — Footer (auth flow'da gereksiz)
@@ -137,12 +177,30 @@ Form taslakları ve view state'i `sessionStorage`'da: `kb_draft:<key>`, `kb_view
 
 ### Veritabanı Yapısı
 
-`supabase/schema.sql` — dokunma. Üç kritik tablo:
+Supabase projesi `fdszypytpodndtlbuzuz`. `supabase/schema.sql` — dokunma;
+değişiklikler numaralı `migration-NN-*.sql` dosyalarıyla yapılır (idempotent).
+
+Üç kritik tablo:
 - `profiles` — her kullanıcının tek profili; `role` alanı kurye/isletme/firma; `yayinda` false iken havuzda görünmez
 - `offers` — çok yönlü teklif sistemi; herhangi bir rol herhangi bir role teklif gönderebilir
 - `profile_contacts` — telefon/email KVKK gereği ayrı tabloda, RLS ile korunur
 
-RLS: `profiles` herkese açık (select); insert/update/delete yalnız kendi satırı. `offers` yalnız taraflar görebilir.
+**RLS (migration-20 sonrası):**
+- `profiles` select **yalnız `authenticated`**. Misafir tabloyu okuyamaz.
+  Misafir için `public.profiles_public` view'ı var (`security_invoker = false`) —
+  `adres`, `lat`, `lng`, `belgeler`, `fotograflar`, `user_id`, `created_at` **dışarıda**.
+  `supabase.js` içindeki `_profileSource()` oturuma göre kaynağı seçer.
+- `listings.sahip_ad` denormalize kolondur (`sahip_rol` ile aynı desen). Misafir
+  `profiles`'a join yapamadığı için ilan kartındaki işveren adı buradan gelir;
+  trigger'lar ilan ekleme/güncelleme ve profil adı değişiminde senkron tutar.
+- `puan`, `degerlendirme`, `tamamlanan`, `seviye` kullanıcıya **kapalıdır**
+  (`guard_profile_metrics` BEFORE UPDATE trigger'ı). Yalnız trigger zinciri
+  (`pg_trigger_depth() > 1`), admin ve Studio değiştirebilir.
+- `offers` yalnız taraflar görebilir.
+
+**Yönetim arayüzü yoktur.** `admin.html` kaldırıldı; tüm yönetim işlemleri
+Supabase Studio → SQL Editor üzerinden yapılır. Hazır sorgular:
+[supabase/ADMIN-REHBERI.md](supabase/ADMIN-REHBERI.md).
 
 ### CSS Breakpoint'leri
 
@@ -153,13 +211,13 @@ RLS: `profiles` herkese açık (select); insert/update/delete yalnız kendi sat�
 
 ### Sayfa Kategorileri
 
-- **Landing:** `index.html` — klasik header, space-bg, landing.js
+- **Landing:** `index.html` — klasik header, space-bg, landing.js (misafire açık)
 - **Auth flow:** `giris.html`, `verify-email.html`, `sifre-sifirla.html`, `onboarding.html` — sidebar yok, bottom nav yok, kendi header'ları var
 - **Paneller:** `panel-kurye.html`, `panel-isletme.html`, `panel-firma.html` — `.mob-dash` class'ı ile kendi mobil header'larını yönetir
-- **Havuzlar:** `kuryeler.html`, `isletmeler.html`, `firmalar.html` — arama + filtre + harita entegrasyonu
+- **Havuzlar:** `kuryeler.html`, `isletmeler.html`, `firmalar.html` — arama + filtre + harita entegrasyonu (giriş gerekir)
 - **Profiller:** `profil-kurye.html?id=`, `profil-isletme.html?id=`, `profil-firma.html?id=` — `?id=` query param ile profil yüklenir
 - **Yardımcı:** `mesajlar.html`, `bildirimler.html`, `eslesme.html`, `havuzum.html`, `harita.html`, `ilanlar.html`, `ayarlar.html`
-- **Statik/Yasal:** `kvkk.html`, `gizlilik.html`, `sartlar.html`, `cerez.html`, `teslimat.html` vb.
+- **Statik/Yasal:** `kvkk.html`, `gizlilik.html`, `sartlar.html`, `cerez.html`, `teslimat.html` vb. (misafire açık)
 
 ### i18n
 
