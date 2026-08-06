@@ -6,6 +6,13 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["-y", "serve", "-l", "3210", "."],
       "port": 3210
+    },
+    {
+      "name": "kuryemibul-mobil",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "serve", "www"],
+      "autoPort": true,
+      "port": 3212
     }
   ]
 }

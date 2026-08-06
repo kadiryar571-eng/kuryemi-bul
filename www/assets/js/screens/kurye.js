@@ -1561,64 +1561,27 @@ window.KuryeScreens = (function () {
       );
       setTimeout(function () { _loadRealChat(id); }, 130);
     } else {
-      // MOCK: mevcut demo konuşması
-      var k    = KONUSMALAR.find(function (x) { return x.id === id; }) || KONUSMALAR[0];
-      var msgs = CHAT[id] || CHAT['1'];
-      var color = _msgIndicatorColor(k.indicator);
-
+      /* Gecersiz / eski konusma kimligi. Sahte konusma GOSTERILMEZ — bos durum
+         basilir. Gercek konusma kimlikleri Supabase UUID'sidir (isReal). */
       renderScreen(
         '<div class="chat-screen">' +
           '<div class="chat-hdr">' +
-            '<button class="chat-hdr__back" onclick="Router.back ? Router.back() : Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
-            '<div class="chat-hdr__ava" style="background:' + k.avatarBg + '">' +
-              k.emoji +
-              (k.online ? '<div class="chat-hdr__online"></div>' : '') +
-            '</div>' +
+            '<button class="chat-hdr__back" onclick="Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
+            '<div class="chat-hdr__ava" style="background:#2A3550;font-size:1.2rem">💬</div>' +
             '<div class="chat-hdr__info">' +
-              '<div class="chat-hdr__name">' + k.name + '</div>' +
-              '<div class="chat-hdr__status">' +
-                (k.online ? '<span class="chat-hdr__dot"></span>Çevrimiçi' : 'Son görülme: ' + k.time) +
-              '</div>' +
+              '<div class="chat-hdr__name">Konuşma bulunamadı</div>' +
             '</div>' +
-            '<div class="chat-hdr__acts">' +
-              '<button class="chat-hdr__act" onclick="KuryeScreens._chatCall()">' +
-                '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
-              '</button>' +
-              '<button class="chat-hdr__act" onclick="KuryeScreens._chatVideo()">' +
-                '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
-              '</button>' +
-              '<button class="chat-hdr__act" onclick="KuryeScreens._chatMore()">' +
-                '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
-              '</button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="chat-context" style="border-color:' + color + '33">' +
-            '<div class="chat-context__dot" style="background:' + color + '"></div>' +
-            '<div class="chat-context__text">' +
-              '<span class="chat-context__role">' + k.jobType + '</span>' +
-              '<span class="chat-context__loc">' + k.meta + '</span>' +
-            '</div>' +
-            '<span class="chat-context__tag" style="color:' + color + '">' + k.tag + '</span>' +
+            '<div class="chat-hdr__acts"></div>' +
           '</div>' +
           '<div class="chat-msgs" id="chat-msgs">' +
-            '<div class="chat-date-sep"><span>Bugün</span></div>' +
-            msgs.map(function (m) {
-              return '<div class="chat-bubble chat-bubble--' + m.dir + '">' +
-                '<div class="chat-bubble__text">' + m.text.replace(/\n/g, '<br>') + '</div>' +
-                '<div class="chat-bubble__meta">' +
-                  m.time +
-                  (m.dir === 'out' ? ' <span class="chat-tick' + (m.read ? ' chat-tick--read' : '') + '">✓✓</span>' : '') +
-                '</div>' +
-              '</div>';
-            }).join('') +
+            '<div class="kb-empty">' +
+              '<div class="kb-empty__icon">💬</div>' +
+              '<div class="kb-empty__title">Bu konuşma artık mevcut değil</div>' +
+              '<div class="kb-empty__sub">Mesajlar listesine dönüp tekrar deneyin.</div>' +
+            '</div>' +
           '</div>' +
-          _chatFooterHTML() +
         '</div>'
       );
-      setTimeout(function () {
-        var el = document.getElementById('chat-msgs');
-        if (el) el.scrollTop = el.scrollHeight;
-      }, 60);
     }
   }
 
