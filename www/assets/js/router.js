@@ -8,10 +8,23 @@ window.Router = (function () {
   var _routes    = [];
   var _current   = null;
   var _prevHash  = null;
+  var _fallback  = null;
 
   /* Register a route: path supports :param segments */
   function define(pattern, handler) {
     _routes.push({ pattern: pattern, handler: handler });
+  }
+
+  /* Bilinmeyen adres geldiğinde nereye gidileceğini belirleyen fonksiyon.
+     app.js kaydeder; kullanıcının rolüne göre panel döndürür. */
+  function setFallback(fn) { _fallback = fn; }
+
+  /* Verilen yol için tanımlı bir route var mı? */
+  function isDefined(path) {
+    for (var i = 0; i < _routes.length; i++) {
+      if (match(_routes[i].pattern, path) !== null) return true;
+    }
+    return false;
   }
 
   /* Parse :param segments from a pattern+hash pair */
@@ -54,8 +67,16 @@ window.Router = (function () {
       }
     }
 
-    /* Fallback */
-    go('/login');
+    /* Bilinmeyen adres (kaldırılmış route, eski kısayol, bozuk derin bağlantı).
+       Uygulama bir yedek kaydettiyse oraya, yoksa girişe. Hedefin gerçekten
+       tanımlı olduğunu doğruluyoruz — aksi halde go() → resolve() sonsuz
+       döngüye girerdi. */
+    if (path === '/login') return;   /* /login bile eşleşmediyse döngüyü kes */
+
+    var hedef = null;
+    try { hedef = _fallback ? _fallback(path) : null; } catch (e) { hedef = null; }
+    if (!hedef || hedef === path || !isDefined(hedef)) hedef = '/login';
+    go(hedef);
   }
 
   /* Navigate programmatically */
@@ -80,11 +101,13 @@ window.Router = (function () {
   window.addEventListener('hashchange', resolve);
 
   return {
-    define : define,
-    go     : go,
-    back   : back,
-    resolve: resolve,
-    current: function () { return _current; }
+    define      : define,
+    setFallback : setFallback,
+    isDefined   : isDefined,
+    go          : go,
+    back        : back,
+    resolve     : resolve,
+    current     : function () { return _current; }
   };
 
 })();

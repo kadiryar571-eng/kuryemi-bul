@@ -34,7 +34,6 @@
     eye:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
     eyeoff:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
     home:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-    crown:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M4 20L2 8l6 4 4-6 4 6 6-4-2 12"/></svg>',
     menu:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
     x:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
     camera:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
@@ -47,7 +46,7 @@
   window.APP = {
     user    : null,
     profile : null,
-    role    : null   /* kurye | firma | isletme | admin */
+    role    : null   /* kurye | firma | isletme */
   };
 
   /* ── DOM refs ─────────────────────────────────────────── */
@@ -145,7 +144,7 @@
     var role = APP.role || 'kurye';
     var profile = APP.profile || {};
     var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
-    var roleLabels = { kurye: 'Kurye', firma: 'Kurye Firması', isletme: 'Esnaf', admin: 'Admin' };
+    var roleLabels = { kurye: 'Kurye', firma: 'Kurye Firması', isletme: 'Esnaf' };
     var roleLabel = roleLabels[role] || role;
     var profilRoute = '/' + role + '/profil';
 
@@ -271,13 +270,6 @@
     { key: 'mesajlar', label: 'Mesajlar',     icon: 'msg',   route: '/isletme/mesajlar' },
     { key: 'profil',   label: 'Profil',       icon: 'user',  route: '/isletme/profil'   }
   ];
-  var NAV_ADMIN = [
-    { key: 'panel',         label: 'Komuta',      icon: 'crown',  route: '/admin/panel'         },
-    { key: 'kullanicilar',  label: 'Kullanıcılar', icon: 'users', route: '/admin/kullanicilar'  },
-    { key: 'ilanlar',       label: 'İlanlar',      icon: 'list',  route: '/admin/ilanlar'       },
-    { key: 'raporlar',      label: 'Raporlar',     icon: 'chart', route: '/admin/raporlar'      },
-    { key: 'ayarlar',       label: 'Ayarlar',      icon: 'settings', route: '/admin/ayarlar'    }
-  ];
 
   function buildNav(items) {
     return items.map(function (item) {
@@ -290,7 +282,7 @@
   }
 
   function renderNav(role) {
-    var map = { kurye: NAV_KURYE, firma: NAV_FIRMA, isletme: NAV_ISLETME, admin: NAV_ADMIN };
+    var map = { kurye: NAV_KURYE, firma: NAV_FIRMA, isletme: NAV_ISLETME };
     $bottomnav.innerHTML = buildNav(map[role] || NAV_KURYE);
     showBottomNav();
   }
@@ -362,15 +354,6 @@
     showLayout();
   }
 
-  /* ── Route guard for admin routes ─────────────────────── */
-  window.requireAdmin = function () {
-    if (APP.role !== 'admin') {
-      Router.go('/' + (APP.role || 'kurye') + '/panel');
-      return false;
-    }
-    return true;
-  };
-
   /* ── Sign out ─────────────────────────────────────────── */
   window.signOut = async function () {
     await goOffline();                       // önce çevrimdışı işaretle
@@ -434,13 +417,13 @@
     Router.define('/bildirim-ayarlari', SharedScreens.bildirimAyarlari);
     Router.define('/verify-email',  SharedScreens.verifyEmail);
 
-    /* Admin */
-    Router.define('/admin/panel',        AdminScreens.panel);
-    Router.define('/admin/kullanicilar', AdminScreens.kullanicilar);
-    Router.define('/admin/ilanlar',      AdminScreens.ilanlar);
-    Router.define('/admin/raporlar',     AdminScreens.raporlar);
-    Router.define('/admin/sikayetler',   AdminScreens.sikayetler);
-    Router.define('/admin/ayarlar',      AdminScreens.ayarlar);
+    /* Yönetim arayüzü uygulamada YOKTUR — Supabase Studio üzerinden yapılır.
+       Eski sürümlerde /admin/* route'ları vardı; bir kısayol, bildirim ya da
+       tarayıcı geçmişi hâlâ oraya işaret edebilir. Aşağıdaki yedek, bilinmeyen
+       her adresi kullanıcının kendi paneline yollar (oturum yoksa girişe). */
+    Router.setFallback(function () {
+      return APP.role ? '/' + APP.role + '/panel' : '/login';
+    });
   }
 
   /* ── Native push notifications (Capacitor) ───────────────── */
