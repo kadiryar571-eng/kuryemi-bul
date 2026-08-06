@@ -90,7 +90,11 @@ create policy profiles_select_all on public.profiles
 --   belgeler    → kimlik/vergi belgesi yolları
 --   fotograflar → işletme fotoğrafı yolları
 --   created_at  → hesap yaşı, profil çıkarımına yarar
-create or replace view public.profiles_public as
+-- security_invoker = false AÇIKÇA belirtiliyor: view, sahibinin (postgres)
+-- yetkisiyle çalışır ve profiles üzerindeki RLS'i aşar. Aksi halde misafir
+-- view'dan da hiçbir satır göremez ve havuz tamamen boşalır.
+drop view if exists public.profiles_public;
+create view public.profiles_public with (security_invoker = false) as
   select
     p.id, p.role, p.ad, p.sehir, p.aciklama,
     p.arac, p.bolgeler, p.deneyim, p.seviye,
