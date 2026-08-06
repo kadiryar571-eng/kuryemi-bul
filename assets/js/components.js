@@ -69,7 +69,8 @@
   function currentRole() { return getRole(); }
 
   function roleToPanel(role) {
-    var map = { kurye: 'panel-kurye.html', isletme: 'panel-isletme.html', firma: 'panel-firma.html', admin: 'admin.html' };
+    /* Yönetim Supabase Studio'dan yapılır; uygulama içi admin sayfası yoktur. */
+    var map = { kurye: 'panel-kurye.html', isletme: 'panel-isletme.html', firma: 'panel-firma.html' };
     return map[role] || 'giris.html';
   }
   function panelHref() { return roleToPanel(getRole()); }
@@ -259,7 +260,6 @@
   /* ─── SIDEBAR RENDER ───────────────────────────────────────── */
   function buildNavItems(role, activePage) {
     var panel = roleToPanel(role);
-    var isAdmin = !!window._kbIsAdmin;
 
     var items = [
       { href: panel, label: 'Dashboard', ic: SIC.dashboard },
@@ -272,7 +272,7 @@
       { href: 'mesajlar.html',  label: 'Mesajlar',  ic: SIC.messages },
     ];
 
-    if (isAdmin) items.push({ href: 'admin.html', label: 'Admin', ic: SIC.admin });
+    /* Uygulama içi admin sayfası kaldırıldı — yönetim Supabase Studio'dan yapılır. */
 
     var footer = [
       { href: 'profil-' + (role !== 'guest' ? role : 'kurye') + '.html', label: 'Profilim', ic: SIC.profile },

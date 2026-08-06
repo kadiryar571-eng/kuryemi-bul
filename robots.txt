@@ -1,11 +1,35 @@
 User-agent: *
 Allow: /
+
+# Giriş gerektiren uygulama sayfaları — taranmasın.
+# (Bunlar zaten giris.html'e yönlendiriyor; taratmak boş yönlendirme üretir.)
 Disallow: /panel-kurye.html
 Disallow: /panel-isletme.html
 Disallow: /panel-firma.html
 Disallow: /profil-duzenle.html
+Disallow: /profil-kurye.html
+Disallow: /profil-isletme.html
+Disallow: /profil-firma.html
 Disallow: /havuzum.html
 Disallow: /sifre-sifirla.html
-Disallow: /admin.html
+Disallow: /kuryeler.html
+Disallow: /isletmeler.html
+Disallow: /firmalar.html
+Disallow: /ilanlar.html
+Disallow: /ilan.html
+Disallow: /harita.html
+Disallow: /mesajlar.html
+Disallow: /mesaj-detay.html
+Disallow: /bildirimler.html
+Disallow: /basvurular.html
+Disallow: /gorusmeler.html
+Disallow: /karar.html
+Disallow: /ise-baslangic.html
+Disallow: /geri-bildirim.html
+Disallow: /eslesme.html
+Disallow: /ayarlar.html
+Disallow: /ilan-olustur.html
+Disallow: /ilan-durum.html
+Disallow: /ilan-kalite.html
 
-Sitemap: https://kadiryar571-eng.github.io/kuryemi-bul/sitemap.xml
+Sitemap: https://kuryemibul.com/sitemap.xml

@@ -186,6 +186,14 @@
     var telefon = fields.telefon;
     delete fields.telefon;
     delete fields.email;
+    /* Sistem tarafından üretilen itibar alanları kullanıcıdan gelmez.
+       Sunucuda guard_profile_metrics trigger'ı da engelliyor (migration-20);
+       burada temizleyerek gereksiz/yanıltıcı istek atmıyoruz. */
+    delete fields.puan;
+    delete fields.degerlendirme;
+    delete fields.tamamlanan;
+    delete fields.seviye;
+    delete fields.dogrulama;
     fields.yayinda = true; // profil kaydedildi -> havuzda görünür
     var r = await client.from("profiles").update(fields).eq("user_id", u.id).select().maybeSingle();
     if (r.error) throw r.error;
@@ -235,19 +243,56 @@
   /* ---------- HAVUZ / PROFİL ---------- */
   // Havuz: yalnız GERÇEK, kayıtlı ve profili doldurulmuş kullanıcılar.
   // İsimsiz (profilini hiç doldurmamış) kayıtlar havuzda gösterilmez.
+  /* Misafir kullanıcı profiles TABLOSUNU okuyamaz (migration-20).
+     Adres, konum ve belge yolları yalnız giriş yapmışlara açıktır;
+     misafire güvenli kolonları veren profiles_public view'ı sunulur.
+
+     migration-20 uygulanmadan önce view mevcut olmayabilir; o durumda
+     tabloya düşülür (kod ile şema aynı anda yayına girmeyebilir). */
+  var _viewYok = false;
+  async function _profileSource() {
+    var u = await getUser();
+    if (u) return "profiles";
+    return _viewYok ? "profiles" : "profiles_public";
+  }
+  /* View bulunamadıysa bir kereliğine işaretle ve tabloya dön */
+  function _viewEksikMi(err) {
+    if (!err) return false;
+    var m = (err.message || '') + ' ' + (err.code || '');
+    if (/Could not find the table|does not exist|42P01|PGRST205/i.test(m)) {
+      if (!_viewYok) {
+        _viewYok = true;
+        console.warn('profiles_public bulunamadı — migration-20 henüz uygulanmamış. ' +
+                     'Geçici olarak profiles tablosuna düşülüyor.');
+      }
+      return true;
+    }
+    return false;
+  }
   async function pool(role) {
-    var r = await client.from("profiles").select("*")
-      .eq("role", role).eq("yayinda", true)
-      .not("user_id", "is", null)     // seed/demo satırları (user_id null) asla gelmez
-      .neq("ad", "")
-      .order("puan", { ascending: false });
+    async function sorgula(src) {
+      var q = client.from(src).select("*").eq("role", role).eq("yayinda", true);
+      // view zaten filtreliyor; tabloda elle süz
+      if (src === "profiles") q = q.not("user_id", "is", null).neq("ad", "");
+      return q.order("puan", { ascending: false });
+    }
+    var src = await _profileSource();
+    var r = await sorgula(src);
+    if (r.error && src === "profiles_public" && _viewEksikMi(r.error)) r = await sorgula("profiles");
     if (r.error) throw r.error;
     return (r.data || []).map(fromDb);
   }
   async function poolCounts() {
+    var src = await _profileSource();
     async function cnt(role) {
-      var r = await client.from("profiles").select("id", { count: "exact", head: true })
-        .eq("role", role).eq("yayinda", true).not("user_id", "is", null).neq("ad", "");
+      async function say(s) {
+        var q = client.from(s).select("id", { count: "exact", head: true })
+          .eq("role", role).eq("yayinda", true);
+        if (s === "profiles") q = q.not("user_id", "is", null).neq("ad", "");
+        return q;
+      }
+      var r = await say(src);
+      if (r.error && src === "profiles_public" && _viewEksikMi(r.error)) r = await say("profiles");
       return r.count || 0;
     }
     var rev = await client.from("reviews").select("id", { count: "exact", head: true });
@@ -263,7 +308,11 @@
     });
   }
   async function profileById(id) {
-    var r = await client.from("profiles").select("*").eq("id", id).maybeSingle();
+    var src = await _profileSource();
+    var r = await client.from(src).select("*").eq("id", id).maybeSingle();
+    if (r.error && src === "profiles_public" && _viewEksikMi(r.error)) {
+      r = await client.from("profiles").select("*").eq("id", id).maybeSingle();
+    }
     if (r.error) throw r.error;
     return r.data ? fromDb(r.data) : null;
   }
@@ -466,8 +515,8 @@
       kontenjan:        l.kontenjan        || 1,
       son_basvuru:      l.son_basvuru      || null,
       tip:              l.tip              || "kurye-ilani",
-      /* Sahip bilgisi */
-      sahip:            (l.owner && l.owner.ad) || "",
+      /* Sahip bilgisi — join yoksa (misafir) denormalize sahip_ad kullanılır */
+      sahip:            (l.owner && l.owner.ad) || l.sahip_ad || "",
       sahipRol:         l.sahip_rol || (l.owner && l.owner.role) || "isletme",
       lat:              (l.owner && l.owner.lat != null) ? l.owner.lat : null,
       lng:              (l.owner && l.owner.lng != null) ? l.owner.lng : null,
@@ -476,10 +525,13 @@
       sahipAciklama:    (l.owner && l.owner.aciklama)   || "",
     };
   }
+  /* İlan sorgularında ortak select. owner join'i misafirde RLS ile boşalır;
+     sahip adı o durumda listings.sahip_ad kolonundan okunur. */
+  var LISTING_SELECT = "*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng,aciklama)";
+
   async function listingById(id) {
     if (!id) return null;
-    var r = await client.from("listings")
-      .select("*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng,aciklama)")
+    var r = await client.from("listings").select(LISTING_SELECT)
       .eq("id", id).maybeSingle();
     if (r.error) { console.warn("listingById:", r.error); return null; }
     return r.data ? listingFromDb(r.data) : null;
@@ -560,8 +612,10 @@
   // Süresi dolmuş ilan iş akışında görünmez.
   async function openListings() {
     var today = new Date().toISOString().slice(0, 10);
-    var r = await client.from("listings")
-      .select("*, owner:owner_id(id,ad,avatar_url,dogrulama,role,sehir,lat,lng,aciklama)")
+    /* Join her zaman istenir. Girişli kullanıcıda profil bilgisi buradan gelir;
+       misafirde RLS satırları eler ve owner null döner (hata değil) — o durumda
+       listingFromDb denormalize sahip_ad kolonuna düşer (migration-20). */
+    var r = await client.from("listings").select(LISTING_SELECT)
       .eq("durum", "acik")
       .or("son_basvuru.is.null,son_basvuru.gte." + today)
       .order("created_at", { ascending: false });
