@@ -750,56 +750,156 @@
     if (r.error) { console.warn("canMessage:", r.error); return false; }
     return !!r.data;
   }
-  async function sendMessage(toProfileId, body) {
-    var me = await myPid(); if (!me) throw new Error("oturum yok");
-    var r = await client.from("messages").insert({ from_user: me, to_user: toProfileId, body: body }).select().maybeSingle();
+  /* ------------------------------------------------------------------
+     MESAJLAŞMA — conversations / conv_messages
+
+     ÖNCEDEN: bu fonksiyonlar eski `messages` tablosunu (from_user /
+     to_user = profil id, serbest yazışma) okuyordu. Ama başvuru
+     yapıldığında schema.sql'deki on_new_application() trigger'ı
+     konuşmayı `conversations` + `conv_messages` tablolarına yazıyor ve
+     `messages`'a HİÇ dokunmuyor. Sonuç: işverene bildirim düşüyordu
+     (notifications tablosu doğru okunuyordu) ama mesajlar sayfası
+     kalıcı olarak boş kalıyordu.
+
+     Artık kök site de www/ SPA ile aynı tabloları kullanıyor.
+     Fonksiyon adları ve dönüş şekilleri korundu ki app.js'deki
+     arayüz kodu neredeyse aynı kalsın; tek fark anahtarın artık
+     profil id değil KONUŞMA id olması (bir kullanıcı çiftinin birden
+     çok başvurusu → birden çok ayrı konuşması olabilir).
+     ------------------------------------------------------------------ */
+
+  // Konuşmaya mesaj gönder (convId ile — eskiden profil id alıyordu)
+  async function sendMessage(convId, body) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var me = await myProfile(); if (!me) throw new Error("profil yok");
+    var r = await client.from("conv_messages").insert({
+      conversation_id: convId, sender_user: u.id, sender_role: me.role,
+      content: body, message_type: "text", metadata: {}
+    }).select().maybeSingle();
     if (r.error) throw r.error;
     return r.data;
   }
-  // Konuşma listesi: karşı profile göre gruplanmış son mesaj + okunmamış sayısı
+
+  // Konuşma listesi: başvuru başına bir konuşma + son mesaj + okunmamış
   async function myConversations() {
-    var me = await myPid(); if (!me) return [];
-    var r = await client.from("messages").select("*").order("created_at", { ascending: false });
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("conversations")
+      .select("id,last_message,last_message_at,kurye_unread,employer_unread,status,created_at," +
+        "kurye_user,employer_user,kurye_id,employer_id," +
+        "listing:listing_id(baslik,sehir,bolge)," +
+        "kurye:kurye_id(ad,role,avatar_url)," +
+        "employer:employer_id(ad,role,avatar_url)")
+      .or("kurye_user.eq." + u.id + ",employer_user.eq." + u.id)
+      .order("last_message_at", { ascending: false });
     if (r.error) { console.warn("myConversations:", r.error); return []; }
-    var threads = {}, order = [];
-    (r.data || []).forEach(function (m) {
-      var other = m.from_user === me ? m.to_user : m.from_user;
-      if (!threads[other]) { threads[other] = { profileId: other, lastBody: m.body, lastAt: m.created_at, lastMine: m.from_user === me, unread: 0 }; order.push(other); }
-      if (m.to_user === me && !m.read_at) threads[other].unread++;
+    return (r.data || []).map(function (c) {
+      var iAmKurye = c.kurye_user === u.id;
+      var other = iAmKurye ? (c.employer || {}) : (c.kurye || {});
+      return {
+        convId:    c.id,
+        profileId: iAmKurye ? c.employer_id : c.kurye_id,  // profil sayfasına gitmek için
+        ad:        other.ad || "Kullanıcı",
+        role:      other.role || (iAmKurye ? "isletme" : "kurye"),
+        avatar:    other.avatar_url || "",
+        lastBody:  c.last_message || "",
+        lastAt:    c.last_message_at,
+        // NOT: conversations tablosu son mesajın göndericisini tutmuyor,
+        // bu yüzden listede "Siz:" öneki gösterilemiyor.
+        lastMine:  false,
+        unread:    iAmKurye ? (c.kurye_unread || 0) : (c.employer_unread || 0),
+        listingTitle: (c.listing && c.listing.baslik) || "",
+        status:    c.status
+      };
     });
-    if (!order.length) return [];
-    var pr = await client.from("profiles").select("id,ad,role,avatar_url").in("id", order);
-    var pmap = {}; (pr.data || []).forEach(function (p) { pmap[p.id] = p; });
-    return order.map(function (id) {
-      var t = threads[id], p = pmap[id] || {};
-      t.ad = p.ad || "Kullanıcı"; t.role = p.role || ""; t.avatar = p.avatar_url || "";
-      return t;
+  }
+
+  // Bir konuşmanın tüm mesajları (artan sırada) + karşı profil.
+  // Mesajlar app.js'deki bubble() ile uyumlu olsun diye eski şekle
+  // haritalanır: from_user (auth id) + body.
+  async function threadWith(convId) {
+    var u = await getUser(); if (!u) return { me: null, messages: [], other: null };
+    var res = await Promise.all([
+      client.from("conversations")
+        .select("id,kurye_user,employer_user,kurye_id,employer_id," +
+          "listing:listing_id(baslik)," +
+          "kurye:kurye_id(id,ad,role,avatar_url)," +
+          "employer:employer_id(id,ad,role,avatar_url)")
+        .eq("id", convId).maybeSingle(),
+      client.from("conv_messages").select("*")
+        .eq("conversation_id", convId).order("created_at", { ascending: true })
+    ]);
+    if (res[0].error || !res[0].data) {
+      console.warn("threadWith:", res[0].error);
+      return { me: u.id, messages: [], other: null };
+    }
+    var c = res[0].data;
+    var iAmKurye = c.kurye_user === u.id;
+    var other = iAmKurye ? (c.employer || {}) : (c.kurye || {});
+    var msgs = (res[1].data || []).map(function (m) {
+      return {
+        id: m.id,
+        from_user: m.sender_user,      // auth id — bubble() me ile karşılaştırır
+        body: m.content,
+        created_at: m.created_at,
+        read_at: m.read_at,
+        message_type: m.message_type,
+        metadata: m.metadata || {}
+      };
     });
+    return {
+      me: u.id,
+      messages: msgs,
+      other: { id: other.id, ad: other.ad || "Kullanıcı", role: other.role || "", avatar_url: other.avatar_url || "" },
+      listingTitle: (c.listing && c.listing.baslik) || ""
+    };
   }
-  // Bir kişiyle olan tüm mesajlar (artan sırada) + karşı profil
-  async function threadWith(profileId) {
-    var me = await myPid(); if (!me) return { me: null, messages: [], other: null };
-    var r = await client.from("messages").select("*")
-      .or("and(from_user.eq." + me + ",to_user.eq." + profileId + "),and(from_user.eq." + profileId + ",to_user.eq." + me + ")")
-      .order("created_at", { ascending: true });
-    if (r.error) { console.warn("threadWith:", r.error); return { me: me, messages: [], other: null }; }
-    var op = await client.from("profiles").select("id,ad,role,avatar_url").eq("id", profileId).maybeSingle();
-    return { me: me, messages: r.data || [], other: op.data || { id: profileId, ad: "Kullanıcı" } };
+
+  // Konuşmanın okunmamışlarını sıfırla
+  async function markThreadRead(convId) {
+    var u = await getUser(); if (!u || !convId) return;
+    var cR = await client.from("conversations")
+      .select("kurye_user,employer_user").eq("id", convId).maybeSingle();
+    if (!cR.data) return;
+    await client.from("conv_messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq("conversation_id", convId).neq("sender_user", u.id).is("read_at", null);
+    var patch = cR.data.kurye_user === u.id ? { kurye_unread: 0 } : { employer_unread: 0 };
+    return client.from("conversations").update(patch).eq("id", convId);
   }
-  async function markThreadRead(fromProfileId) {
-    var me = await myPid(); if (!me) return;
-    return client.from("messages").update({ read_at: new Date().toISOString() })
-      .eq("to_user", me).eq("from_user", fromProfileId).is("read_at", null);
-  }
+
+  // Tüm konuşmalardaki okunmamış toplamı (bottom-nav rozeti)
   async function unreadMessageCount() {
-    var me = await myPid(); if (!me) return 0;
-    var r = await client.from("messages").select("id", { count: "exact", head: true }).eq("to_user", me).is("read_at", null);
-    return r.count || 0;
+    var u = await getUser(); if (!u) return 0;
+    var r = await client.from("conversations")
+      .select("kurye_user,kurye_unread,employer_unread")
+      .or("kurye_user.eq." + u.id + ",employer_user.eq." + u.id);
+    if (r.error) { console.warn("unreadMessageCount:", r.error); return 0; }
+    return (r.data || []).reduce(function (sum, c) {
+      return sum + (c.kurye_user === u.id ? (c.kurye_unread || 0) : (c.employer_unread || 0));
+    }, 0);
   }
+  /* Yeni mesaj bildirimi — conv_messages tablosunu dinler.
+     ÖNCEDEN `messages` tablosunu dinliyordu; başvuru konuşmaları oraya
+     yazılmadığı için realtime hiç tetiklenmiyordu.
+     cb'ye eski şekle haritalanmış nesne verilir (from_user + body),
+     böylece app.js'deki bubble() değişmeden çalışır. */
   function subscribeMessages(cb) {
     var ch = client.channel("kb-msg-" + Date.now())
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" },
-        function (payload) { try { cb(payload.new); } catch (e) {} })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "conv_messages" },
+        function (payload) {
+          var m = payload.new || {};
+          try {
+            cb({
+              id: m.id,
+              conversationId: m.conversation_id,
+              from_user: m.sender_user,
+              body: m.content,
+              created_at: m.created_at,
+              message_type: m.message_type,
+              metadata: m.metadata || {}
+            });
+          } catch (e) {}
+        })
       .subscribe();
     return ch;
   }

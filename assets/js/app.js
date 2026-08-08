@@ -2621,7 +2621,7 @@
         ? '<div class="msg-conv__av"><img src="' + KB.esc(c.avatar) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.remove()"></div>'
         : '<div class="msg-conv__av msg-conv__av--ph">' + KB.initials(c.ad) + '</div>';
       var unreadBadge = c.unread ? '<span class="msg-conv__badge">' + (c.unread > 99 ? "99+" : c.unread) + '</span>' : '';
-      return '<button type="button" class="msg-conv' + (c.profileId === current ? " is-active" : "") + (c.unread ? " msg-conv--unread" : "") + '" data-conv="' + c.profileId + '">' +
+      return '<button type="button" class="msg-conv' + (c.convId === current ? " is-active" : "") + (c.unread ? " msg-conv--unread" : "") + '" data-conv="' + c.convId + '">' +
         avEl +
         '<div class="msg-conv__body">' +
           '<div class="msg-conv__top"><span class="msg-conv__name">' + KB.esc(c.ad) + '</span><span class="msg-conv__time">' + msgTimeConv(c.lastAt) + '</span></div>' +
@@ -2702,12 +2702,14 @@
       if (archBtn) archBtn.addEventListener("click", function() { close(); KB.toast("Konuşma arşivlendi", "success"); });
     }
 
-    async function openThread(profileId) {
-      current = profileId;
+    // NOT: anahtar artık PROFİL id değil KONUŞMA id. Bir kullanıcı çiftinin
+    // birden çok başvurusu olabilir ve her başvuru ayrı bir konuşmadır.
+    async function openThread(convId) {
+      current = convId;
       if (rootC) rootC.classList.add("msg--threadopen");
-      listEl.querySelectorAll(".msg-conv").forEach(function(b) { b.classList.toggle("is-active", b.getAttribute("data-conv") === profileId); });
+      listEl.querySelectorAll(".msg-conv").forEach(function(b) { b.classList.toggle("is-active", b.getAttribute("data-conv") === convId); });
       mainEl.innerHTML = '<div class="msg-thread"><div class="msg-thread__scroll" id="msgScroll"><div class="skel skel--line" style="width:55%;margin:10px 0"></div><div class="skel skel--line" style="width:40%;margin:10px 0 10px auto"></div></div></div>';
-      var t = await SB.threadWith(profileId);
+      var t = await SB.threadWith(convId);
       var other = t.other || {};
       var head =
         '<div class="msg-thread__head">' +
@@ -2744,7 +2746,7 @@
           '</div>' +
         '</div>';
       scrollBottom();
-      try { await SB.markThreadRead(profileId); } catch (e) {}
+      try { await SB.markThreadRead(convId); } catch (e) {}
       loadConvs();
       if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge();
       document.getElementById("msgBack").addEventListener("click", function() {
@@ -2763,7 +2765,7 @@
         var empt = scroll.querySelector(".msg-thread__empty"); if (empt) empt.remove();
         scroll.insertAdjacentHTML("beforeend", bubble({ from_user: t.me, body: bodyTxt, created_at: new Date().toISOString() }, t.me));
         scrollBottom();
-        try { await SB.sendMessage(profileId, bodyTxt); loadConvs(); }
+        try { await SB.sendMessage(convId, bodyTxt); loadConvs(); }
         catch (err) { KB.toast((err && err.message) || T("apl.error"), "error"); }
       });
     }
@@ -2775,16 +2777,37 @@
     }
 
     await loadConvs();
+    // ?to= parametresi PROFİL id taşır (profil sayfası / eşleşme kartlarındaki
+    // "Mesaj Gönder" linkleri). Konuşmalar artık konuşma id ile anahtarlandığı
+    // için önce o kişiyle olan konuşmayı bulmamız gerekiyor.
     var to = KB.getParam("to");
-    if (to) openThread(to);
-    else if (convs.length && window.matchMedia("(min-width:861px)").matches) openThread(convs[0].profileId);
+    if (to) {
+      var match = convs.filter(function (c) { return c.profileId === to; });
+      if (match.length) {
+        openThread(match[0].convId);   // birden fazlaysa en yeni (liste zaten sıralı)
+      } else {
+        // O kişiyle henüz konuşma yok — konuşmalar başvuruyla açılıyor.
+        mainEl.innerHTML =
+          '<div class="msg-empty"><div class="kb-empty__ic">💬</div>' +
+          '<div class="kb-empty__t">Bu kişiyle henüz bir konuşma yok</div>' +
+          '<div class="kb-empty__d">Konuşmalar bir ilana başvurulduğunda başlar.</div></div>';
+      }
+    }
+    else if (convs.length && window.matchMedia("(min-width:861px)").matches) openThread(convs[0].convId);
     else if (convs.length) mainEl.innerHTML = msgPickPlaceholder();
 
     if (SB.subscribeMessages) {
-      SB.subscribeMessages(function(m) {
-        if (current && m.from_user === current) {
-          var scroll = document.getElementById("msgScroll");
-          if (scroll) { scroll.insertAdjacentHTML("beforeend", bubble(m, m.to_user)); scrollBottom(); SB.markThreadRead(current); }
+      SB.subscribeMessages(async function(m) {
+        // Açık olan konuşmaya ait mi? (eskiden m.from_user ile karşılaştırılıyordu —
+        // artık anahtar konuşma id.) Kendi gönderdiğimiz mesaj zaten
+        // ekranda olduğu için tekrar basmıyoruz.
+        if (current && m.conversationId === current) {
+          var myUid = null;
+          try { var u = await SB.getUser(); myUid = u && u.id; } catch (e) {}
+          if (m.from_user !== myUid) {
+            var scroll = document.getElementById("msgScroll");
+            if (scroll) { scroll.insertAdjacentHTML("beforeend", bubble(m, myUid)); scrollBottom(); SB.markThreadRead(current); }
+          }
         }
         loadConvs();
         if (window.__kbUpdateMsgBadge) window.__kbUpdateMsgBadge();
