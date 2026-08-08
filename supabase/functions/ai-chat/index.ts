@@ -1,10 +1,53 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+/* ------------------------------------------------------------------
+   GÜVENLİK: Bu fonksiyon daha önce kimlik doğrulaması yapmıyordu ve
+   Access-Control-Allow-Origin: * ile herkese açıktı. anon key public
+   olduğu için herhangi biri GROQ_API_KEY kotasını sınırsız harcayabilir
+   ya da projeyi ücretsiz bir LLM relay'i olarak kullanabilirdi.
+   Artık: (1) geçerli JWT zorunlu, (2) kullanıcı başına oran sınırı,
+   (3) origin allow-list, (4) girdi boyutu sınırı.
+   ------------------------------------------------------------------ */
+
+const ALLOWED_ORIGINS = [
+  "https://kuryemibul.com",
+  "https://www.kuryemibul.com",
+  "capacitor://localhost",   // Capacitor iOS
+  "http://localhost",        // Capacitor Android (androidScheme https ise https://localhost)
+  "https://localhost",
+  "http://localhost:3000",   // yerel geliştirme (npx serve)
+];
+
+function corsFor(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+
+/* Basit bellek-içi oran sınırı. Edge instance başına çalışır; kesin
+   değildir ama kontrolsüz kötüye kullanımı durdurur. Kalıcı sınır
+   gerekiyorsa bir `ai_usage` tablosuna taşınmalıdır. */
+const RATE_LIMIT = 20;              // istek
+const RATE_WINDOW_MS = 60_000;      // / dakika / kullanıcı
+const _hits = new Map<string, number[]>();
+
+function rateLimited(userId: string): boolean {
+  const now = Date.now();
+  const arr = (_hits.get(userId) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  arr.push(now);
+  _hits.set(userId, arr);
+  if (_hits.size > 5000) _hits.clear();   // bellek sızıntısı koruması
+  return arr.length > RATE_LIMIT;
+}
+
+const MAX_MESSAGES = 30;
+const MAX_CHARS = 8000;
 
 function buildSystemPrompt(ctx: Record<string, string | null>): string {
   const roleLabel = ctx.roleLabel || "Misafir";
@@ -69,6 +112,8 @@ function parseReply(raw: string): { reply: string; suggestions: string[] } {
 }
 
 serve(async (req: Request) => {
+  const CORS = corsFor(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS });
   }
@@ -81,12 +126,60 @@ serve(async (req: Request) => {
   }
 
   try {
+    /* --- 1) Kimlik doğrulama: geçerli kullanıcı JWT'si zorunlu --- */
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Giriş yapmalısınız" }), {
+        status: 401,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+
+    const supa = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+    const { data: authData, error: authErr } = await supa.auth.getUser(token);
+    const user = authData?.user;
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Oturum geçersiz" }), {
+        status: 401,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+
+    /* --- 2) Kullanıcı başına oran sınırı --- */
+    if (rateLimited(user.id)) {
+      return new Response(
+        JSON.stringify({ error: "Çok fazla istek gönderdiniz. Bir dakika sonra tekrar deneyin." }),
+        { status: 429, headers: { ...CORS, "Content-Type": "application/json", "Retry-After": "60" } },
+      );
+    }
+
     const body = await req.json();
-    const messages: Array<{ role: string; content: string }> = body.messages || [];
+    const rawMessages: Array<{ role: string; content: string }> = Array.isArray(body.messages) ? body.messages : [];
     const userContext: Record<string, string | null> = body.userContext || {};
 
-    if (!messages.length) {
+    if (!rawMessages.length) {
       return new Response(JSON.stringify({ error: "Mesaj gerekli" }), {
+        status: 400,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+
+    /* --- 3) Girdi doğrulama: rol allow-list + boyut sınırı ---
+       Eskiden body.messages doğrudan Groq'a geçiyordu; istemci
+       kendi "system" mesajını enjekte ederek sistem promptunu
+       ezebiliyordu. Artık yalnız user/assistant kabul edilir. */
+    const messages = rawMessages
+      .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .slice(-MAX_MESSAGES)
+      .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
+
+    if (!messages.length) {
+      return new Response(JSON.stringify({ error: "Geçerli mesaj yok" }), {
         status: 400,
         headers: { ...CORS, "Content-Type": "application/json" },
       });
@@ -103,7 +196,7 @@ serve(async (req: Request) => {
     // Groq, OpenAI uyumlu format kullanır
     const groqMessages = [
       { role: "system", content: buildSystemPrompt(userContext) },
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ...messages,
     ];
 
     const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -121,11 +214,15 @@ serve(async (req: Request) => {
     });
 
     if (!resp.ok) {
+      // Upstream hata detayı yalnız sunucu log'una gider.
+      // Eskiden Groq'un ham hata metni istemciye dönüyordu; bu,
+      // model adı/kota/anahtar durumu gibi altyapı bilgisini sızdırır.
       const errText = await resp.text();
       console.error("Groq API hatası:", resp.status, errText);
-      let detail = "";
-      try { detail = JSON.parse(errText)?.error?.message || ""; } catch (_) {}
-      return new Response(JSON.stringify({ error: "Groq " + resp.status + ": " + (detail || errText.slice(0, 120)) }), {
+      const userMsg = resp.status === 429
+        ? "AI servisi şu an yoğun. Birazdan tekrar deneyin."
+        : "AI servisine ulaşılamadı. Lütfen tekrar deneyin.";
+      return new Response(JSON.stringify({ error: userMsg }), {
         status: 502,
         headers: { ...CORS, "Content-Type": "application/json" },
       });

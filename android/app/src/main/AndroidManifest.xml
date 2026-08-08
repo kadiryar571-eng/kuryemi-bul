@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        GÜVENLİK: allowBackup="false".
+        WebView'in localStorage'ı Supabase refresh token'ını tutar.
+        allowBackup="true" iken bu veri Google auto-backup'a giriyor ve
+        USB hata ayıklama açık her cihazda `adb backup` ile çekilebiliyordu
+        (OWASP Mobile M9 — Insecure Data Storage).
+        dataExtractionRules + fullBackupContent, Android 12 öncesi ve
+        sonrası için cihaz-transferi/bulut yedeklemesini de kapatır.
+    -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -20,7 +31,39 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Google OAuth dönüşü: com.kuryemibul.app://callback deep-link -->
+            <!--
+                Google OAuth dönüşü — DOĞRULANMIŞ App Link.
+
+                NEDEN DEĞİŞTİ: eskiden yalnız com.kuryemibul.app:// özel
+                şeması vardı. Android'de özel şema sahipliği doğrulanamaz;
+                cihaza kurulu HERHANGİ bir uygulama aynı şemayı kaydedip
+                OAuth authorization code'unu yakalayabilir (OWASP Mobile M1).
+
+                android:autoVerify="true" ile Android, kurulum anında
+                https://kuryemibul.com/.well-known/assetlinks.json dosyasını
+                indirir ve içindeki SHA-256 parmak izini APK'nın imzasıyla
+                karşılaştırır. Eşleşmezse link bu uygulamaya AÇILMAZ —
+                yani sahte bir uygulama araya giremez.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="kuryemibul.com"
+                      android:path="/auth-callback.html" />
+                <data android:scheme="https"
+                      android:host="www.kuryemibul.com"
+                      android:path="/auth-callback.html" />
+            </intent-filter>
+
+            <!--
+                Eski özel şema — GEÇİŞ DÖNEMİ İÇİN bırakıldı.
+                Artık hiçbir yerden buraya redirect YAPILMIYOR (redirectTo
+                https adresine taşındı), dolayısıyla kullanılmıyor.
+                App Links doğrulaması sahada teyit edildikten sonra bu
+                blok tamamen silinmelidir.
+            -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

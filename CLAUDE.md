@@ -60,13 +60,20 @@ Her sayfa şu sırayı korumak zorunda:
 
 ```html
 <script src="assets/js/i18n.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js"
+        integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="assets/js/supabase.js"></script>
 <script src="assets/js/presence.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/motion.js"></script>
 ```
+
+> **CDN sürümü SABİTTİR, `@2` kısayolu kullanmayın.** SRI hash'i tam dosyaya
+> bağlıdır; `@2` her yeni 2.x sürümünde değişir ve hash tutmayınca script
+> yüklenmez. Sürüm yükseltirken hash'i yeniden hesaplayın:
+> `curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A`
 
 `i18n.js` en önce çalışır (DOM hazır olmadan). `supabase.js` CDN'den sonra gelir.
 `presence.js` `supabase.js`'e bağımlıdır (SB.presencePing / SB.raw kullanır).
@@ -76,19 +83,27 @@ Her sayfa şu sırayı korumak zorunda:
 > Üretimde mock veri yoktur; tek veri kaynağı Supabase'dir. Bağlantı yoksa
 > sayfalar boş durum gösterir, asla uydurma içerik göstermez.
 
-### CSS Yüklenme Sırası (kritik)
+**`www/` SPA** — `util.js` MUTLAKA en önce:
 
 ```html
-<link rel="stylesheet" href="assets/css/styles.css">
-<link rel="stylesheet" href="assets/css/talent.css">
-<link rel="stylesheet" href="assets/css/design-system.css">
-<link rel="stylesheet" href="assets/css/mobile-ux.css">
-<link rel="stylesheet" href="assets/css/mobile-design-system.css">
-<link rel="stylesheet" href="assets/css/mobile-screens.css">
-<link rel="stylesheet" href="assets/css/mobile-motion.css">
+<script src="assets/js/util.js"></script>   <!-- esc/escAttr/escJs -->
+<script src="https://maps.googleapis.com/..."></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/..."></script>
+<script src="assets/js/supabase.js"></script>
+<script src="assets/js/router.js"></script>
+<script src="assets/js/screens/shared.js"></script>
+<script src="assets/js/screens/{login,kurye,firma,isletme}.js"></script>
+<script src="assets/js/native.js"></script>
+<script src="assets/js/webrtc.js"></script>
+<script src="assets/js/app.js"></script>
 ```
 
-`mobile-motion.css` her zaman en son yüklenir.
+`util.js` en başta olmalı — tüm `screens/*` modülleri render sırasında `esc()` çağırır.
+
+### CSS
+
+Tek dosya: `assets/css/main.css` (kök site) ve `www/assets/css/app.css` (SPA).
+Ayrı bir yükleme sırası yoktur.
 
 ### Global Nesneler
 
@@ -174,6 +189,40 @@ Merkezi `KB.STATE` nesnesi (components.js içinde):
 Kalıcı tercihler `localStorage`'da: `kb_theme`, `kb_rol`, `kb_fontscale`, `kb_contrast`, `kb_sidebar_collapsed`, `kb_cookie_ok`.
 
 Form taslakları ve view state'i `sessionStorage`'da: `kb_draft:<key>`, `kb_view:<key>`.
+
+## Güvenlik Kuralları (ihlal etmeyin)
+
+### 1. HTML kaçışı zorunlu
+
+Başka bir kullanıcıdan gelen HİÇBİR değer (`ad`, mesaj `content`, ilan `baslik`, `metadata.*`) kaçırılmadan DOM'a girmez. `www/` SPA bir Capacitor WebView'de çalıştığı için XSS yalnız DOM'u değil, Capacitor köprüsünü (Camera/Geolocation/Filesystem) ve oturum jetonunu da ele geçirir.
+
+Bağlama göre doğru fonksiyonu seçin — hepsi aynı değildir:
+
+```js
+'<div>' + esc(v) + '</div>'                      // metin
+'<div style="color:' + escAttr(v) + '">'         // attribute
+'onclick="go(\'' + escJs(v) + '\')"'             // attribute İÇİNDE JS string
+'<img src="' + escAttr(safeUrl(v)) + '">'        // URL
+esc(v).replace(/\n/g,'<br>')  →  escLines(v)     // çok satırlı metin
+```
+
+**`onclick` içinde `esc()` KULLANMAYIN.** HTML parser `&#39;`'i JS'e geçmeden çözer; kaçış boşa gider ve enjeksiyon çalışır. O bağlam `escJs()` ister (`'` üretir).
+
+Kök sitede karşılığı `KB.esc()`'tir (components.js). Yeni bir yerel `esc()` kopyası TANIMLAMAYIN — eskiden 7 kopya vardı ve hepsi `'` karakterini atlıyordu.
+
+### 2. Sırlar
+
+- `release.keystore`, `google-services.json`, `.env` → `.gitignore`'da. Repo **public**.
+- İmzalama secret'ları yalnız GitHub Actions'ta. Kurulum: `store/keystore-setup-guide.md`
+- Supabase `anon` key istemcide olabilir (RLS korur); `service_role` **asla**.
+
+### 3. APK derleme
+
+`assembleDebug` çıktısı ASLA yayınlanmaz — `debuggable="true"` taşır (ADB ile oturum jetonu okunabilir) ve herkeste bulunan debug anahtarıyla imzalıdır. CI yalnız `assembleRelease` üretir ve çıktıyı iki kez doğrular.
+
+### 4. OAuth deep link
+
+Native dönüş adresi `https://kuryemibul.com/auth-callback.html` — **doğrulanmış App Link**. Özel şemaya (`com.kuryemibul.app://`) geri DÖNMEYİN: sahipliği doğrulanamaz, herhangi bir uygulama kaydedip authorization code'u yakalayabilir. Doğrulama `.well-known/assetlinks.json` + `.nojekyll` ile çalışır (Jekyll dotfile klasörlerini yayınlamaz).
 
 ### Veritabanı Yapısı
 

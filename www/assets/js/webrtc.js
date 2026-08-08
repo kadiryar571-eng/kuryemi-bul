@@ -359,12 +359,21 @@ window.KBCall = (function () {
   /* ── Init ────────────────────────────────────────────────── */
   function _init() {
     _injectCSS();
-    /* Wait for SB to be ready, then start global listener */
+    /* SB hazır olunca global dinleyiciyi başlat.
+       ÖNCEDEN: koşul hiç gerçekleşmezse (giriş yapmamış ziyaretçi)
+       bu setInterval sayfa açık kaldığı sürece her 1.5 sn'de bir
+       sonsuza kadar çalışıyordu. Artık 40 denemeden (~60 sn) sonra
+       vazgeçiyor; kullanıcı sonradan giriş yaparsa zaten sayfa
+       yeniden yükleniyor. */
+    var tries = 0;
+    var MAX_TRIES = 40;
     var t = setInterval(function () {
       if (window.SB && SB.isOn() && window.APP && APP.user) {
         clearInterval(t);
         _startGlobal();
+        return;
       }
+      if (++tries >= MAX_TRIES) clearInterval(t);
     }, 1500);
   }
 

@@ -2555,7 +2555,15 @@
     grid.innerHTML = skeletonCards(Math.min(ids.length, 4));
     var jobs = [];
     if (online()) {
-      for (var i = 0; i < ids.length; i++) { try { var l = await SB.listingById(ids[i]); if (l && l.durum === "acik") jobs.push(l); } catch (e) {} }
+      /* ÖNCEDEN: for döngüsü içinde seri await — N kayıtlı ilan için N
+         ardışık ağ turu. 20 favoride mobil bağlantıda ~4 sn ölü bekleme.
+         Artık hepsi paralel; süre en yavaş isteğe eşit. Sıra korunuyor
+         (Promise.all girdi sırasını garanti eder) ve tek bir hatalı
+         kayıt diğerlerini düşürmüyor. */
+      var results = await Promise.all(ids.map(function (id) {
+        return SB.listingById(id).catch(function () { return null; });
+      }));
+      jobs = results.filter(function (l) { return l && l.durum === "acik"; });
     }
     function render() {
       if (!jobs.length) { grid.innerHTML = savedEmpty(); if (countEl) countEl.textContent = ""; return; }

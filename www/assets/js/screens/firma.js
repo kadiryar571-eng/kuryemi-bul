@@ -6,9 +6,10 @@
 window.FirmaScreens = (function () {
   'use strict';
 
-  function _esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  /* Merkezi kaçış katmanına delege eder (util.js).
+     Yerel kopya ' (tek tırnak) karakterini kaçırmıyordu — bu,
+     onclick="fn('...')" kalıbında attribute enjeksiyonuna açıktı. */
+  function _esc(s) { return esc(s); }
 
   /* Ekran verisi TAMAMEN Supabase'den gelir; örnek kayıt yoktur. */
   var ILANLAR = [];
@@ -28,7 +29,7 @@ window.FirmaScreens = (function () {
     var badge = a.durum === 'reviewed' ? '<span class="kb-chip kb-chip--success" style="font-size:.7rem;padding:2px 8px">İncelendi</span>' :
                 a.durum === 'accepted' ? '<span class="kb-chip kb-chip--accent" style="font-size:.7rem;padding:2px 8px">Kabul</span>' :
                 a.ilanBaslik ? '<span style="font-size:.7rem;color:var(--muted)">' + a.ilanBaslik + '</span>' : '';
-    return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/' + role + '/aday/' + a.id + '\')">' +
+    return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/' + role + '/aday/' + esc(a.id)+ '\')">' +
       '<div class="kb-avatar" style="background:var(--c-firma)">' + initials(name) + '</div>' +
       '<div class="person-card__info">' +
         '<div class="person-card__name">' + name + '</div>' +
@@ -243,8 +244,8 @@ window.FirmaScreens = (function () {
       '<div style="font-size:.82rem;color:var(--c-accent);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
       '<div class="flex" style="gap:8px;margin-top:10px">' +
         '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/firma/basvurular\')">Başvuruları Gör</button>' +
-        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/firma/ilan/duzenle/' + il.id + '\')">Düzenle</button>' : '') +
-        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._ilanToggle(\'' + il.id + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/firma/ilan/duzenle/' + esc(il.id) + '\')">Düzenle</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._ilanToggle(\'' + esc(il.id) + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
       '</div>' +
     '</div>';
   }
@@ -671,12 +672,12 @@ window.FirmaScreens = (function () {
         (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + sub + '</div></div>' : '') +
 
         (a.ilanBaslik ? '<div class="detail-section"><div class="detail-section__title">Başvurulan İlan</div>' +
-          '<div class="detail-row">' + ICON.briefcase + a.ilanBaslik + '</div></div>' : '') +
+          '<div class="detail-row">' + ICON.briefcase + escAttr(a.ilanBaslik) + '</div></div>' : '') +
 
         (a.mesaj ? '<div class="detail-section"><div class="detail-section__title">Başvuru Mesajı</div>' +
-          '<div style="font-size:.88rem;color:var(--text);line-height:1.6;padding:4px 0">' + a.mesaj + '</div></div>' : '') +
+          '<div style="font-size:.88rem;color:var(--text);line-height:1.6;padding:4px 0">' + esc(a.mesaj)+ '</div></div>' : '') +
 
-        (a.tarih ? '<div class="detail-section"><div class="detail-row" style="color:var(--muted)">' + ICON.clock + 'Başvuru tarihi: ' + a.tarih + '</div></div>' : '') +
+        (a.tarih ? '<div class="detail-section"><div class="detail-row" style="color:var(--muted)">' + ICON.clock + 'Başvuru tarihi: ' + esc(a.tarih)+ '</div></div>' : '') +
 
         '<div id="aday-profil-extra"></div>' +
 
@@ -698,8 +699,8 @@ window.FirmaScreens = (function () {
         if (!el) return;
         var rows = [];
         if (p.experience || p.exp) rows.push('<div class="detail-row">' + ICON.briefcase + (p.experience || p.exp) + '</div>');
-        if (p.vehicle)   rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + p.vehicle + '</div>');
-        if (p.bio)       rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + p.bio + '</div>');
+        if (p.vehicle)   rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + esc(p.vehicle)+ '</div>');
+        if (p.bio)       rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + esc(p.bio)+ '</div>');
         if (rows.length) {
           el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
         }
@@ -767,7 +768,7 @@ window.FirmaScreens = (function () {
         return '<div class="kb-card">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
             '<div style="font-weight:700">' + _esc(r.ad) + '</div>' +
-            '<div class="kb-stars">' + ICON.star + ' ' + r.puan + '</div>' +
+            '<div class="kb-stars">' + ICON.star + ' ' + esc(r.puan)+ '</div>' +
           '</div>' +
           (r.yorum ? '<div style="font-size:.86rem;color:var(--text2);line-height:1.5">' + _esc(r.yorum) + '</div>' : '') +
           '<div style="font-size:.7rem;color:var(--muted);margin-top:6px">' + (r.tarih || '') + '</div>' +

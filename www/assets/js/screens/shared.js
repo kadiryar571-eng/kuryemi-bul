@@ -250,7 +250,7 @@ window.SharedScreens = (function () {
         if (!jobs.length) { root.innerHTML = _favEmpty('Kaydettiğin ilanlar artık yayında değil.'); return; }
 
         root.innerHTML = jobs.map(function (l) {
-          return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + l.id + '\')">' +
+          return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + escJs(l.id)+ '\')">' +
             '<div class="job-card__top">' +
               '<div class="job-card__avatar">🏢</div>' +
               '<div class="job-card__info">' +
@@ -641,7 +641,7 @@ window.SharedScreens = (function () {
       time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     }
     var searchText = ((c.otherName || '') + ' ' + (c.listingTitle || '') + ' ' + (c.lastMessage || '')).toLowerCase();
-    return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + c.id + '\')" data-search="' + searchText + '">' +
+    return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + escJs(c.id)+ '\')" data-search="' + searchText + '">' +
       '<div class="msg-conv__bar" style="background:' + roleBg + '"></div>' +
       '<div class="msg-conv__ava" style="background:' + roleBg + '">' +
         roleEmoji +
@@ -649,17 +649,17 @@ window.SharedScreens = (function () {
       '</div>' +
       '<div class="msg-conv__body">' +
         '<div class="msg-conv__top">' +
-          '<div class="msg-conv__name">' + c.otherName + '</div>' +
-          '<div class="msg-conv__time">' + time + '</div>' +
+          '<div class="msg-conv__name">' + esc(c.otherName)+ '</div>' +
+          '<div class="msg-conv__time">' + esc(time) + '</div>' +
         '</div>' +
         '<div class="msg-conv__job">' +
           '<span class="msg-conv__badge--standart">Başvuru</span>' +
           ' ' + (c.listingTitle || 'İlan') +
         '</div>' +
         '<div class="msg-conv__preview">' + (c.lastMessage || 'Yeni konuşma') + '</div>' +
-        (c.listingSehir ? '<div class="msg-conv__meta">📍 ' + c.listingSehir + '</div>' : '') +
+        (c.listingSehir ? '<div class="msg-conv__meta">📍 ' + esc(c.listingSehir)+ '</div>' : '') +
       '</div>' +
-      (c.unread > 0 ? '<div class="msg-conv__unread">' + c.unread + '</div>' : '') +
+      (c.unread > 0 ? '<div class="msg-conv__unread">' + esc(c.unread)+ '</div>' : '') +
     '</div>';
   }
 
@@ -789,8 +789,8 @@ window.SharedScreens = (function () {
     var isOut = m.sender_user === myUserId;
     var time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
     return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
-      '<div class="chat-bubble__text">' + (m.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</div>' +
-      '<div class="chat-bubble__meta">' + time + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
+      '<div class="chat-bubble__text">' + escLines(m.content) + '</div>' +
+      '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
     '</div>';
   }
 
@@ -817,7 +817,7 @@ window.SharedScreens = (function () {
           '<button class="chat-hdr__back" onclick="Router.back?Router.back():Router.go(\'' + backRoute + '\')">' + ICON.back + '</button>' +
           '<div class="chat-hdr__ava" style="background:' + otherBg + '">' + otherEmoji + '</div>' +
           '<div class="chat-hdr__info">' +
-            '<div class="chat-hdr__name">' + otherName + '</div>' +
+            '<div class="chat-hdr__name">' + esc(otherName) + '</div>' +
             '<div class="chat-hdr__status"><span class="chat-hdr__dot"></span>Aktif Başvuru</div>' +
           '</div>' +
           '<div class="chat-hdr__acts">' +
@@ -850,8 +850,8 @@ window.SharedScreens = (function () {
         ctxEl.innerHTML =
           '<div class="chat-context__dot" style="background:' + otherBg + '"></div>' +
           '<div class="chat-context__text">' +
-            '<span class="chat-context__role">' + listingTitle + '</span>' +
-            (listingSehir ? '<span class="chat-context__loc">' + listingSehir + '</span>' : '') +
+            '<span class="chat-context__role">' + esc(listingTitle) + '</span>' +
+            (listingSehir ? '<span class="chat-context__loc">' + esc(listingSehir) + '</span>' : '') +
           '</div>' +
           '<span class="chat-context__tag" style="color:' + otherBg + '">Başvuru</span>';
       }
@@ -1023,8 +1023,8 @@ window.SharedScreens = (function () {
     var now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble--out chat-bubble--new';
-    bubble.innerHTML = '<div class="chat-bubble__text">' + text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-      '<div class="chat-bubble__meta">' + now + ' <span class="chat-tick">✓✓</span></div>';
+    bubble.innerHTML = '<div class="chat-bubble__text">' + escLines(text) + '</div>' +
+      '<div class="chat-bubble__meta">' + esc(now) + ' <span class="chat-tick">✓✓</span></div>';
     msgsEl.appendChild(bubble);
     msgsEl.scrollTop = msgsEl.scrollHeight;
     if (_activeChatState._convId && window.SB && SB.isOn()) {
@@ -1048,8 +1048,8 @@ window.SharedScreens = (function () {
     var now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble--out chat-bubble--new';
-    bubble.innerHTML = '<div class="chat-bubble__text">' + text + '</div>' +
-      '<div class="chat-bubble__meta">' + now + ' <span class="chat-tick">✓✓</span></div>';
+    bubble.innerHTML = '<div class="chat-bubble__text">' + esc(text) + '</div>' +
+      '<div class="chat-bubble__meta">' + esc(now) + ' <span class="chat-tick">✓✓</span></div>';
     msgs.appendChild(bubble);
     msgs.scrollTop = msgs.scrollHeight;
     if (_activeChatState._convId && window.SB && SB.isOn()) {
@@ -1058,9 +1058,9 @@ window.SharedScreens = (function () {
   }
 
   /* ── Profil Düzenle ─────────────────────────────────────── */
-  function _pdEsc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  /* Geriye dönük ad — util.js'teki merkezi escAttr()'a delege eder.
+     Yerel kopya ' (tek tırnak) karakterini kaçırmıyordu. */
+  function _pdEsc(s) { return escAttr(s); }
 
   function profilDuzenle() {
     showAppBar('Profili Düzenle', true);
@@ -1142,7 +1142,7 @@ window.SharedScreens = (function () {
     if (typeof KBPickPhoto !== 'function') { toast('Kamera erişimi yok'); return; }
     KBPickPhoto(function (dataUrl) {
       var el = document.getElementById('pd-avatar');
-      if (el) el.innerHTML = '<img src="' + dataUrl + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block">';
+      if (el) el.innerHTML = '<img src="' + escAttr(safeUrl(dataUrl)) + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block">';
       var saving = document.getElementById('pd-av-saving');
       if (saving) saving.style.display = 'block';
 
@@ -1482,19 +1482,19 @@ window.initPremiumMap = async function(role) {
     var r = window.APP && APP.role || role;
     var actionHtml = '';
     if (it.type === 'ilan' && r === 'kurye') {
-      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + it.id + '\')">Hızlı Başvur</button>';
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + escJs(it.id)+ '\')">Hızlı Başvur</button>';
     } else if (it.type === 'kurye' && r === 'firma') {
-      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/firma/aday/' + it.id + '\')">Profili Gör</button>';
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/firma/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
     } else if (it.type === 'kurye' && r === 'isletme') {
-      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isletme/aday/' + it.id + '\')">Profili Gör</button>';
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isletme/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
     }
-    var maasHtml = it.maas ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + it.maas + ' ₺</div>' : '';
+    var maasHtml = it.maas ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + esc(it.maas)+ ' ₺</div>' : '';
     var distHtml = dist ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
-    return '<div class="spm-bcard" data-spmkey="' + it.key + '" tabindex="0">' +
+    return '<div class="spm-bcard" data-spmkey="' + escAttr(it.key)+ '" tabindex="0">' +
       '<div class="spm-bcard__top">' +
         '<div class="spm-bcard__logo" style="border-color:' + cfg.color + '33">' + cfg.emoji + '</div>' +
         '<div class="spm-bcard__info"><div class="spm-bcard__title">' + (it.ad || '') + '</div><div class="spm-bcard__sub">' + (it.sub || '') + '</div></div>' +
-        '<span class="spm-bcard__badge spm-bcard__badge--' + it.type + '">' + cfg.label + '</span>' +
+        '<span class="spm-bcard__badge spm-bcard__badge--' + escAttr(it.type)+ '">' + cfg.label + '</span>' +
       '</div>' +
       '<div class="spm-bcard__meta">' + maasHtml + distHtml + '</div>' +
       '<div class="spm-bcard__score"><div class="spm-bcard__score-bar"><div class="spm-bcard__score-fill" style="width:' + score + '%"></div></div><div class="spm-bcard__score-pct">%' + score + ' eşleşme</div></div>' +

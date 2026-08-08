@@ -21,8 +21,8 @@ window.IsletmeScreens = (function () {
     var sub   = a.sehir || a.loc || 'Başvurdu';
     var badge = a.durum === 'reviewed' ? '<span class="kb-chip kb-chip--success" style="font-size:.7rem;padding:2px 8px">İncelendi</span>' :
                 a.durum === 'accepted' ? '<span class="kb-chip kb-chip--accent" style="font-size:.7rem;padding:2px 8px">Kabul</span>' :
-                a.ilanBaslik ? '<span style="font-size:.7rem;color:var(--muted)">' + a.ilanBaslik + '</span>' : '';
-    return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/isletme/aday/' + a.id + '\')">' +
+                a.ilanBaslik ? '<span style="font-size:.7rem;color:var(--muted)">' + esc(a.ilanBaslik)+ '</span>' : '';
+    return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/isletme/aday/' + escJs(a.id)+ '\')">' +
       '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
       '<div class="person-card__info">' +
         '<div class="person-card__name">' + name + '</div>' +
@@ -252,8 +252,8 @@ window.IsletmeScreens = (function () {
       '<div style="font-size:.82rem;color:var(--c-isletme,#FF6B35);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
       '<div class="flex" style="gap:8px;margin-top:10px">' +
         '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/basvurular\')">Başvuruları Gör</button>' +
-        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/isletme/ilan/duzenle/' + il.id + '\')">Düzenle</button>' : '') +
-        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="IsletmeScreens._ilanToggle(\'' + il.id + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/isletme/ilan/duzenle/' + escJs(il.id) + '\')">Düzenle</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="IsletmeScreens._ilanToggle(\'' + escJs(il.id) + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
       '</div>' +
     '</div>';
   }
@@ -613,12 +613,12 @@ window.IsletmeScreens = (function () {
         (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + sub + '</div></div>' : '') +
 
         (a.ilanBaslik ? '<div class="detail-section"><div class="detail-section__title">Başvurulan İlan</div>' +
-          '<div class="detail-row">' + ICON.briefcase + a.ilanBaslik + '</div></div>' : '') +
+          '<div class="detail-row">' + ICON.briefcase + esc(a.ilanBaslik) + '</div></div>' : '') +
 
         (a.mesaj ? '<div class="detail-section"><div class="detail-section__title">Başvuru Mesajı</div>' +
-          '<div style="font-size:.88rem;color:var(--text);line-height:1.6;padding:4px 0">' + a.mesaj + '</div></div>' : '') +
+          '<div style="font-size:.88rem;color:var(--text);line-height:1.6;padding:4px 0">' + esc(a.mesaj)+ '</div></div>' : '') +
 
-        (a.tarih ? '<div class="detail-section"><div class="detail-row" style="color:var(--muted)">' + ICON.clock + 'Başvuru tarihi: ' + a.tarih + '</div></div>' : '') +
+        (a.tarih ? '<div class="detail-section"><div class="detail-row" style="color:var(--muted)">' + ICON.clock + 'Başvuru tarihi: ' + esc(a.tarih)+ '</div></div>' : '') +
 
         '<div id="aday-profil-extra"></div>' +
 
@@ -636,8 +636,8 @@ window.IsletmeScreens = (function () {
         if (!el) return;
         var rows = [];
         if (p.experience || p.exp) rows.push('<div class="detail-row">' + ICON.briefcase + (p.experience || p.exp) + '</div>');
-        if (p.vehicle)   rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + p.vehicle + '</div>');
-        if (p.bio)       rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + p.bio + '</div>');
+        if (p.vehicle)   rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + esc(p.vehicle)+ '</div>');
+        if (p.bio)       rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + esc(p.bio)+ '</div>');
         if (rows.length) {
           el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
         }

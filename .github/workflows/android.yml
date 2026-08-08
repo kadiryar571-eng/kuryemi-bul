@@ -1,7 +1,32 @@
 name: Android APK Derle
 
+# ============================================================
+# GÜVENLİK NOTU (önceki sürümdeki kritik hata):
+# Bu workflow eskiden `assembleDebug` çalıştırıp çıkan APK'yı
+# downloads/kuryemibul.apk olarak siteye yayınlıyordu. Sonuç:
+#   1) android:debuggable="true" — ADB ile process'e bağlanıp
+#      WebView'den canlı Supabase oturum jetonu okunabiliyordu.
+#   2) APK, herkese açık Android DEBUG anahtarıyla imzalıydı
+#      (CN=Android Debug, O=Android, C=US) — üçüncü bir kişi
+#      "güncelleme" olarak kabul edilecek kötücül bir APK
+#      üretebiliyordu.
+# Artık yalnız imzalı RELEASE derlenir ve yayınlanır.
+#
+# GEREKLİ GITHUB SECRETS (Settings → Secrets → Actions):
+#   KEYSTORE_BASE64     — release.keystore dosyasının base64'ü
+#   KEYSTORE_PASSWORD   — anahtar deposu parolası
+#   KEY_ALIAS           — anahtar takma adı
+#   KEY_PASSWORD        — anahtar parolası
+# Kurulum adımları için: store/keystore-setup-guide.md
+# ============================================================
+
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "APK'yı downloads/ altına yayınla"
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -13,6 +38,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: İmzalama secret'larını doğrula
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$KEYSTORE_BASE64" ]   && missing="$missing KEYSTORE_BASE64"
+          [ -z "$KEYSTORE_PASSWORD" ] && missing="$missing KEYSTORE_PASSWORD"
+          [ -z "$KEY_ALIAS" ]         && missing="$missing KEY_ALIAS"
+          [ -z "$KEY_PASSWORD" ]      && missing="$missing KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Eksik secret(lar):$missing"
+            echo "::error::Kurulum: store/keystore-setup-guide.md"
+            echo "::error::İmzasız/debug APK YAYINLANMAZ — derleme durduruldu."
+            exit 1
+          fi
+          echo "Tüm imzalama secret'ları mevcut."
 
       - name: Node kur
         uses: actions/setup-node@v4
@@ -38,32 +83,84 @@ jobs:
             "platform-tools" || true
 
       - name: Bağımlılıkları yükle
-        run: npm install
+        run: npm ci || npm install
 
       - name: Web varlıklarını + plugin'leri senkronla
         run: npx cap sync android
 
+      - name: Keystore'u çöz
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+          # Dosya gerçekten bir JKS/PKCS12 mi? (bozuk base64 erken yakalanır)
+          if [ ! -s android/app/release.keystore ]; then
+            echo "::error::Keystore çözülemedi — KEYSTORE_BASE64 bozuk olabilir."
+            exit 1
+          fi
+
       - name: gradlew çalıştırılabilir yap
         run: chmod +x android/gradlew
 
-      - name: APK derle (debug)
+      - name: APK derle (release, imzalı)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          KEYSTORE_FILE: release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: APK'yı artifact olarak kaydet
+      - name: AAB derle (Play Store için)
+        working-directory: android
+        env:
+          KEYSTORE_FILE: release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: İmzayı ve debuggable bayrağını doğrula
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          BT=$(ls -d /usr/local/lib/android/sdk/build-tools/* | sort -V | tail -1)
+
+          # 1) Debug anahtarıyla imzalanmadığından emin ol
+          if "$BT/apksigner" verify --print-certs "$APK" | grep -qi "Android Debug"; then
+            echo "::error::APK hâlâ DEBUG anahtarıyla imzalı — yayınlanmayacak."
+            exit 1
+          fi
+
+          # 2) debuggable bayrağı kapalı olmalı
+          if "$BT/aapt" dump badging "$APK" | grep -q "application-debuggable"; then
+            echo "::error::APK debuggable — yayınlanmayacak."
+            exit 1
+          fi
+
+          "$BT/apksigner" verify --verbose "$APK"
+          echo "Doğrulama geçti: release imzalı, debuggable değil."
+
+      - name: Keystore'u sil
+        if: always()
+        run: rm -f android/app/release.keystore
+
+      - name: Artifact olarak kaydet
         uses: actions/upload-artifact@v4
         with:
-          name: kuryemibul-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: kuryemibul-release
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
       - name: Web sitesindeki indirme dosyasını güncelle
+        if: ${{ inputs.publish }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk downloads/kuryemibul.apk
+          cp android/app/build/outputs/apk/release/app-release.apk downloads/kuryemibul.apk
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add downloads/kuryemibul.apk
-          git diff --staged --quiet || git commit -m "chore: APK güncelle (otomatik) [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: APK güncelle (release, imzalı) [skip ci]"
           git checkout -- .
           git pull --rebase origin main
           git push

@@ -10,7 +10,26 @@ dist/
 ios/
 .gradle/
 
+# İMZALAMA ANAHTARLARI — asla commit'lenmez.
+# Kaybedilirse Play Store'da uygulama bir daha GÜNCELLENEMEZ; ayrı
+# ve yedekli bir yerde saklayın (bkz. store/keystore-setup-guide.md).
+*.keystore
+*.jks
+keystore.properties
+android/app/release.keystore
+
+# Firebase yapılandırması (proje kimlikleri + API anahtarı içerir)
+android/app/google-services.json
+
+# Ortam değişkenleri / sırlar
+.env
+.env.*
+!.env.example
+
 # OS / editör
 Thumbs.db
 .DS_Store
+desktop.ini
 .vscode/
+.idea/
+android/.idea/

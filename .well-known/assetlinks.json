@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kuryemibul.app",
+      "sha256_cert_fingerprints": [
+        "8D:8F:D0:CF:9B:EC:1D:8A:9F:BA:F4:5D:05:C0:6D:E8:E2:12:45:76:8C:34:AE:DC:68:11:25:DE:9D:4B:C4:10"
+      ]
+    }
+  }
+]

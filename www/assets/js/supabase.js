@@ -53,7 +53,14 @@
   }
   // Capacitor native ortam mı?
   function isNative() { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
-  var NATIVE_REDIRECT = "com.kuryemibul.app://callback";
+  /* Native OAuth dönüş adresi — DOĞRULANMIŞ App Link.
+     Eskiden "com.kuryemibul.app://callback" idi; özel şemayı her
+     uygulama kaydedebildiği için authorization code yakalanabiliyordu.
+     https adresi assetlinks.json ile bu APK'ya kilitlidir.
+     NOT: Supabase → Authentication → URL Configuration → Redirect URLs
+     listesinde bu adres EKLİ olmalı, yoksa Supabase redirect'i reddeder. */
+  var NATIVE_REDIRECT = "https://kuryemibul.com/auth-callback.html";
+  var LEGACY_REDIRECT = "com.kuryemibul.app://";   // yalnız geriye dönük yakalama
 
   // Google ile giriş/kayıt (OAuth).
   // Web: aynı sekmede redirect → giris.html oturum tespiti.
@@ -85,7 +92,14 @@
 
     App.addListener("appUrlOpen", async function (ev) {
       var url = ev && ev.url;
-      if (!url || url.indexOf("com.kuryemibul.app://") !== 0) return;
+      if (!url) return;
+      /* Hem yeni App Link'i hem eski özel şemayı kabul et. Eski şema
+         geçiş dönemi içindir; App Links sahada teyit edilince
+         LEGACY_REDIRECT kontrolü ve manifest'teki blok silinmelidir. */
+      var isCallback = url.indexOf(NATIVE_REDIRECT) === 0 ||
+                       url.indexOf("https://www.kuryemibul.com/auth-callback.html") === 0 ||
+                       url.indexOf(LEGACY_REDIRECT) === 0;
+      if (!isCallback) return;
 
       // Browser plugin'i kapat
       try { var B = window.Capacitor.Plugins.Browser; if (B && B.close) await B.close(); } catch (e) {}

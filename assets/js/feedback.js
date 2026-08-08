@@ -32,9 +32,14 @@
   function repKey(profileId)           { return 'kb_rep_' + profileId; }
 
   /* ── Utilities ── */
+  /* Kaçış işlevi merkezîdir: components.js → KB.esc.
+     Yerel kopya kaldırıldı (' karakterini kaçırmıyordu). */
   function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (window.KB && KB.esc) return KB.esc(s);
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
   function calcAvg(ratings) {
     var vals = Object.keys(ratings).map(function(k){ return ratings[k]; })

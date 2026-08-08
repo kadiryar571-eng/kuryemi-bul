@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+import groovy.json.JsonSlurper
+
+// Sürüm bilgisi tek kaynaktan: kökteki version.json (CI her push'ta build'i artırır).
+// Eskiden versionCode/versionName burada "1"/"1.0" olarak sabitti; her derleme
+// sürüm 1 olarak çıktığı için Play Store güncellemesi imkânsızdı.
+def versionJson = new JsonSlurper().parseText(file('../../version.json').text)
+def appVersionCode = versionJson.build as int
+def appVersionName = "${versionJson.version}.${versionJson.build}"
+
 android {
     namespace "com.kuryemibul.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,8 +16,8 @@ android {
         applicationId "com.kuryemibul.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +25,43 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release imzalama — anahtar deposu ASLA repoda tutulmaz.
+    // CI, GitHub Secrets'tan base64 çözüp android/app/release.keystore
+    // olarak yazar ve şu ortam değişkenlerini set eder.
+    // Yerelde imzasız derlemek isterseniz: değişkenleri boş bırakın,
+    // signingConfig otomatik olarak devre dışı kalır.
+    signingConfigs {
+        release {
+            def ksFile = System.getenv("KEYSTORE_FILE") ?: "release.keystore"
+            def ksPath = file(ksFile)
+            if (ksPath.exists() && System.getenv("KEYSTORE_PASSWORD")) {
+                storeFile     ksPath
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias      System.getenv("KEY_ALIAS")
+                keyPassword   System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // R8: küçültme + kaynak temizliği + obfuscation.
+            // Eskiden false idi — APK içindeki tüm sınıf/metot adları açıktı.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Anahtar yoksa (yerel geliştirme) imzasız kalır, derleme patlamaz.
+            if (file(System.getenv("KEYSTORE_FILE") ?: "release.keystore").exists()
+                    && System.getenv("KEYSTORE_PASSWORD")) {
+                signingConfig signingConfigs.release
+            }
+        }
+        debug {
+            // Debug derlemeler yalnız yereldir; asla dağıtılmaz.
+            // Paket adı ayrıştırılır ki release sürümün üzerine kurulmasın.
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
 }

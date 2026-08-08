@@ -95,9 +95,15 @@
   }
 
   /* ─── HELPERS ──────────────────────────────────────────────── */
+  /* Projedeki TEK kaçış (escape) kaynağı; diğer modüller buraya delege eder.
+     ' (tek tırnak) de kaçırılır — eskiden atlanıyordu ve
+     onclick="fn('...')" kalıbında attribute enjeksiyonuna açık kapı
+     bırakıyordu. */
   function esc(s) {
     if (s == null) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
   function initials(name) {
     var parts = String(name || '?').trim().split(/\s+/);

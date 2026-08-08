@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src  'self' 'unsafe-inline';
+    style-src   'self' 'unsafe-inline';
+    img-src     'self' data:;
+    connect-src 'self';
+    frame-src   'none';
+    object-src  'none';
+    base-uri    'self';
+    form-action 'self';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Giriş yapılıyor · KuryemiBul</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .cb-wrap { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .cb-card { max-width: 380px; width: 100%; text-align: center; }
+    .cb-logo { width: 64px; height: 64px; margin: 0 auto 20px; display: block; }
+    .cb-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+    .cb-sub { font-size: .9rem; color: var(--text-2); line-height: 1.6; margin-bottom: 24px; }
+    .cb-spin { width: 34px; height: 34px; margin: 0 auto 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: cbspin .8s linear infinite; }
+    @keyframes cbspin { to { transform: rotate(360deg); } }
+    .cb-hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="cb-wrap">
+    <div class="cb-card">
+      <img src="assets/logo.png" alt="KuryemiBul" class="cb-logo">
+
+      <div id="cbLoading">
+        <div class="cb-spin"></div>
+        <div class="cb-title">Giriş tamamlanıyor…</div>
+        <div class="cb-sub">Uygulamaya yönlendiriliyorsunuz.</div>
+      </div>
+
+      <div id="cbFallback" class="cb-hidden">
+        <div class="cb-title">Uygulamaya geri dönün</div>
+        <div class="cb-sub">
+          Girişiniz onaylandı. KuryemiBul uygulaması otomatik açılmadıysa,
+          telefonunuzdan uygulamaya geri dönün — oturumunuz açılmış olacak.
+        </div>
+        <a href="/" class="btn btn--ghost btn--sm">Web sitesine dön</a>
+      </div>
+
+      <div id="cbError" class="cb-hidden">
+        <div class="cb-title">Giriş tamamlanamadı</div>
+        <div class="cb-sub" id="cbErrMsg">Bağlantı geçersiz veya süresi dolmuş.</div>
+        <a href="giris.html" class="btn btn--primary btn--sm">Tekrar dene</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* ------------------------------------------------------------------
+     Bu sayfa NATIVE OAuth dönüş adresidir:
+       https://kuryemibul.com/auth-callback.html?code=...
+
+     Normal akışta bu sayfa HİÇ görünmez — Android App Links, adresi
+     doğrulanmış uygulamaya yönlendirir ve uygulama code'u kendi
+     içinde exchangeCodeForSession ile oturuma çevirir.
+
+     Bu sayfa yalnız App Links doğrulaması başarısız olduğunda (ör.
+     assetlinks.json yayında değil, ya da kullanıcı linki masaüstünde
+     açtı) tarayıcıda görünür.
+
+     GÜVENLİK: Buradan com.kuryemibul.app:// özel şemasına OTOMATİK
+     yönlendirme YAPILMAZ. Özel şemayı her uygulama kaydedebilir;
+     otomatik yönlendirme, OAuth code'unu kötücül bir uygulamaya
+     teslim etme riski doğurur. Kullanıcıya elle dönmesi söylenir.
+
+     PKCE code_verifier uygulamanın deposunda olduğu için code'u burada
+     zaten oturuma çeviremeyiz; denemiyoruz da.
+     ------------------------------------------------------------------ */
+  (function () {
+    var qs    = new URLSearchParams(location.search);
+    var code  = qs.get('code');
+    var oaErr = qs.get('error') || qs.get('error_description');
+
+    function show(id) {
+      ['cbLoading', 'cbFallback', 'cbError'].forEach(function (x) {
+        var el = document.getElementById(x);
+        if (el) el.classList.toggle('cb-hidden', x !== id);
+      });
+    }
+
+    if (oaErr) {
+      var m = document.getElementById('cbErrMsg');
+      if (m) m.textContent = String(oaErr).slice(0, 200);
+      show('cbError');
+      return;
+    }
+
+    if (!code) { show('cbError'); return; }
+
+    /* Uygulama araya girecekse bu sayfa zaten kapanır. 2.5 sn içinde
+       kapanmadıysa App Links çalışmamış demektir → yönergeyi göster. */
+    setTimeout(function () { show('cbFallback'); }, 2500);
+  })();
+  </script>
+</body>
+</html>

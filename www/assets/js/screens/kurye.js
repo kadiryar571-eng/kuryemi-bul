@@ -26,18 +26,18 @@ window.KuryeScreens = (function () {
   }
 
   function _jobCard(j) {
-    return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + j.id + '\')">' +
+    return '<div class="job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">' +
       '<div class="job-card__top">' +
         '<div class="job-card__avatar">🏢</div>' +
         '<div class="job-card__info">' +
-          '<div class="job-card__title">' + j.title + '</div>' +
-          '<div class="job-card__company">' + j.company + '</div>' +
+          '<div class="job-card__title">' + esc(j.title)+ '</div>' +
+          '<div class="job-card__company">' + esc(j.company)+ '</div>' +
         '</div>' +
-        '<div class="job-card__salary">' + j.salary + '</div>' +
+        '<div class="job-card__salary">' + esc(j.salary)+ '</div>' +
       '</div>' +
       '<div class="job-card__tags">' +
-        '<span class="kb-chip kb-chip--accent">' + j.type + '</span>' +
-        '<span class="kb-chip">' + ICON.pin + j.location + '</span>' +
+        '<span class="kb-chip kb-chip--accent">' + esc(j.type)+ '</span>' +
+        '<span class="kb-chip">' + ICON.pin + esc(j.location) + '</span>' +
       '</div>' +
     '</div>';
   }
@@ -253,7 +253,7 @@ window.KuryeScreens = (function () {
           '<div class="actapp-card__title">' + title + '</div>' +
           '<div class="actapp-card__company">' + company + '</div>' +
         '</div>' +
-        '<div class="actapp-card__time">' + time + '</div>' +
+        '<div class="actapp-card__time">' + esc(time) + '</div>' +
       '</div>' +
       '<div class="actapp-card__bottom">' +
         '<span class="app-status app-status--' + statusCls + '">' + statusLbl + '</span>' +
@@ -289,7 +289,7 @@ window.KuryeScreens = (function () {
         '<div class="mini-msg__preview">' + preview + '</div>' +
       '</div>' +
       '<div class="mini-msg__meta">' +
-        '<span class="mini-msg__time">' + time + '</span>' +
+        '<span class="mini-msg__time">' + esc(time) + '</span>' +
         (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') +
       '</div>' +
     '</div>';
@@ -308,15 +308,15 @@ window.KuryeScreens = (function () {
   var MAP_ILANLAR = [];
 
   function _mapJobCard(j) {
-    return '<div class="map-job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + j.id + '\')">' +
-      '<div class="map-job-card__avatar" style="background:' + j.avatarBg + '">' + j.emoji + '</div>' +
+    return '<div class="map-job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">' +
+      '<div class="map-job-card__avatar" style="background:' + escAttr(j.avatarBg)+ '">' + esc(j.emoji)+ '</div>' +
       '<div class="map-job-card__body">' +
-        '<div class="map-job-card__title">' + j.title + '</div>' +
-        '<div class="map-job-card__company">' + j.company + '</div>' +
-        '<div class="map-job-card__salary">' + j.salary + '</div>' +
+        '<div class="map-job-card__title">' + esc(j.title)+ '</div>' +
+        '<div class="map-job-card__company">' + esc(j.company)+ '</div>' +
+        '<div class="map-job-card__salary">' + esc(j.salary)+ '</div>' +
         '<div class="map-job-card__meta">' +
-          '<span>📍 ' + j.dist + '</span>' +
-          '<span>🕐 ' + j.time + '</span>' +
+          '<span>📍 ' + esc(j.dist)+ '</span>' +
+          '<span>🕐 ' + esc(j.time)+ '</span>' +
         '</div>' +
         '<div class="map-job-card__tags">' +
           j.tags.map(function (t) { return '<span class="map-job-card__tag">' + t + '</span>'; }).join('') +
@@ -325,13 +325,13 @@ window.KuryeScreens = (function () {
       '<div class="map-job-card__score">' +
         '<svg viewBox="0 0 36 36" class="map-job-card__ring">' +
           '<circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2.5"/>' +
-          '<circle cx="18" cy="18" r="15.5" fill="none" stroke="' + j.avatarBg + '" stroke-width="2.5"' +
+          '<circle cx="18" cy="18" r="15.5" fill="none" stroke="' + escAttr(j.avatarBg)+ '" stroke-width="2.5"' +
             ' stroke-dasharray="' + Math.round(97.4 * j.match / 100) + ' 97.4"' +
             ' stroke-linecap="round" transform="rotate(-90 18 18)"/>' +
         '</svg>' +
-        '<div class="map-job-card__pct">' + j.match + '%</div>' +
+        '<div class="map-job-card__pct">' + esc(j.match)+ '%</div>' +
       '</div>' +
-      '<button class="map-job-card__cta" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + j.id + '\')">Hızlı Başvur</button>' +
+      '<button class="map-job-card__cta" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">Hızlı Başvur</button>' +
     '</div>';
   }
 
@@ -562,14 +562,14 @@ window.KuryeScreens = (function () {
 
   function _ilCard(j) {
     var saved = !!_ilanState.savedIds[j.id];
-    return '<div class="il-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + j.id + '\')">' +
+    return '<div class="il-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">' +
 
       /* ── Row 1: logo + tier badge + save ── */
       '<div class="il-card__head">' +
-        '<div class="il-card__avatar" style="background:' + j.avatarBg + '">' + j.emoji + '</div>' +
+        '<div class="il-card__avatar" style="background:' + escAttr(j.avatarBg)+ '">' + esc(j.emoji)+ '</div>' +
         '<div class="il-card__tier-wrap">' + _tierBadge(j.tier) + '</div>' +
         '<button class="il-card__save' + (saved ? ' il-card__save--saved' : '') + '" ' +
-          'onclick="event.stopPropagation();KuryeScreens._ilToggleSave(this,\'' + j.id + '\')">' +
+          'onclick="event.stopPropagation();KuryeScreens._ilToggleSave(this,\'' + escJs(j.id)+ '\')">' +
           '<svg viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
         '</button>' +
       '</div>' +
@@ -577,9 +577,9 @@ window.KuryeScreens = (function () {
       /* ── Row 2: title + match ring ── */
       '<div class="il-card__mid">' +
         '<div class="il-card__info">' +
-          '<div class="il-card__title">' + j.title + '</div>' +
-          '<div class="il-card__company">' + j.company + '</div>' +
-          '<div class="il-card__salary">' + j.salary + '</div>' +
+          '<div class="il-card__title">' + esc(j.title)+ '</div>' +
+          '<div class="il-card__company">' + esc(j.company)+ '</div>' +
+          '<div class="il-card__salary">' + esc(j.salary)+ '</div>' +
           '<div class="il-card__meta">' +
             [j.location ? '📍 ' + j.location : '', j.dist, j.time ? '🕐 ' + j.time : '']
               .filter(Boolean).join(' &bull; ') +
@@ -591,11 +591,11 @@ window.KuryeScreens = (function () {
           '<div class="il-card__score">' +
             '<svg viewBox="0 0 40 40" class="il-card__ring">' +
               '<circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>' +
-              '<circle cx="20" cy="20" r="17" fill="none" stroke="' + j.avatarBg + '" stroke-width="3"' +
+              '<circle cx="20" cy="20" r="17" fill="none" stroke="' + escAttr(j.avatarBg)+ '" stroke-width="3"' +
                 ' stroke-dasharray="' + Math.round(106.8 * j.match / 100) + ' 106.8"' +
                 ' stroke-linecap="round" transform="rotate(-90 20 20)"/>' +
             '</svg>' +
-            '<div class="il-card__pct"><span>' + j.match + '</span><small>%</small></div>' +
+            '<div class="il-card__pct"><span>' + esc(j.match)+ '</span><small>%</small></div>' +
           '</div>' : '') +
       '</div>' +
 
@@ -608,7 +608,7 @@ window.KuryeScreens = (function () {
       '</div>' +
 
       /* ── CTA ── */
-      '<button class="il-card__cta" onclick="event.stopPropagation();KuryeScreens._basvur(\'' + j.id + '\')">' +
+      '<button class="il-card__cta" onclick="event.stopPropagation();KuryeScreens._basvur(\'' + escJs(j.id)+ '\')">' +
         (j.tier === 'premium' ? 'Hızlı Başvur ⚡' : 'Başvur') +
       '</button>' +
 
@@ -951,10 +951,10 @@ window.KuryeScreens = (function () {
       '<div class="apply-modal">' +
 
         '<div class="apply-modal__head">' +
-          '<div class="apply-modal__avatar" style="background:' + ilan.avatarBg + '">' + ilan.emoji + '</div>' +
+          '<div class="apply-modal__avatar" style="background:' + escAttr(ilan.avatarBg)+ '">' + esc(ilan.emoji)+ '</div>' +
           '<div class="apply-modal__hinfo">' +
-            '<div class="apply-modal__htitle">' + ilan.title + '</div>' +
-            '<div class="apply-modal__hco">' + ilan.company + '</div>' +
+            '<div class="apply-modal__htitle">' + esc(ilan.title)+ '</div>' +
+            '<div class="apply-modal__hco">' + esc(ilan.company)+ '</div>' +
           '</div>' +
           '<button class="apply-modal__close" onclick="document.getElementById(\'apply-overlay\').remove()">' +
             '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
@@ -978,7 +978,7 @@ window.KuryeScreens = (function () {
         '<div class="apply-modal__actions">' +
           '<button class="apply-modal__cancel" onclick="document.getElementById(\'apply-overlay\').remove()">Vazgeç</button>' +
           '<button class="apply-modal__submit" id="apply-submit-btn" ' +
-            'onclick="KuryeScreens._doApply(\'' + ilan.id + '\',\'' +
+            'onclick="KuryeScreens._doApply(\'' + escJs(ilan.id)+ '\',\'' +
               ilan.title.replace(/'/g, "\\'") + '\',\'' +
               ilan.company.replace(/'/g, "\\'") + '\')">' +
             (ilan.tier === 'premium' ? 'Hızlı Başvur ⚡' : 'Başvuruyu Gönder →') +
@@ -1084,7 +1084,7 @@ window.KuryeScreens = (function () {
         _basLabel(b.durum || b.status) +
       '</div>' +
       '<div style="font-size:.85rem;color:var(--muted)">' + (b.baslik || b.role || '') + '</div>' +
-      (b.ilanSehir ? '<div style="font-size:.75rem;color:var(--muted);margin-top:2px">' + b.ilanSehir + '</div>' : '') +
+      (b.ilanSehir ? '<div style="font-size:.75rem;color:var(--muted);margin-top:2px">' + esc(b.ilanSehir)+ '</div>' : '') +
       '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Başvuru: ' + (b.tarih || b.date || '') + '</div>' +
     '</div>';
   }
@@ -1139,39 +1139,39 @@ window.KuryeScreens = (function () {
   function _konusmaCard(k, isActive) {
     var color = _msgIndicatorColor(k.indicator);
     return '<div class="msg-conv' + (isActive ? ' msg-conv--active' : '') + '" ' +
-      'onclick="KuryeScreens._msgOpen(\'' + k.id + '\')">' +
+      'onclick="KuryeScreens._msgOpen(\'' + esc(k.id) + '\')">' +
 
       /* indicator bar */
       '<div class="msg-conv__bar" style="background:' + color + '"></div>' +
 
       /* avatar */
-      '<div class="msg-conv__ava" style="background:' + k.avatarBg + '">' +
-        k.emoji +
+      '<div class="msg-conv__ava" style="background:' + esc(k.avatarBg) + '">' +
+        escAttr(k.emoji) +
         (k.online ? '<div class="msg-conv__online"></div>' : '') +
       '</div>' +
 
       /* body */
       '<div class="msg-conv__body">' +
         '<div class="msg-conv__row1">' +
-          '<div class="msg-conv__name">' + k.name + '</div>' +
-          '<div class="msg-conv__time">' + k.time + '</div>' +
+          '<div class="msg-conv__name">' + escAttr(k.name) + '</div>' +
+          '<div class="msg-conv__time">' + escAttr(k.time) + '</div>' +
         '</div>' +
         '<div class="msg-conv__row2">' +
-          '<span class="msg-conv__badge msg-conv__badge--' + k.badge + '">' +
+          '<span class="msg-conv__badge msg-conv__badge--' + esc(k.badge) + '">' +
             (k.badge === 'premium' ? '⭐' : '') + ' ' + k.badge.charAt(0).toUpperCase() + k.badge.slice(1) +
           '</span>' +
-          '<span class="msg-conv__job">' + k.jobType + '</span>' +
+          '<span class="msg-conv__job">' + escAttr(k.jobType) + '</span>' +
         '</div>' +
-        '<div class="msg-conv__tag" style="color:' + color + '">' + k.tag + '</div>' +
-        '<div class="msg-conv__preview">' + k.lastMsg + '</div>' +
-        '<div class="msg-conv__meta">' + k.meta + '</div>' +
+        '<div class="msg-conv__tag" style="color:' + color + '">' + escAttr(k.tag) + '</div>' +
+        '<div class="msg-conv__preview">' + escAttr(k.lastMsg) + '</div>' +
+        '<div class="msg-conv__meta">' + escAttr(k.meta) + '</div>' +
       '</div>' +
 
       /* right */
       '<div class="msg-conv__right">' +
-        (k.unread ? '<div class="msg-conv__unread">' + k.unread + '</div>' : '') +
+        (k.unread ? '<div class="msg-conv__unread">' + escAttr(k.unread) + '</div>' : '') +
         '<button class="msg-conv__star' + (k.starred ? ' msg-conv__star--on' : '') + '" ' +
-          'onclick="event.stopPropagation();KuryeScreens._msgStar(\'' + k.id + '\')">' +
+          'onclick="event.stopPropagation();KuryeScreens._msgStar(\'' + esc(k.id) + '\')">' +
           ICON.star +
         '</button>' +
       '</div>' +
@@ -1200,7 +1200,7 @@ window.KuryeScreens = (function () {
       var d = new Date(c.lastMessageAt);
       time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     }
-    return '<div class="msg-conv" onclick="Router.go(\'/kurye/mesaj/' + c.id + '\')">' +
+    return '<div class="msg-conv" onclick="Router.go(\'/kurye/mesaj/' + escJs(c.id)+ '\')">' +
       '<div class="msg-conv__bar" style="background:' + roleBg + '"></div>' +
       '<div class="msg-conv__ava" style="background:' + roleBg + '">' +
         roleEmoji +
@@ -1208,8 +1208,8 @@ window.KuryeScreens = (function () {
       '</div>' +
       '<div class="msg-conv__body">' +
         '<div class="msg-conv__top">' +
-          '<div class="msg-conv__name">' + c.otherName + '</div>' +
-          '<div class="msg-conv__time">' + time + '</div>' +
+          '<div class="msg-conv__name">' + esc(c.otherName)+ '</div>' +
+          '<div class="msg-conv__time">' + esc(time) + '</div>' +
         '</div>' +
         '<div class="msg-conv__job">' +
           '<span class="msg-conv__badge--standart">Başvuru</span>' +
@@ -1221,7 +1221,7 @@ window.KuryeScreens = (function () {
         '</div>' +
       '</div>' +
       (c.unread > 0
-        ? '<div class="msg-conv__unread">' + c.unread + '</div>'
+        ? '<div class="msg-conv__unread">' + esc(c.unread)+ '</div>'
         : '') +
     '</div>';
   }
@@ -1431,8 +1431,8 @@ window.KuryeScreens = (function () {
     var isOut = m.sender_user === myUserId;
     var time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
     return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
-      '<div class="chat-bubble__text">' + (m.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</div>' +
-      '<div class="chat-bubble__meta">' + time + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
+      '<div class="chat-bubble__text">' + escLines(m.content) + '</div>' +
+      '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
     '</div>';
   }
 
@@ -1457,7 +1457,7 @@ window.KuryeScreens = (function () {
           '<button class="chat-hdr__back" onclick="Router.back ? Router.back() : Router.go(\'/kurye/mesajlar\')">' + ICON.back + '</button>' +
           '<div class="chat-hdr__ava" style="background:' + otherBg + '">' + otherEmoji + '</div>' +
           '<div class="chat-hdr__info">' +
-            '<div class="chat-hdr__name">' + otherName + '</div>' +
+            '<div class="chat-hdr__name">' + esc(otherName) + '</div>' +
             '<div class="chat-hdr__status"><span class="chat-hdr__dot"></span>Aktif Başvuru</div>' +
           '</div>' +
           '<div class="chat-hdr__acts">' +
@@ -1477,8 +1477,8 @@ window.KuryeScreens = (function () {
         ctxEl.innerHTML =
           '<div class="chat-context__dot" style="background:' + otherBg + '"></div>' +
           '<div class="chat-context__text">' +
-            '<span class="chat-context__role">' + listingTitle + '</span>' +
-            (listingSehir ? '<span class="chat-context__loc">' + listingSehir + '</span>' : '') +
+            '<span class="chat-context__role">' + esc(listingTitle) + '</span>' +
+            (listingSehir ? '<span class="chat-context__loc">' + esc(listingSehir) + '</span>' : '') +
           '</div>' +
           '<span class="chat-context__tag" style="color:' + otherBg + '">Başvuru</span>';
       }
@@ -1597,8 +1597,8 @@ window.KuryeScreens = (function () {
     var now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble--out chat-bubble--new';
-    bubble.innerHTML = '<div class="chat-bubble__text">' + text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-      '<div class="chat-bubble__meta">' + now + ' <span class="chat-tick">✓✓</span></div>';
+    bubble.innerHTML = '<div class="chat-bubble__text">' + escLines(text) + '</div>' +
+      '<div class="chat-bubble__meta">' + esc(now) + ' <span class="chat-tick">✓✓</span></div>';
     msgsEl.appendChild(bubble);
     msgsEl.scrollTop = msgsEl.scrollHeight;
 
