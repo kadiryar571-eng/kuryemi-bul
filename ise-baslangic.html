@@ -416,8 +416,8 @@
     wire();
   }
 
-  if (window.KB && KB.ready && KB.ready.then) {
-    KB.ready.then(boot);
+  if (window.KB && KB.ready) {
+    KB.ready().then(boot).catch(boot);
   } else {
     document.addEventListener('DOMContentLoaded', boot);
   }

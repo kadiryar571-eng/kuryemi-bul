@@ -1,16 +1,43 @@
-/* KBChat — Application-Based Chat Engine
-   Every thread is tied to: job + applicant + employer + application status */
+/* KBChat — Başvuru temelli sohbet motoru (Supabase destekli)
+   ============================================================
+   Her görüşme şuna bağlıdır: ilan + başvuran + işveren + başvuru durumu.
+
+   ÖNEMLİ — 2026-08 taşıması:
+   Bu modül eskiden TAMAMEN localStorage üzerinde çalışıyordu
+   (kb_threads_*, kb_chat_*). Başvuru yapıldığında schema.sql'deki
+   on_new_application() trigger'ı konuşmayı `conversations` +
+   `conv_messages` tablolarına yazdığı için, mesajlar.html ve
+   mesaj-detay.html hiçbir zaman gerçek veriyi göremiyordu:
+   bildirim düşüyor ama görüşme listesi boş kalıyordu.
+
+   Artık tek veri kaynağı Supabase'dir. localStorage yalnız
+   çevrimdışı okuma için pasif bir önbellek olarak kullanılır.
+
+   API SÖZLEŞMESİ KORUNDU: getThreads/getMsgs/getStats gibi
+   fonksiyonlar hâlâ SENKRON çalışır ve bellek içi önbellekten
+   okur. Sayfalar açılırken bir kez `await KBChat.load(uid, role)`
+   çağırmalıdır; gerisi eskisi gibi çalışır.
+   ============================================================ */
 (function () {
   'use strict';
 
-  /* ─── Storage keys ─────────────────────────────────────────── */
+  /* ─── Çevrimdışı önbellek anahtarları ───────────────────────── */
   var S = {
     threads: function (uid) { return 'kb_threads_' + uid; },
     msgs:    function (tid) { return 'kb_chat_' + tid; },
     log:     function (tid) { return 'kb_chat_log_' + tid; }
   };
 
-  /* ─── Status definitions ────────────────────────────────────── */
+  /* ─── Bellek içi önbellek ───────────────────────────────────── */
+  var _cache = {
+    uid:      null,
+    role:     'kurye',      // oturumdaki kullanıcının bu görüşmelerdeki rolü
+    threads:  [],
+    msgs:     {},           // { conversationId: [msg, ...] }
+    loaded:   false
+  };
+
+  /* ─── Durum tanımları ───────────────────────────────────────── */
   var STATUS_DEFS = {
     yeni:       { lbl: 'Yeni',        cls: 'msg-badge--yeni',        ico: '🆕' },
     aktif:      { lbl: 'Aktif',       cls: 'msg-badge--aktif',       ico: '💬' },
@@ -18,7 +45,6 @@
     sonuclandi: { lbl: 'Sonuçlandı',  cls: 'msg-badge--sonuclandi',  ico: '✅' }
   };
 
-  /* ─── Application status labels ────────────────────────────── */
   var APP_STATUS = {
     beklemede:   'Beklemede',
     inceleniyor: 'İnceleniyor',
@@ -27,7 +53,6 @@
     red:         'Reddedildi'
   };
 
-  /* ─── Quick replies ─────────────────────────────────────────── */
   var QUICK_REPLIES_KURYE = [
     'Merhaba, ilgileniyorum.',
     'Görüşme için uygunum.',
@@ -46,110 +71,208 @@
     'Teşekkür ederiz.'
   ];
 
-  /* ─── Business action definitions ──────────────────────────── */
   var BIZ_ACTIONS = {
     mulakat: {
-      lbl:       'Mülakata Çağır',
-      ico:       '📅',
-      appStatus: 'mulakat',
-      chatStatus:'gorusme',
+      lbl: 'Mülakata Çağır', ico: '📅',
+      appStatus: 'mulakat', chatStatus: 'gorusme',
+      dbDurum: null,   // başvuru durumu değişmez, yalnız görüşme açılır
       systemMsg: 'Mülakata davet edildiniz. Esnaf sizinle görüşmek istiyor.',
-      logEvent:  'interview_invite',
-      notifType: 'interview_request'
+      logEvent: 'interview_invite', notifType: 'interview_request'
     },
     kabul: {
-      lbl:       'Kabul Et',
-      ico:       '✅',
-      appStatus: 'kabul',
-      chatStatus:'sonuclandi',
-      systemMsg: 'Tebrikler! Başvurunuz kabul edildi.',
-      logEvent:  'hired',
-      notifType: 'hiring_decision'
+      lbl: 'Kabul Et', ico: '✅',
+      appStatus: 'kabul', chatStatus: 'sonuclandi',
+      dbDurum: 'accepted',
+      systemMsg: 'Başvurunuz kabul edildi. Tebrikler!',
+      logEvent: 'accepted', notifType: 'application_accepted'
     },
     red: {
-      lbl:       'Reddet',
-      ico:       '❌',
-      appStatus: 'red',
-      chatStatus:'sonuclandi',
-      systemMsg: 'Başvurunuz değerlendirildi, bu sefer uygun görülmedi. Başarılar dileriz.',
-      logEvent:  'rejected',
-      notifType: 'hiring_decision'
+      lbl: 'Reddet', ico: '❌',
+      appStatus: 'red', chatStatus: 'sonuclandi',
+      dbDurum: 'rejected',
+      systemMsg: 'Başvurunuz bu ilan için olumsuz sonuçlandı.',
+      logEvent: 'rejected', notifType: 'application_rejected'
     }
   };
 
-  /* ─── Storage helpers ───────────────────────────────────────── */
+  /* ─── Yardımcılar ───────────────────────────────────────────── */
+  function SBon() { return !!(window.SB && SB.isOn && SB.isOn()); }
+
+  function preview(text) {
+    var s = String(text == null ? '' : text);
+    return s.length > 65 ? s.slice(0, 65) + '…' : s;
+  }
+
+  /* conv_messages satırını eski mesaj şekline çevirir */
+  function mapMsg(m, kuryeUser) {
+    var from = 'system';
+    if (m.sender_user) from = (m.sender_user === kuryeUser) ? 'kurye' : 'isletme';
+    return {
+      id:       m.id,
+      threadId: m.conversation_id,
+      from:     from,
+      type:     m.message_type === 'text' ? 'text' : m.message_type,
+      content:  m.content,
+      metadata: m.metadata || {},
+      ts:       m.created_at,
+      read:     !!m.read_at
+    };
+  }
+
+  /* conversations satırını eski thread şekline çevirir */
+  function mapThread(c, myUid, extras) {
+    var iAmKurye = c.kurye_user === myUid;
+    var kuryeP    = c.kurye    || {};
+    var employerP = c.employer || {};
+    var L         = c.listing  || {};
+
+    var app       = (extras && extras.app)       || null;
+    var interview = (extras && extras.interview) || null;
+    var decision  = (extras && extras.decision)  || null;
+
+    // Başvuru durumu → eski appStatus sözlüğü
+    var appStatus = 'inceleniyor';
+    if (app && app.durum === 'accepted')      appStatus = 'kabul';
+    else if (app && app.durum === 'rejected') appStatus = 'red';
+    else if (interview)                       appStatus = 'mulakat';
+
+    // Sohbet durumu — filtre çubuğu bunu kullanır
+    var chatStatus;
+    if (decision && ['kabul', 'reddedildi', 'tamamlandi'].indexOf(decision.status) !== -1) chatStatus = 'sonuclandi';
+    else if (app && app.durum !== 'pending') chatStatus = 'sonuclandi';
+    else if (interview)                      chatStatus = 'gorusme';
+    else if (c._hasUserMsg)                  chatStatus = 'aktif';
+    else                                     chatStatus = 'yeni';
+
+    return {
+      id:            c.id,
+      applicationId: c.application_id,
+      jobId:         c.listing_id,
+      jobTitle:      L.baslik || 'İlan',
+      jobSehir:      [L.sehir, L.bolge].filter(Boolean).join(' · '),
+      kuryeId:       c.kurye_id,
+      kurye:         { id: c.kurye_id,    ad: kuryeP.ad    || 'Kurye', avatar: kuryeP.avatar_url    || '' },
+      isletmeId:     c.employer_id,
+      isletme:       { id: c.employer_id, ad: employerP.ad || 'Esnaf', avatar: employerP.avatar_url || '' },
+      appStatus:     appStatus,
+      chatStatus:    chatStatus,
+      lastMsg:       preview(c.last_message || ''),
+      lastMsgTime:   c.last_message_at || c.created_at,
+      unread:        { kurye: c.kurye_unread || 0, isletme: c.employer_unread || 0 },
+      archived:      c.status === 'archived',
+      createdAt:     c.created_at,
+      /* oturumdaki kullanıcının bu görüşmedeki rolü — UI taraf ayrımı için */
+      myRole:        iAmKurye ? 'kurye' : 'isletme',
+      _kuryeUser:    c.kurye_user,
+      _employerUser: c.employer_user
+    };
+  }
+
+  /* ─── YÜKLEME (tek async giriş noktası) ─────────────────────── */
+  async function load(uid, role) {
+    _cache.uid  = uid || _cache.uid;
+    _cache.role = role || _cache.role;
+
+    if (!SBon()) {
+      // Çevrimdışı: son bilinen önbelleği kullan
+      try { _cache.threads = JSON.parse(localStorage.getItem(S.threads(_cache.uid)) || '[]'); }
+      catch (e) { _cache.threads = []; }
+      _cache.loaded = true;
+      return _cache.threads;
+    }
+
+    try {
+      var u = await SB.getUser();
+      if (!u) { _cache.threads = []; _cache.loaded = true; return []; }
+      _cache.uid = u.id;
+
+      var raw = await SB.rawConversations();
+      if (!raw || !raw.length) { _cache.threads = []; _cache.loaded = true; _persist(); return []; }
+
+      var convIds = raw.map(function (c) { return c.id; });
+      var appIds  = raw.map(function (c) { return c.application_id; }).filter(Boolean);
+
+      var bundle = await SB.convBundle(convIds, appIds);
+      var msgsByConv = bundle.messages   || {};
+      var appsById   = bundle.apps       || {};
+      var ivByApp    = bundle.interviews || {};
+      var decByApp   = bundle.decisions  || {};
+
+      _cache.msgs = {};
+      _cache.threads = raw.map(function (c) {
+        var list = msgsByConv[c.id] || [];
+        c._hasUserMsg = list.some(function (m) { return m.sender_user && m.message_type === 'text'; });
+        _cache.msgs[c.id] = list.map(function (m) { return mapMsg(m, c.kurye_user); });
+        return mapThread(c, u.id, {
+          app:       appsById[c.application_id],
+          interview: ivByApp[c.application_id],
+          decision:  decByApp[c.application_id]
+        });
+      });
+
+      _cache.loaded = true;
+      _persist();
+      return _cache.threads;
+    } catch (e) {
+      console.warn('KBChat.load:', e);
+      _cache.loaded = true;
+      return _cache.threads;
+    }
+  }
+
+  /* Çevrimdışı okuma için pasif önbellek */
+  function _persist() {
+    try {
+      localStorage.setItem(S.threads(_cache.uid), JSON.stringify(_cache.threads));
+      Object.keys(_cache.msgs).forEach(function (tid) {
+        localStorage.setItem(S.msgs(tid), JSON.stringify(_cache.msgs[tid]));
+      });
+    } catch (e) {}
+  }
+
+  /* ─── Okuma (SENKRON — önbellekten) ─────────────────────────── */
   function getThreads(uid) {
+    if (_cache.loaded) return _cache.threads.slice();
     try { return JSON.parse(localStorage.getItem(S.threads(uid)) || '[]'); } catch (e) { return []; }
   }
-  function saveThreads(uid, threads) {
-    localStorage.setItem(S.threads(uid), JSON.stringify(threads));
-  }
   function getMsgs(tid) {
+    if (_cache.msgs[tid]) return _cache.msgs[tid].slice();
     try { return JSON.parse(localStorage.getItem(S.msgs(tid)) || '[]'); } catch (e) { return []; }
   }
-  function saveMsgs(tid, msgs) {
-    localStorage.setItem(S.msgs(tid), JSON.stringify(msgs));
+  function findThread(uid, jobId, kuryeId) {
+    return getThreads(uid).find(function (t) {
+      return String(t.jobId) === String(jobId) && String(t.kuryeId) === String(kuryeId);
+    }) || null;
   }
+
+  /* Denetim kaydı — yalnız yerel, bilgilendirme amaçlı */
   function getLog(tid) {
     try { return JSON.parse(localStorage.getItem(S.log(tid)) || '[]'); } catch (e) { return []; }
   }
   function appendLog(tid, event, detail) {
     var log = getLog(tid);
     log.push({ event: event, detail: detail || '', ts: new Date().toISOString() });
-    localStorage.setItem(S.log(tid), JSON.stringify(log));
+    try { localStorage.setItem(S.log(tid), JSON.stringify(log)); } catch (e) {}
   }
 
-  /* ─── Thread CRUD ───────────────────────────────────────────── */
-  function makeId(jobId, kuryeId) {
-    return 'thread_' + String(jobId) + '_' + String(kuryeId);
-  }
-
-  function findThread(uid, jobId, kuryeId) {
-    var tid = makeId(jobId, kuryeId);
-    return getThreads(uid).find(function (t) { return t.id === tid; }) || null;
-  }
-
+  /* ─── Yazma ─────────────────────────────────────────────────── */
+  // Görüşmeler artık başvuru trigger'ı ile açılır; istemci oluşturamaz.
   function ensureThread(uid, jobId, kuryeId, meta) {
-    var existing = findThread(uid, jobId, kuryeId);
-    if (existing) return existing;
-
-    var thread = {
-      id:          makeId(jobId, kuryeId),
-      jobId:       jobId,
-      jobTitle:    meta.jobTitle    || 'İlan',
-      kuryeId:     kuryeId,
-      kurye:       meta.kurye      || { id: kuryeId, ad: 'Kurye', avatar: '' },
-      isletmeId:   meta.isletmeId  || '',
-      isletme:     meta.isletme    || { id: meta.isletmeId, ad: 'Esnaf', avatar: '' },
-      appStatus:   meta.appStatus  || 'inceleniyor',
-      chatStatus:  'yeni',
-      lastMsg:     '',
-      lastMsgTime: new Date().toISOString(),
-      unread:      { kurye: 0, isletme: 0 },
-      archived:    false,
-      createdAt:   meta.createdAt  || new Date().toISOString()
-    };
-
-    var threads = getThreads(uid);
-    threads.unshift(thread);
-    saveThreads(uid, threads);
-    appendLog(thread.id, 'thread_created', 'Görüşme başlatıldı');
-    return thread;
+    return findThread(uid, jobId, kuryeId);
   }
 
   function updateThread(uid, tid, patch) {
-    var threads = getThreads(uid);
-    var idx = threads.findIndex(function (t) { return t.id === tid; });
+    var idx = _cache.threads.findIndex(function (t) { return t.id === tid; });
     if (idx === -1) return null;
-    threads[idx] = Object.assign({}, threads[idx], patch);
-    saveThreads(uid, threads);
-    return threads[idx];
+    _cache.threads[idx] = Object.assign({}, _cache.threads[idx], patch);
+    _persist();
+    return _cache.threads[idx];
   }
 
-  /* ─── Messaging ─────────────────────────────────────────────── */
+  /* Mesaj gönder — önbelleği hemen günceller (iyimser), DB'ye arka planda yazar */
   function sendMessage(uid, threadId, from, type, content) {
     var msg = {
-      id:       'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+      id:       'tmp_' + Date.now(),
       threadId: threadId,
       from:     from,
       type:     type || 'text',
@@ -158,133 +281,117 @@
       read:     false
     };
 
-    var msgs = getMsgs(threadId);
-    msgs.push(msg);
-    saveMsgs(threadId, msgs);
+    if (!_cache.msgs[threadId]) _cache.msgs[threadId] = [];
+    _cache.msgs[threadId].push(msg);
 
-    /* update thread metadata */
-    var threads = getThreads(uid);
-    var thread  = threads.find(function (t) { return t.id === threadId; });
-    if (thread) {
-      var unread = Object.assign({ kurye: 0, isletme: 0 }, thread.unread);
-      if (from === 'kurye')   unread.isletme = (unread.isletme || 0) + 1;
-      else if (from !== 'system') unread.kurye = (unread.kurye || 0) + 1;
-
-      var newChatStatus = (thread.chatStatus === 'yeni' && from !== 'system')
-        ? 'aktif' : thread.chatStatus;
-      var preview = String(content);
-      if (preview.length > 65) preview = preview.slice(0, 65) + '…';
-
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    if (t) {
       updateThread(uid, threadId, {
-        lastMsg:     preview,
+        lastMsg:     preview(content),
         lastMsgTime: msg.ts,
-        unread:      unread,
-        chatStatus:  newChatStatus
+        chatStatus:  (t.chatStatus === 'yeni' && from !== 'system') ? 'aktif' : t.chatStatus
       });
     }
 
+    // Sistem mesajlarını istemci yazamaz (RLS: sender_user = auth.uid()).
+    if (SBon() && from !== 'system') {
+      SB.sendConvMessage(threadId, content, type === 'text' ? 'text' : type)
+        .then(function (row) { if (row && row.id) msg.id = row.id; })
+        .catch(function (e) { console.warn('KBChat.sendMessage:', e); });
+    }
     return msg;
   }
 
   function markRead(uid, threadId, role) {
-    var threads = getThreads(uid);
-    var thread  = threads.find(function (t) { return t.id === threadId; });
-    if (!thread) return;
-    var unread = Object.assign({ kurye: 0, isletme: 0 }, thread.unread);
-    unread[role] = 0;
-    updateThread(uid, threadId, { unread: unread });
-
-    var msgs = getMsgs(threadId);
-    msgs.forEach(function (m) { if (m.from !== role) m.read = true; });
-    saveMsgs(threadId, msgs);
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    if (t) {
+      var unread = Object.assign({ kurye: 0, isletme: 0 }, t.unread);
+      unread[role] = 0;
+      updateThread(uid, threadId, { unread: unread });
+    }
+    (_cache.msgs[threadId] || []).forEach(function (m) { if (m.from !== role) m.read = true; });
+    if (SBon()) SB.markConvRead(threadId).catch(function () {});
   }
 
-  /* ─── Business actions ──────────────────────────────────────── */
+  /* ─── İş akışı eylemleri ────────────────────────────────────── */
   function doBusinessAction(uid, threadId, actionKey) {
     var action = BIZ_ACTIONS[actionKey];
     if (!action) return false;
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    if (!t) return false;
 
-    var threads = getThreads(uid);
-    var thread  = threads.find(function (t) { return t.id === threadId; });
-    if (!thread) return false;
-
-    updateThread(uid, threadId, {
-      appStatus:  action.appStatus,
-      chatStatus: action.chatStatus
-    });
-
-    sendMessage(uid, threadId, 'system', 'system', action.systemMsg);
+    updateThread(uid, threadId, { appStatus: action.appStatus, chatStatus: action.chatStatus });
     appendLog(threadId, action.logEvent, action.lbl);
 
-    /* sync to kb_apps_{jobId} */
-    try {
-      var appKey = 'kb_apps_' + thread.jobId;
-      var apps   = JSON.parse(localStorage.getItem(appKey) || '{}');
-      if (apps[thread.kuryeId]) {
-        apps[thread.kuryeId].status    = action.appStatus;
-        apps[thread.kuryeId].updatedAt = new Date().toISOString();
-        localStorage.setItem(appKey, JSON.stringify(apps));
+    if (SBon()) {
+      // Başvuru durumunu güncelle (yalnız ilan sahibi yapabilir — RLS korur)
+      if (action.dbDurum && t.applicationId) {
+        SB.setApplicationStatus(t.applicationId, action.dbDurum)
+          .catch(function (e) { console.warn('doBusinessAction durum:', e); });
       }
-    } catch (e) {}
-
-    /* notify kurye */
-    notify(thread.kuryeId, action.notifType, {
-      isletme:   thread.isletme.ad,
-      job:       thread.jobTitle,
-      actionKey: actionKey
-    });
-
+      // Bilgilendirme mesajını kullanıcı adına gönder (sistem mesajı RLS'e takılır)
+      SB.sendConvMessage(threadId, action.systemMsg, 'text')
+        .catch(function (e) { console.warn('doBusinessAction mesaj:', e); });
+    }
     return true;
   }
 
-  /* ─── Archive ───────────────────────────────────────────────── */
+  /* ─── Arşiv ─────────────────────────────────────────────────── */
   function archiveThread(uid, threadId) {
     updateThread(uid, threadId, { archived: true });
     appendLog(threadId, 'archived', '');
+    if (SBon()) SB.setConvStatus(threadId, 'archived').catch(function () {});
   }
   function unarchiveThread(uid, threadId) {
     updateThread(uid, threadId, { archived: false });
     appendLog(threadId, 'unarchived', '');
+    if (SBon()) SB.setConvStatus(threadId, 'active').catch(function () {});
   }
 
-  /* ─── Notifications ─────────────────────────────────────────── */
-  function notify(toUid, type, data) {
-    try {
-      var key   = 'kb_notifications_' + toUid;
-      var notifs = JSON.parse(localStorage.getItem(key) || '[]');
-      var msgMap = {
-        interview_request: (data.isletme || 'Esnaf') + ' sizi mülakata davet etti: ' + (data.job || ''),
-        hiring_decision:   data.actionKey === 'kabul'
-          ? 'Tebrikler! Başvurunuz kabul edildi — ' + (data.job || '')
-          : 'Başvuru sonuçlandı: ' + (data.job || ''),
-        new_message:       (data.from || 'Esnaf') + ' size mesaj gönderdi: ' + (data.job || '')
-      };
-      notifs.unshift({
-        id:   'notif_' + Date.now(),
-        type: type,
-        msg:  msgMap[type] || type,
-        data: data,
-        read: false,
-        ts:   new Date().toISOString()
-      });
-      localStorage.setItem(key, JSON.stringify(notifs.slice(0, 100)));
-    } catch (e) {}
+  /* ─── Görüşme / karar (DB) ──────────────────────────────────── */
+  function getInterview(threadId) {
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    return (t && t._interview) || null;
+  }
+  async function saveInterview(threadId, data) {
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    if (!t || !SBon()) return null;
+    var row = await SB.upsertInterview(Object.assign({
+      application_id: t.applicationId, listing_id: t.jobId,
+      interviewer_id: t.isletmeId,     interviewee_id: t.kuryeId
+    }, data));
+    if (row) { t._interview = row; updateThread(_cache.uid, threadId, { chatStatus: 'gorusme' }); }
+    return row;
+  }
+  function getDecision(threadId) {
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    return (t && t._decision) || null;
+  }
+  async function saveDecision(threadId, data) {
+    var t = _cache.threads.find(function (x) { return x.id === threadId; });
+    if (!t || !SBon()) return null;
+    var row = await SB.upsertDecision(Object.assign({
+      application_id: t.applicationId, listing_id: t.jobId,
+      employer_id:    t.isletmeId,     applicant_id: t.kuryeId
+    }, data));
+    if (row) t._decision = row;
+    return row;
   }
 
-  /* ─── Stats ─────────────────────────────────────────────────── */
+  /* ─── Bildirim ──────────────────────────────────────────────── */
+  function notify() { /* bildirimler artık DB trigger'ları ile üretiliyor */ }
+
+  /* ─── İstatistik ────────────────────────────────────────────── */
   function getStats(uid) {
-    var all      = getThreads(uid);
-    var active   = all.filter(function (t) { return !t.archived && t.chatStatus === 'aktif'; });
-    var gorusme  = all.filter(function (t) { return !t.archived && t.chatStatus === 'gorusme'; });
-    var unread   = all.reduce(function (acc, t) {
-      if (t.archived) return acc;
-      return acc + ((t.unread && t.unread.kurye) || 0) + ((t.unread && t.unread.isletme) || 0);
-    }, 0);
+    var all = getThreads(uid);
+    var live = all.filter(function (t) { return !t.archived; });
     return {
-      total:       all.filter(function (t) { return !t.archived; }).length,
-      active:      active.length,
-      gorusme:     gorusme.length,
-      totalUnread: unread,
+      total:       live.length,
+      active:      live.filter(function (t) { return t.chatStatus === 'aktif'; }).length,
+      gorusme:     live.filter(function (t) { return t.chatStatus === 'gorusme'; }).length,
+      totalUnread: live.reduce(function (acc, t) {
+        return acc + ((t.unread && t.unread[t.myRole]) || 0);
+      }, 0),
       archived:    all.filter(function (t) { return t.archived; }).length
     };
   }
@@ -292,71 +399,54 @@
   function getUnreadCount(uid, role) {
     return getThreads(uid).reduce(function (acc, t) {
       if (t.archived) return acc;
-      return acc + ((t.unread && t.unread[role]) || 0);
+      return acc + ((t.unread && t.unread[role || t.myRole]) || 0);
     }, 0);
   }
 
-  /* ─── Badge render ──────────────────────────────────────────── */
-  function renderBadge(status) {
-    var def = STATUS_DEFS[status] || STATUS_DEFS.yeni;
-    return '<span class="msg-badge ' + def.cls + '">' + def.ico + ' ' + def.lbl + '</span>';
+  /* ─── Rozet ─────────────────────────────────────────────────── */
+  function renderBadge(el, count) {
+    if (!el) return;
+    if (!count) { el.textContent = ''; el.style.display = 'none'; return; }
+    el.textContent = count > 99 ? '99+' : String(count);
+    el.style.display = '';
   }
 
-  /* ─── Demo seed ─────────────────────────────────────────────── */
-  function simpleHash(s) {
-    var h = 0;
-    for (var i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-    return Math.abs(h);
-  }
-
-  /* Demo/örnek veri üreticisi kaldırıldı — üretimde sahte kayıt oluşturulmaz. */
-  /* ─── Interview & decision storage ────────────────────────────── */
-  function getInterview(tid) {
-    try { return JSON.parse(localStorage.getItem('kb_interview_' + tid) || 'null'); } catch (e) { return null; }
-  }
-  function saveInterview(tid, data) {
-    if (data === null) { localStorage.removeItem('kb_interview_' + tid); return; }
-    localStorage.setItem('kb_interview_' + tid, JSON.stringify(data));
-  }
-  function getDecision(tid) {
-    try { return JSON.parse(localStorage.getItem('kb_decision_' + tid) || 'null'); } catch (e) { return null; }
-  }
-  function saveDecision(tid, data) {
-    localStorage.setItem('kb_decision_' + tid, JSON.stringify(data));
-  }
-
-  /* ─── Public API ────────────────────────────────────────────── */
   window.KBChat = {
-    /* data */
+    /* yükleme */
+    load:             load,
+    isLoaded:         function () { return _cache.loaded; },
+    /* veri */
     getThreads:       getThreads,
-    saveThreads:      saveThreads,
+    saveThreads:      function () { _persist(); },
     getMsgs:          getMsgs,
     getLog:           getLog,
-    /* threads */
+    appendLog:        appendLog,
+    /* görüşmeler */
     findThread:       findThread,
     ensureThread:     ensureThread,
     updateThread:     updateThread,
-    /* messaging */
+    /* mesajlaşma */
     sendMessage:      sendMessage,
     markRead:         markRead,
-    /* actions */
+    /* eylemler */
     doBusinessAction: doBusinessAction,
-    /* archive */
+    /* arşiv */
     archiveThread:    archiveThread,
     unarchiveThread:  unarchiveThread,
-    /* notify */
+    /* bildirim */
     notify:           notify,
-    /* stats */
+    /* istatistik */
     getStats:         getStats,
     getUnreadCount:   getUnreadCount,
     /* render */
     renderBadge:      renderBadge,
-    /* demo */    /* interview + decision */
+    /* görüşme + karar */
     getInterview:     getInterview,
     saveInterview:    saveInterview,
     getDecision:      getDecision,
     saveDecision:     saveDecision,
-    /* constants */
+    /* sabitler */
+    STATUS_DEFS:           STATUS_DEFS,
     QUICK_REPLIES_KURYE:   QUICK_REPLIES_KURYE,
     QUICK_REPLIES_ISLETME: QUICK_REPLIES_ISLETME,
     BIZ_ACTIONS:           BIZ_ACTIONS,

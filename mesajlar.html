@@ -572,12 +572,17 @@
   }
 
   if (window.KB && KB.ready) {
-    KB.ready.then(function () {
+    KB.ready().then(async function () {
       role = (KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme';
       var user = KB.STATE && KB.STATE.user;
       uid  = user ? user.id : ('demo_' + role);
+      // Görüşmeleri Supabase'den yükle. KBChat artık localStorage değil
+      // conversations/conv_messages tablolarını kullanıyor; load() bir kez
+      // çağrıldıktan sonra getThreads/getMsgs senkron çalışmaya devam eder.
+      try { if (window.KBChat && KBChat.load) await KBChat.load(uid, role); }
+      catch (e) { console.warn('KBChat.load:', e); }
       boot();
-    });
+    }).catch(function (e) { console.warn('mesajlar boot:', e); boot(); });
   } else {
     document.addEventListener('DOMContentLoaded', boot);
   }

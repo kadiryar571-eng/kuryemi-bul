@@ -391,7 +391,7 @@
 
       var uid = 'demo_firma';
       try {
-        await (window.KB && KB.ready ? KB.ready : Promise.resolve());
+        await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
         var s = window.KB && KB.STATE && KB.STATE.user;
         if (s && s.id) uid = s.id;
       } catch (e) {}

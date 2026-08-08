@@ -886,7 +886,18 @@
   }
 
   if (window.KB && KB.ready) {
-    KB.ready.then(boot);
+    KB.ready().then(async function () {
+      // Detay sayfası da önce görüşmeleri yüklemeli — KBChat artık
+      // localStorage yerine Supabase'den besleniyor.
+      try {
+        if (window.KBChat && KBChat.load) {
+          var u = KB.STATE && KB.STATE.user;
+          var r = (KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'kurye';
+          await KBChat.load(u ? u.id : null, r);
+        }
+      } catch (e) { console.warn('KBChat.load:', e); }
+      boot();
+    }).catch(function (e) { console.warn('mesaj-detay boot:', e); boot(); });
   } else {
     document.addEventListener('DOMContentLoaded', boot);
   }

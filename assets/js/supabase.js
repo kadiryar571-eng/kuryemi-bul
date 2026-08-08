@@ -878,6 +878,127 @@
       return sum + (c.kurye_user === u.id ? (c.kurye_unread || 0) : (c.employer_unread || 0));
     }, 0);
   }
+  /* ------------------------------------------------------------------
+     KBChat köprüsü (chat.js buradan besleniyor)
+
+     chat.js eskiden tamamen localStorage üzerinde çalışıyordu ve
+     mesajlar.html / mesaj-detay.html hiçbir zaman gerçek veriyi
+     göremiyordu. Aşağıdaki fonksiyonlar o modülün ihtiyaç duyduğu
+     ham veriyi tek seferde çeker.
+     ------------------------------------------------------------------ */
+
+  // Ham conversation satırları (chat.js kendi eşlemesini yapar)
+  async function rawConversations() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("conversations")
+      .select("id,application_id,listing_id,kurye_id,employer_id,kurye_user,employer_user," +
+        "last_message,last_message_at,kurye_unread,employer_unread,status,created_at," +
+        "listing:listing_id(baslik,sehir,bolge)," +
+        "kurye:kurye_id(ad,avatar_url)," +
+        "employer:employer_id(ad,avatar_url)")
+      .or("kurye_user.eq." + u.id + ",employer_user.eq." + u.id)
+      .order("last_message_at", { ascending: false });
+    if (r.error) { console.warn("rawConversations:", r.error); return []; }
+    return r.data || [];
+  }
+
+  // Mesajlar + başvurular + görüşmeler + kararlar — tek turda
+  async function convBundle(convIds, appIds) {
+    var empty = { messages: {}, apps: {}, interviews: {}, decisions: {} };
+    if (!convIds || !convIds.length) return empty;
+
+    var res = await Promise.all([
+      client.from("conv_messages").select("*")
+        .in("conversation_id", convIds).order("created_at", { ascending: true }),
+      appIds && appIds.length
+        ? client.from("applications").select("id,durum,mesaj,created_at").in("id", appIds)
+        : Promise.resolve({ data: [] }),
+      appIds && appIds.length
+        ? client.from("interviews").select("*").in("application_id", appIds)
+        : Promise.resolve({ data: [] }),
+      appIds && appIds.length
+        ? client.from("hiring_decisions").select("*").in("application_id", appIds)
+        : Promise.resolve({ data: [] })
+    ]);
+
+    var out = { messages: {}, apps: {}, interviews: {}, decisions: {} };
+    (res[0].data || []).forEach(function (m) {
+      (out.messages[m.conversation_id] = out.messages[m.conversation_id] || []).push(m);
+    });
+    (res[1].data || []).forEach(function (a) { out.apps[a.id] = a; });
+    // Aynı başvuruya birden çok kayıt varsa en yenisi kalsın
+    (res[2].data || []).forEach(function (i) {
+      var cur = out.interviews[i.application_id];
+      if (!cur || (i.created_at || "") > (cur.created_at || "")) out.interviews[i.application_id] = i;
+    });
+    (res[3].data || []).forEach(function (d) {
+      var cur = out.decisions[d.application_id];
+      if (!cur || (d.created_at || "") > (cur.created_at || "")) out.decisions[d.application_id] = d;
+    });
+    return out;
+  }
+
+  // Konuşmaya mesaj gönder (chat.js'in beklediği ad)
+  async function sendConvMessage(convId, content, type, metadata) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var me = await myProfile(); if (!me) throw new Error("profil yok");
+    var r = await client.from("conv_messages").insert({
+      conversation_id: convId, sender_user: u.id, sender_role: me.role,
+      content: content, message_type: type || "text", metadata: metadata || {}
+    }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+
+  // markThreadRead ile aynı iş — chat.js bu adı kullanıyor
+  async function markConvRead(convId) { return markThreadRead(convId); }
+
+  // Konuşmayı arşivle / geri al
+  async function setConvStatus(convId, status) {
+    return client.from("conversations").update({ status: status }).eq("id", convId);
+  }
+
+  // Başvuru durumu (yalnız ilan sahibi — RLS korur)
+  async function setApplicationStatus(appId, durum) {
+    return updateApplication(appId, durum);
+  }
+
+  // Görüşme kaydı: varsa güncelle, yoksa oluştur
+  async function upsertInterview(data) {
+    if (!data || !data.application_id) return null;
+    var ex = await client.from("interviews").select("id")
+      .eq("application_id", data.application_id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (ex.data && ex.data.id) {
+      var up = await client.from("interviews")
+        .update(Object.assign({}, data, { updated_at: new Date().toISOString() }))
+        .eq("id", ex.data.id).select().maybeSingle();
+      if (up.error) { console.warn("upsertInterview:", up.error); return null; }
+      return up.data;
+    }
+    var ins = await client.from("interviews").insert(data).select().maybeSingle();
+    if (ins.error) { console.warn("upsertInterview:", ins.error); return null; }
+    return ins.data;
+  }
+
+  // İşe alım kararı: varsa güncelle, yoksa oluştur
+  async function upsertDecision(data) {
+    if (!data || !data.application_id) return null;
+    var ex = await client.from("hiring_decisions").select("id")
+      .eq("application_id", data.application_id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (ex.data && ex.data.id) {
+      var up = await client.from("hiring_decisions")
+        .update(Object.assign({}, data, { updated_at: new Date().toISOString() }))
+        .eq("id", ex.data.id).select().maybeSingle();
+      if (up.error) { console.warn("upsertDecision:", up.error); return null; }
+      return up.data;
+    }
+    var ins = await client.from("hiring_decisions").insert(data).select().maybeSingle();
+    if (ins.error) { console.warn("upsertDecision:", ins.error); return null; }
+    return ins.data;
+  }
+
   /* Yeni mesaj bildirimi — conv_messages tablosunu dinler.
      ÖNCEDEN `messages` tablosunu dinliyordu; başvuru konuşmaları oraya
      yazılmadığı için realtime hiç tetiklenmiyordu.
@@ -1317,6 +1438,11 @@
     subscribeConversations: subscribeConversations,
     canMessage: canMessage, sendMessage: sendMessage, myConversations: myConversations,
     threadWith: threadWith, markThreadRead: markThreadRead, unreadMessageCount: unreadMessageCount, subscribeMessages: subscribeMessages,
+    /* KBChat köprüsü */
+    rawConversations: rawConversations, convBundle: convBundle,
+    sendConvMessage: sendConvMessage, markConvRead: markConvRead,
+    setConvStatus: setConvStatus, setApplicationStatus: setApplicationStatus,
+    upsertInterview: upsertInterview, upsertDecision: upsertDecision,
     signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
     resetPassword: resetPassword, updatePassword: updatePassword,
     verifyEmail: verifyEmail, resendVerification: resendVerification,
