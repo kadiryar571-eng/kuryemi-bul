@@ -397,7 +397,7 @@
   }
 
   if (window.KB && KB.ready) {
-    KB.ready().then(boot).catch(boot);
+    KB.ready().then(function () { return window.KBChat ? KBChat.ready : null; }).then(boot).catch(boot);
   } else {
     document.addEventListener('DOMContentLoaded', boot);
   }

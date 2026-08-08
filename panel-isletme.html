@@ -326,6 +326,7 @@
       /* Welcome block */
       try {
         await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
+        try { if (window.KBChat) await KBChat.ready; } catch (e) {}
         var profile = window.SB && SB.isOn() ? await SB.myProfile() : null;
         var greeting = document.getElementById('welcomeGreeting');
         var sub = document.getElementById('welcomeSub');

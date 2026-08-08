@@ -774,7 +774,7 @@
     /* ── Init ── */
     document.addEventListener('DOMContentLoaded', function() {
       if (window.KB && KB.ready) {
-        KB.ready().then(function() { boot(); });
+        KB.ready().then(function () { return window.KBChat ? KBChat.ready : null; }).then(function () { boot(); });
       } else {
         boot();
       }

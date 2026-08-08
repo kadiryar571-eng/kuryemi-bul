@@ -407,6 +407,7 @@
   }
 
   async function boot() {
+    try { if (window.KBChat) await KBChat.ready; } catch (e) {}
     var params = new URLSearchParams(window.location.search);
     /* Demo kimlik varsayılanları KALDIRILDI — geçerli parametre yoksa
        uydurma bir karar kaydı oluşturmak yerine kullanıcıyı yönlendir. */

@@ -308,6 +308,7 @@
   }
 
   async function boot() {
+    try { if (window.KBChat) await KBChat.ready; } catch (e) {}
     var el = document.getElementById('ivList');
     if (el) el.innerHTML = '<div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div>';
 

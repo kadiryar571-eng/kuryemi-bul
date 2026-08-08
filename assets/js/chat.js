@@ -203,11 +203,18 @@
         var list = msgsByConv[c.id] || [];
         c._hasUserMsg = list.some(function (m) { return m.sender_user && m.message_type === 'text'; });
         _cache.msgs[c.id] = list.map(function (m) { return mapMsg(m, c.kurye_user); });
-        return mapThread(c, u.id, {
+        var iv  = ivByApp[c.application_id];
+        var dec = decByApp[c.application_id];
+        var t = mapThread(c, u.id, {
           app:       appsById[c.application_id],
-          interview: ivByApp[c.application_id],
-          decision:  decByApp[c.application_id]
+          interview: iv,
+          decision:  dec
         });
+        // getInterview()/getDecision() bunları okur — doldurulmazsa
+        // gorusmeler.html ve karar.html hep boş görürdü.
+        t._interview = iv  || null;
+        t._decision  = dec || null;
+        return t;
       });
 
       _cache.loaded = true;
@@ -219,6 +226,26 @@
       return _cache.threads;
     }
   }
+
+  /* ─── OTOMATİK YÜKLEME ──────────────────────────────────────
+     chat.js'i 9 sayfa kullanıyor (mesajlar, mesaj-detay, basvurular,
+     gorusmeler, karar, geri-bildirim, panel-*). Her birinde ayrı ayrı
+     load() çağırmak yerine modül kendini yükler ve `KBChat.ready`
+     sözünü açığa çıkarır. Sayfalar render'dan önce şunu beklemeli:
+         await KBChat.ready;
+     Beklemezlerse getThreads() çevrimdışı önbelleğe düşer (boş olabilir).
+     ------------------------------------------------------------------ */
+  var _readyPromise = null;
+  function ensureLoaded() {
+    if (!_readyPromise) {
+      _readyPromise = (window.KB && KB.ready)
+        ? KB.ready().then(function () { return load(); }).catch(function () { return load(); })
+        : load();
+    }
+    return _readyPromise;
+  }
+  // Script yüklenir yüklenmez başlat — sayfalar beklerken iş zaten dönüyor olur.
+  try { ensureLoaded(); } catch (e) {}
 
   /* Çevrimdışı okuma için pasif önbellek */
   function _persist() {
@@ -404,16 +431,19 @@
   }
 
   /* ─── Rozet ─────────────────────────────────────────────────── */
-  function renderBadge(el, count) {
-    if (!el) return;
-    if (!count) { el.textContent = ''; el.style.display = 'none'; return; }
-    el.textContent = count > 99 ? '99+' : String(count);
-    el.style.display = '';
+  /* DİKKAT: bu bir DOM fonksiyonu DEĞİL — HTML string döndürür.
+     mesajlar.html renderDetail() içinde doğrudan innerHTML'e
+     birleştiriyor: KBChat.renderBadge(thread.chatStatus). */
+  function renderBadge(status) {
+    var def = STATUS_DEFS[status] || STATUS_DEFS.yeni;
+    return '<span class="msg-badge ' + def.cls + '">' + def.ico + ' ' + def.lbl + '</span>';
   }
 
   window.KBChat = {
-    /* yükleme */
-    load:             load,
+    /* yükleme — sayfalar render'dan önce `await KBChat.ready` demeli */
+    get ready()     { return ensureLoaded(); },
+    load:             function (uid, role) { _readyPromise = load(uid, role); return _readyPromise; },
+    reload:           function () { _readyPromise = load(); return _readyPromise; },
     isLoaded:         function () { return _cache.loaded; },
     /* veri */
     getThreads:       getThreads,
