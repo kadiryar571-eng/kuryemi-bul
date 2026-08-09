@@ -118,11 +118,11 @@ window.FirmaScreens = (function () {
         var apps = (await SB.allMyListingApplications()) || [];
         _basCache = apps;
         var top = apps.slice(0, 2);
+        /* Başlık BURAYA basılmaz — statik şablonda #firma-son-basvuru
+           kapsayıcısının hemen üstünde zaten var. Buraya da basıldığı için
+           veriler yüklendiğinde "Son Başvurular" alt alta iki kez
+           görünüyordu. Bu kapsayıcı yalnız listeyi tutar. */
         el.innerHTML =
-          '<div class="kb-section-head" style="margin-top:4px">' +
-            '<div class="kb-section-title">Son Başvurular</div>' +
-            '<button class="kb-section-link" onclick="Router.go(\'/firma/basvurular\')">Tümünü Gör</button>' +
-          '</div>' +
           (top.length
             ? top.map(function (a) {
                 return _fCandCard(a.id, a.ad || a.name || 'Aday',
