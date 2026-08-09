@@ -323,7 +323,7 @@ window.KuryeScreens = (function () {
         '</div>' +
       '</div>' +
       '<div class="map-job-card__score">' +
-        '<svg viewBox="0 0 36 36" class="map-job-card__ring">' +
+        '<svg width="20" height="20" viewBox="0 0 36 36" class="map-job-card__ring">' +
           '<circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2.5"/>' +
           '<circle cx="18" cy="18" r="15.5" fill="none" stroke="' + escAttr(j.avatarBg)+ '" stroke-width="2.5"' +
             ' stroke-dasharray="' + Math.round(97.4 * j.match / 100) + ' 97.4"' +
@@ -379,7 +379,7 @@ window.KuryeScreens = (function () {
         '<div class="map-canvas" id="map-canvas">' +
 
           /* Dark city grid lines */
-          '<svg class="map-grid" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">' +
+          '<svg width="20" height="20" class="map-grid" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">' +
             '<rect width="400" height="300" fill="#0F1825"/>' +
             /* roads */
             '<line x1="0" y1="150" x2="400" y2="150" stroke="#1C2C42" stroke-width="12"/>' +
@@ -570,7 +570,7 @@ window.KuryeScreens = (function () {
         '<div class="il-card__tier-wrap">' + _tierBadge(j.tier) + '</div>' +
         '<button class="il-card__save' + (saved ? ' il-card__save--saved' : '') + '" ' +
           'onclick="event.stopPropagation();KuryeScreens._ilToggleSave(this,\'' + escJs(j.id)+ '\')">' +
-          '<svg viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
         '</button>' +
       '</div>' +
 
@@ -589,7 +589,7 @@ window.KuryeScreens = (function () {
            veri yoksa uydurma yüzde basılmaz. */
         (j.match != null ?
           '<div class="il-card__score">' +
-            '<svg viewBox="0 0 40 40" class="il-card__ring">' +
+            '<svg width="20" height="20" viewBox="0 0 40 40" class="il-card__ring">' +
               '<circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>' +
               '<circle cx="20" cy="20" r="17" fill="none" stroke="' + escAttr(j.avatarBg)+ '" stroke-width="3"' +
                 ' stroke-dasharray="' + Math.round(106.8 * j.match / 100) + ' 106.8"' +

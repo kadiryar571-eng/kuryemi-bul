@@ -1488,8 +1488,8 @@ window.initPremiumMap = async function(role) {
     } else if (it.type === 'kurye' && r === 'isletme') {
       actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isletme/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
     }
-    var maasHtml = it.maas ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + esc(it.maas)+ ' ₺</div>' : '';
-    var distHtml = dist ? '<div class="spm-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
+    var maasHtml = it.maas ? '<div class="spm-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + esc(it.maas)+ ' ₺</div>' : '';
+    var distHtml = dist ? '<div class="spm-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
     return '<div class="spm-bcard" data-spmkey="' + escAttr(it.key)+ '" tabindex="0">' +
       '<div class="spm-bcard__top">' +
         '<div class="spm-bcard__logo" style="border-color:' + cfg.color + '33">' + cfg.emoji + '</div>' +
