@@ -80,7 +80,10 @@
   /* Dashboard greeting bar — greeting left, bell+hamburger right */
   window.showDashboardBar = function () {
     var profile = APP.profile || {};
-    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
+    // profiles tablosundaki alan `ad`. Burada eskiden full_name /
+    // company_name / business_name okunuyordu — bu üç kolon şemada YOK,
+    // dolayısıyla selamlama her kullanıcı için 'Kullanıcı'ya düşüyordu.
+    var name = profile.ad || 'Kullanıcı';
     var firstName = name.split(' ')[0];
     $appbar.className = 'kb-appbar kb-appbar--dash';
     $appbar.style.display = '';
@@ -89,7 +92,7 @@
         ICON.menu +
       '</button>' +
       '<div class="kb-appbar__greet">' +
-        '<div class="kb-appbar__greet-name">Merhaba, ' + firstName + ' 👋</div>' +
+        '<div class="kb-appbar__greet-name">Merhaba, ' + esc(firstName) + ' 👋</div>' +
         '<div class="kb-appbar__greet-sub">Bugün seni bekleyen fırsatları keşfet</div>' +
       '</div>' +
       '<div class="kb-appbar__actions">' +
@@ -143,7 +146,7 @@
   function _buildDrawer() {
     var role = APP.role || 'kurye';
     var profile = APP.profile || {};
-    var name = profile.full_name || profile.company_name || profile.business_name || 'Kullanıcı';
+    var name = profile.ad || 'Kullanıcı';   // şemadaki alan `ad` (bkz. showDashboardBar)
     var roleLabels = { kurye: 'Kurye', firma: 'Kurye Firması', isletme: 'Esnaf' };
     var roleLabel = roleLabels[role] || role;
     var profilRoute = '/' + role + '/profil';
@@ -178,7 +181,7 @@
       '<div class="kb-drawer__head">' +
         '<div class="kb-drawer__profile">' +
           '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-accent)">' + initials(name) + '</div>' +
-          '<div class="kb-drawer__name">' + name + '</div>' +
+          '<div class="kb-drawer__name">' + esc(name) + '</div>' +
           '<div class="kb-drawer__rating">' + ICON.star + '&nbsp;4.8 puan</div>' +
           '<div class="kb-drawer__role-badge">' + roleLabel + '</div>' +
         '</div>' +

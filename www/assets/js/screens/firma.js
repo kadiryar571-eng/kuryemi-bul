@@ -798,13 +798,15 @@ window.FirmaScreens = (function () {
     showBottomNav();
     setActiveNav('profil');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.company_name)) || 'Kurye Firması';
+    // Şemadaki alan `ad`; full_name/company_name diye kolon YOK. Bu yüzden
+    // firma kullanıcıları kendi adları yerine hep 'Kurye Firması' görüyordu.
+    var name = (APP.profile && APP.profile.ad) || 'Kurye Firması';
 
     renderScreen(
       '<div>' +
         '<div class="profile-hero">' +
           '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-firma)">' + initials(name) + '</div>' +
-          '<div class="profile-hero__name">' + name + '</div>' +
+          '<div class="profile-hero__name">' + esc(name) + '</div>' +
           '<div class="profile-hero__sub">Kurye Firması</div>' +
           '<div class="profile-hero__badges">' +
             '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' +

@@ -673,13 +673,14 @@ window.IsletmeScreens = (function () {
     showBottomNav();
     setActiveNav('profil');
 
-    var name = (APP.profile && (APP.profile.full_name || APP.profile.business_name)) || 'Esnaf';
+    // Şemadaki alan `ad`; full_name/business_name diye kolon YOK.
+    var name = (APP.profile && APP.profile.ad) || 'Esnaf';
 
     renderScreen(
       '<div>' +
         '<div class="profile-hero">' +
           '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
-          '<div class="profile-hero__name">' + name + '</div>' +
+          '<div class="profile-hero__name">' + esc(name) + '</div>' +
           '<div class="profile-hero__sub">Esnaf</div>' +
           '<div class="profile-hero__badges">' +
             '<span class="kb-chip kb-chip--warning">⭐ 4.5</span>' +
