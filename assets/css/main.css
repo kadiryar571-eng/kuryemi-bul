@@ -446,6 +446,34 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 #app-topbar .topbar-ico-btn:hover { background: var(--surface-2); }
 #app-topbar .hamburger-btn { display: none; }
 
+/* ── Üst çubuk: dar ekran koruması ────────────────────────────────────
+   ÖNCEDEN mobilde şu zincir işliyordu:
+     1. Profil çipi kullanıcı adını tam metin bastığı için .topbar-actions
+        247px oluyor ve metnin min genişliği yüzünden küçülemiyordu.
+     2. #app-topbar bir flex satırı; taşınca küçültme diğer öğelere düşüyordu.
+     3. Hamburger'in ikonu boyutsuz bir <svg> olduğu için min genişliği
+        SIFIRDI — tüm küçültmeyi o yuttu ve buton 0px'e çöktü.
+     4. Menü butonu görünmez oldu; kenar çubuğu, dolayısıyla Ayarlar ve
+        Çıkış Yap açılamaz hale geldi.
+   375px'te ölçüldü: sayfa 466px genişliğinde, 91px yatay taşma, 40 element
+   ekran dışına çıkıyordu. İkonlara açık boyut verildi; buradaki kurallar
+   da aynı çöküşün bir daha olmamasını garantiliyor. */
+#app-topbar .topbar-brand,
+#app-topbar .topbar-actions,
+#app-topbar .theme-toggle-btn,
+#app-topbar .topbar-ico-btn { flex-shrink: 0; }
+
+@media (max-width: 720px) {
+  /* Bu genişlikte arama kutusu 52px'e sıkışıp boş bir kutuya dönüşüyordu */
+  #app-topbar .topbar-search { display: none; }
+}
+
+@media (max-width: 480px) {
+  /* Yalnız avatar dairesi kalsın — ad ~106px yer kaplıyordu */
+  #app-topbar .topbar-profile-name { display: none; }
+  #app-topbar { padding: 0 12px; gap: 8px; }
+}
+
 /* ─── 13. SİDEBAR ────────────────────────────────────────────── */
 #app-sidebar {
   position: fixed;

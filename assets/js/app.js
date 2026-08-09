@@ -2093,8 +2093,8 @@
       var cfg = PIN[it.type];
       var score = matchScore(it.key);
       var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + " km" : null;
-      var maasHtml = it.maas ? '<div class="mx-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + KB.esc(String(it.maas)) + ' ₺</div>' : '';
-      var distHtml = dist ? '<div class="mx-bcard__meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
+      var maasHtml = it.maas ? '<div class="mx-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + KB.esc(String(it.maas)) + ' ₺</div>' : '';
+      var distHtml = dist ? '<div class="mx-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
       var actionHtml = it.action.apply
         ? '<button class="mx-bcard__btn mx-bcard__btn--primary" data-apply="' + it.id + '" data-baslik="' + KB.esc(it.action.apply.baslik || "") + '">Hızlı Başvur</button>' +
           '<a class="mx-bcard__btn mx-bcard__btn--ghost" href="ilan.html?id=' + it.id + '">Detay</a>'
