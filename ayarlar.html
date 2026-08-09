@@ -37,6 +37,9 @@
     .toggle-sw input:checked + .toggle-sw__track { background: var(--primary); }
     .toggle-sw__track::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
     .toggle-sw input:checked + .toggle-sw__track::after { transform: translateX(18px); }
+    .toggle-sw input:disabled + .toggle-sw__track { opacity: .45; cursor: not-allowed; }
+    .settings-row__hint { font-size: .78rem; color: var(--text-2); padding: 6px 16px 10px; line-height: 1.45; }
+    .settings-row__hint--warn { color: var(--danger, #d64545); }
     .danger-zone { border: 1px solid #fee2e2; border-radius: var(--radius-lg); padding: 20px; }
     .danger-zone h3 { color: #dc2626; font-size: 0.95rem; margin-bottom: 4px; }
     .danger-zone p { font-size: 0.85rem; color: var(--text-2); margin-bottom: 14px; }
@@ -81,8 +84,9 @@
           Push Bildirimleri
           <div class="settings-row__sub">Anlık mesaj ve güncelleme bildirimleri</div>
         </div>
-        <label class="toggle-sw"><input type="checkbox" id="togglePush" checked><span class="toggle-sw__track"></span></label>
+        <label class="toggle-sw"><input type="checkbox" id="togglePush"><span class="toggle-sw__track"></span></label>
       </div>
+      <div class="settings-row__hint" id="pushHint" hidden></div>
     </div>
 
     <!-- Gizlilik -->
@@ -129,12 +133,93 @@
   <script src="assets/js/components.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/motion.js"></script>
+  <script src="assets/js/push.js"></script>
   <script>
     document.getElementById('btnLogout').addEventListener('click', async function () {
       if (!confirm('Çıkış yapmak istediğinizden emin misiniz?')) return;
       if (window.SB && SB.isOn()) await SB.signOut().catch(function(){});
       location.href = 'giris.html';
     });
+
+    /* ── Push bildirimleri ────────────────────────────────────────────────
+       Bu anahtar eskiden `checked` işaretli ama hiçbir şeye bağlı değildi:
+       kullanıcı "açık" görüyor, bildirim hiç gelmiyordu. Artık gerçek
+       abonelik durumunu gösteriyor ve gerçekten açıp kapatıyor.
+
+       İzin istemi YALNIZ buradan, kullanıcı anahtara dokununca çıkar —
+       sayfa açılışında davetsiz istem tarayıcıda kalıcı bloklamaya yol
+       açabiliyor. */
+    (function () {
+      var box  = document.getElementById('togglePush');
+      var hint = document.getElementById('pushHint');
+      if (!box) return;
+
+      function setHint(msg, warn) {
+        if (!msg) { hint.hidden = true; return; }
+        hint.hidden = false;
+        hint.textContent = msg;
+        hint.className = 'settings-row__hint' + (warn ? ' settings-row__hint--warn' : '');
+      }
+
+      async function refresh() {
+        if (!window.KBPush) { box.checked = false; box.disabled = true; return; }
+        var st = KBPush.status();
+
+        if (st === 'unsupported') {
+          box.checked = false; box.disabled = true;
+          setHint('Bu tarayıcı web bildirimlerini desteklemiyor. Mobil uygulamada bildirimler ayrıca çalışır.');
+          return;
+        }
+        if (st === 'denied') {
+          box.checked = false; box.disabled = true;
+          setHint('Bildirim izni tarayıcı ayarlarından engellenmiş. Adres çubuğundaki kilit simgesinden izin verip sayfayı yenileyin.', true);
+          return;
+        }
+
+        box.disabled = false;
+        box.checked = await KBPush.isSubscribed();
+        setHint(box.checked ? 'Bu cihazda bildirimler açık.' : 'Uygulama kapalıyken de haberdar olmak için açın.');
+      }
+
+      box.addEventListener('change', async function () {
+        var wanted = box.checked;
+        box.disabled = true;
+        setHint(wanted ? 'İzin isteniyor…' : 'Kapatılıyor…');
+
+        try {
+          if (wanted) {
+            var r = await KBPush.enable();
+            if (r !== 'granted') {
+              box.checked = false;
+              setHint(
+                r === 'denied' ? 'İzin reddedildi. Tarayıcı ayarlarından izin vermeniz gerekiyor.'
+              : r === 'error'  ? 'Abonelik kurulamadı. Bağlantınızı kontrol edip tekrar deneyin.'
+              :                  'Bildirimler açılamadı.',
+                true
+              );
+              box.disabled = false;
+              return;
+            }
+          } else {
+            await KBPush.disable();
+          }
+        } catch (e) {
+          box.checked = !wanted;
+          setHint('Beklenmeyen bir hata oluştu.', true);
+        }
+
+        box.disabled = false;
+        await refresh();
+      });
+
+      // KB.ready() oturum yüklenince resolve olur; abonelik durumu
+      // kullanıcıya bağlı olduğu için önce onu bekliyoruz.
+      if (window.KB && typeof KB.ready === 'function') {
+        KB.ready().then(refresh).catch(refresh);
+      } else {
+        refresh();
+      }
+    })();
   </script>
 </body>
 </html>

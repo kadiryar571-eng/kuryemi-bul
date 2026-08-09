@@ -126,34 +126,15 @@
     });
   }
 
-  /* ── Push Notifications ────────────────────────────────── */
-  /* Firebase (google-services.json) kurulmadan çağrılırsa native crash atar.
-     FCM entegrasyonu tamamlanınca bu bloğu tekrar aktif et. */
-  function initPush() {
-    if (!isNative()) return;
-    var Push = plug('PushNotifications');
-    if (!Push) return;
+  /* ── Push Notifications ──────────────────────────────────
+     BURADA DEĞİL — app.js içindeki initNativePush() yönetiyor.
 
-    // Push.requestPermissions() çağrısı FCM olmadan crash yaratıyor — devre dışı.
-    return;
-
-    Push.addListener('registration', function (token) {
-      if (window.SB && SB.savePushToken) {
-        SB.savePushToken(token.value).catch(function () {});
-      }
-    });
-
-    Push.addListener('pushNotificationReceived', function (notif) {
-      if (typeof toast === 'function') {
-        toast((notif.title || '') + (notif.body ? ' — ' + notif.body : ''));
-      }
-    });
-
-    Push.addListener('pushNotificationActionPerformed', function (action) {
-      var link = action.notification && action.notification.data && action.notification.data.link;
-      if (link && window.Router) Router.go(link);
-    });
-  }
+     Bu dosyada da bir initPush() vardı ama ilk satırında `return` ile
+     devre dışı bırakılmıştı (Firebase kurulmadan çağrılınca uygulama
+     çöküyordu). Firebase artık yapılandırıldı; ölü bloğu canlandırmak
+     yerine sildik, çünkü iki dosya da dinleyici eklerse her bildirim
+     iki kez işlenir: çift toast ve çift savePushToken çağrısı.
+     Tek sahip app.js'tir. */
 
   /* ── Init ───────────────────────────────────────────────── */
   function init() {
@@ -161,7 +142,6 @@
     initBackButton();
     initAppState();
     initDeepLink();
-    initPush();
     console.log('[KBNative] platform:', window.Capacitor.getPlatform());
   }
 

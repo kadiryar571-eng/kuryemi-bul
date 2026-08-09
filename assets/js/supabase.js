@@ -1221,6 +1221,22 @@
   }
 
   /* ---- Push Subscription ---- */
+  // VAPID *public* anahtarı send-push fonksiyonundan okunur. Tasarımı gereği
+  // genel bir anahtar (tarayıcıya zaten gömülür) ama tek kaynakta tutuluyor:
+  // Supabase secret'ı yenilendiğinde site kodunu değiştirmek gerekmiyor ve
+  // istemciye elle yapıştırılmış yanlış anahtar diye bir hata sınıfı doğmuyor.
+  var _vapidCache = null;
+  async function vapidPublicKey() {
+    if (_vapidCache) return _vapidCache;
+    if (!client) return null;
+    try {
+      var r = await client.functions.invoke("send-push", { method: "GET" });
+      if (r.error || !r.data || !r.data.vapidPublicKey) return null;
+      _vapidCache = r.data.vapidPublicKey;
+      return _vapidCache;
+    } catch (e) { return null; }
+  }
+
   async function savePushSubscription(sub) {
     var u = await getUser();
     if (!u) return;
@@ -1462,7 +1478,7 @@
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
-    savePushToken: savePushToken,
+    savePushToken: savePushToken, vapidPublicKey: vapidPublicKey,
     myListingStats: myListingStats, myFleet: myFleet,
     createInterview: createInterview, myInterviews: myInterviews, updateInterview: updateInterview,
     interviewById: interviewById, subscribeInterviews: subscribeInterviews,
