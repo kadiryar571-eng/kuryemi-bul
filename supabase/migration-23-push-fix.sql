@@ -90,6 +90,31 @@ revoke all on function public.push_service_key()  from public, anon, authenticat
 -- katalogdan tespit edip dinamik çağırıyoruz — migration-14'ün düştüğü
 -- tuzak tam olarak buydu.
 -- ---------------------------------------------------------------------------
+-- Nesne nerede yaşıyor? Eklentinin kurulum şeması ile içindeki nesnelerin
+-- şeması AYNI OLMAK ZORUNDA DEĞİL: bu projede pg_net `extensions` şemasına
+-- kurulu ama yanıt tablosu `net._http_response` olarak duruyor. Bu yüzden
+-- eklenti şemasını değil, nesnenin kendisini katalogdan arıyoruz.
+create or replace function public.push_func_schema(p_name text)
+returns text language sql stable security definer set search_path = pg_catalog as $$
+  select n.nspname
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where p.proname = p_name
+  order by (n.nspname = 'net') desc, (n.nspname = 'extensions') desc
+  limit 1;
+$$;
+
+create or replace function public.push_table_schema(p_name text)
+returns text language sql stable security definer set search_path = pg_catalog as $$
+  select n.nspname
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where c.relname = p_name and c.relkind in ('r', 'p', 'v', 'm')
+  order by (n.nspname = 'net') desc, (n.nspname = 'extensions') desc
+  limit 1;
+$$;
+
+revoke all on function public.push_func_schema(text)  from public, anon, authenticated;
+revoke all on function public.push_table_schema(text) from public, anon, authenticated;
+
 create or replace function public.send_web_push()
 returns trigger
 language plpgsql
@@ -110,10 +135,7 @@ begin
 
   v_url := public.push_project_url() || '/functions/v1/send-push';
 
-  select n.nspname into v_net_schema
-  from pg_extension e
-  join pg_namespace n on n.oid = e.extnamespace
-  where e.extname = 'pg_net';
+  v_net_schema := public.push_func_schema('http_post');
 
   if v_net_schema is null then
     raise warning '[push] pg_net eklentisi kurulu degil — bildirim gonderilemedi';
@@ -172,13 +194,16 @@ as $$
 declare
   v_net_schema text;
 begin
-  select n.nspname into v_net_schema
-  from pg_extension e join pg_namespace n on n.oid = e.extnamespace
-  where e.extname = 'pg_net';
+  v_net_schema := public.push_func_schema('http_post');
 
-  kontrol := 'pg_net eklentisi';
+  kontrol := 'pg_net http_post';
   durum   := case when v_net_schema is null then 'EKSIK' else 'ok' end;
   detay   := coalesce('sema: ' || v_net_schema, 'create extension pg_net; calistirin');
+  return next;
+
+  kontrol := 'pg_net yanit tablosu';
+  durum   := case when public.push_table_schema('_http_response') is null then 'EKSIK' else 'ok' end;
+  detay   := coalesce('sema: ' || public.push_table_schema('_http_response'), '_http_response bulunamadi');
   return next;
 
   kontrol := 'Vault: service_role_key';
@@ -282,20 +307,19 @@ security definer
 set search_path = public
 as $$
 declare
-  v_net_schema text;
+  v_schema text;
 begin
-  select n.nspname into v_net_schema
-  from pg_extension e join pg_namespace n on n.oid = e.extnamespace
-  where e.extname = 'pg_net';
-
-  if v_net_schema is null then return; end if;
+  -- Yanıt tablosu pg_net'in kurulu olduğu şemada DEĞİL: bu projede
+  -- fonksiyonlar `extensions`, tablo `net` şemasında. Nesne adından bul.
+  v_schema := public.push_table_schema('_http_response');
+  if v_schema is null then return; end if;
 
   return query execute format($q$
     select id, status_code, left(coalesce(content, ''), 500), error_msg, created
     from %I._http_response
     order by created desc
     limit %s
-  $q$, v_net_schema, p_limit);
+  $q$, v_schema, p_limit);
 end;
 $$;
 
