@@ -1678,7 +1678,10 @@ window.KuryeScreens = (function () {
       var lng = Number(coords && coords.longitude);
       if (!isFinite(lat) || !isFinite(lng)) { toast('Konum okunamadı'); return; }
       SB.sendConvMessage(_msgState._convId, '📍 Konum paylaşıldı', 'location', { lat: lat, lng: lng })
-        .then(function () { toast('Konumunuz gönderildi'); })
+        .then(function (row) {
+          KBChatFile.append(row, _chatMsgBubble, _msgState._myUserId);
+          toast('Konumunuz gönderildi');
+        })
         .catch(function (e) { console.warn('konum gonderilemedi:', e); toast('Konum gönderilemedi'); });
     }, function () { toast('Konum izni verilmedi'); });
   }
@@ -1692,7 +1695,10 @@ window.KuryeScreens = (function () {
     // Belge / CV / evrak — hepsi gerçek dosya gönderme akışına gider
     // (ortak yardımcı shared.js'te tanımlı).
     if (type === 'belge' || type === 'cv' || type === 'evrak') {
-      KBChatFile.pick(function () { return _msgState._convId; });
+      KBChatFile.pick(
+        function () { return _msgState._convId; },
+        function (row) { KBChatFile.append(row, _chatMsgBubble, _msgState._myUserId); }
+      );
       return;
     }
 
@@ -1728,7 +1734,10 @@ window.KuryeScreens = (function () {
      Eskiden KBMotion'a bağlıydı — o nesne SPA'da hiç tanımlı değil, yani
      düğme tamamen sessizdi: dokunuluyor, hiçbir şey olmuyor, hata da yok. */
   function _chatAttach() {
-    KBChatFile.pick(function () { return _msgState._convId; });
+    KBChatFile.pick(
+      function () { return _msgState._convId; },
+      function (row) { KBChatFile.append(row, _chatMsgBubble, _msgState._myUserId); }
+    );
   }
 
   /* ── 7. PROFİL ──────────────────────────────────────────── */

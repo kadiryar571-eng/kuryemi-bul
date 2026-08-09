@@ -1104,7 +1104,8 @@ window.SharedScreens = (function () {
 
       SB.sendConvMessage(st._convId, '📍 Konum paylaşıldı', 'location', {
         lat: lat, lng: lng
-      }).then(function () {
+      }).then(function (row) {
+        KBChatFile.append(row, _sharedChatMsgBubble, st._myUserId);
         toast('Konumunuz gönderildi');
       }).catch(function (e) {
         console.warn('konum gonderilemedi:', e);
@@ -1131,7 +1132,27 @@ window.SharedScreens = (function () {
 
   /** Dosya seçtirir, yükler, mesaj olarak gönderir.
       convIdGetter: gönderim anında güncel konuşma kimliğini döndüren fn. */
-  KBChatFile.pick = function (convIdGetter) {
+  /** Gönderilen mesajı ekrana ekler.
+      Gerçek zamanlı kanal KENDİ mesajlarımızı atlıyor (metin gönderiminde
+      zaten anında balon çiziliyor, çift görünmesin diye). Dosya ve konumda
+      öyle bir balon yoktu; sonuç: gönderiyorsunuz, sohbette hiçbir şey
+      olmuyor, gönderilmedi sanıyorsunuz. Bu yüzden gönderim başarılı olunca
+      dönen satırı elle basıyoruz. */
+  KBChatFile.append = function (row, bubbleFn, myUserId) {
+    if (!row) return;
+    var el = document.getElementById('chat-msgs');
+    if (!el) return;
+    var div = document.createElement('div');
+    div.innerHTML = bubbleFn(row, myUserId);
+    if (div.firstChild) {
+      el.appendChild(div.firstChild);
+      el.scrollTop = el.scrollHeight;
+    }
+  };
+
+  /** convIdGetter: gönderim anındaki konuşma kimliği
+      onSent(row): gönderim başarılı olunca dönen mesaj satırı */
+  KBChatFile.pick = function (convIdGetter, onSent) {
     var convId = convIdGetter && convIdGetter();
     if (!convId || !window.SB || !SB.isOn()) return;
 
@@ -1157,7 +1178,8 @@ window.SharedScreens = (function () {
           size: file.size,
           mime: file.type || ''
         });
-      }).then(function () {
+      }).then(function (row) {
+        if (onSent) onSent(row);
         toast('Dosya gönderildi');
       }).catch(function (e) {
         console.warn('dosya gonderilemedi:', e);
@@ -1219,7 +1241,10 @@ window.SharedScreens = (function () {
     if (type === 'konum') { _shareLocation(); return; }
     // Belge / CV / evrak — hepsi aynı dosya gönderme akışına gider.
     if (type === 'belge' || type === 'cv' || type === 'evrak' || type === 'ekle') {
-      KBChatFile.pick(function () { return _activeChatState && _activeChatState._convId; });
+      KBChatFile.pick(
+        function () { return _activeChatState && _activeChatState._convId; },
+        function (row) { KBChatFile.append(row, _sharedChatMsgBubble, _activeChatState._myUserId); }
+      );
       return;
     }
     var map = {
