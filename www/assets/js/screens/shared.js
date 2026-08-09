@@ -315,9 +315,29 @@ window.SharedScreens = (function () {
           '<button class="btn btn--danger" onclick="SharedScreens._deleteAccount()">Hesabımı Kalıcı Olarak Sil</button>' +
         '</div>' +
 
-        '<p class="text-center fs-sm text-muted mt-12">KuryemiBul v2.0</p>' +
+        /* Sürüm burada ELLE YAZILMAZ. Eskiden sabit "KuryemiBul v2.0"
+           yazıyordu; gerçek sürüm 1.0.116 iken ekranda v2.0 görünüyordu.
+           Kimse güncellemediği sürece de öyle kalırdı. Bir kullanıcı hata
+           bildirdiğinde hangi derlemede olduğunu söylemediği için destek
+           açısından da işe yaramıyordu. Artık APK'nın kendisinden okunuyor. */
+        '<p class="text-center fs-sm text-muted mt-12" id="kb-app-version">KuryemiBul</p>' +
       '</div>'
     );
+
+    // renderScreen DOM'u ~120ms sonra basıyor; elemanı ondan sonra ara.
+    setTimeout(_fillAppVersion, 150);
+  }
+
+  /* Uygulama sürümünü Capacitor App eklentisinden alır (versionName + versionCode).
+     Web'de APK sürümü diye bir şey yok — orada yalnız ad gösterilir. */
+  function _fillAppVersion() {
+    var el = document.getElementById('kb-app-version');
+    if (!el) return;
+    var App = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App;
+    if (!App || !App.getInfo) { el.textContent = 'KuryemiBul'; return; }
+    App.getInfo().then(function (info) {
+      el.textContent = 'KuryemiBul v' + info.version + ' (' + info.build + ')';
+    }).catch(function () { el.textContent = 'KuryemiBul'; });
   }
 
   function _deleteAccount() {
