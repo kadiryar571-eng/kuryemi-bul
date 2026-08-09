@@ -16,7 +16,7 @@ window.KBCall = (function () {
   };
 
   /* ── State ─────────────────────────────────────────────── */
-  var _state        = 'idle'; // idle | calling | ringing | active
+  var _state        = 'idle'; // idle | calling | ringing | answering | active
   var _pc           = null;
   var _sigCh        = null;   // webrtc signaling channel (broadcast)
   var _globalCh     = null;   // global incoming call listener (postgres_changes)
@@ -103,7 +103,12 @@ window.KBCall = (function () {
     var hasVideo = type === 'video';
     var el = _overlay();
     el.innerHTML = '<div class="kbcall kbcall--active">' +
-      (hasVideo ? '<video id="kbcall-remote" autoplay playsinline></video>' : '<div style="position:absolute;inset:0;background:#181c2e;z-index:1;display:flex;align-items:center;justify-content:center"><div style="font-size:4rem">' + (name ? name[0].toUpperCase() : '?') + '</div></div>') +
+      (hasVideo
+        ? '<video id="kbcall-remote" autoplay playsinline></video>'
+        /* Sesli aramada da bir medya elementi ŞART: uzak ses aksi halde
+           hiçbir yere bağlanmaz ve duyulmaz. Görünmez bir <audio> yeter. */
+        : '<audio id="kbcall-remote-audio" autoplay></audio>' +
+          '<div style="position:absolute;inset:0;background:#181c2e;z-index:1;display:flex;align-items:center;justify-content:center"><div style="font-size:4rem">' + (name ? name[0].toUpperCase() : '?') + '</div></div>') +
       (hasVideo ? '<video id="kbcall-local" autoplay playsinline muted></video>' : '') +
       '<div class="kbcall__active-info">' +
         '<div class="kbcall__name">' + _esc(name) + '</div>' +
@@ -117,13 +122,14 @@ window.KBCall = (function () {
     '</div>';
     el.style.display = 'flex';
 
+    _attachRemote();
     if (hasVideo) {
-      var rv = document.getElementById('kbcall-remote');
       var lv = document.getElementById('kbcall-local');
-      if (rv && _remoteStream) rv.srcObject = _remoteStream;
-      if (lv && _localStream)  lv.srcObject = _localStream;
+      if (lv && _localStream) lv.srcObject = _localStream;
     }
 
+    // Çift sayaç olmasın: _showActive iki tetikleyiciden de çağrılabiliyor.
+    if (_timerItv) { clearInterval(_timerItv); _timerItv = null; }
     var secs = 0;
     _timerItv = setInterval(function () {
       secs++;
@@ -179,18 +185,40 @@ window.KBCall = (function () {
 
     _pc.ontrack = function (e) {
       _remoteStream = e.streams[0];
-      var rv = document.getElementById('kbcall-remote');
-      if (rv) rv.srcObject = _remoteStream;
+      _attachRemote();
+      /* Uzak medya geldiyse bağlantı fiilen kurulmuştur. connectionState
+         bazı cihazlarda geç ya da hiç 'connected' olmayabiliyor; bu ikinci
+         tetikleyici arayüzün "aranıyor" ekranında asılı kalmasını önler. */
+      _goActive();
     };
 
     _pc.onconnectionstatechange = function () {
-      if (_pc.connectionState === 'connected' && _state !== 'active') {
-        _state = 'active';
-        _showActive(_callerName, _callType);
+      if (_pc.connectionState === 'connected') {
+        _goActive();
       } else if (_pc.connectionState === 'failed' || _pc.connectionState === 'disconnected') {
         _cleanup();
       }
     };
+  }
+
+  /* Aktif ekrana geçiş — iki yerden de çağrılabildiği için idempotent. */
+  function _goActive() {
+    if (_state === 'active') return;
+    _state = 'active';
+    _showActive(_callerName, _callType);
+    _attachRemote();
+  }
+
+  /* Uzak sesi/görüntüyü bir medya elementine bağla.
+     ÖNCEDEN yalnız `kbcall-remote` (video) aranıyordu; sesli aramada böyle
+     bir element hiç oluşturulmuyor, dolayısıyla uzak ses hiçbir yere
+     bağlanmıyor ve DUYULMUYORDU. WebRTC uzak sesi kendiliğinden çalmaz —
+     mutlaka bir <audio>/<video> elementine iliştirilmesi gerekir. */
+  function _attachRemote() {
+    if (!_remoteStream) return;
+    var el = document.getElementById('kbcall-remote') ||
+             document.getElementById('kbcall-remote-audio');
+    if (el && el.srcObject !== _remoteStream) el.srcObject = _remoteStream;
   }
 
   async function _getMedia(video) {
@@ -273,7 +301,14 @@ window.KBCall = (function () {
 
   async function accept() {
     if (_state !== 'ringing') return;
-    _state = 'active';
+    /* 'active' DEĞİL — bilerek ara bir durum.
+       Eskiden burada doğrudan _state='active' yazılıyordu. Arayüzü aktif
+       ekrana geçiren tek yer onconnectionstatechange ve oradaki koşul
+       `_state !== 'active'` istiyor; bu yüzden cevaplayan tarafta koşul asla
+       sağlanmıyor, bağlantı kurulsa bile gelen arama ekranı kırmızı/yeşil
+       butonlarla ekranda kalıyordu. Arayan tarafta durum 'calling' olduğu
+       için orada sorun görünmüyordu — asimetrinin sebebi buydu. */
+    _state = 'answering';
 
     try { await _getMedia(_callType === 'video'); }
     catch (e) {
