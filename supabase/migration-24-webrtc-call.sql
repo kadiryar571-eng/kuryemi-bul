@@ -1,6 +1,12 @@
 -- ============================================================================
 -- migration-24-webrtc-call.sql   (idempotent)
 --
+-- !! GÜNCEL DEĞİL: aşağıdaki 2. madde (aramayı yalnız işveren başlatır)
+--    migration-25-call-all-roles.sql ile KALDIRILDI. Artık konuşmanın her
+--    iki tarafı da arama başlatabilir. 1. madde (CHECK kısıtına
+--    'webrtc_call' eklenmesi) geçerliliğini koruyor — o olmadan arama
+--    hiç çalışmaz. Bu dosya tarihsel kayıt olarak duruyor.
+--
 -- 1) SESLİ/GÖRÜNTÜLÜ ARAMA HİÇ ÇALIŞMIYORDU
 --
 --    webrtc.js aramayı başlatırken teklifi (SDP offer) conv_messages tablosuna
