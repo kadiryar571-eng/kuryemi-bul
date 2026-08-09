@@ -1430,6 +1430,37 @@ window.KuryeScreens = (function () {
     }
     var isOut = m.sender_user === myUserId;
     var time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+    /* Arama kaydı — işveren tarafında (shared.js) zaten böyle çiziliyordu,
+       kuryede eksikti: "Arama başlatıldı" düz bir metin balonu olarak
+       görünüyordu. */
+    if (m.message_type === 'webrtc_call') {
+      var cmeta  = m.metadata || {};
+      var cvideo = cmeta.callType === 'video';
+      var cicon  = cvideo ? '📹' : '📞';
+      var clabel = isOut
+        ? (cvideo ? 'Görüntülü arama başlatıldı' : 'Sesli arama başlatıldı')
+        : (cvideo ? 'Gelen görüntülü arama'      : 'Gelen sesli arama');
+      return '<div class="chat-date-sep"><span>' + cicon + ' ' + esc(clabel) + '</span></div>';
+    }
+
+    /* Konum — haritada açılabilen kart. onclick bir JS string bağlamı
+       olduğu için escJs kullanılıyor (bkz. CLAUDE.md). */
+    if (m.message_type === 'location') {
+      var lmeta = m.metadata || {};
+      var lat = Number(lmeta.lat), lng = Number(lmeta.lng);
+      if (isFinite(lat) && isFinite(lng)) {
+        var mapUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+        return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
+          '<button class="chat-loc" onclick="KBOpenUrl(\'' + escJs(mapUrl) + '\')">' +
+            '<span class="chat-loc__pin">📍</span>' +
+            '<span class="chat-loc__txt"><b>Konum paylaşıldı</b><span>Haritada aç →</span></span>' +
+          '</button>' +
+          '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
+        '</div>';
+      }
+    }
+
     return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
       '<div class="chat-bubble__text">' + escLines(m.content) + '</div>' +
       '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
@@ -1630,24 +1661,57 @@ window.KuryeScreens = (function () {
     }
   }
 
+  /* Konum paylaşımı — GERÇEK konumla (bkz. shared.js'teki eşi).
+     Konum alınamazsa hiçbir şey gönderilmez; "paylaştım" deyip boş mesaj
+     yollamak kullanıcının konumu gittiğini sanmasına yol açar. */
+  function _shareLocation() {
+    if (!_msgState._convId || !window.SB || !SB.isOn()) return;
+    if (typeof KBGetLocation !== 'function') { toast('Konum bu cihazda desteklenmiyor'); return; }
+    toast('Konum alınıyor…');
+
+    KBGetLocation(function (coords) {
+      var lat = Number(coords && coords.latitude);
+      var lng = Number(coords && coords.longitude);
+      if (!isFinite(lat) || !isFinite(lng)) { toast('Konum okunamadı'); return; }
+      SB.sendConvMessage(_msgState._convId, '📍 Konum paylaşıldı', 'location', { lat: lat, lng: lng })
+        .then(function () { toast('Konumunuz gönderildi'); })
+        .catch(function (e) { console.warn('konum gonderilemedi:', e); toast('Konum gönderilemedi'); });
+    }, function () { toast('Konum izni verilmedi'); });
+  }
+
+  /* ÖNCEDEN: bu fonksiyon mesajı yalnız EKRANA çiziyor, veritabanına HİÇ
+     göndermiyordu. Sayfa yenilenince balon kayboluyor, işveren de hiçbir
+     şey almıyordu — yani kuryenin bütün hızlı işlem satırı sahteydi.
+     Artık shared.js'teki eşi gibi gerçekten gönderiyor. */
   function _chatQuick(type) {
+    if (type === 'konum') { _shareLocation(); return; }
+
     var map = {
-      konum:  'Konumunuz paylaşıldı 📍',
-      uygun:  'Uygunluk bilgisi gönderildi 📅',
-      belge:  'Belgeleriniz gönderildi 📄',
-      cv:     'CV\'niz gönderildi 📄',
-      evrak:  'Evrak yükleme başlatılıyor...',
-      plan:   'Görüşme talebi gönderildi 📅',
-      teklif: 'Teklif detayları açılıyor...'
+      uygun:   '📅 Uygunluğumu bildiriyorum',
+      belge:   '📄 Belgelerimi gönderiyorum',
+      cv:      '📄 CV\'mi gönderiyorum',
+      evrak:   '📄 Evraklarımı gönderiyorum',
+      plan:    '📅 Görüşme talep ediyorum',
+      teklif:  '⭐ Teklif detayları',
+      gorusme: '🎯 Görüşmeye davet ediyorum'
     };
+    var text = map[type];
+    if (!text) return;
+
     var msgs = document.getElementById('chat-msgs');
     if (!msgs) return;
+    var now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     var bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble--out chat-bubble--new';
-    bubble.innerHTML = '<div class="chat-bubble__text">' + (map[type] || '📎 Paylaşıldı') + '</div>' +
-      '<div class="chat-bubble__meta">Şimdi <span class="chat-tick">✓✓</span></div>';
+    bubble.innerHTML = '<div class="chat-bubble__text">' + esc(text) + '</div>' +
+      '<div class="chat-bubble__meta">' + esc(now) + ' <span class="chat-tick">✓✓</span></div>';
     msgs.appendChild(bubble);
     msgs.scrollTop = msgs.scrollHeight;
+
+    if (_msgState._convId && window.SB && SB.isOn()) {
+      SB.sendConvMessage(_msgState._convId, text)
+        .catch(function (e) { console.warn('_chatQuick send:', e); });
+    }
   }
 
   /* _chatCall / _chatVideo kaldırıldı — kurye arama başlatmıyor (bkz. chat header). */

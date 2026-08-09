@@ -808,6 +808,31 @@ window.SharedScreens = (function () {
     }
     var isOut = m.sender_user === myUserId;
     var time  = m.created_at ? new Date(m.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+    /* Konum — haritada açılabilen kart.
+       Koordinatlar Number()'dan geçip isFinite ile doğrulanıyor; URL'ye
+       yalnız sayı girebiliyor. Yine de onclick bir JS string bağlamı
+       olduğu için escJs kullanılıyor (esc yetmez — HTML ayrıştırıcı
+       &#39;'i JS'e geçmeden çözer, bkz. CLAUDE.md). */
+    if (m.message_type === 'location') {
+      var md  = m.metadata || {};
+      var lat = Number(md.lat), lng = Number(md.lng);
+      if (isFinite(lat) && isFinite(lng)) {
+        var mapUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+        return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
+          '<button class="chat-loc" onclick="KBOpenUrl(\'' + escJs(mapUrl) + '\')">' +
+            '<span class="chat-loc__pin">📍</span>' +
+            '<span class="chat-loc__txt">' +
+              '<b>Konum paylaşıldı</b>' +
+              '<span>Haritada aç →</span>' +
+            '</span>' +
+          '</button>' +
+          '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
+        '</div>';
+      }
+      // Koordinat yoksa aşağıdaki düz metin balonuna düşer.
+    }
+
     return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
       '<div class="chat-bubble__text">' + escLines(m.content) + '</div>' +
       '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
@@ -1052,9 +1077,43 @@ window.SharedScreens = (function () {
     }
   }
 
+  /* Konum paylaşımı — GERÇEK konumla.
+     Eskiden bu da aşağıdaki sabit metin listesindeydi: cihazın konumu hiç
+     okunmuyor, karşı tarafa dokunulamayan bir yazı gidiyordu. Artık
+     koordinatlar mesajın metadata'sında taşınıyor ve haritada açılabiliyor.
+     Konum alınamazsa hiçbir şey gönderilmiyor — "paylaştım" deyip boş mesaj
+     yollamak, kullanıcının konumu gittiğini sanmasına yol açar. */
+  function _shareLocation() {
+    var st = _activeChatState;
+    if (!st || !st._convId || !window.SB || !SB.isOn()) return;
+
+    if (typeof KBGetLocation !== 'function') {
+      toast('Konum bu cihazda desteklenmiyor');
+      return;
+    }
+    toast('Konum alınıyor…');
+
+    KBGetLocation(function (coords) {
+      var lat = Number(coords && coords.latitude);
+      var lng = Number(coords && coords.longitude);
+      if (!isFinite(lat) || !isFinite(lng)) { toast('Konum okunamadı'); return; }
+
+      SB.sendConvMessage(st._convId, '📍 Konum paylaşıldı', 'location', {
+        lat: lat, lng: lng
+      }).then(function () {
+        toast('Konumunuz gönderildi');
+      }).catch(function (e) {
+        console.warn('konum gonderilemedi:', e);
+        toast('Konum gönderilemedi');
+      });
+    }, function () {
+      toast('Konum izni verilmedi');
+    });
+  }
+
   function chatQuick(type) {
+    if (type === 'konum') { _shareLocation(); return; }
     var map = {
-      konum:   '📍 Konumumu paylaştım',
       uygun:   '📅 Uygunluğumu bildiriyorum',
       belge:   '📄 Belgelerimi gönderiyorum',
       plan:    '📅 Görüşme talep ediyorum',
