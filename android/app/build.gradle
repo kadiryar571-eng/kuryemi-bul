@@ -86,11 +86,40 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-try {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
-        apply plugin: 'com.google.gms.google-services'
+// ---------------------------------------------------------------------------
+// Firebase yapılandırması (google-services.json)
+//
+// DİKKAT — bu blok eskiden dosya yoksa SESSİZCE atlıyordu (logger.info).
+// google-services.json .gitignore'da olduğu için CI onu göremiyordu:
+// derleme "başarılı" çıkıyor ama APK'da google_app_id kaynağı olmuyordu.
+// Sonuç: kullanıcı bildirim iznini verdiği anda
+//   PushNotificationsPlugin.register()
+//   -> FirebaseMessaging.getInstance()
+//   -> IllegalStateException: Default FirebaseApp is not initialized
+// ve uygulama çöküyordu. Emülatörde birebir yeniden üretildi.
+//
+// Artık RELEASE derlemesi eksik yapılandırmayla ASLA tamamlanmaz.
+// Debug derlemede yalnız uyarı verilir (yerel geliştirme engellenmesin).
+// CI dosyayı GOOGLE_SERVICES_JSON secret'ından yazar.
+// ---------------------------------------------------------------------------
+def servicesJSON = file('google-services.json')
+if (servicesJSON.exists() && servicesJSON.length() > 0) {
+    apply plugin: 'com.google.gms.google-services'
+} else {
+    gradle.taskGraph.whenReady { graph ->
+        def releaseBuild = graph.allTasks.any { t ->
+            t.name.toLowerCase().contains('release')
+        }
+        if (releaseBuild) {
+            throw new GradleException(
+                "google-services.json bulunamadi.\n" +
+                "Firebase yapilandirmasi olmadan RELEASE derlemesi yapilamaz: push\n" +
+                "bildirimleri acildiginda uygulama coker (Default FirebaseApp is not\n" +
+                "initialized).\n" +
+                "CI icin: GOOGLE_SERVICES_JSON secret'i tanimli olmali.\n" +
+                "Yerelde: android/app/google-services.json dosyasini koyun."
+            )
+        }
+        logger.warn("UYARI: google-services.json yok - push bildirimleri calismayacak (debug derleme).")
     }
-} catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }

@@ -39,18 +39,20 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: İmzalama secret'larını doğrula
+      - name: Gerekli secret'ları doğrula
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           missing=""
-          [ -z "$KEYSTORE_BASE64" ]   && missing="$missing KEYSTORE_BASE64"
-          [ -z "$KEYSTORE_PASSWORD" ] && missing="$missing KEYSTORE_PASSWORD"
-          [ -z "$KEY_ALIAS" ]         && missing="$missing KEY_ALIAS"
-          [ -z "$KEY_PASSWORD" ]      && missing="$missing KEY_PASSWORD"
+          [ -z "$KEYSTORE_BASE64" ]      && missing="$missing KEYSTORE_BASE64"
+          [ -z "$KEYSTORE_PASSWORD" ]    && missing="$missing KEYSTORE_PASSWORD"
+          [ -z "$KEY_ALIAS" ]            && missing="$missing KEY_ALIAS"
+          [ -z "$KEY_PASSWORD" ]         && missing="$missing KEY_PASSWORD"
+          [ -z "$GOOGLE_SERVICES_JSON" ] && missing="$missing GOOGLE_SERVICES_JSON"
           if [ -n "$missing" ]; then
             echo "::error::Eksik secret(lar):$missing"
             echo "::error::Kurulum: store/keystore-setup-guide.md"
@@ -99,6 +101,31 @@ jobs:
             exit 1
           fi
 
+      # google-services.json .gitignore'da (Firebase API anahtarı içeriyor, repo public).
+      # Bu adım olmadan google-services eklentisi atlanıyor, APK'da google_app_id
+      # kaynağı oluşmuyor ve kullanıcı bildirim iznini verdiği anda uygulama
+      # "Default FirebaseApp is not initialized" ile çöküyor.
+      - name: google-services.json'u çöz
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::GOOGLE_SERVICES_JSON secret'ı tanımlı değil."
+            echo "::error::Firebase yapılandırması olmadan release APK üretilmez — push bildirimleri çöker."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+          # Geçerli JSON mu ve paket adı doğru mu?
+          node -e "
+            const j = require('./android/app/google-services.json');
+            const pkgs = (j.client || []).map(c => c.client_info.android_client_info.package_name);
+            if (!pkgs.includes('com.kuryemibul.app')) {
+              console.error('::error::google-services.json paket adı uyuşmuyor: ' + pkgs.join(', '));
+              process.exit(1);
+            }
+            console.log('google-services.json OK — proje: ' + j.project_info.project_id);
+          "
+
       - name: gradlew çalıştırılabilir yap
         run: chmod +x android/gradlew
 
@@ -137,12 +164,23 @@ jobs:
             exit 1
           fi
 
-          "$BT/apksigner" verify --verbose "$APK"
-          echo "Doğrulama geçti: release imzalı, debuggable değil."
+          # 3) Firebase yapılandırması APK'ya girdi mi?
+          #    google-services eklentisi atlanırsa derleme SESSİZCE başarılı olur
+          #    ama google_app_id kaynağı oluşmaz; kullanıcı bildirim iznini
+          #    verdiği anda uygulama çöker. Bu kapı o sessiz hatayı yakalar.
+          if ! "$BT/aapt" dump --values resources "$APK" | grep -q "google_app_id"; then
+            echo "::error::APK'da google_app_id yok — Firebase yapılandırması eklenmemiş."
+            echo "::error::Push bildirimleri açıldığında uygulama çöker. Yayınlanmayacak."
+            exit 1
+          fi
+          echo "Firebase yapılandırması APK'da ✓"
 
-      - name: Keystore'u sil
+          "$BT/apksigner" verify --verbose "$APK"
+          echo "Doğrulama geçti: release imzalı, debuggable değil, Firebase yapılandırılmış."
+
+      - name: Sırları runner'dan sil
         if: always()
-        run: rm -f android/app/release.keystore
+        run: rm -f android/app/release.keystore android/app/google-services.json
 
       - name: Artifact olarak kaydet
         uses: actions/upload-artifact@v4
