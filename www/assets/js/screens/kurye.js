@@ -1373,9 +1373,9 @@ window.KuryeScreens = (function () {
             '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
           '</button>' +
           '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off">' +
-          '<button class="chat-input__icon" onclick="KuryeScreens._chatEmoji()">' +
-            '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
-          '</button>' +
+          /* Emoji düğmesi KALDIRILDI: hiçbir şey yapmıyordu (KBMotion'a
+             bağlıydı, o da SPA'da tanımsız). Telefon klavyesinde zaten
+             emoji tuşu var; ayrı bir seçici değer katmıyor. */
           '<button class="chat-send" onclick="KuryeScreens._chatSend()">' + ICON.send + '</button>' +
         '</div>' +
       '</div>' +
@@ -1446,6 +1446,10 @@ window.KuryeScreens = (function () {
 
     /* Konum — haritada açılabilen kart. onclick bir JS string bağlamı
        olduğu için escJs kullanılıyor (bkz. CLAUDE.md). */
+    if (m.message_type === 'document' && m.metadata && m.metadata.path) {
+      return KBChatFile.bubble(m, isOut, time);
+    }
+
     if (m.message_type === 'location') {
       var lmeta = m.metadata || {};
       var lat = Number(lmeta.lat), lng = Number(lmeta.lng);
@@ -1685,12 +1689,15 @@ window.KuryeScreens = (function () {
      Artık shared.js'teki eşi gibi gerçekten gönderiyor. */
   function _chatQuick(type) {
     if (type === 'konum') { _shareLocation(); return; }
+    // Belge / CV / evrak — hepsi gerçek dosya gönderme akışına gider
+    // (ortak yardımcı shared.js'te tanımlı).
+    if (type === 'belge' || type === 'cv' || type === 'evrak') {
+      KBChatFile.pick(function () { return _msgState._convId; });
+      return;
+    }
 
     var map = {
       uygun:   '📅 Uygunluğumu bildiriyorum',
-      belge:   '📄 Belgelerimi gönderiyorum',
-      cv:      '📄 CV\'mi gönderiyorum',
-      evrak:   '📄 Evraklarımı gönderiyorum',
       plan:    '📅 Görüşme talep ediyorum',
       teklif:  '⭐ Teklif detayları',
       gorusme: '🎯 Görüşmeye davet ediyorum'
@@ -1716,8 +1723,13 @@ window.KuryeScreens = (function () {
 
   /* _chatCall / _chatVideo kaldırıldı — kurye arama başlatmıyor (bkz. chat header). */
   function _chatMore()   { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('⋮ Seçenekler', 'Sohbet ayarları — Faz 2\'de geliyor'); }
-  function _chatAttach() { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📎 Dosya', 'Dosya eki — Faz 2\'de geliyor'); }
-  function _chatEmoji()  { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('😊 Emoji', 'Emoji seçici — Faz 2\'de geliyor'); }
+
+  /* Ataç düğmesi artık gerçek dosya seçiciyi açıyor.
+     Eskiden KBMotion'a bağlıydı — o nesne SPA'da hiç tanımlı değil, yani
+     düğme tamamen sessizdi: dokunuluyor, hiçbir şey olmuyor, hata da yok. */
+  function _chatAttach() {
+    KBChatFile.pick(function () { return _msgState._convId; });
+  }
 
   /* ── 7. PROFİL ──────────────────────────────────────────── */
   function profil() {
@@ -2021,7 +2033,7 @@ window.KuryeScreens = (function () {
     _chatQuick       : _chatQuick,
     _chatMore        : _chatMore,
     _chatAttach      : _chatAttach,
-    _chatEmoji       : _chatEmoji,
+
     _prEditAreas     : _prEditAreas,
     _prViewCV        : _prViewCV,
     _prShareDoc      : _prShareDoc,

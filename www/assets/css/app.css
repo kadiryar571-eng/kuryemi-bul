@@ -2403,6 +2403,32 @@ a { color: inherit; text-decoration: none; }
   border-bottom-left-radius: 5px;
 }
 .chat-loc:active { transform: scale(.98); }
+
+/* Dosya mesajı — konum kartıyla aynı iskelet, farklı içerik. */
+.chat-file {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border: none; border-radius: 16px;
+  background: var(--surface2); color: var(--text);
+  cursor: pointer; text-align: left; width: 100%; max-width: 260px;
+}
+.chat-bubble--out .chat-file {
+  background: var(--c-kurye); color: #fff;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 4px 16px rgba(108,77,255,.4);
+}
+.chat-bubble--in .chat-file {
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+}
+.chat-file:active { transform: scale(.98); }
+.chat-file__ico { font-size: 1.5rem; flex-shrink: 0; }
+.chat-file__txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+/* Uzun dosya adı balonu taşırmasın */
+.chat-file__txt b {
+  font-size: .82rem; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chat-file__txt span { font-size: .7rem; opacity: .75; }
 .chat-loc__pin { font-size: 1.35rem; flex-shrink: 0; }
 .chat-loc__txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .chat-loc__txt b { font-size: .83rem; font-weight: 600; }

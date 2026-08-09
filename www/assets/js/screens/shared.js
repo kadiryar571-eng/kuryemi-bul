@@ -744,9 +744,9 @@ window.SharedScreens = (function () {
             '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
           '</button>' +
           '<input type="text" class="chat-input__field" id="chat-input-field" placeholder="Mesajınızı yazın..." autocomplete="off" onkeydown="if(event.key===\'Enter\'){SharedScreens.chatSend();}">' +
-          '<button class="chat-input__icon" onclick="SharedScreens.chatQuick(\'emoji\')">' +
-            '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
-          '</button>' +
+          /* Emoji düğmesi KALDIRILDI: chatQuick('emoji') haritada yoktu,
+             yani dokunulunca hiçbir şey olmuyordu. Telefon klavyesinde
+             zaten emoji tuşu var. */
           '<button class="chat-send" onclick="SharedScreens.chatSend()">' + ICON.send + '</button>' +
         '</div>' +
       '</div>' +
@@ -831,6 +831,10 @@ window.SharedScreens = (function () {
         '</div>';
       }
       // Koordinat yoksa aşağıdaki düz metin balonuna düşer.
+    }
+
+    if (m.message_type === 'document' && m.metadata && m.metadata.path) {
+      return KBChatFile.bubble(m, isOut, time);
     }
 
     return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
@@ -1111,8 +1115,113 @@ window.SharedScreens = (function () {
     });
   }
 
+  /* ── Dosya gönderimi ───────────────────────────────────────────────────
+     "Belge Gönder" / "CV Gönder" / "Evrak Yükle" butonları eskiden hiçbir
+     dosya göndermiyordu; yalnızca "belgelerimi gönderiyorum" diye bir metin
+     yazıyorlardı. Karşı taraf bir şey geldiğini sanıyor, ortada dosya yok.
+
+     Dosya seçici olarak gizli bir <input type="file"> kullanılıyor —
+     Capacitor WebView'i onShowFileChooser'ı destekliyor, ek eklenti
+     gerekmiyor. Dosya chat_files bucket'ına yükleniyor (özel; okuma izni
+     konuşma üyeliğine bağlı, bkz. migration-27) ve mesaja yalnız YOL
+     yazılıyor. Doğrudan URL yazılsaydı süresi dolmayan bir bağlantı
+     mesajda kalıcı olarak dururdu. */
+
+  window.KBChatFile = window.KBChatFile || {};
+
+  /** Dosya seçtirir, yükler, mesaj olarak gönderir.
+      convIdGetter: gönderim anında güncel konuşma kimliğini döndüren fn. */
+  KBChatFile.pick = function (convIdGetter) {
+    var convId = convIdGetter && convIdGetter();
+    if (!convId || !window.SB || !SB.isOn()) return;
+
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = [
+      'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
+      '.doc', '.docx', '.xls', '.xlsx'
+    ].join(',');
+
+    inp.onchange = function () {
+      var file = inp.files && inp.files[0];
+      if (!file) return;
+
+      var err = SB.checkChatFile(file);
+      if (err) { toast(err); return; }
+
+      toast('Yükleniyor…');
+      SB.uploadChatFile(convId, file).then(function (path) {
+        return SB.sendConvMessage(convId, '📄 ' + file.name, 'document', {
+          path: path,
+          name: file.name,
+          size: file.size,
+          mime: file.type || ''
+        });
+      }).then(function () {
+        toast('Dosya gönderildi');
+      }).catch(function (e) {
+        console.warn('dosya gonderilemedi:', e);
+        toast((e && e.message) || 'Dosya gönderilemedi');
+      });
+    };
+
+    inp.click();
+  };
+
+  /** Dosya mesajını açar — özel bucket olduğu için imzalı bağlantı üretilir. */
+  KBChatFile.open = function (path) {
+    if (!path || !window.SB || !SB.isOn()) return;
+    toast('Açılıyor…');
+    SB.chatFileUrl(path).then(function (url) {
+      if (!url) { toast('Dosya açılamadı'); return; }
+      if (typeof KBOpenUrl === 'function') KBOpenUrl(url);
+      else window.open(url, '_blank');
+    }).catch(function () { toast('Dosya açılamadı'); });
+  };
+
+  /** Dosya boyutunu okunur hale getirir. */
+  KBChatFile.size = function (bytes) {
+    var b = Number(bytes);
+    if (!isFinite(b) || b <= 0) return '';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return Math.round(b / 1024) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  };
+
+  /** Uzantıya göre simge. */
+  KBChatFile.icon = function (name, mime) {
+    var n = String(name || '').toLowerCase();
+    if ((mime || '').indexOf('image/') === 0) return '🖼️';
+    if (/\.pdf$/.test(n)) return '📕';
+    if (/\.(doc|docx)$/.test(n)) return '📘';
+    if (/\.(xls|xlsx)$/.test(n)) return '📗';
+    return '📄';
+  };
+
+  /** Dosya mesajı balonu — iki ekranda da aynı görünüm. */
+  KBChatFile.bubble = function (m, isOut, time) {
+    var md   = m.metadata || {};
+    var name = md.name || 'Dosya';
+    var meta = [KBChatFile.size(md.size), 'Açmak için dokun'].filter(Boolean).join(' · ');
+    return '<div class="chat-bubble chat-bubble--' + (isOut ? 'out' : 'in') + '">' +
+      '<button class="chat-file" onclick="KBChatFile.open(\'' + escJs(md.path || '') + '\')">' +
+        '<span class="chat-file__ico">' + KBChatFile.icon(name, md.mime) + '</span>' +
+        '<span class="chat-file__txt">' +
+          '<b>' + esc(name) + '</b>' +
+          '<span>' + esc(meta) + '</span>' +
+        '</span>' +
+      '</button>' +
+      '<div class="chat-bubble__meta">' + esc(time) + (isOut ? ' <span class="chat-tick">✓✓</span>' : '') + '</div>' +
+    '</div>';
+  };
+
   function chatQuick(type) {
     if (type === 'konum') { _shareLocation(); return; }
+    // Belge / CV / evrak — hepsi aynı dosya gönderme akışına gider.
+    if (type === 'belge' || type === 'cv' || type === 'evrak' || type === 'ekle') {
+      KBChatFile.pick(function () { return _activeChatState && _activeChatState._convId; });
+      return;
+    }
     var map = {
       uygun:   '📅 Uygunluğumu bildiriyorum',
       belge:   '📄 Belgelerimi gönderiyorum',

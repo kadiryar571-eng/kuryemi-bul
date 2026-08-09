@@ -722,6 +722,65 @@
   }
 
   // Konuşmaya mesaj gönder
+  /* ---- Sohbet dosyaları ----
+     Yol kuralı: <conversation_id>/<gönderen_uid>/<zaman>.<uzantı>
+     Bucket ÖZEL; okuma izni "bu konuşmanın tarafı mısın" sorusuna bağlı
+     (bkz. migration-27). Bu yüzden dosya doğrudan URL ile açılamaz, her
+     seferinde imzalı bağlantı üretilir. */
+
+  var CHAT_FILE_MAX = 10 * 1024 * 1024;   // 10 MB — bucket'ta da tanımlı
+  var CHAT_FILE_TYPES = [
+    'image/jpeg', 'image/png', 'image/webp',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ];
+
+  /** İstemci tarafı ön kontrol. Asıl kapı bucket kuralları — burası yalnız
+      kullanıcıya erken ve anlaşılır geri bildirim vermek için. */
+  function checkChatFile(file) {
+    if (!file) return 'Dosya seçilmedi';
+    if (file.size > CHAT_FILE_MAX) {
+      return 'Dosya çok büyük (' + Math.round(file.size / 1048576) + ' MB). En fazla 10 MB.';
+    }
+    if (file.type && CHAT_FILE_TYPES.indexOf(file.type) === -1) {
+      return 'Bu dosya türü desteklenmiyor. Resim, PDF veya Office belgesi gönderebilirsiniz.';
+    }
+    return null;
+  }
+
+  async function uploadChatFile(convId, file) {
+    var u = await getUser();
+    if (!u) throw new Error('oturum yok');
+    if (!convId) throw new Error('konusma yok');
+
+    var err = checkChatFile(file);
+    if (err) throw new Error(err);
+
+    var ext  = ((file.name || 'dosya').split('.').pop() || 'bin').toLowerCase();
+    // Uzantıyı temizle — yol enjeksiyonu ve tuhaf karakterler girmesin.
+    ext = ext.replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin';
+    var path = convId + '/' + u.id + '/' + Date.now() + '.' + ext;
+
+    var up = await client.storage.from('chat_files').upload(path, file, {
+      upsert: false,
+      contentType: file.type || 'application/octet-stream'
+    });
+    if (up.error) throw up.error;
+    return path;
+  }
+
+  /** Özel bucket → geçici imzalı bağlantı (varsayılan 1 saat). */
+  async function chatFileUrl(path, seconds) {
+    if (!path) return null;
+    var r = await client.storage.from('chat_files')
+      .createSignedUrl(path, seconds || 3600);
+    if (r.error) { console.warn('chatFileUrl:', r.error); return null; }
+    return r.data && r.data.signedUrl;
+  }
+
   async function sendConvMessage(convId, content, type, metadata) {
     var u = await getUser(); if (!u) throw new Error('oturum yok');
     var me = await myProfile(); if (!me) throw new Error('profil yok');
@@ -961,6 +1020,7 @@
     listingApplications: listingApplications, updateApplication: updateApplication, allMyListingApplications: allMyListingApplications,
     applyWithConv: applyWithConv, myConvs: myConvs, getConvDetail: getConvDetail,
     sendConvMessage: sendConvMessage, markConvRead: markConvRead, subscribeConv: subscribeConv,
+    uploadChatFile: uploadChatFile, chatFileUrl: chatFileUrl, checkChatFile: checkChatFile,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken,
