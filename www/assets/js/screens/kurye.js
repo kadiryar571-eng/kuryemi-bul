@@ -1460,10 +1460,16 @@ window.KuryeScreens = (function () {
             '<div class="chat-hdr__name">' + esc(otherName) + '</div>' +
             '<div class="chat-hdr__status"><span class="chat-hdr__dot"></span>Aktif Başvuru</div>' +
           '</div>' +
+          /* Arama butonu bilerek YOK. Ürün kuralı: aramayı yalnız işveren
+             (esnaf / kurye firması) başlatır, kurye yalnız gelen aramayı alır.
+             Gelen arama bu ekrandan bağımsız çalışır — webrtc.js'teki global
+             dinleyici yakalar (bkz. _startGlobal).
+             Kural veritabanında da uygulanıyor: migration-24, conv_messages'a
+             'webrtc_call' eklemeyi employer_user ile sınırlar.
+             Eskiden burada bir telefon butonu vardı ama _chatCall() sadece bir
+             yer tutucuydu ve KBMotion'a bağlıydı — o nesne SPA'da hiç tanımlı
+             değil, yani buton tamamen sessizdi. */
           '<div class="chat-hdr__acts">' +
-            '<button class="chat-hdr__act" onclick="KuryeScreens._chatCall()">' +
-              '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.93-.93a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.6 16.92z"/></svg>' +
-            '</button>' +
             '<button class="chat-hdr__act" onclick="KuryeScreens._chatMore()">' +
               '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
             '</button>' +
@@ -1630,8 +1636,7 @@ window.KuryeScreens = (function () {
     msgs.scrollTop = msgs.scrollHeight;
   }
 
-  function _chatCall()   { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📞 Arama', 'VoIP araması — Faz 2\'de geliyor'); }
-  function _chatVideo()  { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📹 Video', 'Görüntülü görüşme — Faz 2\'de geliyor'); }
+  /* _chatCall / _chatVideo kaldırıldı — kurye arama başlatmıyor (bkz. chat header). */
   function _chatMore()   { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('⋮ Seçenekler', 'Sohbet ayarları — Faz 2\'de geliyor'); }
   function _chatAttach() { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📎 Dosya', 'Dosya eki — Faz 2\'de geliyor'); }
   function _chatEmoji()  { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('😊 Emoji', 'Emoji seçici — Faz 2\'de geliyor'); }
@@ -1936,8 +1941,6 @@ window.KuryeScreens = (function () {
     _msgOpen         : _msgOpen,
     _chatSend        : _chatSend,
     _chatQuick       : _chatQuick,
-    _chatCall        : _chatCall,
-    _chatVideo       : _chatVideo,
     _chatMore        : _chatMore,
     _chatAttach      : _chatAttach,
     _chatEmoji       : _chatEmoji,
