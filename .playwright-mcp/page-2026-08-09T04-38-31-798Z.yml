@@ -1,0 +1,33 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - link "KuryemiBul" [ref=f1e3] [cursor=pointer]:
+      - /url: index.html
+    - generic [ref=f1e4]:
+      - text: Hesabın yok mu?
+      - link "Kayıt ol" [ref=f1e5] [cursor=pointer]:
+        - /url: "#"
+  - main [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - generic [ref=f1e8]:
+        - button "Giriş Yap" [ref=f1e9] [cursor=pointer]
+        - button "Kayıt Ol" [ref=f1e10] [cursor=pointer]
+      - button "Google ile devam et" [ref=f1e11] [cursor=pointer]
+      - generic [ref=f1e17]: veya
+      - generic [ref=f1e18]:
+        - generic [ref=f1e19]:
+          - generic [ref=f1e20]: E-posta adresi
+          - textbox "E-posta adresi" [ref=f1e21]:
+            - /placeholder: ornek@mail.com
+        - generic [ref=f1e22]:
+          - generic [ref=f1e23]: Şifre
+          - generic [ref=f1e24]:
+            - textbox "Şifre" [ref=f1e25]:
+              - /placeholder: ••••••••
+            - button "Şifreyi göster" [ref=f1e26] [cursor=pointer]
+        - link "Şifremi unuttum" [ref=f1e31] [cursor=pointer]:
+          - /url: sifre-sifirla.html
+        - button "Giriş Yap" [ref=f1e32] [cursor=pointer]
+      - paragraph [ref=f1e33]:
+        - text: Henüz hesabın yok mu?
+        - link "Kayıt ol →" [ref=f1e34] [cursor=pointer]:
+          - /url: "#"
