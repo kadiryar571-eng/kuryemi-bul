@@ -87,6 +87,12 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Sesli aramada telefon kulağa götürülünce ekranı kapatmak için
+         (PROXIMITY_SCREEN_OFF_WAKE_LOCK). Bunsuz yanak ekrana değip
+         "kapat" butonuna basabiliyor. Normal izin — kullanıcıya sorulmaz.
+         Bkz. CallAudioPlugin. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

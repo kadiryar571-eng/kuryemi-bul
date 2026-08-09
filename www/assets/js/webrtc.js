@@ -55,8 +55,12 @@ window.KBCall = (function () {
       '.kbcall__btn--accept{background:#22C55E;color:#fff}',
       '.kbcall__btn--reject,.kbcall__btn--end{background:#EF4444;color:#fff;transform:rotate(135deg)}',
       '.kbcall__btn--reject:active,.kbcall__btn--end:active{transform:rotate(135deg) scale(.88)}',
-      '.kbcall__btn--mute,.kbcall__btn--cam{background:rgba(255,255,255,.12);color:#fff}',
-      '.kbcall__btn--mute.is-off,.kbcall__btn--cam.is-off{background:rgba(255,255,255,.06);opacity:.45}'
+      '.kbcall__btn--mute,.kbcall__btn--cam,.kbcall__btn--spk{background:rgba(255,255,255,.12);color:#fff}',
+      '.kbcall__btn--mute.is-off,.kbcall__btn--cam.is-off{background:rgba(255,255,255,.06);opacity:.45}',
+      /* Hoparlör AÇIKKEN dolu görünür — kapalıyken (kulaklık modu) sönük.
+         Mikrofon/kamera düğmelerinin tersi: orada "is-off" sönüklüğü ifade
+         ediyor, burada varsayılan durum zaten kapalı. */
+      '.kbcall__btn--spk.is-on{background:#fff;color:#111}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -70,6 +74,31 @@ window.KBCall = (function () {
   var PHONE_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.32.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.01L6.6 10.8z"/></svg>';
   var MIC_ICON   = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
   var CAM_ICON   = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+  var SPK_ICON   = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+
+  /* ── Ses yönlendirmesi (yerel eklenti) ──────────────────────────────────
+     WebView sesi varsayılan olarak medya akışından çalar; yani HOPARLÖRE
+     gider. Sesli aramada telefonu kulağa götürmek işe yaramaz. Kulaklık
+     hoparlörüne geçmek AudioManager'ı MODE_IN_COMMUNICATION'a almayı
+     gerektiriyor ve buna JavaScript'ten erişilemiyor — WebRTC API'si ses
+     yönlendirmesini kontrol etmez. Bu yüzden küçük bir Capacitor eklentisi
+     var: android/.../CallAudioPlugin.java
+     Web'de (tarayıcıda) eklenti yok; orada sessizce atlanır. */
+  var _speakerOn = false;
+
+  function _audioPlugin() {
+    return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.CallAudio;
+  }
+  function _audioRouteStart(video) {
+    _speakerOn = !!video;           // görüntülü arama hoparlörle başlar
+    var p = _audioPlugin();
+    if (p && p.start) p.start({ speaker: _speakerOn }).catch(function () {});
+  }
+  function _audioRouteStop() {
+    var p = _audioPlugin();
+    if (p && p.stop) p.stop().catch(function () {});
+    _speakerOn = false;
+  }
 
   /* ── UI renders ─────────────────────────────────────────── */
   function _showCalling(name, type) {
@@ -116,6 +145,9 @@ window.KBCall = (function () {
       '</div>' +
       '<div class="kbcall__actions kbcall__actions--active">' +
         '<button class="kbcall__btn kbcall__btn--mute" id="kbcall-mute-btn" onclick="KBCall.toggleMute()" title="Mikrofon">' + MIC_ICON + '</button>' +
+        /* Hoparlör düğmesi yalnız sesli aramada. Görüntülü arama zaten
+           hoparlörle başlıyor ve telefon kulağa götürülmüyor. */
+        (hasVideo ? '' : '<button class="kbcall__btn kbcall__btn--spk' + (_speakerOn ? ' is-on' : '') + '" id="kbcall-spk-btn" onclick="KBCall.toggleSpeaker()" title="Hoparlör">' + SPK_ICON + '</button>') +
         (hasVideo ? '<button class="kbcall__btn kbcall__btn--cam" id="kbcall-cam-btn" onclick="KBCall.toggleCam()" title="Kamera">' + CAM_ICON + '</button>' : '') +
         '<button class="kbcall__btn kbcall__btn--end" onclick="KBCall.hangup()">' + PHONE_ICON + '</button>' +
       '</div>' +
@@ -278,6 +310,7 @@ window.KBCall = (function () {
       _state = 'idle'; return;
     }
 
+    _audioRouteStart(_callType === 'video');
     _openSig(convId);
     _showCalling(otherName, _callType);
     _createPC();
@@ -316,6 +349,7 @@ window.KBCall = (function () {
       reject(); return;
     }
 
+    _audioRouteStart(_callType === 'video');
     _createPC();
     _localStream.getTracks().forEach(function (t) { _pc.addTrack(t, _localStream); });
 
@@ -369,6 +403,23 @@ window.KBCall = (function () {
     if (btn) btn.classList.toggle('is-off', off);
   }
 
+  /* Hoparlör <-> kulaklık hoparlörü. Yalnız sesli aramada anlamlı. */
+  function toggleSpeaker() {
+    var p = _audioPlugin();
+    if (!p || !p.setSpeaker) return;          // web: yönlendirme kontrolü yok
+    _speakerOn = !_speakerOn;
+    p.setSpeaker({ on: _speakerOn }).catch(function () {
+      _speakerOn = !_speakerOn;               // başarısızsa durumu geri al
+      _syncSpeakerBtn();
+    });
+    _syncSpeakerBtn();
+  }
+
+  function _syncSpeakerBtn() {
+    var btn = document.getElementById('kbcall-spk-btn');
+    if (btn) btn.classList.toggle('is-on', _speakerOn);
+  }
+
   function toggleCam() {
     if (!_localStream) return;
     var tracks = _localStream.getVideoTracks();
@@ -380,6 +431,9 @@ window.KBCall = (function () {
 
   function _cleanup() {
     _state = 'idle';
+    // Ses modunu aramadan çıkar — yoksa arama bitse de sistem sesi
+    // "görüşme" modunda takılı kalır ve müzik/video sesi bozuk çalar.
+    _audioRouteStop();
     _pendingOffer = null;
     _answered = false;
     _iceBuf = [];
@@ -424,6 +478,7 @@ window.KBCall = (function () {
     reject     : reject,
     hangup     : hangup,
     toggleMute : toggleMute,
-    toggleCam  : toggleCam
+    toggleCam  : toggleCam,
+    toggleSpeaker : toggleSpeaker
   };
 })();
