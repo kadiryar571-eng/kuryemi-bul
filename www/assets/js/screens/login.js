@@ -243,7 +243,9 @@ window.LoginScreens = (function () {
     btn.textContent = 'Kayıt olunuyor…';
 
     try {
-      var result = await SB.signUp(email, pass, { full_name: name, role: role });
+      // Sıra önemli: signUp(email, password, ad, telefon, role).
+      // Buraya nesne geçmek profil adını bozuyor ve rol seçimini düşürüyordu.
+      var result = await SB.signUp(email, pass, name, '', role);
       if (result && result.error) throw result.error;
       toast('Hoş geldin! E-postanı doğrula.');
       await _afterLogin();

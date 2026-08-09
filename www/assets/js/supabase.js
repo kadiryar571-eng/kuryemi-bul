@@ -43,12 +43,23 @@
   }
 
   /* ---------- AUTH ---------- */
-  // Rol artık kayıtta seçilmez; handle_new_user trigger'ı varsayılan 'kurye' atar,
-  // kullanıcı profil-duzenle.html'de rolünü seçer.
-  async function signUp(email, password, ad, telefon) {
+  // Metadata anahtarları handle_new_user() trigger'ının okuduklarıyla BİREBİR
+  // eşleşmek zorunda: `ad` ve `role` (bkz. schema.sql).
+  //
+  // GEÇMİŞ: login.js buraya üçüncü argüman olarak bir NESNE gönderiyordu
+  // (`{ full_name: name, role: role }`). Sonuç iki ayrı bozukluktu:
+  //   • metadata `{ ad: {full_name:…, role:…} }` oluyordu; trigger'ın
+  //     `->>'ad'` okuması nesnenin tamamını METİN olarak alıyor ve profil adı
+  //     `{"role": "kurye", "full_name": "Test Kurye"}` diye kaydediliyordu.
+  //   • `->>'role'` NULL dönüyordu → kayıt formundaki rol seçimi sessizce
+  //     yok sayılıyor, Esnaf/Firma seçen herkes 'kurye' olarak açılıyordu.
+  // Kök sitedeki giris.html doğru çağırdığı için hata yalnız APK'da görüldü.
+  async function signUp(email, password, ad, telefon, role) {
+    var meta = { ad: ad || "", telefon: telefon || "" };
+    if (role) meta.role = role;
     return client.auth.signUp({
       email: email, password: password,
-      options: { data: { ad: ad, telefon: telefon || "" }, emailRedirectTo: location.origin + "/verify-email.html" }
+      options: { data: meta, emailRedirectTo: location.origin + "/verify-email.html" }
     });
   }
   // Capacitor native ortam mı?
