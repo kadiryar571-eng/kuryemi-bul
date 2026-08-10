@@ -293,7 +293,7 @@ window.KBCall = (function () {
   async function startCall(convId, otherName, type) {
     if (_state !== 'idle') return;
     if (!window.SB || !SB.isOn()) {
-      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Çevrimiçi değilsiniz');
+      toast('Çevrimiçi değilsiniz');
       return;
     }
 
@@ -306,7 +306,7 @@ window.KBCall = (function () {
 
     try { await _getMedia(_callType === 'video'); }
     catch (e) {
-      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Mikrofon/kamera erişimi reddedildi');
+      toast('Mikrofon/kamera erişimi reddedildi');
       _state = 'idle'; return;
     }
 
@@ -345,7 +345,7 @@ window.KBCall = (function () {
 
     try { await _getMedia(_callType === 'video'); }
     catch (e) {
-      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Mikrofon/kamera erişimi reddedildi');
+      toast('Mikrofon/kamera erişimi reddedildi');
       reject(); return;
     }
 

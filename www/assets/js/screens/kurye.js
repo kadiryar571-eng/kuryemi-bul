@@ -415,11 +415,8 @@ window.KuryeScreens = (function () {
             '<div class="map-user-dot"></div>' +
           '</div>' +
 
-          /* Zoom controls */
-          '<div class="map-zoom">' +
-            '<button onclick="KuryeScreens._mapZoom(1)">+</button>' +
-            '<button onclick="KuryeScreens._mapZoom(-1)">−</button>' +
-          '</div>' +
+          /* Yakınlaştırma düğmeleri KALDIRILDI: harita gerçek bir harita
+             motoru değil, çizilmiş bir SVG. + / − hiçbir şey yapmıyordu. */
 
           /* GPS button */
           '<button class="map-gps-btn" onclick="KuryeScreens._mapGPS()">' +
@@ -446,11 +443,10 @@ window.KuryeScreens = (function () {
           '<div style="padding:24px 16px"><div class="kb-spinner"></div></div>' +
         '</div>' +
 
-        /* ── AI Match FAB ── */
-        '<button class="map-ai-fab" onclick="KuryeScreens._mapAI()">' +
-          '<span class="map-ai-fab__icon">✨</span>' +
-          '<span class="map-ai-fab__label">AI Match</span>' +
-        '</button>' +
+        /* "AI Match" düğmesi KALDIRILDI. Böyle bir eşleştirme motoru yok;
+           düğme "Profiline en uygun 4 ilan bulundu" diye SABİT bir metin
+           gösteriyordu — o 4 sayısı da uydurmaydı. Olmayan bir özelliği
+           duyurmak, sessiz kalmaktan daha kötü. */
 
       '</div>' /* /map-screen */
     );
@@ -517,34 +513,23 @@ window.KuryeScreens = (function () {
     if (btn) btn.style.color = btn.style.color === 'var(--c-kurye)' ? '' : 'var(--c-kurye)';
   }
 
-  function _mapCluster(n) {
-    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Küme', n + ' ilan bu alanda');
-  }
 
-  function _mapZoom(dir) { /* Leaflet.js Faz 2'de */ }
 
   /* Gerçek konum — sabit "İstanbul, Kadıköy" metni kaldırıldı */
   function _mapGPS() {
     if (!navigator.geolocation) {
-      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Konum desteklenmiyor');
+      toast('Konum desteklenmiyor');
       return;
     }
     navigator.geolocation.getCurrentPosition(function (pos) {
       var c = pos.coords;
-      if (typeof KBMotion !== 'undefined') {
-        KBMotion.showSuccess('Konum alındı',
-          c.latitude.toFixed(4) + ', ' + c.longitude.toFixed(4), 1800);
-      }
+      toast('Konum alındı: ' + c.latitude.toFixed(4) + ', ' + c.longitude.toFixed(4));
     }, function () {
-      if (typeof KBMotion !== 'undefined') KBMotion.showErrorToast('Konum alınamadı');
+      toast('Konum alınamadı');
     }, { enableHighAccuracy: true, timeout: 8000 });
   }
 
-  function _mapAI() {
-    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('✨ AI Match', 'Profiline en uygun 4 ilan bulundu');
-  }
 
-  function _mapFilter(type) { /* legacy compat */ }
 
   /* ── 3. İLANLAR ────────────────────────────────────────── */
   var ILANLAR = [];
@@ -679,9 +664,8 @@ window.KuryeScreens = (function () {
             ICON.search +
             '<input type="text" id="il-search-input" placeholder="Pozisyon, firma veya anahtar kelime ara..." autocomplete="off" oninput="KuryeScreens._ilSearch(this.value)">' +
           '</div>' +
-          '<button class="il-search__filter" onclick="KuryeScreens._ilAdvFilter()">' +
-            ICON.filter +
-          '</button>' +
+          /* Gelişmiş filtre düğmesi KALDIRILDI — hiçbir şey yapmıyordu.
+             Kategori çipleri ve sıralama gerçekten çalışıyor, onlar kaldı. */
         '</div>' +
 
         /* ── Quick category chips ── */
@@ -693,21 +677,10 @@ window.KuryeScreens = (function () {
           '<button class="il-cat il-cat--gold"   data-cat="premium"  onclick="KuryeScreens._ilCat(this,\'premium\')">⭐ Premium</button>' +
         '</div>' +
 
-        /* ── Advanced filter dropdowns ── */
-        '<div class="il-adv-filters">' +
-          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
-            '<option>Maaş</option><option>10k+</option><option>20k+</option><option>30k+</option>' +
-          '</select>' +
-          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
-            '<option>Mesafe</option><option>&lt;1 km</option><option>&lt;3 km</option><option>&lt;10 km</option>' +
-          '</select>' +
-          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
-            '<option>Araç Tipi</option><option>Moto</option><option>Araç</option><option>Yaya</option>' +
-          '</select>' +
-          '<select class="il-adv-sel" onchange="KuryeScreens._ilAdvChange()">' +
-            '<option>Deneyim</option><option>Yok</option><option>1 yıl</option><option>3 yıl+</option>' +
-          '</select>' +
-        '</div>' +
+        /* Gelişmiş filtre açılırları (Maaş / Mesafe / Araç Tipi / Deneyim)
+           KALDIRILDI: hiçbirinin seçimi bir şeyi filtrelemiyordu — onchange
+           işleyicisi boştu. Kullanıcı seçim yapıp sonucun değişmesini
+           bekliyor, liste aynı kalıyordu. */
 
         /* ── Sort row ── */
         '<div class="il-sort-row">' +
@@ -861,11 +834,7 @@ window.KuryeScreens = (function () {
     }
   }
 
-  function _ilAdvFilter() {
-    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Gelişmiş Filtre', 'Yakında — Faz 2\'de geliyor');
-  }
 
-  function _ilAdvChange() { /* visual only, Faz 2 */ }
 
   function _ilanFilter(cat, btn) {
     document.querySelectorAll('#ilan-tabs .kb-tab').forEach(function (el) { el.classList.remove('active'); });
@@ -1286,10 +1255,9 @@ window.KuryeScreens = (function () {
             '<div class="msg-header__title">Mesajlar</div>' +
             '<div class="msg-header__sub">Tüm görüşmelerin burada ✨</div>' +
           '</div>' +
-          '<div class="msg-header__actions">' +
-            '<button class="msg-header__btn" onclick="KuryeScreens._msgSearch()">' + ICON.search + '</button>' +
-            '<button class="msg-header__btn" onclick="KuryeScreens._msgFilter()">' + ICON.filter + '</button>' +
-          '</div>' +
+          /* Arama ve filtre düğmeleri KALDIRILDI — ikisi de hiçbir şey
+             yapmıyordu. Konuşma listesi zaten sekmelerle (Tümü / İş
+             Görüşmeleri / Aktif Sohbetler) süzülüyor. */
         '</div>' +
 
         /* ── Segment tabs ── */
@@ -1337,13 +1305,7 @@ window.KuryeScreens = (function () {
     if (list) list.innerHTML = _msgConvList(_msgState.tab);
   }
 
-  function _msgSearch() {
-    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Arama', 'Konuşma arama — Faz 2\'de geliyor');
-  }
 
-  function _msgFilter() {
-    if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Filtrele', 'Gelişmiş filtre — Faz 2\'de geliyor');
-  }
 
   function _msgOpen(id) {
     Router.go('/kurye/mesaj/' + id);
@@ -1507,9 +1469,8 @@ window.KuryeScreens = (function () {
             '<button class="chat-hdr__act" id="kchat-video-btn" title="Görüntülü Ara">' +
               '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
             '</button>' +
-            '<button class="chat-hdr__act" onclick="KuryeScreens._chatMore()">' +
-              '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
-            '</button>' +
+            /* Üç nokta menüsü KALDIRILDI — hiçbir şey yapmıyordu.
+               Sohbet ayarları diye bir ekran yok. */
           '</div>';
 
         /* Arama butonlarını WebRTC'ye bağla — innerHTML yeni basıldığı için
@@ -1728,7 +1689,6 @@ window.KuryeScreens = (function () {
   }
 
   /* _chatCall / _chatVideo kaldırıldı — kurye arama başlatmıyor (bkz. chat header). */
-  function _chatMore()   { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('⋮ Seçenekler', 'Sohbet ayarları — Faz 2\'de geliyor'); }
 
   /* Ataç düğmesi artık gerçek dosya seçiciyi açıyor.
      Eskiden KBMotion'a bağlıydı — o nesne SPA'da hiç tanımlı değil, yani
@@ -1875,7 +1835,8 @@ window.KuryeScreens = (function () {
         '<div class="pr-section">' +
           '<div class="pr-section__hd">' +
             '<div class="pr-section__title">Çalışabileceğim Alanlar</div>' +
-            '<button class="pr-section__edit" onclick="KuryeScreens._prEditAreas()">Düzenle</button>' +
+            /* "Düzenle" KALDIRILDI — hiçbir şey açmıyordu. Bölgeler
+               profil düzenleme ekranından değiştiriliyor. */
           '</div>' +
           /* Çalışma bölgeleri profildeki GERÇEK bolgeler alanından gelir */
           '<div class="pr-tags">' +
@@ -1899,14 +1860,11 @@ window.KuryeScreens = (function () {
         '</div>' +
 
         /* ── Featured CV ── */
-        '<div class="pr-cv-card">' +
-          '<div class="pr-cv-card__icon">📄</div>' +
-          '<div class="pr-cv-card__body">' +
-            '<div class="pr-cv-card__title">Öne Çıkan CV</div>' +
-            '<div class="pr-cv-card__sub">Bu CV işverenlere başvurularda otomatik gösterilir.</div>' +
-          '</div>' +
-          '<button class="pr-cv-card__btn" onclick="KuryeScreens._prViewCV()">Görüntüle</button>' +
-        '</div>' +
+        /* "Öne Çıkan CV" kartı KALDIRILDI. Yalnız düğmesi değil, kartın
+           tamamı gerçek dışıydı: CV yükleme diye bir özellik yok, dolayısıyla
+           "Bu CV işverenlere başvurularda otomatik gösterilir" cümlesi de
+           doğru değildi. Düğmeyi alıp kartı bırakmak daha tutarsız olurdu.
+           CV artık sohbetten dosya olarak gönderiliyor (bkz. KBChatFile). */
 
         /* ── Settings menu ── */
         '<div class="pr-section pr-section--menu">' +
@@ -1923,19 +1881,12 @@ window.KuryeScreens = (function () {
           '</div>' +
         '</div>' +
 
-        /* ── Premium upgrade banner ── */
-        '<div class="pr-upgrade">' +
-          '<div class="pr-upgrade__glow"></div>' +
-          '<div class="pr-upgrade__body">' +
-            '<div class="pr-upgrade__title">Profilini Öne Çıkar ✨</div>' +
-            '<div class="pr-upgrade__perks">' +
-              '<div class="pr-upgrade__perk">🔝 Üst sıralarda görün</div>' +
-              '<div class="pr-upgrade__perk">🏅 Özel rozet kazan</div>' +
-              '<div class="pr-upgrade__perk">📩 Daha fazla işveren sana ulaşsın</div>' +
-            '</div>' +
-            '<button class="pr-upgrade__cta" onclick="KuryeScreens._prPremium()">Premium\'a Geç</button>' +
-          '</div>' +
-        '</div>' +
+        /* Premium yükseltme kartı KALDIRILDI. Premium diye bir sistem yok;
+           kart "üst sıralarda görün", "özel rozet kazan" gibi var olmayan
+           ayrıcalıklar sayıyor ve düğmesi hiçbir şey yapmıyordu. Ücretli
+           bir özelliği duyurup satın alınamaz bırakmak, Play Store
+           incelemesinde de sorun çıkarabilir.
+           Premium gerçekten geldiğinde bu blok geri eklenir. */
 
         '<div style="height:100px"></div>' +
 
@@ -1993,9 +1944,10 @@ window.KuryeScreens = (function () {
       '<div class="pr-doc__icon">' + icon + '</div>' +
       '<div class="pr-doc__label">' + label + '</div>' +
       '<div class="pr-doc__status' + (ok ? ' pr-doc__status--ok' : ' pr-doc__status--pending') + '">' + status + '</div>' +
-      '<button class="pr-doc__share" onclick="KuryeScreens._prShareDoc(\'' + label + '\')">' +
-        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>' +
-      '</button>' +
+      /* Paylaş düğmesi KALDIRILDI — en yanıltıcı olanıydı: hiçbir şey
+         paylaşmadığı halde "<belge> paylaşıldı" diyordu. Kullanıcı belgesini
+         gönderdiğini sanıyordu. Belge paylaşımı artık sohbetten gerçek
+         dosya gönderimiyle yapılıyor. */
     '</div>';
   }
 
@@ -2011,10 +1963,6 @@ window.KuryeScreens = (function () {
     return _prMenuItem(label, icon, route);
   }
 
-  function _prEditAreas()       { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('Bölge Düzenle', 'Faz 2\'de geliyor'); }
-  function _prViewCV()          { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📄 CV', 'CV önizleme — Faz 2\'de geliyor'); }
-  function _prShareDoc(label)   { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('📤 Paylaş', label + ' paylaşıldı'); }
-  function _prPremium()         { if (typeof KBMotion !== 'undefined') KBMotion.showInAppNotif('✨ Premium', 'Premium abonelik — Faz 2\'de geliyor'); }
 
   return {
     panel       : panel,
@@ -2031,31 +1979,18 @@ window.KuryeScreens = (function () {
     _ilSearch        : _ilSearch,
     _ilToggleSave    : _ilToggleSave,
     _ilToggleSavedView: _ilToggleSavedView,
-    _ilAdvFilter     : _ilAdvFilter,
-    _ilAdvChange     : _ilAdvChange,
     _msgTab          : _msgTab,
     _msgStar         : _msgStar,
-    _msgSearch       : _msgSearch,
-    _msgFilter       : _msgFilter,
     _msgOpen         : _msgOpen,
     _chatSend        : _chatSend,
     _chatQuick       : _chatQuick,
-    _chatMore        : _chatMore,
     _chatAttach      : _chatAttach,
 
-    _prEditAreas     : _prEditAreas,
-    _prViewCV        : _prViewCV,
-    _prShareDoc      : _prShareDoc,
-    _prPremium       : _prPremium,
     _basFilter       : _basFilter,
-    _mapFilter       : _mapFilter,
     _mapCat          : _mapCat,
     _mapToggleFilter : _mapToggleFilter,
     _mapToggleLayer  : _mapToggleLayer,
-    _mapCluster      : _mapCluster,
-    _mapZoom         : _mapZoom,
     _mapGPS          : _mapGPS,
-    _mapAI           : _mapAI,
     _basvur          : _basvur,
     _doApply         : _doApply,
     _showApplySuccess: _showApplySuccess,
