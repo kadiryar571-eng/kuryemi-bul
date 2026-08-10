@@ -63,7 +63,7 @@ window.FirmaScreens = (function () {
         { id: 'fps-mesaj',   num: '—', label: 'Okunmamış Mesaj',     icon: 'msg',   color: 'orange', route: '/firma/mesajlar',   action: 'Detaylar' },
         { id: 'fps-goruntu', num: '—', label: 'Profil Görüntülenme', icon: 'eye',   color: 'purple', route: '/firma/profil',     action: 'Detaylar' }
       ],
-      upgradeBanner: true,
+
       contentHtml: (
         '<div class="kb-section-head" style="margin-top:4px">' +
           '<div class="kb-section-title">Son Başvurular</div>' +

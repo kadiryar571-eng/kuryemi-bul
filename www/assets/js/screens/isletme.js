@@ -56,7 +56,7 @@ window.IsletmeScreens = (function () {
         { id: 'ips-mesaj', num: '—', label: 'Okunmamış Mesaj',     icon: 'msg',       color: 'green',  route: '/isletme/mesajlar',   action: 'Oku'      },
         { id: 'ips-puan',  num: '—', label: 'Profil Görüntülenme', icon: 'eye',       color: 'purple', route: '/isletme/profil',     action: 'Detaylar' }
       ],
-      upgradeBanner: true,
+
       contentHtml: (
         '<div class="kb-section-head" style="margin-top:4px">' +
           '<div class="kb-section-title">Son Başvurular</div>' +

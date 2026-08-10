@@ -635,15 +635,12 @@ window.SharedScreens = (function () {
         '</div>' +
       '</div>' +
       '<div class="prem-stats">' + stats + '</div>' +
-      (cfg.upgradeBanner ?
-        '<div class="prem-upgrade">' +
-          '<div class="prem-upgrade__content">' +
-            '<div class="prem-upgrade__pill">' + ICON.star + ' Premium</div>' +
-            '<div class="prem-upgrade__title">Premium\'a Geç, Öne Çık</div>' +
-            '<div class="prem-upgrade__sub">İlanlarınızı öne çıkarın, daha fazla adaya ulaşın.</div>' +
-          '</div>' +
-          '<button class="prem-upgrade__btn">Detayları Gör</button>' +
-        '</div>' : '') +
+      /* Premium bandı KALDIRILDI. "Detayları Gör" düğmesinin onclick'i
+         hiç yoktu — dokunulduğunda hiçbir şey olmuyordu. Premium diye bir
+         sistem de yok; satın alınamayan bir ücretli özelliği duyurmak Play
+         Store incelemesinde sorun çıkarabilir.
+         cfg.upgradeBanner artık yok sayılıyor; çağıran ekranlardaki bayrak
+         da temizlendi. */
       (cfg.contentHtml || '') +
     '</div>';
   }

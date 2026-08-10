@@ -97,15 +97,10 @@ window.KuryeScreens = (function () {
           _statCard('<span id="ps-mesaj">—</span>',   'Mesajlarım',         'msg',       'purple', '/kurye/mesajlar',   'Sohbetler')  +
         '</div>' +
 
-        /* ── Premium Upgrade Banner ── */
-        '<div class="prem-upgrade">' +
-          '<div class="prem-upgrade__content">' +
-            '<div class="prem-upgrade__pill">' + ICON.star + ' Premium</div>' +
-            '<div class="prem-upgrade__title">Premium\'a Geç, Daha Fazla Kazan</div>' +
-            '<div class="prem-upgrade__sub">Öne çık, daha hızlı iş bul ve premium fırsatlara eriş.</div>' +
-          '</div>' +
-          '<button class="prem-upgrade__btn">Detayları Gör</button>' +
-        '</div>' +
+        /* Premium bandı KALDIRILDI — "Detayları Gör" düğmesinin onclick'i
+           HİÇ YOKTU, tamamen boş bir <button> idi. Premium diye bir sistem
+           de yok. Profil ekranındaki eşi de aynı sebeple kaldırıldı.
+           Premium gerçekten geldiğinde geri eklenir. */
 
         /* ── Suggested Jobs ── */
         '<div class="kb-section-head" style="margin-top:4px">' +
@@ -423,14 +418,11 @@ window.KuryeScreens = (function () {
             '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/><circle cx="12" cy="12" r="8" opacity=".3"/></svg>' +
           '</button>' +
 
-          /* Floating bottom filter row */
-          '<div class="map-float-chips">' +
-            '<button class="map-float-chip map-float-chip--active">📍 Yakınımda</button>' +
-            '<button class="map-float-chip">🆕 Bugün eklenen</button>' +
-            '<button class="map-float-chip map-float-chip--gold">⭐ Premium</button>' +
-            '<button class="map-float-chip">⏱ Tam Zamanlı</button>' +
-            '<button class="map-float-chip map-float-chip--red">🔥 Acil</button>' +
-          '</div>' +
+          /* Alttaki yüzen filtre çipleri KALDIRILDI: beşinin de onclick'i
+             yoktu, hiçbir dinleyiciye de bağlı değillerdi — yalnız CSS'leri
+             vardı. Dokunulduğunda hiçbir şey olmuyordu. Üstelik haritanın
+             üstünde ZATEN çalışan bir çip satırı var (_mapCat ile bağlı);
+             bu ikinci satır onun sahte kopyasıydı. */
 
         '</div>' + /* /map-canvas */
 
