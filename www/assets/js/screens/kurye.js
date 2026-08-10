@@ -300,35 +300,15 @@ window.KuryeScreens = (function () {
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */
-  var MAP_ILANLAR = [];
+  /* Eski SVG harita ekrani ve yardimcilari KALDIRILDI.
+     Fonksiyonun adi zaten _harita_UNUSED idi: hicbir yerden cagrilmiyordu.
+     /kurye/harita rotasi premium Google Maps ekranini aciyor (harita()).
+     Silinen kume: _harita_UNUSED, _loadMapJobs, _mapJobCard, _mapGPS,
+     _mapCat, _mapToggleFilter, _mapToggleLayer, MAP_ILANLAR.
+     Pinleri gercek koordinatlarina degil keyfi yuzdelere koyuyordu; zaten
+     erisilemez oldugu icin kullaniciya ulasmiyordu. */
 
-  function _mapJobCard(j) {
-    return '<div class="map-job-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">' +
-      '<div class="map-job-card__avatar" style="background:' + escAttr(j.avatarBg)+ '">' + esc(j.emoji)+ '</div>' +
-      '<div class="map-job-card__body">' +
-        '<div class="map-job-card__title">' + esc(j.title)+ '</div>' +
-        '<div class="map-job-card__company">' + esc(j.company)+ '</div>' +
-        '<div class="map-job-card__salary">' + esc(j.salary)+ '</div>' +
-        '<div class="map-job-card__meta">' +
-          '<span>📍 ' + esc(j.dist)+ '</span>' +
-          '<span>🕐 ' + esc(j.time)+ '</span>' +
-        '</div>' +
-        '<div class="map-job-card__tags">' +
-          j.tags.map(function (t) { return '<span class="map-job-card__tag">' + t + '</span>'; }).join('') +
-        '</div>' +
-      '</div>' +
-      '<div class="map-job-card__score">' +
-        '<svg width="20" height="20" viewBox="0 0 36 36" class="map-job-card__ring">' +
-          '<circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2.5"/>' +
-          '<circle cx="18" cy="18" r="15.5" fill="none" stroke="' + escAttr(j.avatarBg)+ '" stroke-width="2.5"' +
-            ' stroke-dasharray="' + Math.round(97.4 * j.match / 100) + ' 97.4"' +
-            ' stroke-linecap="round" transform="rotate(-90 18 18)"/>' +
-        '</svg>' +
-        '<div class="map-job-card__pct">' + esc(j.match)+ '%</div>' +
-      '</div>' +
-      '<button class="map-job-card__cta" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">Hızlı Başvur</button>' +
-    '</div>';
-  }
+
 
   function harita() {
     var bar = document.getElementById('kb-appbar');
@@ -345,181 +325,16 @@ window.KuryeScreens = (function () {
     }
   }
 
-  function _harita_UNUSED() {
-    renderScreen(
-      '<div class="map-screen--unused">' +
-
-        /* ── Top glass search bar ── */
-        '<div class="map-topbar">' +
-          '<button class="map-topbar__icon" onclick="KuryeScreens._mapToggleFilter()">' + ICON.filter + '</button>' +
-          '<div class="map-topbar__search">' +
-            ICON.search +
-            '<input type="text" placeholder="Moto kurye, restoran, firma ara..." autocomplete="off">' +
-          '</div>' +
-          '<button class="map-topbar__icon" id="map-layer-btn" onclick="KuryeScreens._mapToggleLayer()" title="Katman">' +
-            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>' +
-          '</button>' +
-        '</div>' +
-
-        /* ── Category filter chips ── */
-        '<div class="map-filter-chips" id="map-cat-chips">' +
-          '<button class="map-chip map-chip--active" data-filter="tumu"    onclick="KuryeScreens._mapCat(this,\'tumu\')">Tümü</button>' +
-          '<button class="map-chip"                  data-filter="ilanlar" onclick="KuryeScreens._mapCat(this,\'ilanlar\')">💼 İş İlanları</button>' +
-          '<button class="map-chip"                  data-filter="firma"   onclick="KuryeScreens._mapCat(this,\'firma\')">🏢 Kurye Firmaları</button>' +
-          '<button class="map-chip"                  data-filter="isletme" onclick="KuryeScreens._mapCat(this,\'isletme\')">🏪 Esnaflar</button>' +
-          '<button class="map-chip map-chip--gold"   data-filter="premium" onclick="KuryeScreens._mapCat(this,\'premium\')">⭐ Premium İşler</button>' +
-        '</div>' +
-
-        /* ── Map canvas ── */
-        '<div class="map-canvas" id="map-canvas">' +
-
-          /* Dark city grid lines */
-          '<svg width="20" height="20" class="map-grid" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">' +
-            '<rect width="400" height="300" fill="#0F1825"/>' +
-            /* roads */
-            '<line x1="0" y1="150" x2="400" y2="150" stroke="#1C2C42" stroke-width="12"/>' +
-            '<line x1="200" y1="0" x2="200" y2="300" stroke="#1C2C42" stroke-width="12"/>' +
-            '<line x1="0" y1="75" x2="400" y2="75" stroke="#1A2840" stroke-width="6"/>' +
-            '<line x1="0" y1="225" x2="400" y2="225" stroke="#1A2840" stroke-width="6"/>' +
-            '<line x1="100" y1="0" x2="100" y2="300" stroke="#1A2840" stroke-width="6"/>' +
-            '<line x1="300" y1="0" x2="300" y2="300" stroke="#1A2840" stroke-width="6"/>' +
-            '<line x1="0" y1="37" x2="400" y2="37" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="0" y1="112" x2="400" y2="112" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="0" y1="187" x2="400" y2="187" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="0" y1="262" x2="400" y2="262" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="50" y1="0" x2="50" y2="300" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="150" y1="0" x2="150" y2="300" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="250" y1="0" x2="250" y2="300" stroke="#162235" stroke-width="2"/>' +
-            '<line x1="350" y1="0" x2="350" y2="300" stroke="#162235" stroke-width="2"/>' +
-            /* blocks */
-            '<rect x="110" y="84" width="80" height="57" rx="3" fill="#162235"/>' +
-            '<rect x="212" y="84" width="80" height="57" rx="3" fill="#162235"/>' +
-            '<rect x="110" y="157" width="80" height="57" rx="3" fill="#162235"/>' +
-            '<rect x="212" y="157" width="80" height="57" rx="3" fill="#162235"/>' +
-            '<rect x="10" y="44" width="80" height="57" rx="3" fill="#162235"/>' +
-            '<rect x="312" y="157" width="78" height="57" rx="3" fill="#162235"/>' +
-          '</svg>' +
-
-          /* Küme balonları ve pinler GERÇEK ilanlardan üretilir.
-             Sabit "12 / 25+ / 8" gibi uydurma sayılar kaldırıldı. */
-          '<div id="map-pins"></div>' +
-
-          /* User location pulse */
-          '<div class="map-user-loc" style="left:50%;top:50%">' +
-            '<div class="map-user-pulse"></div>' +
-            '<div class="map-user-dot"></div>' +
-          '</div>' +
-
-          /* Yakınlaştırma düğmeleri KALDIRILDI: harita gerçek bir harita
-             motoru değil, çizilmiş bir SVG. + / − hiçbir şey yapmıyordu. */
-
-          /* GPS button */
-          '<button class="map-gps-btn" onclick="KuryeScreens._mapGPS()">' +
-            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/><circle cx="12" cy="12" r="8" opacity=".3"/></svg>' +
-          '</button>' +
-
-          /* Alttaki yüzen filtre çipleri KALDIRILDI: beşinin de onclick'i
-             yoktu, hiçbir dinleyiciye de bağlı değillerdi — yalnız CSS'leri
-             vardı. Dokunulduğunda hiçbir şey olmuyordu. Üstelik haritanın
-             üstünde ZATEN çalışan bir çip satırı var (_mapCat ile bağlı);
-             bu ikinci satır onun sahte kopyasıydı. */
-
-        '</div>' + /* /map-canvas */
-
-        /* ── Swipeable job cards ── */
-        '<div class="map-cards-header">' +
-          '<span class="map-cards-title">Yakınındaki Fırsatlar</span>' +
-          '<span class="map-cards-count" id="map-cards-count">—</span>' +
-        '</div>' +
-        '<div class="map-cards-scroll" id="map-cards">' +
-          '<div style="padding:24px 16px"><div class="kb-spinner"></div></div>' +
-        '</div>' +
-
-        /* "AI Match" düğmesi KALDIRILDI. Böyle bir eşleştirme motoru yok;
-           düğme "Profiline en uygun 4 ilan bulundu" diye SABİT bir metin
-           gösteriyordu — o 4 sayısı da uydurmaydı. Olmayan bir özelliği
-           duyurmak, sessiz kalmaktan daha kötü. */
-
-      '</div>' /* /map-screen */
-    );
-
-    setTimeout(function () { _loadMapJobs(); }, 130);
-  }
 
   /* Haritadaki "Yakınındaki Fırsatlar" — gerçek açık ilanlar.
      Konumu olan ilanlar için pin, olmayanlar için yalnız kart çıkar. */
-  async function _loadMapJobs() {
-    var cards = document.getElementById('map-cards');
-    var count = document.getElementById('map-cards-count');
-    var pins  = document.getElementById('map-pins');
-    if (!cards) return;
 
-    if (!window.SB || !SB.isOn()) {
-      cards.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">İlanlar yüklenemedi</div></div>';
-      if (count) count.textContent = '—';
-      return;
-    }
-    try {
-      var list = await SB.openListings();
-      MAP_ILANLAR.length = 0;
-      (list || []).map(_dbListingToIlan).forEach(function (x) { MAP_ILANLAR.push(x); });
 
-      if (count) count.textContent = MAP_ILANLAR.length + ' ilan';
-      cards.innerHTML = MAP_ILANLAR.length
-        ? MAP_ILANLAR.map(_mapJobCard).join('')
-        : '<div class="kb-empty" style="padding:20px"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">Yakında açık ilan yok</div></div>';
 
-      /* Pinler: yalnız konumu GERÇEKTEN bilinen ilanlar için */
-      if (pins) {
-        var withLoc = (list || []).filter(function (l) { return l.lat != null && l.lng != null; });
-        pins.innerHTML = withLoc.slice(0, 12).map(function (l, i) {
-          // konumları görsel haritaya oransal yerleştir
-          var left = 12 + ((i * 37) % 76);
-          var top  = 18 + ((i * 23) % 60);
-          return '<div class="map-pin map-pin--blue" style="left:' + left + '%;top:' + top + '%" ' +
-                 'title="' + String(l.baslik || 'İlan').replace(/"/g, '&quot;') + '" ' +
-                 'onclick="Router.go(\'/kurye/ilan/' + l.id + '\')"><span>💼</span></div>';
-        }).join('');
-      }
-    } catch (e) {
-      console.warn('_loadMapJobs:', e);
-      cards.innerHTML = '<div class="kb-empty"><div class="kb-empty__icon">📭</div><div class="kb-empty__title">İlanlar yüklenemedi</div></div>';
-      if (count) count.textContent = '—';
-    }
-  }
-
-  function _mapCat(btn, filter) {
-    document.querySelectorAll('#map-cat-chips .map-chip').forEach(function (el) {
-      el.classList.remove('map-chip--active');
-    });
-    btn.classList.add('map-chip--active');
-  }
-
-  function _mapToggleFilter() {
-    var el = document.getElementById('map-cat-chips');
-    if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
-  }
-
-  function _mapToggleLayer() {
-    var btn = document.getElementById('map-layer-btn');
-    if (btn) btn.style.color = btn.style.color === 'var(--c-kurye)' ? '' : 'var(--c-kurye)';
-  }
 
 
 
   /* Gerçek konum — sabit "İstanbul, Kadıköy" metni kaldırıldı */
-  function _mapGPS() {
-    if (!navigator.geolocation) {
-      toast('Konum desteklenmiyor');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      var c = pos.coords;
-      toast('Konum alındı: ' + c.latitude.toFixed(4) + ', ' + c.longitude.toFixed(4));
-    }, function () {
-      toast('Konum alınamadı');
-    }, { enableHighAccuracy: true, timeout: 8000 });
-  }
 
 
 
@@ -1979,10 +1794,6 @@ window.KuryeScreens = (function () {
     _chatAttach      : _chatAttach,
 
     _basFilter       : _basFilter,
-    _mapCat          : _mapCat,
-    _mapToggleFilter : _mapToggleFilter,
-    _mapToggleLayer  : _mapToggleLayer,
-    _mapGPS          : _mapGPS,
     _basvur          : _basvur,
     _doApply         : _doApply,
     _showApplySuccess: _showApplySuccess,
