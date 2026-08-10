@@ -358,23 +358,50 @@
     }
 
     /* ── Analytics ── */
-    function renderAnalytics(job) {
-      var el       = document.getElementById('ilqAnalytics');
-      var noteEl   = document.getElementById('ilqConvNote');
+    /* İlan performansı — GERÇEK sayaçlardan.
+       ÖNCEDEN: IQ.getAnalytics() sayıları uyduruyordu. Gerçek bir değer
+       bulamayınca ilan kimliğini hash'leyip görüntülenme için 20–80,
+       başvuru için 4–10, kayıt için 0–4 arası sayı üretiyordu. Altındaki
+       "dönüşümü %X'e çıkarabilirsin" notu da bu uydurma sayılardan
+       türetiliyordu. İşveren bu ekrana bakıp ilanını düzenleyip
+       düzenlemeyeceğine karar veriyor — uydurma sayının en zararlı olduğu
+       yer burası. (CLAUDE.md: sahte "başvuru sayısı" üretmek yasaktır.)
+       Ayrıca "gerçek" saydığı yol bile localStorage'dı; yani cihaz başına
+       değişen, sunucuyla ilgisiz bir sayıydı.
+       Artık listing_stats RPC'sinden geliyor; bilinmiyorsa "—" yazıyor. */
+    async function renderAnalytics(job) {
+      var el     = document.getElementById('ilqAnalytics');
+      var noteEl = document.getElementById('ilqConvNote');
       if (!el) return;
-      var an = IQ.getAnalytics(job.id);
-      var convColor = an.conv >= 20 ? 'green' : an.conv >= 10 ? 'orange' : '';
+
+      var stats = null;
+      try {
+        if (window.SB && SB.isOn() && SB.listingStats) stats = await SB.listingStats(job.id);
+      } catch (e) { console.warn('listingStats:', e); }
+
+      var views = stats && Number.isFinite(+stats.views) ? +stats.views : null;
+      var apps  = stats && Number.isFinite(+stats.apps)  ? +stats.apps  : null;
+      var conv  = (views !== null && apps !== null && views > 0)
+        ? Math.round((apps / views) * 100) : null;
+
+      var show = function (v, suffix) { return v === null ? '—' : v + (suffix || ''); };
+      var convColor = conv === null ? '' : (conv >= 20 ? 'green' : conv >= 10 ? 'orange' : '');
+
+      /* "Kayıt" kutusu kaldırıldı — ilan başına kaydetme sayısı diye bir
+         veri kaynağı yok, o sayı tamamen uydurmaydı. */
       el.innerHTML =
-        '<div class="ilq-an-item ilq-an-item--blue"><div class="ilq-an-val">' + an.views + '</div><div class="ilq-an-lbl">👁 Görüntülenme</div></div>' +
-        '<div class="ilq-an-item"><div class="ilq-an-val">' + an.applies + '</div><div class="ilq-an-lbl">📋 Başvuru</div></div>' +
-        '<div class="ilq-an-item"><div class="ilq-an-val">' + an.saves + '</div><div class="ilq-an-lbl">⭐ Kayıt</div></div>' +
-        '<div class="ilq-an-item ilq-an-item--' + (convColor||'') + '"><div class="ilq-an-val">%' + an.conv + '</div><div class="ilq-an-lbl">🔄 Dönüşüm</div></div>';
+        '<div class="ilq-an-item ilq-an-item--blue"><div class="ilq-an-val">' + show(views) + '</div><div class="ilq-an-lbl">👁 Görüntülenme</div></div>' +
+        '<div class="ilq-an-item"><div class="ilq-an-val">' + show(apps) + '</div><div class="ilq-an-lbl">📋 Başvuru</div></div>' +
+        '<div class="ilq-an-item ilq-an-item--' + convColor + '"><div class="ilq-an-val">' + (conv === null ? '—' : '%' + conv) + '</div><div class="ilq-an-lbl">🔄 Dönüşüm</div></div>';
+
       if (noteEl) {
+        /* Hedef dönüşüm oranı tahmini KALDIRILDI — uydurma sayıdan
+           türetilmiş ikinci bir uydurma sayıydı. Yalnız gerçekten
+           hesaplanan kalite puanı gösteriliyor. */
         var score = IQ.calcScore(job);
-        var potConv = Math.min(35, an.conv + Math.round((100 - score) * 0.3));
-        noteEl.innerHTML = an.conv < potConv
-          ? 'Bu ilanın kalitesi %' + score + '. Optimize ederek dönüşüm oranını <strong>%' + potConv + '\'e</strong> çıkarabilirsin.'
-          : 'Bu ilan zaten iyi optimize edilmiş. 🎉';
+        noteEl.innerHTML = views === null
+          ? 'Bu ilanın kalite puanı <strong>%' + score + '</strong>. Görüntülenme verisi henüz yok.'
+          : 'Bu ilanın kalite puanı <strong>%' + score + '</strong>. Eksik alanları tamamlamak ilanın görünürlüğünü artırır.';
       }
     }
 

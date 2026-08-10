@@ -146,28 +146,35 @@ window.IlanQuality = (function () {
   }
 
   /* ─── Analytics ──────────────────────────────────────────────── */
-  function simpleHash(s) {
-    var h = 0, str = String(s);
-    for (var i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    return Math.abs(h);
-  }
+  /* simpleHash KALDIRILDI — tek işi uydurma istatistik üretmekti
+     (bkz. getAnalytics). Başka çağıranı yok. */
 
+  /* UYDURMA SAYI ÜRETİMİ KALDIRILDI.
+     Bu fonksiyon gerçek bir değer bulamayınca ilan kimliğini hash'leyip
+     görüntülenme için 20–80, başvuru için 4–10, kayıt için 0–4 arası bir
+     sayı üretiyordu. İşveren bu sayılara bakıp ilanını düzenleyip
+     düzenlemeyeceğine karar veriyor.
+     CLAUDE.md: "hash'ten türetilmiş sahte 'başvuru sayısı' üretmek
+     yasaktır; bilinmeyen bir sayı varsa — gösterilir."
+     Ayrıca okuduğu localStorage cihaz başınaydı, sunucu verisiyle ilgisi
+     yoktu. Gerçek sayaçlar SB.listingStats() (listing_stats RPC) ile
+     geliyor — ilan-kalite.html artık onu kullanıyor.
+     Bilinmeyen değerler null döner; çağıran taraf "—" gösterir. */
   function getAnalytics(jobId) {
-    var views = 0, applies = 0, saves = 0, shortlisted = 0;
-    try { views = parseInt(localStorage.getItem('kb_job_views_' + jobId) || '0', 10); } catch(e) {}
-    if (!views) views = 20 + (simpleHash(jobId + 'v') % 60);
+    var views = null, applies = null, shortlisted = null;
     try {
-      var apps = JSON.parse(localStorage.getItem('kb_apps_' + jobId)) || {};
-      applies     = Object.keys(apps).length;
-      shortlisted = Object.keys(apps).filter(function(k) { return apps[k].shortlisted; }).length;
-      if (!applies) applies = 4 + (simpleHash(jobId) % 6);
-    } catch(e) { applies = 4 + (simpleHash(jobId) % 6); }
+      var v = parseInt(localStorage.getItem('kb_job_views_' + jobId) || '', 10);
+      if (Number.isFinite(v)) views = v;
+    } catch (e) {}
     try {
-      var saved = JSON.parse(localStorage.getItem('kb_saved_jobs')) || [];
-      saves = saved.indexOf(jobId) !== -1 ? 1 : (simpleHash(jobId + 's') % 5);
-    } catch(e) { saves = simpleHash(jobId + 's') % 5; }
-    var conv = views > 0 ? Math.round((applies / views) * 100) : 0;
-    return { views: views, applies: applies, saves: saves, shortlisted: shortlisted, conv: conv };
+      var apps = JSON.parse(localStorage.getItem('kb_apps_' + jobId));
+      if (apps) {
+        applies     = Object.keys(apps).length;
+        shortlisted = Object.keys(apps).filter(function (k) { return apps[k].shortlisted; }).length;
+      }
+    } catch (e) {}
+    var conv = (views && applies !== null) ? Math.round((applies / views) * 100) : null;
+    return { views: views, applies: applies, saves: null, shortlisted: shortlisted, conv: conv };
   }
 
   /* ─── Record analytics event ─────────────────────────────────── */

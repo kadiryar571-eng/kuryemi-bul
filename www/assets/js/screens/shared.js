@@ -1496,7 +1496,8 @@ window._spmShell = function() {
       '</button>' +
       '<button type="button" class="spm-fab" id="spmAIBtn">' +
         '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
-        '<span>AI Öneri</span>' +
+        /* "AI Öneri" değil — ortada AI yok, sabit bir ilçe kısayolu. */
+        '<span>Bölgeler</span>' +
       '</button>' +
       '<button type="button" class="spm-fab" id="spmHeatBtn">' +
         '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>' +
@@ -1510,10 +1511,15 @@ window._spmShell = function() {
     '<div class="spm-ai-card" id="spmAiCard">' +
       '<div class="spm-ai-card__head">' +
         '<div class="spm-ai-card__icon">✨</div>' +
-        '<div><div class="spm-ai-card__title">AI Fırsat Analizi</div><div class="spm-ai-card__sub">Sana en uygun bölgeler</div></div>' +
+        /* Eskiden "AI Fırsat Analizi / Sana en uygun bölgeler" yazıyordu.
+           Ortada ne bir AI ne de profil okuması var — sabit 5 ilçelik bir
+           kısayol listesi. Düğmeler gerçekten çalışıyor (haritayı o ilçeye
+           kaydırıyor), o yüzden kaldırmak yerine başlık dürüstleştirildi. */
+        '<div><div class="spm-ai-card__title">Bölgeye Git</div><div class="spm-ai-card__sub">Yoğun ilçelere hızlı geçiş</div></div>' +
         '<button type="button" class="spm-ai-card__close" id="spmAiClose">✕</button>' +
       '</div>' +
-      '<div class="spm-ai-card__body">Profiline göre en yoğun iş ilanı bölgeleri.</div>' +
+      /* "Profiline göre" ifadesi kaldırıldı — profil hiç okunmuyor. */
+      '<div class="spm-ai-card__body">İstanbul\'da kurye ilanının yoğun olduğu ilçeler.</div>' +
       '<div class="spm-ai-zones">' +
         '<button type="button" class="spm-ai-zone" data-zone="kadikoy">Kadıköy</button>' +
         '<button type="button" class="spm-ai-zone" data-zone="besiktas">Beşiktaş</button>' +
@@ -1625,11 +1631,14 @@ window.initPremiumMap = async function(role) {
     return o;
   }
 
-  function matchScore(key) {
-    var h = 0;
-    for (var i = 0; i < key.length; i++) h = ((h * 31) + key.charCodeAt(i)) >>> 0;
-    return 72 + (h % 22);
-  }
+  /* matchScore KALDIRILDI.
+     Gerçek bir hesaplama değildi: kaydın anahtarını hash'leyip 72–93 arası
+     bir sayı üretiyor ve bunu "%81 eşleşme" diye gösteriyordu. Kullanıcı bu
+     orana bakıp kiminle iletişime geçeceğine karar veriyor — uydurma bir
+     sayının en zararlı olduğu yer tam olarak burası.
+     CLAUDE.md bunu zaten yasaklıyor: "hash'ten türetilmiş sahte 'uyum
+     skoru' üretmek yasaktır; bilinmeyen bir oran varsa — gösterilir."
+     Gerçek bir eşleştirme algoritması yazılınca geri gelir. */
 
   function distKm(a, b, c, d) {
     var R = 6371, dLat = (c-a)*Math.PI/180, dLng = (d-b)*Math.PI/180;
@@ -1687,7 +1696,7 @@ window.initPremiumMap = async function(role) {
   }
 
   function bcard(it) {
-    var cfg = PIN[it.type], score = matchScore(it.key);
+    var cfg = PIN[it.type];
     var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + ' km' : null;
     var r = window.APP && APP.role || role;
     var actionHtml = '';
@@ -1707,7 +1716,8 @@ window.initPremiumMap = async function(role) {
         '<span class="spm-bcard__badge spm-bcard__badge--' + escAttr(it.type)+ '">' + cfg.label + '</span>' +
       '</div>' +
       '<div class="spm-bcard__meta">' + maasHtml + distHtml + '</div>' +
-      '<div class="spm-bcard__score"><div class="spm-bcard__score-bar"><div class="spm-bcard__score-fill" style="width:' + score + '%"></div></div><div class="spm-bcard__score-pct">%' + score + ' eşleşme</div></div>' +
+      /* Eşleşme yüzdesi ve çubuğu KALDIRILDI — sayı uydurmaydı
+         (bkz. matchScore yorumu). */
       (actionHtml ? '<div class="spm-bcard__action">' + actionHtml + '</div>' : '') +
     '</div>';
   }

@@ -2009,11 +2009,14 @@
       if (window.KB && KB.saveView) KB.saveView("flt_mx2", { q: searchEl ? searchEl.value : "", layers: activeLayers });
     }
 
-    function matchScore(key) {
-      var h = 0;
-      for (var i = 0; i < key.length; i++) h = ((h * 31) + key.charCodeAt(i)) >>> 0;
-      return 72 + (h % 22);
-    }
+    /* matchScore KALDIRILDI — gerçek bir hesaplama değildi.
+       Kaydın anahtarını hash'leyip 72–93 arası bir sayı üretiyor ve bunu
+       "%81 eşleşme" diye gösteriyordu. Kullanıcı bu orana bakıp kiminle
+       iletişime geçeceğine karar veriyor.
+       CLAUDE.md: "hash'ten türetilmiş sahte 'uyum skoru' üretmek yasaktır."
+       DİKKAT: KBPrefs.matchScore BUNDAN FARKLIDIR ve GERÇEKTİR — kullanıcının
+       kayıtlı tercihlerini (çalışma tipi, asgari maaş, faydalar) ilanın
+       gerçek alanlarıyla karşılaştırır. O kullanılmaya devam ediyor. */
 
     function distKm(lat1, lng1, lat2, lng2) {
       var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
@@ -2091,7 +2094,6 @@
 
     function bcard(it) {
       var cfg = PIN[it.type];
-      var score = matchScore(it.key);
       var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + " km" : null;
       var maasHtml = it.maas ? '<div class="mx-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + KB.esc(String(it.maas)) + ' ₺</div>' : '';
       var distHtml = dist ? '<div class="mx-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
@@ -2109,10 +2111,7 @@
           '<span class="mx-bcard__badge mx-bcard__badge--' + it.type + '">' + cfg.label + '</span>' +
         '</div>' +
         '<div class="mx-bcard__meta">' + maasHtml + distHtml + '</div>' +
-        '<div class="mx-bcard__score">' +
-          '<div class="mx-bcard__score-bar"><div class="mx-bcard__score-fill" style="width:' + score + '%"></div></div>' +
-          '<div class="mx-bcard__score-pct">%' + score + ' eşleşme</div>' +
-        '</div>' +
+        /* Eşleşme yüzdesi ve çubuğu KALDIRILDI — sayı uydurmaydı. */
         '<div class="mx-bcard__action">' + actionHtml + '</div>' +
       '</div>';
     }
