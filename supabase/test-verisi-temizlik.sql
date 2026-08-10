@@ -10,12 +10,11 @@
 -- sonucuna bakın.
 --
 -- SİLİNECEKLER
---   • test konuşması ve içindeki 23 mesaj (arama kayıtları, konum,
+--   • test konuşması ve içindeki mesajlar (arama kayıtları, konum,
 --     dosya mesajı, sistem mesajları dahil)
 --   • test başvurusu
 --   • bu konuşmadan doğan bildirimler (her iki tarafta)
 --   • push_test ile üretilmiş test bildirimleri
---   • sohbete yüklenmiş dosyalar (chat_files bucket)
 --
 -- KALACAKLAR
 --   • test hesabı ve profili
@@ -23,34 +22,63 @@
 --   • cihaz push token'ları (kendiliğinden tazeleniyor)
 --
 -- DİKKAT: Bu betiği çalıştırdıktan sonra "telefondan dosya açma" testini
--- yapamazsınız — test dosyası da silinir. O testi ÖNCE yapın.
+-- yapamazsınız — sohbet silinince dosya mesajı da gider. O testi ÖNCE yapın.
+-- ============================================================================
+
+
+-- ============================================================================
+-- ADIM 1 — DOSYALAR (SQL DEĞİL, STUDIO'DAN)
+--
+-- Yüklenen dosyalar SQL ile silinemez. Supabase, storage.objects üzerinde
+-- storage.protect_delete() trigger'ı çalıştırıyor ve doğrudan DELETE'i
+-- reddediyor:
+--
+--   ERROR 42501: Direct deletion from storage tables is not allowed.
+--                Use the Storage API instead.
+--
+-- Sebebi mantıklı: satırı silmek diskteki dosyayı silmez, yetim dosya kalır.
+-- Bu yüzden silme yalnız Storage API üzerinden yapılabiliyor — RLS
+-- politikalarımız (kb_chatfiles_delete) doğru, trigger onların üstünde.
+--
+-- YAPILACAK:
+--   Supabase Studio → Storage → chat_files → içindeki klasörü aç →
+--   dosyaları seç → Delete
+--
+-- Bucket tamamen teste ait, içindeki her şey silinebilir.
+-- Neyin durduğunu önce görmek isterseniz (bu SELECT çalışır):
+-- ============================================================================
+
+select
+  name                                       as dosya_yolu,
+  (storage.foldername(name))[1]              as konusma_id,
+  round((metadata ->> 'size')::numeric / 1024, 1) as boyut_kb,
+  created_at
+from storage.objects
+where bucket_id = 'chat_files'
+order by created_at;
+
+
+-- ============================================================================
+-- ADIM 2 — VERİTABANI (aşağısını tek seferde çalıştırın)
+--
+-- Dosyaları Studio'dan sildikten SONRA burayı çalıştırın. Sırası önemli:
+-- konuşmalar silinince hangi dosyanın hangi konuşmaya ait olduğu
+-- kaybolur (klasör adı = conversation_id).
 -- ============================================================================
 
 begin;
 
--- Neyin silineceğini önce görün (istersen bu bloğu ayrı çalıştır)
+-- Öncesi
 select
-  (select count(*) from public.conv_messages)                                    as mesaj,
-  (select count(*) from public.conversations)                                    as konusma,
-  (select count(*) from public.applications)                                     as basvuru,
-  (select count(*) from public.notifications)                                     as bildirim,
-  (select count(*) from storage.objects where bucket_id = 'chat_files')          as dosya;
+  (select count(*) from public.conv_messages)                           as mesaj,
+  (select count(*) from public.conversations)                           as konusma,
+  (select count(*) from public.applications)                            as basvuru,
+  (select count(*) from public.notifications)                           as bildirim,
+  (select count(*) from storage.objects where bucket_id = 'chat_files') as kalan_dosya;
 
 
 -- ---------------------------------------------------------------------------
--- 1) Sohbete yüklenen dosyalar
---    conv_messages silinince dosyalar OTOMATİK gitmez — storage ayrı bir
---    alan, cascade yok. Önce onları temizliyoruz.
--- ---------------------------------------------------------------------------
-delete from storage.objects
-where bucket_id = 'chat_files'
-  and (storage.foldername(name))[1] in (
-    select c.id::text from public.conversations c
-  );
-
-
--- ---------------------------------------------------------------------------
--- 2) Bu konuşmadan doğan bildirimler (iki tarafta da)
+-- 1) Bu konuşmadan doğan bildirimler (iki tarafta da)
 --    data->>'conversation_id' ile bağlılar. Ayrıca push_test'in ürettiği
 --    type='test' kayıtları.
 -- ---------------------------------------------------------------------------
@@ -68,7 +96,7 @@ where (data ->> 'application_id') in (
 
 
 -- ---------------------------------------------------------------------------
--- 3) Konuşmalar ve başvurular
+-- 2) Konuşmalar ve başvurular
 --    conv_messages, conversations'a cascade ile bağlı;
 --    conversations da applications'a cascade ile bağlı.
 --    Yani başvuruyu silmek zinciri götürür — ama sırayı açıkça yazıyoruz
@@ -79,19 +107,23 @@ delete from public.conversations;
 delete from public.applications;
 
 
--- Sonuç
+-- Sonrası
 select
-  (select count(*) from public.conv_messages)                                    as mesaj,
-  (select count(*) from public.conversations)                                    as konusma,
-  (select count(*) from public.applications)                                     as basvuru,
-  (select count(*) from public.notifications)                                     as bildirim,
-  (select count(*) from storage.objects where bucket_id = 'chat_files')          as dosya;
+  (select count(*) from public.conv_messages)                           as mesaj,
+  (select count(*) from public.conversations)                           as konusma,
+  (select count(*) from public.applications)                            as basvuru,
+  (select count(*) from public.notifications)                           as bildirim,
+  (select count(*) from storage.objects where bucket_id = 'chat_files') as kalan_dosya;
 
 commit;
 
 -- ============================================================================
--- Hepsi 0 dönmeli. Yanlış giderse COMMIT yerine ROLLBACK yazıp çalıştırın —
--- begin/commit arasında olduğu için hiçbir şey kalıcı olmaz.
+-- İlk dört sütun 0 dönmeli. kalan_dosya da 0 değilse Adım 1'i atlamışsınız
+-- demektir — Studio → Storage'dan silin, veri kaybı olmaz.
+--
+-- Yanlış giderse COMMIT yerine ROLLBACK yazıp çalıştırın — begin/commit
+-- arasında olduğu için hiçbir şey kalıcı olmaz. (Nitekim ilk denemede
+-- storage hatası tam da bunu yaptı: tamamı geri alındı.)
 --
 -- Test hesabını da silmek isterseniz (şimdilik ÖNERİLMEZ):
 --   Supabase Studio → Authentication → Users → oguzhanyar178+kurye@gmail.com
