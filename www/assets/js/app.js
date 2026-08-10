@@ -73,7 +73,11 @@
       (showBack
         ? '<button class="kb-appbar__back" onclick="Router.back()">' + ICON.back + '</button>'
         : '') +
-      '<div class="kb-appbar__title">' + (title || '') + '</div>' +
+      /* Başlık kaçırılır: çağıranların çoğu sabit metin geçiyor ama aday
+         detayı ekranı adayın ADINI geçiyor (firma.js/isletme.js →
+         showAppBar(name, true)). Kaynakta kaçırmak tüm çağıranları kapsar.
+         rightHtml bilerek kaçırılmıyor — o zaten HTML parçası. */
+      '<div class="kb-appbar__title">' + esc(title || '') + '</div>' +
       (rightHtml || '');
   };
 

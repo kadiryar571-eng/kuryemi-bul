@@ -43,8 +43,8 @@ window.SharedScreens = (function () {
           '<div class="notif-item__dot' + (isRead ? ' notif-item__dot--read' : '') + '"></div>' +
           '<div style="font-size:1.1rem;margin-right:10px;flex:none">' + icon + '</div>' +
           '<div class="notif-item__text">' +
-            '<div class="notif-item__title">' + n.title + '</div>' +
-            (n.body ? '<div class="notif-item__sub">' + n.body + '</div>' : '') +
+            '<div class="notif-item__title">' + esc(n.title) + '</div>' +
+            (n.body ? '<div class="notif-item__sub">' + esc(n.body) + '</div>' : '') +
           '</div>' +
           '<div class="notif-item__time">' + _notifRelTime(n.created_at) + '</div>' +
         '</div>';
@@ -254,7 +254,7 @@ window.SharedScreens = (function () {
             '<div class="job-card__top">' +
               '<div class="job-card__avatar">🏢</div>' +
               '<div class="job-card__info">' +
-                '<div class="job-card__title">' + (l.baslik || 'İlan') + '</div>' +
+                '<div class="job-card__title">' + esc(l.baslik || 'İlan') + '</div>' +
                 '<div class="job-card__company">' + (l.sahip || 'Esnaf') + '</div>' +
               '</div>' +
               '<div class="job-card__salary">' + (l.maas_aralik || '—') + '</div>' +
@@ -270,8 +270,8 @@ window.SharedScreens = (function () {
           return '<div class="person-card kb-card--pressable">' +
             '<div class="kb-avatar">' + initials(p.ad || '?') + '</div>' +
             '<div class="person-card__info">' +
-              '<div class="person-card__name">' + (p.ad || 'Kurye') + '</div>' +
-              '<div class="person-card__sub">' + (p.deneyim ? p.deneyim + ' yıl deneyim' : 'Deneyim belirtilmemiş') + '</div>' +
+              '<div class="person-card__name">' + esc(p.ad || 'Kurye') + '</div>' +
+              '<div class="person-card__sub">' + (p.deneyim ? esc(p.deneyim) + ' yıl deneyim' : 'Deneyim belirtilmemiş') + '</div>' +
               '<div class="person-card__meta"><span class="kb-stars">' + ICON.star +
                 (Number(p.puan) > 0 ? Number(p.puan).toFixed(1) : '—') + '</span></div>' +
             '</div>' +
@@ -769,7 +769,7 @@ window.SharedScreens = (function () {
 
   function _sharedChatMsgBubble(m, myUserId) {
     if (m.message_type === 'system') {
-      return '<div class="chat-date-sep chat-system-msg"><span>' + (m.content || '') + '</span></div>';
+      return '<div class="chat-date-sep chat-system-msg"><span>' + esc(m.content || '') + '</span></div>';
     }
     if (m.message_type === 'webrtc_call') {
       var meta = m.metadata || {};
@@ -786,15 +786,15 @@ window.SharedScreens = (function () {
           '<div class="chat-pcard__head">' +
             '<div class="chat-pcard__ava">🛵</div>' +
             '<div class="chat-pcard__info">' +
-              '<div class="chat-pcard__name">' + (meta.ad || 'Aday') + '</div>' +
+              '<div class="chat-pcard__name">' + esc(meta.ad || 'Aday') + '</div>' +
               '<div class="chat-pcard__lvl">' + sevBadge + '</div>' +
-              '<div class="chat-pcard__sub">⭐ ' + (meta.puan || '0') + ' · ' + (meta.sehir || '') + '</div>' +
+              '<div class="chat-pcard__sub">⭐ ' + esc(meta.puan || '0') + ' · ' + esc(meta.sehir || '') + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="chat-pcard__stats">' +
-            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.deneyim || 0) + 'y</span><span class="chat-pcard__slbl">Deneyim</span></div>' +
-            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.puan || '0') + '</span><span class="chat-pcard__slbl">Puan</span></div>' +
-            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.arac || '—') + '</span><span class="chat-pcard__slbl">Araç</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc(meta.deneyim || 0) + 'y</span><span class="chat-pcard__slbl">Deneyim</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc(meta.puan || '0') + '</span><span class="chat-pcard__slbl">Puan</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc(meta.arac || '—') + '</span><span class="chat-pcard__slbl">Araç</span></div>' +
           '</div>' +
           '<div class="chat-pcard__actions">' +
             '<button class="chat-pcard__btn chat-pcard__btn--sec" onclick="SharedScreens.chatQuick(\'gorusme\')">Görüşmeye Davet</button>' +
@@ -1712,7 +1712,7 @@ window.initPremiumMap = async function(role) {
     return '<div class="spm-bcard" data-spmkey="' + escAttr(it.key)+ '" tabindex="0">' +
       '<div class="spm-bcard__top">' +
         '<div class="spm-bcard__logo" style="border-color:' + cfg.color + '33">' + cfg.emoji + '</div>' +
-        '<div class="spm-bcard__info"><div class="spm-bcard__title">' + (it.ad || '') + '</div><div class="spm-bcard__sub">' + (it.sub || '') + '</div></div>' +
+        '<div class="spm-bcard__info"><div class="spm-bcard__title">' + esc(it.ad || '') + '</div><div class="spm-bcard__sub">' + esc(it.sub || '') + '</div></div>' +
         '<span class="spm-bcard__badge spm-bcard__badge--' + escAttr(it.type)+ '">' + cfg.label + '</span>' +
       '</div>' +
       '<div class="spm-bcard__meta">' + maasHtml + distHtml + '</div>' +

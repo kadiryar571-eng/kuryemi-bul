@@ -104,7 +104,7 @@ window.KBCall = (function () {
   function _showCalling(name, type) {
     var el = _overlay();
     el.innerHTML = '<div class="kbcall">' +
-      '<div class="kbcall__ava">' + (name ? name[0].toUpperCase() : '?') + '</div>' +
+      '<div class="kbcall__ava">' + _esc(name ? name[0].toUpperCase() : '?') + '</div>' +
       '<div class="kbcall__name">' + _esc(name) + '</div>' +
       '<div class="kbcall__status">' + (type === 'video' ? '📹 Görüntülü aranıyor…' : '🔊 Sesli aranıyor…') + '</div>' +
       '<div class="kbcall__actions">' +
@@ -117,7 +117,7 @@ window.KBCall = (function () {
   function _showIncoming(name, type) {
     var el = _overlay();
     el.innerHTML = '<div class="kbcall">' +
-      '<div class="kbcall__ava">' + (name ? name[0].toUpperCase() : '?') + '</div>' +
+      '<div class="kbcall__ava">' + _esc(name ? name[0].toUpperCase() : '?') + '</div>' +
       '<div class="kbcall__name">' + _esc(name) + '</div>' +
       '<div class="kbcall__status">' + (type === 'video' ? '📹 Görüntülü arama' : '🔊 Sesli arama') + '</div>' +
       '<div class="kbcall__actions">' +
@@ -137,7 +137,7 @@ window.KBCall = (function () {
         /* Sesli aramada da bir medya elementi ŞART: uzak ses aksi halde
            hiçbir yere bağlanmaz ve duyulmaz. Görünmez bir <audio> yeter. */
         : '<audio id="kbcall-remote-audio" autoplay></audio>' +
-          '<div style="position:absolute;inset:0;background:#181c2e;z-index:1;display:flex;align-items:center;justify-content:center"><div style="font-size:4rem">' + (name ? name[0].toUpperCase() : '?') + '</div></div>') +
+          '<div style="position:absolute;inset:0;background:#181c2e;z-index:1;display:flex;align-items:center;justify-content:center"><div style="font-size:4rem">' + _esc(name ? name[0].toUpperCase() : '?') + '</div></div>') +
       (hasVideo ? '<video id="kbcall-local" autoplay playsinline muted></video>' : '') +
       '<div class="kbcall__active-info">' +
         '<div class="kbcall__name">' + _esc(name) + '</div>' +

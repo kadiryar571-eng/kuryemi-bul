@@ -6,6 +6,14 @@
 window.IsletmeScreens = (function () {
   'use strict';
 
+  /* Doğrulama rozeti — profildeki gerçek 'dogrulama' alanından.
+     none | pending | verified dışında bir değer gelirse doğrulanmamış sayılır. */
+  function _dogrulamaBadge(d) {
+    if (d === 'verified') return '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>';
+    if (d === 'pending')  return '<span class="kb-chip kb-chip--warning">⏳ Doğrulama Bekliyor</span>';
+    return '<span class="kb-chip">' + ICON.shield + ' Doğrulanmadı</span>';
+  }
+
   /* Ekran verisi TAMAMEN Supabase'den gelir; örnek kayıt yoktur. */
   var ADAYLAR = [];
 
@@ -25,8 +33,8 @@ window.IsletmeScreens = (function () {
     return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/isletme/aday/' + escJs(a.id)+ '\')">' +
       '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
       '<div class="person-card__info">' +
-        '<div class="person-card__name">' + name + '</div>' +
-        '<div class="person-card__sub">' + sub + '</div>' +
+        '<div class="person-card__name">' + esc(name) + '</div>' +
+        '<div class="person-card__sub">' + esc(sub) + '</div>' +
         '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + score + '</span>' + badge + '</div>' +
       '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
@@ -159,7 +167,7 @@ window.IsletmeScreens = (function () {
     return '<div class="rec-cand-card" onclick="Router.go(\'/isletme/aday/' + id + '\')">' +
       '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
       '<div class="rec-cand-card__info">' +
-        '<div class="rec-cand-card__name">' + name + '</div>' +
+        '<div class="rec-cand-card__name">' + esc(name) + '</div>' +
         '<div class="rec-cand-card__sub">' + exp + ' · ' + loc + '</div>' +
         '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + score + '</span></div>' +
       '</div>' +
@@ -170,7 +178,7 @@ window.IsletmeScreens = (function () {
   function _iMiniMsg(name, preview, time, unread) {
     return '<div class="mini-msg" onclick="Router.go(\'/isletme/mesajlar\')">' +
       '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem;background:var(--c-isletme)">' + initials(name) + '</div>' +
-      '<div class="mini-msg__info"><div class="mini-msg__name">' + name + '</div><div class="mini-msg__preview">' + preview + '</div></div>' +
+      '<div class="mini-msg__info"><div class="mini-msg__name">' + esc(name) + '</div><div class="mini-msg__preview">' + preview + '</div></div>' +
       '<div class="mini-msg__meta"><span class="mini-msg__time">' + time + '</span>' + (unread > 0 ? '<span class="mini-msg__badge" style="background:var(--c-isletme)">' + unread + '</span>' : '') + '</div>' +
     '</div>';
   }
@@ -245,10 +253,10 @@ window.IsletmeScreens = (function () {
     var isAcik = (il.durum || il.active === true) === 'acik' || il.active === true;
     return '<div class="kb-card" style="margin-bottom:10px">' +
       '<div class="flex items-center justify-between mb-8">' +
-        '<div style="font-weight:700">' + (il.baslik || il.title || 'İlan') + '</div>' +
+        '<div style="font-weight:700">' + esc((il.baslik || il.title || 'İlan')) + '</div>' +
         '<span class="kb-chip ' + (isAcik ? 'kb-chip--success' : '') + '">' + (isAcik ? 'Açık' : 'Pasif') + '</span>' +
       '</div>' +
-      ((il.sehir || il.type) ? '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' + [(il.type || ''), (il.sehir || '')].filter(Boolean).join(' · ') + '</div>' : '') +
+      ((il.sehir || il.type) ? '<div style="font-size:.82rem;color:var(--muted);margin-bottom:6px">' + esc([(il.type || ''), (il.sehir || '')].filter(Boolean).join(' · ')) + '</div>' : '') +
       '<div style="font-size:.82rem;color:var(--c-isletme,#FF6B35);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
       '<div class="flex" style="gap:8px;margin-top:10px">' +
         '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/basvurular\')">Başvuruları Gör</button>' +
@@ -603,7 +611,7 @@ window.IsletmeScreens = (function () {
           '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">' +
             '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
             '<div>' +
-              '<div style="font-size:1.1rem;font-weight:800">' + name + '</div>' +
+              '<div style="font-size:1.1rem;font-weight:800">' + esc(name) + '</div>' +
               '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + score + '</div>' +
               durumBadge +
             '</div>' +
@@ -634,10 +642,13 @@ window.IsletmeScreens = (function () {
         if (!p) return;
         var el = document.getElementById('aday-profil-extra');
         if (!el) return;
+        /* Alan adları profiles tablosuyla eşleşmek zorunda (bkz. firma.js'teki eşi):
+           deneyim / arac / aciklama. Eskiden şemada olmayan experience|exp /
+           vehicle / bio okunuyordu; "Profil" bölümü hiç çizilmiyordu. */
         var rows = [];
-        if (p.experience || p.exp) rows.push('<div class="detail-row">' + ICON.briefcase + (p.experience || p.exp) + '</div>');
-        if (p.vehicle)   rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + esc(p.vehicle)+ '</div>');
-        if (p.bio)       rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + esc(p.bio)+ '</div>');
+        if (p.deneyim)  rows.push('<div class="detail-row">' + ICON.briefcase + esc(p.deneyim) + ' yıl deneyim</div>');
+        if (p.arac)     rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + esc(p.arac) + '</div>');
+        if (p.aciklama) rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + escLines(p.aciklama) + '</div>');
         if (rows.length) {
           el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
         }
@@ -682,9 +693,13 @@ window.IsletmeScreens = (function () {
           '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
           '<div class="profile-hero__name">' + esc(name) + '</div>' +
           '<div class="profile-hero__sub">Esnaf</div>' +
+          /* Rozetler GERÇEK profilden — eskiden "⭐ 4.5" ve "Doğrulandı"
+             sabit yazılıydı (bkz. firma.js'teki eşi). */
           '<div class="profile-hero__badges">' +
-            '<span class="kb-chip kb-chip--warning">⭐ 4.5</span>' +
-            '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>' +
+            (Number((APP.profile || {}).puan) > 0
+              ? '<span class="kb-chip kb-chip--warning">⭐ ' + Number(APP.profile.puan).toFixed(1) + '</span>'
+              : '<span class="kb-chip">⭐ Henüz puan yok</span>') +
+            _dogrulamaBadge((APP.profile || {}).dogrulama) +
           '</div>' +
         '</div>' +
 
@@ -707,7 +722,7 @@ window.IsletmeScreens = (function () {
   function _mi(label, icon, route) {
     return '<div class="profile-menu-item" onclick="Router.go(\'' + route + '\')" style="padding:14px 16px">' +
       '<div class="profile-menu-item__icon" style="color:var(--c-isletme)">' + ICON[icon] + '</div>' +
-      '<div class="profile-menu-item__label">' + label + '</div>' +
+      '<div class="profile-menu-item__label">' + esc(label) + '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
     '</div>';
   }

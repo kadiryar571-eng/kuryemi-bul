@@ -206,7 +206,7 @@ window.KuryeScreens = (function () {
         '<div class="prem-stat__num prem-stat__num--' + color + '">' + num + '</div>' +
         '<div class="prem-stat__icon prem-stat__icon--' + color + '">' + ICON[icon] + '</div>' +
       '</div>' +
-      '<div class="prem-stat__label">' + label + '</div>' +
+      '<div class="prem-stat__label">' + esc(label) + '</div>' +
       '<div class="prem-stat__action">' + actionLabel + ICON.chevron + '</div>' +
     '</div>';
   }
@@ -216,8 +216,8 @@ window.KuryeScreens = (function () {
       '<div class="prem-job__row1">' +
         '<div class="prem-job__avatar" style="background:' + avatarBg + '">' + emoji + '</div>' +
         '<div class="prem-job__info">' +
-          '<div class="prem-job__title">' + title + '</div>' +
-          '<div class="prem-job__company">' + company + '</div>' +
+          '<div class="prem-job__title">' + esc(title) + '</div>' +
+          '<div class="prem-job__company">' + esc(company) + '</div>' +
         '</div>' +
         '<button class="prem-job__save" onclick="event.stopPropagation()">' + ICON.heart + '</button>' +
       '</div>' +
@@ -245,8 +245,8 @@ window.KuryeScreens = (function () {
       '<div class="actapp-card__top">' +
         '<div class="actapp-card__ico">' + ico + '</div>' +
         '<div class="actapp-card__info">' +
-          '<div class="actapp-card__title">' + title + '</div>' +
-          '<div class="actapp-card__company">' + company + '</div>' +
+          '<div class="actapp-card__title">' + esc(title) + '</div>' +
+          '<div class="actapp-card__company">' + esc(company) + '</div>' +
         '</div>' +
         '<div class="actapp-card__time">' + esc(time) + '</div>' +
       '</div>' +
@@ -262,8 +262,8 @@ window.KuryeScreens = (function () {
       '<div class="rec-job-card__top">' +
         '<div class="rec-job-card__avatar">' + ico + '</div>' +
         '<div class="rec-job-card__info">' +
-          '<div class="rec-job-card__title">' + title + '</div>' +
-          '<div class="rec-job-card__company">' + company + '</div>' +
+          '<div class="rec-job-card__title">' + esc(title) + '</div>' +
+          '<div class="rec-job-card__company">' + esc(company) + '</div>' +
         '</div>' +
         '<div class="rec-job-card__salary">' + salary + '</div>' +
       '</div>' +
@@ -280,7 +280,7 @@ window.KuryeScreens = (function () {
     return '<div class="mini-msg" onclick="Router.go(\'' + route + '\')">' +
       '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem">' + initials(name) + '</div>' +
       '<div class="mini-msg__info">' +
-        '<div class="mini-msg__name">' + name + '</div>' +
+        '<div class="mini-msg__name">' + esc(name) + '</div>' +
         '<div class="mini-msg__preview">' + preview + '</div>' +
       '</div>' +
       '<div class="mini-msg__meta">' +
@@ -863,8 +863,8 @@ window.KuryeScreens = (function () {
     renderScreen(
       '<div>' +
         '<div class="detail-hero">' +
-          '<div class="detail-hero__title">' + title + '</div>' +
-          '<div class="detail-hero__sub">' + company + '</div>' +
+          '<div class="detail-hero__title">' + esc(title) + '</div>' +
+          '<div class="detail-hero__sub">' + esc(company) + '</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
             (tip ? '<span class="kb-chip kb-chip--accent">' + tip + '</span>' : '') +
             (konum ? '<span class="kb-chip">' + ICON.pin + konum + '</span>' : '') +
@@ -992,7 +992,7 @@ window.KuryeScreens = (function () {
         '</div>' +
         '<div class="apply-success__title">Başvurun İletildi!</div>' +
         '<div class="apply-success__sub">' +
-          '<strong>' + company + '</strong>' +
+          '<strong>' + esc(company) + '</strong>' +
           (ilanTitle ? ' · ' + ilanTitle : '') +
         '</div>' +
         '<div class="apply-success__info">' +
@@ -1041,10 +1041,10 @@ window.KuryeScreens = (function () {
   function _basCard(b) {
     return '<div class="kb-card" style="margin-bottom:10px">' +
       '<div class="flex items-center justify-between mb-8">' +
-        '<div style="font-weight:700">' + (b.firma || b.company || 'Esnaf') + '</div>' +
+        '<div style="font-weight:700">' + esc((b.firma || b.company || 'Esnaf')) + '</div>' +
         _basLabel(b.durum || b.status) +
       '</div>' +
-      '<div style="font-size:.85rem;color:var(--muted)">' + (b.baslik || b.role || '') + '</div>' +
+      '<div style="font-size:.85rem;color:var(--muted)">' + esc((b.baslik || b.role || '')) + '</div>' +
       (b.ilanSehir ? '<div style="font-size:.75rem;color:var(--muted);margin-top:2px">' + esc(b.ilanSehir)+ '</div>' : '') +
       '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Başvuru: ' + (b.tarih || b.date || '') + '</div>' +
     '</div>';
@@ -1355,7 +1355,7 @@ window.KuryeScreens = (function () {
 
   function _chatMsgBubble(m, myUserId) {
     if (m.message_type === 'system') {
-      return '<div class="chat-date-sep chat-system-msg"><span>' + (m.content || '') + '</span></div>';
+      return '<div class="chat-date-sep chat-system-msg"><span>' + esc((m.content || '')) + '</span></div>';
     }
     if (m.message_type === 'profile_card') {
       var meta = m.metadata || {};
@@ -1365,15 +1365,15 @@ window.KuryeScreens = (function () {
           '<div class="chat-pcard__head">' +
             '<div class="chat-pcard__ava">🛵</div>' +
             '<div class="chat-pcard__info">' +
-              '<div class="chat-pcard__name">' + (meta.ad || 'Aday') + '</div>' +
+              '<div class="chat-pcard__name">' + esc((meta.ad || 'Aday')) + '</div>' +
               '<div class="chat-pcard__lvl">' + sevBadge + '</div>' +
-              '<div class="chat-pcard__sub">⭐ ' + (meta.puan || '0') + ' · ' + (meta.sehir || '') + '</div>' +
+              '<div class="chat-pcard__sub">⭐ ' + (meta.puan || '0') + ' · ' + esc((meta.sehir || '')) + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="chat-pcard__stats">' +
-            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.deneyim || 0) + 'y</span><span class="chat-pcard__slbl">Deneyim</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc((meta.deneyim || 0)) + 'y</span><span class="chat-pcard__slbl">Deneyim</span></div>' +
             '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.puan || '0') + '</span><span class="chat-pcard__slbl">Puan</span></div>' +
-            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.arac || '—') + '</span><span class="chat-pcard__slbl">Araç</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc((meta.arac || '—')) + '</span><span class="chat-pcard__slbl">Araç</span></div>' +
           '</div>' +
           '<div class="chat-pcard__actions">' +
             '<button class="chat-pcard__btn chat-pcard__btn--sec" onclick="KuryeScreens._chatQuick(\'gorusme\')">Görüşmeye Davet</button>' +
@@ -1742,7 +1742,7 @@ window.KuryeScreens = (function () {
               '<div class="pr-avatar__online"></div>' +
             '</div>' +
             '<div class="pr-hero__info">' +
-              '<div class="pr-hero__name">' + name + '</div>' +
+              '<div class="pr-hero__name">' + esc(name) + '</div>' +
               '<div class="pr-hero__role">🛵 ' + prArac + '</div>' +
               '<div class="pr-hero__loc">' +
                 '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
@@ -1909,14 +1909,14 @@ window.KuryeScreens = (function () {
   function _prMetric(val, label, color) {
     return '<div class="pr-metric">' +
       '<div class="pr-metric__val" style="color:' + color + '">' + val + '</div>' +
-      '<div class="pr-metric__label">' + label + '</div>' +
+      '<div class="pr-metric__label">' + esc(label) + '</div>' +
     '</div>';
   }
 
   function _prVerif(label, ok) {
     return '<div class="pr-verif' + (ok ? ' pr-verif--ok' : '') + '">' +
       '<div class="pr-verif__icon">' + (ok ? '✓' : '?') + '</div>' +
-      '<div class="pr-verif__label">' + label + '</div>' +
+      '<div class="pr-verif__label">' + esc(label) + '</div>' +
     '</div>';
   }
 
@@ -1934,7 +1934,7 @@ window.KuryeScreens = (function () {
   function _prDoc(icon, label, status, ok) {
     return '<div class="pr-doc">' +
       '<div class="pr-doc__icon">' + icon + '</div>' +
-      '<div class="pr-doc__label">' + label + '</div>' +
+      '<div class="pr-doc__label">' + esc(label) + '</div>' +
       '<div class="pr-doc__status' + (ok ? ' pr-doc__status--ok' : ' pr-doc__status--pending') + '">' + status + '</div>' +
       /* Paylaş düğmesi KALDIRILDI — en yanıltıcı olanıydı: hiçbir şey
          paylaşmadığı halde "<belge> paylaşıldı" diyordu. Kullanıcı belgesini
@@ -1946,7 +1946,7 @@ window.KuryeScreens = (function () {
   function _prMenuItem(label, icon, route) {
     return '<div class="pr-menu-item" onclick="Router.go(\'' + route + '\')">' +
       '<div class="pr-menu-item__icon">' + ICON[icon] + '</div>' +
-      '<div class="pr-menu-item__label">' + label + '</div>' +
+      '<div class="pr-menu-item__label">' + esc(label) + '</div>' +
       '<div class="pr-menu-item__chevron">' + ICON.chevron + '</div>' +
     '</div>';
   }
