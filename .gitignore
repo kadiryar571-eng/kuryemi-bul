@@ -28,6 +28,11 @@ android/app/release.keystore
 # Firebase yapılandırması (proje kimlikleri + API anahtarı içerir)
 android/app/google-services.json
 
+# Supabase CLI önbelleği — "supabase link" calisinca kendiliğinden üretilir.
+# Repoda işi yok; üstelik .nojekyll yüzünden yayınlanıyordu ve pooler-url
+# veritabanı host'unu + kullanıcı adını açığa veriyordu (şifre içermiyordu).
+supabase/.temp/
+
 # Ortam değişkenleri / sırlar
 .env
 .env.*

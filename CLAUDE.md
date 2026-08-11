@@ -260,14 +260,14 @@ Supabase Studio → SQL Editor üzerinden yapılır. Hazır sorgular:
 
 ### Sayfa Kategorileri
 
-- **Landing:** `index.html` — klasik header, space-bg, landing.js (misafire açık)
+- **Landing:** `index.html` — klasik header, space-bg, sayfaya gömülü script'ler (misafire açık). Giriş/kayıt modalı da buradadır.
 - **Auth flow:** `verify-email.html`, `sifre-sifirla.html`, `onboarding.html` — sidebar yok, bottom nav yok, kendi header'ları var
 - **Giriş / kayıt:** ayrı sayfa YOKTUR. `index.html` üzerinde modal açılır (`auth-modal.js` kabuk + `auth-forms.js` form). Adres kalıbı `index.html?auth=login|register[&next=…]`. Google OAuth web dönüş adresi de `/index.html`'dir ve Supabase Redirect URLs listesinde kayıtlıdır.
 - **Paneller:** `panel-kurye.html`, `panel-isletme.html`, `panel-firma.html` — `.mob-dash` class'ı ile kendi mobil header'larını yönetir
 - **Havuzlar:** `kuryeler.html`, `isletmeler.html`, `firmalar.html` — arama + filtre + harita entegrasyonu (giriş gerekir)
 - **Profiller:** `profil-kurye.html?id=`, `profil-isletme.html?id=`, `profil-firma.html?id=` — `?id=` query param ile profil yüklenir
 - **Yardımcı:** `mesajlar.html`, `bildirimler.html`, `eslesme.html`, `havuzum.html`, `harita.html`, `ilanlar.html`, `ayarlar.html`
-- **Statik/Yasal:** `kvkk.html`, `gizlilik.html`, `sartlar.html`, `cerez.html`, `teslimat.html` vb. (misafire açık)
+- **Statik/Yasal:** `kvkk.html`, `gizlilik.html`, `sartlar.html`, `cerez.html`, `guvenlik.html` (misafire açık)
 
 ### i18n
 

@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Havuz ve ilan sayfaları (kuryeler / isletmeler / firmalar / harita / ilanlar)
-  artık giriş gerektiriyor; giriş sayfasına yönlendikleri için sitemap'ten
-  çıkarıldı. Taranabilir olan yalnız ana sayfa, giriş ve yasal metinlerdir.
-  Alan adı kuryemibul.com (CNAME) olarak güncellendi.
+  giriş gerektiriyor; taranabilir değiller.
+
+  giris.html KALDIRILDI: giriş artık ayrı bir sayfa değil, index.html
+  üzerinde açılan bir modal — indekslenecek ayrı adresi yok.
+
+  guvenlik.html KALDIRILDI: sayfa henüz içeriksiz ("yakında"). Boş sayfayı
+  indekslemek zarar verir; içerik yazılınca geri eklenmeli.
+
+  Taranabilir olan yalnız ana sayfa ve yasal metinlerdir.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://kuryemibul.com/</loc><priority>1.0</priority></url>
-  <url><loc>https://kuryemibul.com/giris.html</loc><priority>0.7</priority></url>
-  <url><loc>https://kuryemibul.com/guvenlik.html</loc><priority>0.4</priority></url>
   <url><loc>https://kuryemibul.com/kvkk.html</loc><priority>0.3</priority></url>
   <url><loc>https://kuryemibul.com/gizlilik.html</loc><priority>0.3</priority></url>
   <url><loc>https://kuryemibul.com/sartlar.html</loc><priority>0.3</priority></url>
