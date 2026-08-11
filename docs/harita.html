@@ -8,13 +8,14 @@
        enjekte edilen kod çalınan oturum jetonunu dış sunucuya POST edemez. -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maps.googleapis.com;
+    script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
     style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src    'self' https://fonts.gstatic.com data:;
-    img-src     'self' data: blob: https://fdszypytpodndtlbuzuz.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com;
+    img-src     'self' data: blob: https://fdszypytpodndtlbuzuz.supabase.co https://tiles.openfreemap.org;
     media-src   'self' blob: mediastream:;
-    connect-src 'self' https://fdszypytpodndtlbuzuz.supabase.co wss://fdszypytpodndtlbuzuz.supabase.co https://maps.googleapis.com;
+    connect-src 'self' https://fdszypytpodndtlbuzuz.supabase.co wss://fdszypytpodndtlbuzuz.supabase.co https://tiles.openfreemap.org;
     frame-src   'none';
+    worker-src  blob:;
     object-src  'none';
     base-uri    'self';
     form-action 'self';
@@ -25,6 +26,7 @@
   <link rel="icon" href="assets/logo.png" sizes="any">
   <link rel="apple-touch-icon" href="assets/logo.png">
   <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/vendor/maplibre/maplibre-gl.css">
   <style>
     .map-wrap { position: relative; }
     #map {
@@ -160,66 +162,11 @@
   <script src="assets/js/motion.js"></script>
   <script src="assets/js/push.js"></script>
 
-  <!-- Google Maps API -->
+  <script src="assets/vendor/maplibre/maplibre-gl.js"></script>
   <script>
-    function __gmapsReady() {
-      if (window.KBApp && KBApp.initMapGoogle) KBApp.initMapGoogle();
-
-      /* Konumum butonu */
-      var btn = document.getElementById('locateBtn');
-      if (!btn) return;
-      var locMarker = null;
-      btn.addEventListener('click', function () {
-        if (!navigator.geolocation) {
-          if (window.KBMotion) KBMotion.showErrorToast('Konum desteklenmiyor.');
-          return;
-        }
-        btn.classList.add('locating');
-        navigator.geolocation.getCurrentPosition(
-          function (pos) {
-            btn.classList.remove('locating');
-            var latLng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            /* Mevcut harita referansı app.js'ten erişilemez, Google Maps objesini bul */
-            var mapEl = document.getElementById('map');
-            if (!mapEl || !mapEl.__gmap) return;
-            var map = mapEl.__gmap;
-            map.setCenter(latLng);
-            map.setZoom(13);
-            if (locMarker) locMarker.setMap(null);
-            locMarker = new google.maps.Marker({
-              position: latLng,
-              map: map,
-              title: 'Konumunuz',
-              icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 9,
-                fillColor: '#0057FF',
-                fillOpacity: 1,
-                strokeColor: '#fff',
-                strokeWeight: 3
-              },
-              zIndex: 9999
-            });
-            new google.maps.Circle({
-              strokeColor: '#0057FF',
-              strokeOpacity: 0.25,
-              strokeWeight: 1,
-              fillColor: '#0057FF',
-              fillOpacity: 0.1,
-              map: map,
-              center: latLng,
-              radius: pos.coords.accuracy || 200
-            });
-          },
-          function (err) {
-            btn.classList.remove('locating');
-            if (window.KBMotion) KBMotion.showErrorToast('Konum alınamadı: ' + err.message);
-          },
-          { enableHighAccuracy: true, timeout: 8000 }
-        );
-      });
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.KBApp && KBApp.initMap) KBApp.initMap();
+    });
   </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIs6NXw-WTa5O_JPJX1cRlVOvHJfoFpjU&callback=__gmapsReady" async defer></script>
 </body>
 </html>

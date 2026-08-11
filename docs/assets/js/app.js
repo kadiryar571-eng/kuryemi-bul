@@ -1392,90 +1392,163 @@
     });
   }
 
-  /* ============ GOOGLE MAPS - HARITA SAYFASI ============ */
-  async function initMapGoogle() {
-    if (typeof google === "undefined" || !google.maps) return;
-    var el = document.getElementById("map");
-    if (!el) return;
-    
-    var turkeyCenter = { lat: 39.5, lng: 33.5 };
-    var map = new google.maps.Map(el, {
-      zoom: 6,
-      center: turkeyCenter,
-      mapTypeControl: true,
-      fullscreenControl: true,
-      styles: [
-        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] }
-      ]
-    });
-    el.__gmap = map; // konumum butonu için referans
+  /* ============ HARİTA (MapLibre GL + OpenFreeMap) ============ */
+  var MAP_STYLE = "https://tiles.openfreemap.org/styles/positron";
 
-    var markerConfig = {
-      kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
-      isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
-      firma: { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
-    };
-    
-    var layers = {
-      kurye: [],
-      isletme: [],
-      firma: []
-    };
-    
-    function createMarker(item, type) {
-      if (item.lat == null || item.lng == null) return;
-      var config = markerConfig[type];
-      var marker = new google.maps.Marker({
-        position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
-        map: map,
-        title: item.ad,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: config.color,
-          fillOpacity: 0.85,
-          strokeColor: "#fff",
-          strokeWeight: 2.5
-        }
+  var MAP_PIN = {
+    kurye:   { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
+    isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
+    firma:   { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
+  };
+
+  /* İşaretçi DOM elemanı. MapLibre custom marker'ı bir HTMLElement ister —
+     Google'daki SVG symbol path karşılığı budur. */
+  function mapPinEl(type) {
+    var cfg = MAP_PIN[type];
+    var el = document.createElement("div");
+    el.className = "kb-map-pin";
+    el.style.cssText = "width:30px;height:30px;border-radius:50%;background:" + cfg.color +
+      ";border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);" +
+      "display:grid;place-items:center;font-size:15px;cursor:pointer";
+    el.textContent = cfg.emoji;
+    return el;
+  }
+
+  /* DİKKAT: item.ad / item.sehir / item.bolgeler başka kullanıcıdan gelir.
+     Hepsi KB.esc()'ten geçer. Popup içine onclick YAZILMAZ. */
+  function mapPopupHtml(item, type) {
+    var cfg = MAP_PIN[type];
+    var yer = item.sehir ? item.sehir : (item.bolgeler || []).join(", ");
+    return '<div class="map-popup">' +
+      '<b>' + cfg.emoji + ' ' + KB.esc(item.ad) + '</b><br>' +
+      '<span class="map-popup__sub">' + KB.esc(yer) + '</span><br>' +
+      '<a href="' + cfg.page + '?id=' + encodeURIComponent(item.id) + '">' +
+        T("map.viewProfile") + '</a>' +
+      '</div>';
+  }
+
+  async function initMap() {
+    var el = document.getElementById("map");
+    if (!el || typeof maplibregl === "undefined") return;
+
+    var map = new maplibregl.Map({
+      container: el,
+      style: MAP_STYLE,
+      center: [33.5, 39.5],   /* [lng, lat] — Google'ın {lat,lng} sırasının TERSİ */
+      zoom: 5.2
+    });
+
+    /* WebGL yoksa MapLibre 5.x "Failed to initialize WebGL" mesajlı bir hata
+       fırlatır. 6.x'teki GPUInitializationError sınıfı 5.x'te YOK — mesaja
+       bakmak zorundayız. */
+    var gpuFailed = false;
+    map.on("error", function (e) {
+      var msg = (e && e.error && e.error.message) || "";
+      if (/webgl/i.test(msg)) {
+        gpuFailed = true;
+        el.innerHTML = '<div class="empty">' + T("map.unsupported") + '</div>';
+        return;
+      }
+      console.error("Map error:", e.error);
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    var layers = { kurye: [], isletme: [], firma: [] };
+
+    function addMarkers(items, type) {
+      items.forEach(function (x) {
+        if (x.lat == null || x.lng == null) return;
+        var marker = new maplibregl.Marker({ element: mapPinEl(type) })
+          .setLngLat([+x.lng, +x.lat])
+          .setPopup(new maplibregl.Popup({ offset: 18 }).setHTML(mapPopupHtml(x, type)))
+          .addTo(map);
+        layers[type].push(marker);
       });
-      
-      var contentString = '<div style="padding:10px;font-family:Arial,sans-serif;max-width:220px;">' +
-        '<div style="font-weight:bold;margin-bottom:6px;font-size:14px;">' + config.emoji + ' ' + KB.esc(item.ad) + '</div>' +
-        '<div style="font-size:12px;color:#666;margin-bottom:10px;">' + 
-        (item.sehir ? KB.esc(item.sehir) : KB.esc((item.bolgeler || []).join(", "))) + 
-        '</div>' +
-        '<a href="' + config.page + '?id=' + item.id + '" style="color:#4f8bff;text-decoration:none;font-size:12px;font-weight:bold;">Profili Gör →</a>' +
-        '</div>';
-      
-      var infoWindow = new google.maps.InfoWindow({ content: contentString });
-      marker.addListener("click", function () { infoWindow.open(map, marker); });
-      
-      return { marker: marker, infoWindow: infoWindow };
     }
-    
+
     try {
       var kData = await loadPool("kurye");
       var iData = await loadPool("isletme");
       var fData = await loadPool("firma");
-      
-      kData.forEach(function(x) { layers.kurye.push(createMarker(x, "kurye")); });
-      iData.forEach(function(x) { layers.isletme.push(createMarker(x, "isletme")); });
-      fData.forEach(function(x) { layers.firma.push(createMarker(x, "firma")); });
-      
+      if (gpuFailed) return;
+
+      addMarkers(kData, "kurye");
+      addMarkers(iData, "isletme");
+      addMarkers(fData, "firma");
+
       document.querySelectorAll("[data-layer]").forEach(function (cb) {
         cb.addEventListener("change", function () {
           var type = cb.getAttribute("data-layer");
-          layers[type].forEach(function(item) {
-            if (item && item.marker) {
-              item.marker.setMap(cb.checked ? map : null);
-            }
+          layers[type].forEach(function (m) {
+            m.getElement().style.display = cb.checked ? "" : "none";
           });
         });
       });
     } catch (e) {
       console.error("Map error:", e);
     }
+
+    initLocateButton(map);
+  }
+
+  /* Konum butonu — eskiden harita.html içindeki inline script'teydi.
+     Google Circle yerine GeoJSON poligon kullanılıyor: MapLibre'ın circle
+     katmanı yarıçapı PİKSEL alır, metre değil; zoom değişince doğruluk
+     çemberi yanlış boyutta kalırdı. */
+  function accuracyPolygon(lng, lat, meters) {
+    var coords = [], steps = 64;
+    var dLat = meters / 111320;
+    var dLng = meters / (111320 * Math.cos(lat * Math.PI / 180));
+    for (var i = 0; i <= steps; i++) {
+      var a = (i / steps) * 2 * Math.PI;
+      coords.push([lng + dLng * Math.cos(a), lat + dLat * Math.sin(a)]);
+    }
+    return { type: "Feature", geometry: { type: "Polygon", coordinates: [coords] }, properties: {} };
+  }
+
+  function initLocateButton(map) {
+    var btn = document.getElementById("locateBtn");
+    if (!btn) return;
+    var locMarker = null;
+
+    btn.addEventListener("click", function () {
+      if (!navigator.geolocation) {
+        if (window.KBMotion) KBMotion.showErrorToast(T("map.noGeo"));
+        return;
+      }
+      btn.classList.add("locating");
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        btn.classList.remove("locating");
+        var lng = pos.coords.longitude, lat = pos.coords.latitude;
+
+        if (locMarker) locMarker.remove();
+        var dot = document.createElement("div");
+        dot.style.cssText = "width:18px;height:18px;border-radius:50%;background:#0057FF;" +
+          "border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)";
+        locMarker = new maplibregl.Marker({ element: dot }).setLngLat([lng, lat]).addTo(map);
+
+        var gj = accuracyPolygon(lng, lat, pos.coords.accuracy || 200);
+        if (map.getSource("kb-accuracy")) {
+          map.getSource("kb-accuracy").setData(gj);
+        } else {
+          map.addSource("kb-accuracy", { type: "geojson", data: gj });
+          map.addLayer({
+            id: "kb-accuracy-fill", type: "fill", source: "kb-accuracy",
+            paint: { "fill-color": "#0057FF", "fill-opacity": 0.1 }
+          });
+          map.addLayer({
+            id: "kb-accuracy-line", type: "line", source: "kb-accuracy",
+            paint: { "line-color": "#0057FF", "line-opacity": 0.25, "line-width": 1 }
+          });
+        }
+
+        map.flyTo({ center: [lng, lat], zoom: 13 });
+      }, function (err) {
+        btn.classList.remove("locating");
+        if (window.KBMotion) KBMotion.showErrorToast(T("map.locFailed") + " " + err.message);
+      }, { enableHighAccuracy: true, timeout: 8000 });
+    });
   }
 
   /* ============ GOOGLE MAPS - PANEL HARİTASI ============ */
@@ -2778,7 +2851,7 @@
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
-    initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initMapExperience: initMapExperience, initPanel: initPanel, openOfferModal: openOfferModal,
+    initMap: initMap, initHomeMap: initHomeMap, initMapExperience: initMapExperience, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings,
     renderJobDetail: renderJobDetail, buildJobDetailHtml: buildJobDetailHtml, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages,
     renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials
