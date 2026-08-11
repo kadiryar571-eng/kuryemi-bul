@@ -56,9 +56,30 @@
     return '';
   }
 
+  /* renderScreen() ekranı HEMEN basmaz — fade geçişi için innerHTML'i 120 ms
+     sonra yazar (app.js). Render'ın hemen ardından başlayan bir Supabase
+     sorgusu bundan hızlı dönerse, .then() içindeki getElementById henüz
+     olmayan bir elemanı arar, null alır ve kod sessizce vazgeçer. Sonuç:
+     bölüm bazen çizilir bazen çizilmez — ağ hızına bağlı bir yarış.
+
+     whenEl() elemanı bekler: varsa hemen, yoksa kısa aralıklarla yeniden
+     dener. Böylece hangi sıra gerçekleşirse gerçekleşsin sonuç aynı olur.
+     Sabit bir gecikme (setTimeout 130) yazmayın — yavaş cihazda tutmaz. */
+  function whenEl(id, cb, timeoutMs) {
+    var waited = 0, step = 25, max = (timeoutMs == null ? 1500 : timeoutMs);
+    (function tick() {
+      var el = document.getElementById(id);
+      if (el) { cb(el); return; }
+      if (waited >= max) return;          // ekran değişmiş olabilir: sessizce bırak
+      waited += step;
+      setTimeout(tick, step);
+    })();
+  }
+
   window.esc      = esc;
   window.escAttr  = escAttr;
   window.escLines = escLines;
   window.escJs    = escJs;
   window.safeUrl  = safeUrl;
+  window.whenEl   = whenEl;
 })();

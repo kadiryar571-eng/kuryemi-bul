@@ -640,8 +640,9 @@ window.IsletmeScreens = (function () {
     if (a.applicantId && window.SB && SB.isOn()) {
       SB.profileById(a.applicantId).then(function(p) {
         if (!p) return;
-        var el = document.getElementById('aday-profil-extra');
-        if (!el) return;
+        /* whenEl: renderScreen 120 ms sonra basar; sorgu daha hizli donerse
+           element henuz yoktur ve eskiden burada sessizce vazgeciliyordu. */
+        whenEl('aday-profil-extra', function (el) {
         /* Alan adları profiles tablosuyla eşleşmek zorunda (bkz. firma.js'teki eşi):
            deneyim / arac / aciklama. Eskiden şemada olmayan experience|exp /
            vehicle / bio okunuyordu; "Profil" bölümü hiç çizilmiyordu. */
@@ -649,9 +650,10 @@ window.IsletmeScreens = (function () {
         if (p.deneyim)  rows.push('<div class="detail-row">' + ICON.briefcase + esc(p.deneyim) + ' yıl deneyim</div>');
         if (p.arac)     rows.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + esc(p.arac) + '</div>');
         if (p.aciklama) rows.push('<div style="font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.5">' + escLines(p.aciklama) + '</div>');
-        if (rows.length) {
-          el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
-        }
+          if (rows.length) {
+            el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
+          }
+        });
       }).catch(function() {});
     }
   }

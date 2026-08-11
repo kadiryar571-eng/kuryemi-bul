@@ -1918,6 +1918,7 @@ a { color: inherit; text-decoration: none; }
 
 /* Save button */
 .il-card__save {
+  margin-left: auto;          /* rozet kabı kaldırıldı; boşluk görevini bu üstlenir */
   width: 36px; height: 36px;
   border-radius: 10px;
   background: var(--surface2);
