@@ -1,6 +1,13 @@
 # Claude Code yerel ayarları
 .claude/settings.local.json
 
+# Claude Code geçici worktree'leri — sitenin komple ikinci bir kopyası.
+# Git kayıtlı worktree'leri kendiliğinden dışlar, ama kayıt düşer de
+# dosyalar kalırsa "git add -A" hepsini alır. Bu repoda .nojekyll olduğu
+# için dotfolder'lar da GitHub Pages'te yayınlanır: o durumda sitenin
+# eski bir kopyası kuryemibul.com/.claude/... altında canlıya çıkardı.
+.claude/worktrees/
+
 # Bağımlılıklar / derleme çıktıları (statik site için gerekmez ama güvenli)
 node_modules/
 dist/
