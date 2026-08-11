@@ -536,7 +536,7 @@ git commit -m "refactor: olu harita kodu kaldirildi (4 fonksiyon, ~450 satir)"
 grep -l "maps.googleapis.com" docs/*.html
 ```
 
-Beklenen: 37 dosya (Task 3'ten sonra `harita.html` listede olmamalı; `auth-callback.html` zaten CSP taşımıyor).
+Beklenen: 37 dosya (Task 3'ten sonra `harita.html` listede olmamalı; `auth-callback.html`'in CSP'si vardır ama en dar biçimdedir — `default-src 'self'`, harita host'ları hiç listelenmemiş — o yüzden listeye girmez).
 
 - [ ] **Step 2: Google host'larını sil**
 
