@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ```bash
-# Local dev server (gerekli — query params ve cleanUrls için)
-npx serve .
+# Local dev server — SİTE KÖKÜ docs/ (aşağıya bak)
+npx http-server docs -c-1
 
 # Capacitor (sadece Android build gerektiğinde)
 npm run cap:sync        # www/ → native sync
@@ -15,13 +15,52 @@ npm run cap:add:android # ilk kez Android platform ekle
 
 Derleme adımı yoktur. Dosyayı kaydet → tarayıcıyı yenile.
 
+> **`npx serve` KULLANMAYIN.** `serve`'de `cleanUrls` **varsayılan olarak
+> açıktır**: `.html` uzantısını 301 ile düşürürken **query string'i de düşürür**.
+> `?next=` ve `?auth=` parametreleri kaybolur, giriş modalı açılmaz. GitHub Pages
+> böyle davranmaz — yani `serve` ile yapılan yerel test üretimi yansıtmaz ve
+> olmayan hatalar kovalarsınız. (Eski `serve.json` bunu düzeltmiyordu; içeriği
+> zaten varsayılanların aynısıydı, o yüzden silindi.)
+>
+> `http-server` yönlendirme yapmaz, query'yi korur; ölçüldü, üretimle birebir.
+>
+> (components.js'teki `currentPage()` hâlâ uzantısız yolu `.html`'e tamamlıyor —
+> artık savunma amaçlı, zararsız.)
+
+## YAYINLANAN SADECE docs/ (önce bunu oku)
+
+GitHub Pages **`main` dalının `docs/` klasörünü** yayınlar. Web kökü orasıdır:
+`docs/index.html` → `kuryemibul.com/`.
+
+Bu ayrım bilinçlidir. Eskiden repo kökü yayınlanıyordu ve `.nojekyll` (App Links
+doğrulaması için zorunlu) nokta klasörlerini de açtığı için **tüm veritabanı
+şeması ve RLS politikaları herkese açıktı**: `kuryemibul.com/supabase/
+migration-20-security.sql` 200 dönüyordu. Sır sızıntısı değildi (anahtarlar
+`.gitignore`'da) ama bir saldırgana her kuralı okuyup açık arama kolaylığı
+veriyordu.
+
+| Yayınlanır (`docs/`) | Yayınlanmaz (kök) |
+|---|---|
+| 43 `.html` sayfa | `supabase/` — şema, migration'lar |
+| `assets/` (css, js, görseller) | `www/` — mobil SPA kaynağı |
+| `downloads/kuryemibul.apk` | `android/`, `store/`, `scripts/` |
+| `.well-known/assetlinks.json` | `*.md`, `package.json`, `version.json` |
+| `sw.js`, `manifest.json`, `robots.txt`, `sitemap.xml` | `capacitor.config.json`, `.github/` |
+| `CNAME`, `.nojekyll` | `.claude/`, `scripts/` |
+
+**Yeni bir site dosyası eklerken `docs/` altına koy.** Kökte kalırsa siteden
+erişilemez. Tersi de geçerli: gizli kalması gereken hiçbir şeyi `docs/` içine koyma.
+
+`version.json` kökte kalır — `android/app/build.gradle` onu `../../version.json`
+diye okur ve site çalışma anında çekmez.
+
 ## İKİ AYRI UYGULAMA (önce bunu oku)
 
 Bu repo **iki bağımsız uygulama** barındırır. Karıştırma:
 
 | | Web sitesi | Mobil uygulama |
 |---|---|---|
-| Konum | Kök dizin | `www/` |
+| Konum | `docs/` | `www/` |
 | Yapı | 44 ayrı `.html` sayfası | Tek sayfa (SPA), kendi router'ı |
 | Yayın | GitHub Pages, `main` dalı → kuryemibul.com | Capacitor APK (paketlenmiş) |
 | Ekranlar | `kuryeler.html`, `panel-kurye.html`, … | `www/assets/js/screens/*.js` |
@@ -31,7 +70,7 @@ Bu repo **iki bağımsız uygulama** barındırır. Karıştırma:
 çevrimdışı çalışsın ve Play Store'un *minimum functionality* politikasında
 "web sarmalayıcı" sayılmasın diye.
 
-**Sonuç:** kök dizinde yapılan bir düzeltme mobil uygulamaya YANSIMAZ. Aynı
+**Sonuç:** `docs/` içinde yapılan bir düzeltme mobil uygulamaya YANSIMAZ. Aynı
 davranış gerekiyorsa `www/` içinde ayrıca uygulanmalı, sonra `npm run cap:sync`
 → APK yeniden derleme → kullanıcı güncellemesi gerekir.
 

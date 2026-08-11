@@ -85,7 +85,7 @@ Workflow şunları otomatik yapar:
 3. **İmza doğrulaması** — çıktı hâlâ "Android Debug" ile imzalıysa iş başarısız olur.
 4. **debuggable doğrulaması** — bayrak açıksa iş başarısız olur.
 5. Keystore'u runner'dan siler.
-6. `downloads/kuryemibul.apk`'yı günceller.
+6. `docs/downloads/kuryemibul.apk`'yı günceller.
 
 ---
 

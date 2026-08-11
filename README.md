@@ -19,23 +19,29 @@ ihtiyaç duyan işletmeleri tek platformda buluşturan kurye ekosistem platformu
 ## Dosya Yapısı
 | Yol | Açıklama |
 |-----|----------|
-| `index.html` | Landing (tanıtım) |
-| `index.html?auth=login` | Giriş / kayıt — ana sayfa üzerinde modal |
-| `kuryeler/isletmeler/firmalar.html` | Havuz listeleme + filtre |
-| `profil-*.html` | Profil detayları (`?id=` ile) |
-| `harita.html` | Leaflet haritası |
-| `panel-*.html` | Role özel paneller |
-| `assets/css/styles.css` | Tasarım sistemi |
-| `assets/js/components.js` | Header/footer, rol anahtarı, helper'lar |
-| `assets/js/data.js` | Örnek (mock) veriler |
-| `assets/js/app.js` | Havuz/filtre, profil, harita, panel, teklif mantığı |
+> **Site kökü `docs/`'tur.** GitHub Pages yalnız o klasörü yayınlar; `supabase/`,
+> `store/`, `www/`, `android/` ve `.md` dosyaları repoda kalır ama yayınlanmaz.
+> Ayrıntı: [CLAUDE.md](CLAUDE.md#yayınlanan-sadece-docs-önce-bunu-oku)
+
+| `docs/index.html` | Landing (tanıtım) + giriş/kayıt modalı |
+| `docs/index.html?auth=login` | Giriş / kayıt — ayrı sayfa yok, modal açılır |
+| `docs/kuryeler|isletmeler|firmalar.html` | Havuz listeleme + filtre |
+| `docs/profil-*.html` | Profil detayları (`?id=` ile) |
+| `docs/harita.html` | Google Maps haritası |
+| `docs/panel-*.html` | Role özel paneller |
+| `docs/assets/css/main.css` | Tasarım sistemi (tek CSS dosyası) |
+| `docs/assets/js/components.js` | Header/footer, rol anahtarı, helper'lar |
+| `docs/assets/js/supabase.js` | Tüm veri katmanı (mock veri YOKTUR) |
+| `docs/assets/js/auth-forms.js` | Giriş/kayıt formu — tek kaynak |
+| `docs/assets/js/app.js` | Havuz/filtre, profil, harita, panel, teklif mantığı |
 
 ## Çalıştırma
 ```bash
-npx serve .
+npx http-server docs -c-1
 ```
-> Not: `serve.json` (`cleanUrls:false`) yalnızca yerel sunucunun `?id=` query'lerini
-> korumasını sağlar; GitHub Pages'i etkilemez.
+> `npx serve` kullanmayın: cleanUrls varsayılan olarak açıktır ve 301'de query
+> string'i düşürür (`?id=`, `?next=`, `?auth=` kaybolur). GitHub Pages böyle
+> davranmaz — `http-server` üretimle birebir uyar.
 
 ## Yol Haritası
 - **Faz 1 (mevcut):** Statik interaktif prototip

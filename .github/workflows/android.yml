@@ -3,7 +3,7 @@ name: Android APK Derle
 # ============================================================
 # GÜVENLİK NOTU (önceki sürümdeki kritik hata):
 # Bu workflow eskiden `assembleDebug` çalıştırıp çıkan APK'yı
-# downloads/kuryemibul.apk olarak siteye yayınlıyordu. Sonuç:
+# docs/downloads/kuryemibul.apk olarak siteye yayınlıyordu. Sonuç:
 #   1) android:debuggable="true" — ADB ile process'e bağlanıp
 #      WebView'den canlı Supabase oturum jetonu okunabiliyordu.
 #   2) APK, herkese açık Android DEBUG anahtarıyla imzalıydı
@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "APK'yı downloads/ altına yayınla"
+        description: "APK'yı docs/downloads/ altına yayınla"
         type: boolean
         default: true
 
@@ -194,10 +194,10 @@ jobs:
       - name: Web sitesindeki indirme dosyasını güncelle
         if: ${{ inputs.publish }}
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk downloads/kuryemibul.apk
+          cp android/app/build/outputs/apk/release/app-release.apk docs/downloads/kuryemibul.apk
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add downloads/kuryemibul.apk
+          git add docs/downloads/kuryemibul.apk
           git diff --staged --quiet || git commit -m "chore: APK güncelle (release, imzalı) [skip ci]"
           git checkout -- .
           git pull --rebase origin main
