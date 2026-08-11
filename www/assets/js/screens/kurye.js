@@ -199,7 +199,7 @@ window.KuryeScreens = (function () {
     _livePanelOff = function () { offs.forEach(function (f) { try { f(); } catch (e) {} }); };
   }
 
-  /* ── Premium Dashboard helpers ─────────────────────────── */
+  /* ── Dashboard kart yardimcilari ────────────────────────── */
   function _statCard(num, label, icon, color, route, actionLabel) {
     return '<div class="prem-stat prem-stat--' + color + '" onclick="Router.go(\'' + route + '\')">' +
       '<div class="prem-stat__top">' +
@@ -212,9 +212,9 @@ window.KuryeScreens = (function () {
   }
 
   function _premJobCard(id, emoji, title, company, salary, dist, time, avatarBg) {
-    return '<div class="prem-job" onclick="Router.go(\'/kurye/ilan/' + id + '\')">' +
+    return '<div class="prem-job" onclick="Router.go(\'/kurye/ilan/' + escJs(id) + '\')">' +
       '<div class="prem-job__row1">' +
-        '<div class="prem-job__avatar" style="background:' + avatarBg + '">' + emoji + '</div>' +
+        '<div class="prem-job__avatar" style="background:' + escAttr(avatarBg) + '">' + esc(emoji) + '</div>' +
         '<div class="prem-job__info">' +
           '<div class="prem-job__title">' + esc(title) + '</div>' +
           '<div class="prem-job__company">' + esc(company) + '</div>' +
@@ -222,10 +222,10 @@ window.KuryeScreens = (function () {
         '<button class="prem-job__save" onclick="event.stopPropagation()">' + ICON.heart + '</button>' +
       '</div>' +
       '<div class="prem-job__row2">' +
-        '<div class="prem-job__salary">' + salary + '</div>' +
+        '<div class="prem-job__salary">' + esc(salary) + '</div>' +
         '<div class="prem-job__meta">' +
-          '<span class="prem-job__meta-item">' + ICON.pin   + dist + '</span>' +
-          '<span class="prem-job__meta-item">' + ICON.clock + time + '</span>' +
+          '<span class="prem-job__meta-item">' + ICON.pin   + esc(dist) + '</span>' +
+          '<span class="prem-job__meta-item">' + ICON.clock + esc(time) + '</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -233,10 +233,10 @@ window.KuryeScreens = (function () {
 
   /* ── Dashboard helpers ──────────────────────────────────── */
   function _mCard(icon, val, lbl, iconBg, iconColor, route) {
-    return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
-      '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
-      '<div class="metric-card__val">' + val + '</div>' +
-      '<div class="metric-card__lbl">' + lbl + '</div>' +
+    return '<div class="metric-card" onclick="Router.go(\'' + escJs(route) + '\')">' +
+      '<div class="metric-card__icon" style="background:' + escAttr(iconBg) + ';color:' + escAttr(iconColor) + '">' + ICON[icon] + '</div>' +
+      '<div class="metric-card__val">' + esc(val) + '</div>' +
+      '<div class="metric-card__lbl">' + esc(lbl) + '</div>' +
     '</div>';
   }
 
@@ -251,41 +251,41 @@ window.KuryeScreens = (function () {
         '<div class="actapp-card__time">' + esc(time) + '</div>' +
       '</div>' +
       '<div class="actapp-card__bottom">' +
-        '<span class="app-status app-status--' + statusCls + '">' + statusLbl + '</span>' +
+        '<span class="app-status app-status--' + escAttr(statusCls) + '">' + esc(statusLbl) + '</span>' +
       '</div>' +
     '</div>';
   }
 
   function _jobRec(id, ico, title, company, salary, loc, type, badges) {
     var BADGE_LABELS = { acil: '🔥 Acil', yeni: '✨ Yeni', popular: '⭐ Popüler', yakin: '📍 Yakın' };
-    return '<div class="rec-job-card" onclick="Router.go(\'/kurye/ilan/' + id + '\')">' +
+    return '<div class="rec-job-card" onclick="Router.go(\'/kurye/ilan/' + escJs(id) + '\')">' +
       '<div class="rec-job-card__top">' +
         '<div class="rec-job-card__avatar">' + ico + '</div>' +
         '<div class="rec-job-card__info">' +
           '<div class="rec-job-card__title">' + esc(title) + '</div>' +
           '<div class="rec-job-card__company">' + esc(company) + '</div>' +
         '</div>' +
-        '<div class="rec-job-card__salary">' + salary + '</div>' +
+        '<div class="rec-job-card__salary">' + esc(salary) + '</div>' +
       '</div>' +
       '<div class="rec-job-card__meta">' +
         '<div class="rec-job-card__tags">' +
-          badges.map(function (b) { return '<span class="job-badge job-badge--' + b + '">' + (BADGE_LABELS[b] || b) + '</span>'; }).join('') +
+          badges.map(function (b) { return '<span class="job-badge job-badge--' + escAttr(b) + '">' + esc(BADGE_LABELS[b] || b) + '</span>'; }).join('') +
         '</div>' +
-        '<span style="font-size:.7rem;color:var(--muted)">' + type + ' · ' + loc + '</span>' +
+        '<span style="font-size:.7rem;color:var(--muted)">' + esc(type) + ' · ' + esc(loc) + '</span>' +
       '</div>' +
     '</div>';
   }
 
   function _miniMsg(name, preview, time, unread, route) {
-    return '<div class="mini-msg" onclick="Router.go(\'' + route + '\')">' +
+    return '<div class="mini-msg" onclick="Router.go(\'' + escJs(route) + '\')">' +
       '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem">' + initials(name) + '</div>' +
       '<div class="mini-msg__info">' +
         '<div class="mini-msg__name">' + esc(name) + '</div>' +
-        '<div class="mini-msg__preview">' + preview + '</div>' +
+        '<div class="mini-msg__preview">' + esc(preview) + '</div>' +
       '</div>' +
       '<div class="mini-msg__meta">' +
         '<span class="mini-msg__time">' + esc(time) + '</span>' +
-        (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') +
+        (unread > 0 ? '<span class="mini-msg__badge">' + esc(unread) + '</span>' : '') +
       '</div>' +
     '</div>';
   }
@@ -341,25 +341,16 @@ window.KuryeScreens = (function () {
   /* ── 3. İLANLAR ────────────────────────────────────────── */
   var ILANLAR = [];
 
-  var _ilanState = { cat: 'tumu', sort: 'match', savedIds: {} };
+  var _ilanState = { cat: 'tumu', sort: 'newest', savedIds: {} };
 
-  function _tierBadge(tier) {
-    var map = {
-      premium:      '<span class="il-tier il-tier--premium">⭐ Premium</span>',
-      profesyonel:  '<span class="il-tier il-tier--pro">🔵 Profesyonel</span>',
-      standart:     '<span class="il-tier il-tier--std">Standart</span>'
-    };
-    return map[tier] || map.standart;
-  }
 
   function _ilCard(j) {
     var saved = !!_ilanState.savedIds[j.id];
     return '<div class="il-card kb-card--pressable" onclick="Router.go(\'/kurye/ilan/' + escJs(j.id)+ '\')">' +
 
-      /* ── Row 1: logo + tier badge + save ── */
+      /* ── Row 1: logo + kaydet ── */
       '<div class="il-card__head">' +
         '<div class="il-card__avatar" style="background:' + escAttr(j.avatarBg)+ '">' + esc(j.emoji)+ '</div>' +
-        '<div class="il-card__tier-wrap">' + _tierBadge(j.tier) + '</div>' +
         '<button class="il-card__save' + (saved ? ' il-card__save--saved' : '') + '" ' +
           'onclick="event.stopPropagation();KuryeScreens._ilToggleSave(this,\'' + escJs(j.id)+ '\')">' +
           '<svg width="20" height="20" viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
@@ -373,7 +364,7 @@ window.KuryeScreens = (function () {
           '<div class="il-card__company">' + esc(j.company)+ '</div>' +
           '<div class="il-card__salary">' + esc(j.salary)+ '</div>' +
           '<div class="il-card__meta">' +
-            [j.location ? '📍 ' + j.location : '', j.dist, j.time ? '🕐 ' + j.time : '']
+            [j.location ? '📍 ' + esc(j.location) : '', esc(j.dist), j.time ? '🕐 ' + esc(j.time) : '']
               .filter(Boolean).join(' &bull; ') +
           '</div>' +
         '</div>' +
@@ -394,14 +385,14 @@ window.KuryeScreens = (function () {
       /* ── Row 3: tags ── */
       '<div class="il-card__tags">' +
         j.tags.map(function (t) {
-          var cls = t === 'Acil Alım' ? ' il-tag--red' : t === 'Premium' ? ' il-tag--gold' : '';
-          return '<span class="il-tag' + cls + '">' + t + '</span>';
+          var cls = t === 'Acil Alım' ? ' il-tag--red' : '';
+          return '<span class="il-tag' + cls + '">' + esc(t) + '</span>';
         }).join('') +
       '</div>' +
 
       /* ── CTA ── */
       '<button class="il-card__cta" onclick="event.stopPropagation();KuryeScreens._basvur(\'' + escJs(j.id)+ '\')">' +
-        (j.tier === 'premium' ? 'Hızlı Başvur ⚡' : 'Başvur') +
+        'Başvur' +
       '</button>' +
 
     '</div>';
@@ -414,16 +405,19 @@ window.KuryeScreens = (function () {
              : cat === 'tamzaman'  ? ILANLAR.filter(function (j) { return j.tags.some(function (t) { return t === 'Tam Zamanlı'; }); })
              : cat === 'parttime'  ? ILANLAR.filter(function (j) { return j.tags.some(function (t) { return t === 'Part Time'; }); })
              : cat === 'acil'      ? ILANLAR.filter(function (j) { return j.tags.some(function (t) { return t === 'Acil Alım'; }); })
-             : cat === 'premium'   ? ILANLAR.filter(function (j) { return j.tier === 'premium'; })
              : ILANLAR.slice();
 
+    /* Yalnız gerçekten uygulanabilen sıralamalar kaldı. Kaldırılanlar:
+         "Sana Uygun"     — eşleşme skoru diye bir veri yok, hep null'dı; hiçbir şey yapmıyordu.
+         "En Yakın"       — mesafe hesaplanmıyor, dist hep '' idi; parseFloat NaN döndürüyordu.
+         "En Yüksek Maaş" — maas_aralik serbest metin ("23.232 – 3.232 ₺/saatlik");
+                            parseInt bunu 23 okuyup Türkçe binlik ayracını bozuyordu.
+       "En Yeni" de ilan ID'sine (rastgele UUID) göre sıralıyordu, yani aslında
+       rastgeleydi; artık gerçek created_at kullanılıyor. */
     data.sort(function (a, b) {
-      if (sort === 'match')  return (b.match || 0) - (a.match || 0);
-      if (sort === 'newest') return a.id > b.id ? -1 : 1;
-      if (sort === 'salary') return parseInt(b.salary) - parseInt(a.salary);
-      if (sort === 'dist')   return parseFloat(a.dist) - parseFloat(b.dist);
-      if (sort === 'premium') return (b.tier === 'premium' ? 1 : 0) - (a.tier === 'premium' ? 1 : 0);
-      return 0;
+      var ta = Date.parse(a.created) || 0, tb = Date.parse(b.created) || 0;
+      if (sort === 'oldest') return ta - tb;
+      return tb - ta;                              // varsayılan: en yeni
     });
 
     var list = document.getElementById('il-feed');
@@ -481,7 +475,6 @@ window.KuryeScreens = (function () {
           '<button class="il-cat"                data-cat="tamzaman" onclick="KuryeScreens._ilCat(this,\'tamzaman\')">⏱ Tam Zamanlı</button>' +
           '<button class="il-cat"                data-cat="parttime" onclick="KuryeScreens._ilCat(this,\'parttime\')">🕐 Part-time</button>' +
           '<button class="il-cat il-cat--red"    data-cat="acil"     onclick="KuryeScreens._ilCat(this,\'acil\')">🔥 Acil</button>' +
-          '<button class="il-cat il-cat--gold"   data-cat="premium"  onclick="KuryeScreens._ilCat(this,\'premium\')">⭐ Premium</button>' +
         '</div>' +
 
         /* Gelişmiş filtre açılırları (Maaş / Mesafe / Araç Tipi / Deneyim)
@@ -494,11 +487,8 @@ window.KuryeScreens = (function () {
           '<div class="il-sort-left">' +
             '<span class="il-sort-label">Sırala:</span>' +
             '<select class="il-sort-sel" id="il-sort-sel" onchange="KuryeScreens._ilSort(this.value)">' +
-              '<option value="match">Sana Uygun</option>' +
               '<option value="newest">En Yeni</option>' +
-              '<option value="dist">En Yakın</option>' +
-              '<option value="salary">En Yüksek Maaş</option>' +
-              '<option value="premium">Premium Önce</option>' +
+              '<option value="oldest">En Eski</option>' +
             '</select>' +
           '</div>' +
           '<div class="il-sort-right" id="il-counter">—</div>' +
@@ -544,7 +534,7 @@ window.KuryeScreens = (function () {
       dist: '',
       time: l.tarih || '',
       match: null,            // gerçek eşleşme verisi yoksa yüzde gösterilmez
-      tier: l.oncelik === 'acil' ? 'premium' : 'standart',
+      created: l.created_at || '',   // sıralama gerçek tarihe göre yapılır
       avatarBg: '#F97316',
       tags: tags,
       saved: false,
@@ -681,27 +671,27 @@ window.KuryeScreens = (function () {
           '<div class="detail-hero__title">' + esc(title) + '</div>' +
           '<div class="detail-hero__sub">' + esc(company) + '</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
-            (tip ? '<span class="kb-chip kb-chip--accent">' + tip + '</span>' : '') +
-            (konum ? '<span class="kb-chip">' + ICON.pin + konum + '</span>' : '') +
+            (tip ? '<span class="kb-chip kb-chip--accent">' + esc(tip) + '</span>' : '') +
+            (konum ? '<span class="kb-chip">' + ICON.pin + esc(konum) + '</span>' : '') +
           '</div>' +
         '</div>' +
 
         '<div class="detail-section">' +
           '<div class="detail-section__title">İlan Açıklaması</div>' +
           '<p style="font-size:.88rem;line-height:1.6;color:var(--text)">' +
-            (aciklama || ('Firmamız için deneyimli ' + title.toLowerCase() + ' arıyoruz. Aktif ve dürüst adayları bekliyoruz.')) +
+            (aciklama ? escLines(aciklama) : ('Firmamız için deneyimli ' + esc(String(title).toLowerCase()) + ' arıyoruz. Aktif ve dürüst adayları bekliyoruz.')) +
           '</p>' +
         '</div>' +
 
         '<div class="detail-section">' +
           '<div class="detail-section__title">Detaylar</div>' +
-          (konum ? '<div class="detail-row">' + ICON.pin + '<span>Konum: ' + konum + '</span></div>' : '') +
-          (tip   ? '<div class="detail-row">' + ICON.briefcase + '<span>Çalışma Tipi: ' + tip + '</span></div>' : '') +
+          (konum ? '<div class="detail-row">' + ICON.pin + '<span>Konum: ' + esc(konum) + '</span></div>' : '') +
+          (tip   ? '<div class="detail-row">' + ICON.briefcase + '<span>Çalışma Tipi: ' + esc(tip) + '</span></div>' : '') +
         '</div>' +
 
         '<div class="detail-cta">' +
-          '<button class="btn btn--primary" onclick="KuryeScreens._basvur(\'' + id + '\',\'' +
-            title.replace(/'/g,"\\'") + '\',\'' + company.replace(/'/g,"\\'") + '\')">' +
+          '<button class="btn btn--primary" onclick="KuryeScreens._basvur(\'' + escJs(id) + '\',\'' +
+            escJs(title) + '\',\'' + escJs(company) + '\')">' +
             'Başvur' +
           '</button>' +
         '</div>' +
@@ -712,7 +702,7 @@ window.KuryeScreens = (function () {
   function _basvur(ilanId, titleOverride, companyOverride) {
     // Yüklü ilan listesinden bul; yoksa çağıranın verdiği gerçek başlık/firma kullanılır.
     var base = ILANLAR.find(function (j) { return j.id === ilanId; }) ||
-      { id: ilanId, title: titleOverride || 'İlan', company: companyOverride || 'Esnaf', emoji: '🏢', avatarBg: '#6C4DFF', tier: 'standart' };
+      { id: ilanId, title: titleOverride || 'İlan', company: companyOverride || 'Esnaf', emoji: '🏢', avatarBg: '#6C4DFF' };
     var ilan = titleOverride
       ? Object.assign({}, base, { title: titleOverride, company: companyOverride || base.company })
       : base;
@@ -737,7 +727,6 @@ window.KuryeScreens = (function () {
           '</button>' +
         '</div>' +
 
-        (ilan.tier !== 'standart' ? '<div class="apply-modal__tier">' + _tierBadge(ilan.tier) + '</div>' : '') +
 
         '<div class="apply-modal__body">' +
           '<div class="apply-modal__label">Kapak mesajı <span class="apply-modal__opt">(isteğe bağlı)</span></div>' +
@@ -755,9 +744,9 @@ window.KuryeScreens = (function () {
           '<button class="apply-modal__cancel" onclick="document.getElementById(\'apply-overlay\').remove()">Vazgeç</button>' +
           '<button class="apply-modal__submit" id="apply-submit-btn" ' +
             'onclick="KuryeScreens._doApply(\'' + escJs(ilan.id)+ '\',\'' +
-              ilan.title.replace(/'/g, "\\'") + '\',\'' +
-              ilan.company.replace(/'/g, "\\'") + '\')">' +
-            (ilan.tier === 'premium' ? 'Hızlı Başvur ⚡' : 'Başvuruyu Gönder →') +
+              escJs(ilan.title) + '\',\'' +
+              escJs(ilan.company) + '\')">' +
+            'Başvuruyu Gönder →' +
           '</button>' +
         '</div>' +
 
@@ -915,7 +904,7 @@ window.KuryeScreens = (function () {
   function _konusmaCard(k, isActive) {
     var color = _msgIndicatorColor(k.indicator);
     return '<div class="msg-conv' + (isActive ? ' msg-conv--active' : '') + '" ' +
-      'onclick="KuryeScreens._msgOpen(\'' + esc(k.id) + '\')">' +
+      'onclick="KuryeScreens._msgOpen(\'' + escJs(k.id) + '\')">' +
 
       /* indicator bar */
       '<div class="msg-conv__bar" style="background:' + color + '"></div>' +
@@ -934,7 +923,7 @@ window.KuryeScreens = (function () {
         '</div>' +
         '<div class="msg-conv__row2">' +
           '<span class="msg-conv__badge msg-conv__badge--' + esc(k.badge) + '">' +
-            (k.badge === 'premium' ? '⭐' : '') + ' ' + k.badge.charAt(0).toUpperCase() + k.badge.slice(1) +
+            esc(k.badge.charAt(0).toUpperCase() + k.badge.slice(1)) +
           '</span>' +
           '<span class="msg-conv__job">' + escAttr(k.jobType) + '</span>' +
         '</div>' +
@@ -947,7 +936,7 @@ window.KuryeScreens = (function () {
       '<div class="msg-conv__right">' +
         (k.unread ? '<div class="msg-conv__unread">' + escAttr(k.unread) + '</div>' : '') +
         '<button class="msg-conv__star' + (k.starred ? ' msg-conv__star--on' : '') + '" ' +
-          'onclick="event.stopPropagation();KuryeScreens._msgStar(\'' + esc(k.id) + '\')">' +
+          'onclick="event.stopPropagation();KuryeScreens._msgStar(\'' + escJs(k.id) + '\')">' +
           ICON.star +
         '</button>' +
       '</div>' +
@@ -1174,20 +1163,18 @@ window.KuryeScreens = (function () {
     }
     if (m.message_type === 'profile_card') {
       var meta = m.metadata || {};
-      var sevBadge = meta.seviye === 'premium' ? '⭐ Premium' : meta.seviye === 'profesyonel' ? '🔵 Profesyonel' : 'Standart';
       return '<div class="chat-bubble chat-bubble--in">' +
         '<div class="chat-pcard">' +
           '<div class="chat-pcard__head">' +
             '<div class="chat-pcard__ava">🛵</div>' +
             '<div class="chat-pcard__info">' +
               '<div class="chat-pcard__name">' + esc((meta.ad || 'Aday')) + '</div>' +
-              '<div class="chat-pcard__lvl">' + sevBadge + '</div>' +
-              '<div class="chat-pcard__sub">⭐ ' + (meta.puan || '0') + ' · ' + esc((meta.sehir || '')) + '</div>' +
+              '<div class="chat-pcard__sub">⭐ ' + esc(meta.puan || '0') + ' · ' + esc((meta.sehir || '')) + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="chat-pcard__stats">' +
             '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc((meta.deneyim || 0)) + 'y</span><span class="chat-pcard__slbl">Deneyim</span></div>' +
-            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + (meta.puan || '0') + '</span><span class="chat-pcard__slbl">Puan</span></div>' +
+            '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc(meta.puan || '0') + '</span><span class="chat-pcard__slbl">Puan</span></div>' +
             '<div class="chat-pcard__stat"><span class="chat-pcard__sval">' + esc((meta.arac || '—')) + '</span><span class="chat-pcard__slbl">Araç</span></div>' +
           '</div>' +
           '<div class="chat-pcard__actions">' +
@@ -1558,26 +1545,26 @@ window.KuryeScreens = (function () {
             '</div>' +
             '<div class="pr-hero__info">' +
               '<div class="pr-hero__name">' + esc(name) + '</div>' +
-              '<div class="pr-hero__role">🛵 ' + prArac + '</div>' +
+              '<div class="pr-hero__role">🛵 ' + esc(prArac) + '</div>' +
               '<div class="pr-hero__loc">' +
                 '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-                ' ' + prSehir +
+                ' ' + esc(prSehir) +
               '</div>' +
               '<div class="pr-hero__minibadges">' +
-                (prDeney > 0 ? '<span class="pr-minibadge">⏱ ' + prDeney + ' yıl deneyim</span>' : '') +
+                (prDeney > 0 ? '<span class="pr-minibadge">⏱ ' + esc(prDeney) + ' yıl deneyim</span>' : '') +
                 (degSay > 0
-                  ? '<span class="pr-minibadge pr-minibadge--star">⭐ ' + prPuan + ' (' + degSay + ')</span>'
+                  ? '<span class="pr-minibadge pr-minibadge--star">⭐ ' + esc(prPuan) + ' (' + esc(degSay) + ')</span>'
                   : '<span class="pr-minibadge">Henüz değerlendirme yok</span>') +
               '</div>' +
             '</div>' +
           '</div>' +
-          /* "Premium Üye" rozeti yalnız gerçekten doğrulanmış profile çıkar */
+          /* Doğrulama rozeti yalnız gerçekten doğrulanmış profile çıkar. */
           (prDogru
-            ? '<div class="pr-hero__premium">' +
-                '<div class="pr-premium-badge">' +
-                  '<div class="pr-premium-badge__icon">✅</div>' +
-                  '<div class="pr-premium-badge__label">Doğrulanmış</div>' +
-                  '<div class="pr-premium-badge__sub">Kimliğin onaylandı</div>' +
+            ? '<div class="pr-hero__verified">' +
+                '<div class="pr-verified-badge">' +
+                  '<div class="pr-verified-badge__icon">✅</div>' +
+                  '<div class="pr-verified-badge__label">Doğrulanmış</div>' +
+                  '<div class="pr-verified-badge__sub">Kimliğin onaylandı</div>' +
                 '</div>' +
               '</div>'
             : '') +
@@ -1587,7 +1574,7 @@ window.KuryeScreens = (function () {
         '<div class="pr-trust">' +
           '<div class="pr-trust__head">' +
             '<div class="pr-trust__title">Profil Güven Skoru</div>' +
-            '<div class="pr-trust__score">' + prPuan +
+            '<div class="pr-trust__score">' + esc(prPuan) +
               (puanNum > 0 ? ' <span>/ 5.0</span>' : '') + '</div>' +
           '</div>' +
           '<div class="pr-trust__bar-wrap">' +

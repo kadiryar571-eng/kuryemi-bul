@@ -21,7 +21,7 @@
   ">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kurye Havuzu · KuryemiBul</title>
-  <meta name="description" content="Bölge, şehir ve seviyeye göre kurye ara.">
+  <meta name="description" content="Bölge, şehir ve araç tipine göre kurye ara.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/logo.png" sizes="any">
   <link rel="apple-touch-icon" href="assets/logo.png">
@@ -38,7 +38,7 @@
     <div class="page-header">
       <div>
         <h1>Kurye Havuzu</h1>
-        <p class="page-sub">Bölge, şehir, seviye ve araç tipine göre kurye bul.</p>
+        <p class="page-sub">Bölge, şehir ve araç tipine göre kurye bul.</p>
       </div>
       <div style="display:flex;gap:8px">
         <a href="harita.html?type=kurye" class="btn btn--ghost btn--sm">🗺 Haritada Gör</a>
@@ -62,7 +62,6 @@
         <div class="suggest-box" id="poolSuggest"></div>
       </div>
       <select id="fSelect1"><option value="">Tüm Şehirler</option></select>
-      <select id="fSelect2"><option value="">Tüm Seviyeler</option></select>
       <select id="fSelect3" onchange="filterByArac(this.value)">
         <option value="">Tüm Araçlar</option>
         <option value="Motosiklet">🛵 Motosiklet</option>

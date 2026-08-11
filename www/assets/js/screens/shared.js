@@ -39,9 +39,9 @@ window.SharedScreens = (function () {
       list.map(function (n) {
         var isRead = !!n.read_at;
         var icon = typeIcon[n.type] || '🔔';
-        return '<div class="notif-item" style="cursor:pointer" onclick="SharedScreens._notifTap(\'' + n.id + '\',\'' + (n.link || '').replace(/'/g,"\\'") + '\')">' +
+        return '<div class="notif-item" style="cursor:pointer" onclick="SharedScreens._notifTap(\'' + escJs(n.id) + '\',\'' + escJs(n.link || '') + '\')">' +
           '<div class="notif-item__dot' + (isRead ? ' notif-item__dot--read' : '') + '"></div>' +
-          '<div style="font-size:1.1rem;margin-right:10px;flex:none">' + icon + '</div>' +
+          '<div style="font-size:1.1rem;margin-right:10px;flex:none">' + esc(icon) + '</div>' +
           '<div class="notif-item__text">' +
             '<div class="notif-item__title">' + esc(n.title) + '</div>' +
             (n.body ? '<div class="notif-item__sub">' + esc(n.body) + '</div>' : '') +
@@ -224,7 +224,7 @@ window.SharedScreens = (function () {
   function _favEmpty(msg) {
     return '<div class="kb-empty"><div class="kb-empty__icon">❤️</div>' +
       '<div class="kb-empty__title">Favori yok</div>' +
-      '<div class="kb-empty__sub">' + msg + '</div></div>';
+      '<div class="kb-empty__sub">' + esc(msg) + '</div></div>';
   }
 
   async function _loadFavoriler() {
@@ -360,7 +360,7 @@ window.SharedScreens = (function () {
   function _settingItem(label, icon, fn) {
     return '<div class="profile-menu-item" style="padding:14px 0" onclick="(' + fn + ')()">' +
       '<div class="profile-menu-item__icon">' + ICON[icon] + '</div>' +
-      '<div class="profile-menu-item__label">' + label + '</div>' +
+      '<div class="profile-menu-item__label">' + esc(label) + '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
     '</div>';
   }
@@ -605,14 +605,14 @@ window.SharedScreens = (function () {
 
   function premDashPanel(cfg) {
     var stats = (cfg.stats || []).map(function (s) {
-      var numHtml = s.id ? '<span id="' + s.id + '">' + s.num + '</span>' : s.num;
-      return '<div class="prem-stat prem-stat--' + s.color + '" onclick="Router.go(\'' + s.route + '\')">' +
+      var numHtml = s.id ? '<span id="' + escAttr(s.id) + '">' + esc(s.num) + '</span>' : esc(s.num);
+      return '<div class="prem-stat prem-stat--' + escAttr(s.color) + '" onclick="Router.go(\'' + escJs(s.route) + '\')">' +
         '<div class="prem-stat__top">' +
-          '<div class="prem-stat__num prem-stat__num--' + s.color + '">' + numHtml + '</div>' +
-          '<div class="prem-stat__icon prem-stat__icon--' + s.color + '">' + ICON[s.icon] + '</div>' +
+          '<div class="prem-stat__num prem-stat__num--' + escAttr(s.color) + '">' + numHtml + '</div>' +
+          '<div class="prem-stat__icon prem-stat__icon--' + escAttr(s.color) + '">' + ICON[s.icon] + '</div>' +
         '</div>' +
-        '<div class="prem-stat__label">' + s.label + '</div>' +
-        '<div class="prem-stat__action">' + s.action + ICON.chevron + '</div>' +
+        '<div class="prem-stat__label">' + esc(s.label) + '</div>' +
+        '<div class="prem-stat__action">' + esc(s.action) + ICON.chevron + '</div>' +
       '</div>';
     }).join('');
 
@@ -658,9 +658,9 @@ window.SharedScreens = (function () {
       time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     }
     var searchText = ((c.otherName || '') + ' ' + (c.listingTitle || '') + ' ' + (c.lastMessage || '')).toLowerCase();
-    return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + escJs(c.id)+ '\')" data-search="' + searchText + '">' +
-      '<div class="msg-conv__bar" style="background:' + roleBg + '"></div>' +
-      '<div class="msg-conv__ava" style="background:' + roleBg + '">' +
+    return '<div class="msg-conv" onclick="Router.go(\'/' + rolePrefix + '/mesaj/' + escJs(c.id)+ '\')" data-search="' + escAttr(searchText) + '">' +
+      '<div class="msg-conv__bar" style="background:' + escAttr(roleBg) + '"></div>' +
+      '<div class="msg-conv__ava" style="background:' + escAttr(roleBg) + '">' +
         roleEmoji +
         '<div class="msg-conv__online" style="display:none"></div>' +
       '</div>' +
@@ -718,7 +718,7 @@ window.SharedScreens = (function () {
       if (el) el.innerHTML = convs.map(function (c) { return _sharedConvCard(c, rolePrefix); }).join('');
       var total = convs.reduce(function (s, c) { return s + (c.unread || 0); }, 0);
       var tab = document.querySelector('#msg-tabs .msg-tab[data-tab="tumu"]');
-      if (tab && total) tab.innerHTML = 'Tümü <span class="msg-tab__badge">' + total + '</span>';
+      if (tab && total) tab.innerHTML = 'Tümü <span class="msg-tab__badge">' + esc(total) + '</span>';
     }).catch(function (e) { console.warn('sharedConvsAsync:', e); });
   }
 
@@ -776,18 +776,16 @@ window.SharedScreens = (function () {
       var isOut = m.sender_user === myUserId;
       var icon = meta.callType === 'video' ? '📹' : '📞';
       var label = isOut ? (meta.callType === 'video' ? 'Görüntülü arama başlatıldı' : 'Sesli arama başlatıldı') : (meta.callType === 'video' ? 'Gelen görüntülü arama' : 'Gelen sesli arama');
-      return '<div class="chat-date-sep"><span>' + icon + ' ' + label + '</span></div>';
+      return '<div class="chat-date-sep"><span>' + esc(icon) + ' ' + esc(label) + '</span></div>';
     }
     if (m.message_type === 'profile_card') {
       var meta = m.metadata || {};
-      var sevBadge = meta.seviye === 'premium' ? '⭐ Premium' : meta.seviye === 'profesyonel' ? '🔵 Profesyonel' : 'Standart';
       return '<div class="chat-bubble chat-bubble--in">' +
         '<div class="chat-pcard">' +
           '<div class="chat-pcard__head">' +
             '<div class="chat-pcard__ava">🛵</div>' +
             '<div class="chat-pcard__info">' +
               '<div class="chat-pcard__name">' + esc(meta.ad || 'Aday') + '</div>' +
-              '<div class="chat-pcard__lvl">' + sevBadge + '</div>' +
               '<div class="chat-pcard__sub">⭐ ' + esc(meta.puan || '0') + ' · ' + esc(meta.sehir || '') + '</div>' +
             '</div>' +
           '</div>' +
@@ -1325,7 +1323,7 @@ window.SharedScreens = (function () {
                 '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Araç Tipi</label>' +
                 '<select id="pd-arac" class="kb-input" style="appearance:auto">' +
                   '<option value="">Seçin…</option>' +
-                  aracSec.map(function(a){ return '<option value="' + a + '"' + (p.arac === a ? ' selected' : '') + '>' + a + '</option>'; }).join('') +
+                  aracSec.map(function(a){ return '<option value="' + escAttr(a) + '"' + (p.arac === a ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('') +
                 '</select>' +
               '</div>' +
               '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
@@ -1485,7 +1483,6 @@ window._spmShell = function() {
         '<button type="button" class="spm-chip is-on" data-spmlayer="ilan"><span class="spm-chip__dot" style="background:#f59e0b"></span>İş İlanları</button>' +
         '<button type="button" class="spm-chip is-on" data-spmlayer="firma"><span class="spm-chip__dot" style="background:#a855f7"></span>Kurye Firmaları</button>' +
         '<button type="button" class="spm-chip" data-spmlayer="acil"><span class="spm-chip__dot" style="background:#ef4444"></span>Acil Alım</button>' +
-        '<button type="button" class="spm-chip" data-spmlayer="premium"><span class="spm-chip__dot" style="background:#f59e0b;box-shadow:0 0 5px #f59e0b"></span>Premium</button>' +
         '<button type="button" class="spm-chip" data-spmlayer="yakin"><span class="spm-chip__dot" style="background:#22d3ee"></span>Yakınımda</button>' +
       '</div>' +
     '</div>' +

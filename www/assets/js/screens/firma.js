@@ -36,13 +36,13 @@ window.FirmaScreens = (function () {
     var sub   = a.sehir || a.loc || 'Başvurdu';
     var badge = a.durum === 'reviewed' ? '<span class="kb-chip kb-chip--success" style="font-size:.7rem;padding:2px 8px">İncelendi</span>' :
                 a.durum === 'accepted' ? '<span class="kb-chip kb-chip--accent" style="font-size:.7rem;padding:2px 8px">Kabul</span>' :
-                a.ilanBaslik ? '<span style="font-size:.7rem;color:var(--muted)">' + a.ilanBaslik + '</span>' : '';
-    return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/' + role + '/aday/' + esc(a.id)+ '\')">' +
+                a.ilanBaslik ? '<span style="font-size:.7rem;color:var(--muted)">' + esc(a.ilanBaslik) + '</span>' : '';
+    return '<div class="person-card kb-card--pressable" onclick="Router.go(\'/' + escJs(role) + '/aday/' + escJs(a.id)+ '\')">' +
       '<div class="kb-avatar" style="background:var(--c-firma)">' + initials(name) + '</div>' +
       '<div class="person-card__info">' +
         '<div class="person-card__name">' + esc(name) + '</div>' +
         '<div class="person-card__sub">' + esc(sub) + '</div>' +
-        '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + score + '</span>' + badge + '</div>' +
+        '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + esc(score) + '</span>' + badge + '</div>' +
       '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
     '</div>';
@@ -164,20 +164,20 @@ window.FirmaScreens = (function () {
 
   /* ── Kurye Firması dashboard helpers ─────────────────────────────── */
   function _fMCard(icon, val, lbl, iconBg, iconColor, route) {
-    return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
-      '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
-      '<div class="metric-card__val">' + val + '</div>' +
-      '<div class="metric-card__lbl">' + lbl + '</div>' +
+    return '<div class="metric-card" onclick="Router.go(\'' + escJs(route) + '\')">' +
+      '<div class="metric-card__icon" style="background:' + escAttr(iconBg) + ';color:' + escAttr(iconColor) + '">' + ICON[icon] + '</div>' +
+      '<div class="metric-card__val">' + esc(val) + '</div>' +
+      '<div class="metric-card__lbl">' + esc(lbl) + '</div>' +
     '</div>';
   }
 
   function _fCandCard(id, name, exp, loc, score) {
-    return '<div class="rec-cand-card" onclick="Router.go(\'/firma/aday/' + id + '\')">' +
+    return '<div class="rec-cand-card" onclick="Router.go(\'/firma/aday/' + escJs(id) + '\')">' +
       '<div class="kb-avatar" style="background:var(--c-firma)">' + initials(name) + '</div>' +
       '<div class="rec-cand-card__info">' +
         '<div class="rec-cand-card__name">' + esc(name) + '</div>' +
-        '<div class="rec-cand-card__sub">' + exp + ' · ' + loc + '</div>' +
-        '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + score + '</span></div>' +
+        '<div class="rec-cand-card__sub">' + esc(exp) + ' · ' + esc(loc) + '</div>' +
+        '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + esc(score) + '</span></div>' +
       '</div>' +
       ICON.chevron +
     '</div>';
@@ -186,8 +186,8 @@ window.FirmaScreens = (function () {
   function _fMiniMsg(name, preview, time, unread) {
     return '<div class="mini-msg" onclick="Router.go(\'/firma/mesajlar\')">' +
       '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem;background:var(--c-firma)">' + initials(name) + '</div>' +
-      '<div class="mini-msg__info"><div class="mini-msg__name">' + esc(name) + '</div><div class="mini-msg__preview">' + preview + '</div></div>' +
-      '<div class="mini-msg__meta"><span class="mini-msg__time">' + time + '</span>' + (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') + '</div>' +
+      '<div class="mini-msg__info"><div class="mini-msg__name">' + esc(name) + '</div><div class="mini-msg__preview">' + esc(preview) + '</div></div>' +
+      '<div class="mini-msg__meta"><span class="mini-msg__time">' + esc(time) + '</span>' + (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') + '</div>' +
     '</div>';
   }
 
@@ -252,8 +252,8 @@ window.FirmaScreens = (function () {
       '<div style="font-size:.82rem;color:var(--c-accent);font-weight:600">' + (il.tarih || il.date || '') + '</div>' +
       '<div class="flex" style="gap:8px;margin-top:10px">' +
         '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/firma/basvurular\')">Başvuruları Gör</button>' +
-        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/firma/ilan/duzenle/' + esc(il.id) + '\')">Düzenle</button>' : '') +
-        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._ilanToggle(\'' + esc(il.id) + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="Router.go(\'/firma/ilan/duzenle/' + escJs(il.id) + '\')">Düzenle</button>' : '') +
+        (il.id ? '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._ilanToggle(\'' + escJs(il.id) + '\',' + !isAcik + ')">' + (isAcik ? 'Pasif Yap' : 'Yayınla') + '</button>' : '') +
       '</div>' +
     '</div>';
   }
@@ -321,14 +321,14 @@ window.FirmaScreens = (function () {
   var HIZMET_LIST = ['Şehir İçi Teslimat','Şehirler Arası Nakliye','Aynı Gün Teslimat','Gece Teslimatı','Soğuk Zincir Taşıma','Kurumsal Lojistik','Depo / Stoklama','Filo Kiralama'];
 
   function _sectionTitle(t) {
-    return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-firma,#00C896);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(0,200,150,.2)">' + t + '</div>';
+    return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-firma,#00C896);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(0,200,150,.2)">' + esc(t) + '</div>';
   }
   function _chipChecks(list, prefix) {
     return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">' +
       list.map(function(item, i) {
         var id = prefix + i;
         return '<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1.5px solid rgba(34,197,94,.35);background:var(--surface2,rgba(34,197,94,.08));font-size:.82rem;cursor:pointer;color:inherit">' +
-          '<input type="checkbox" id="' + id + '" value="' + item + '" style="accent-color:var(--c-firma,#22C55E);width:15px;height:15px;flex-shrink:0"> ' + item + '</label>';
+          '<input type="checkbox" id="' + escAttr(id) + '" value="' + escAttr(item) + '" style="accent-color:var(--c-firma,#22C55E);width:15px;height:15px;flex-shrink:0"> ' + esc(item) + '</label>';
       }).join('') +
     '</div>';
   }
@@ -671,13 +671,13 @@ window.FirmaScreens = (function () {
             '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-firma)">' + initials(name) + '</div>' +
             '<div>' +
               '<div style="font-size:1.1rem;font-weight:800">' + esc(name) + '</div>' +
-              '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + score + '</div>' +
+              '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + esc(score) + '</div>' +
               durumBadge +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + sub + '</div></div>' : '') +
+        (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + esc(sub) + '</div></div>' : '') +
 
         (a.ilanBaslik ? '<div class="detail-section"><div class="detail-section__title">Başvurulan İlan</div>' +
           '<div class="detail-row">' + ICON.briefcase + escAttr(a.ilanBaslik) + '</div></div>' : '') +
@@ -692,10 +692,10 @@ window.FirmaScreens = (function () {
         '<div class="detail-cta" style="display:flex;flex-direction:column;gap:8px">' +
           '<div style="display:flex;gap:10px">' +
             '<button class="btn btn--outline" onclick="Router.go(\'/firma/mesajlar\')" style="flex:1">Mesaj Gönder</button>' +
-            '<button class="btn btn--success" onclick="FirmaScreens._kabul(\'' + id + '\')" style="flex:1">Kabul Et</button>' +
+            '<button class="btn btn--success" onclick="FirmaScreens._kabul(\'' + escJs(id) + '\')" style="flex:1">Kabul Et</button>' +
           '</div>' +
           (durum !== 'reviewed' && durum !== 'accepted' ?
-            '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._degerlendir(\'' + id + '\')">İncelendi olarak işaretle</button>' : '') +
+            '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._degerlendir(\'' + escJs(id) + '\')">İncelendi olarak işaretle</button>' : '') +
         '</div>' +
       '</div>'
     );
@@ -758,7 +758,7 @@ window.FirmaScreens = (function () {
       '<div class="kb-screen-inner">' +
         '<div class="kb-card" style="text-align:center;margin-bottom:16px">' +
           '<div style="font-size:2.2rem;font-weight:800;color:var(--c-firma)">' + (puan > 0 ? Number(puan).toFixed(1) : '—') + '</div>' +
-          '<div class="kb-stars" style="justify-content:center;margin:4px 0">' + ICON.star + ' ' + adet + ' değerlendirme</div>' +
+          '<div class="kb-stars" style="justify-content:center;margin:4px 0">' + ICON.star + ' ' + esc(adet) + ' değerlendirme</div>' +
         '</div>' +
         '<div id="firma-puan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
       '</div>'
@@ -853,7 +853,7 @@ window.FirmaScreens = (function () {
   }
 
   function _mi(label, icon, route) {
-    return '<div class="profile-menu-item" onclick="Router.go(\'' + route + '\')" style="padding:14px 16px">' +
+    return '<div class="profile-menu-item" onclick="Router.go(\'' + escJs(route) + '\')" style="padding:14px 16px">' +
       '<div class="profile-menu-item__icon">' + ICON[icon] + '</div>' +
       '<div class="profile-menu-item__label">' + esc(label) + '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
@@ -883,8 +883,8 @@ window.FirmaScreens = (function () {
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
             '<div style="font-weight:800">Temel Bilgiler</div>' + dBadge +
           '</div>' +
-          '<div class="detail-row">' + ICON.pin + (p.sehir || 'Şehir belirtilmemiş') + '</div>' +
-          '<div class="detail-row">' + ICON.briefcase + 'Kapasite: ' + (p.kapasite || 0) + ' kurye' + '</div>' +
+          '<div class="detail-row">' + ICON.pin + esc(p.sehir || 'Şehir belirtilmemiş') + '</div>' +
+          '<div class="detail-row">' + ICON.briefcase + 'Kapasite: ' + esc(p.kapasite || 0) + ' kurye' + '</div>' +
           (p.aciklama ? '<div style="font-size:.84rem;color:var(--text2);margin-top:10px;line-height:1.5">' + _esc(p.aciklama) + '</div>' : '') +
         '</div>' +
 
@@ -941,7 +941,7 @@ window.FirmaScreens = (function () {
     if (!fotograflar.length) return '<div class="kb-empty" style="grid-column:1/-1;padding:20px 0"><div class="kb-empty__sub">Henüz fotoğraf eklenmedi.</div></div>';
     return fotograflar.map(function (url) {
       return '<div style="aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--surface2)">' +
-        '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">' +
+        '<img src="' + escAttr(safeUrl(url)) + '" style="width:100%;height:100%;object-fit:cover">' +
       '</div>';
     }).join('');
   }

@@ -1008,7 +1008,6 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .level-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-full); }
 .level-badge--standart    { background: #FEF3C7; color: #92400E; }
 .level-badge--profesyonel { background: #E0F2FE; color: #075985; }
-.level-badge--premium     { background: #F3E8FF; color: #6B21A8; }
 
 /* career track */
 .career-track { display: flex; align-items: center; }
@@ -5505,7 +5504,6 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 /* Durum badge'leri */
 [data-theme="dark"] .level-badge--standart    { background: #2D2006; color: #FCD34D; }
 [data-theme="dark"] .level-badge--profesyonel { background: #0A1F2E; color: #7DD3F8; }
-[data-theme="dark"] .level-badge--premium     { background: #1E0A2E; color: #C084FC; }
 
 [data-theme="dark"] .job-badge--new    { background: #0D1F3C; color: #93C5FD; }
 [data-theme="dark"] .job-badge--match  { background: #0A2818; color: #6EE7B7; }

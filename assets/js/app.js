@@ -879,22 +879,6 @@
     if (!online() || !list || !list.length) return;
     try { PRESENCE = await SB.presenceOf(list.map(function (x) { return x.id; })); } catch (e) {}
   }
-  function careerTrackHtml(seviye) {
-    var levels = ["standart", "profesyonel", "premium"];
-    var cur = levels.indexOf(seviye || "standart");
-    var labels = [T("level.standart"), T("level.profesyonel"), T("level.premium")];
-    var icons = ["🥉", "🥈", "🥇"];
-    var html = '<div class="career-track">';
-    for (var i = 0; i < 3; i++) {
-      var cls = i < cur ? "done" : i === cur ? "current" : "";
-      html += '<div class="career-track__node ' + cls + '">' + icons[i] + '</div>';
-      if (i < 2) html += '<div class="career-track__seg' + (i < cur ? " done" : "") + '"></div>';
-    }
-    html += '</div><div class="career-track__labels">';
-    for (var j = 0; j < 3; j++) html += '<span' + (j === cur ? ' class="cur"' : '') + '>' + labels[j] + '</span>';
-    html += '</div>';
-    return html;
-  }
 
   function kuryeCard(k) {
     var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
@@ -904,7 +888,7 @@
       '<div class="pcard__top"><div class="avatar">' + avInner(k) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(k.ad) + ' ' + verBadge(k.dogrulama) + '</div>' +
           '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
-      '<div>' + KB.levelBadge(k.seviye) + ' ' + KB.stars(k.puan) + '</div>' +
+      '<div>' + KB.stars(k.puan) + '</div>' +
       '<div class="career-score-mini">' +
         '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (k.puan ? Number(k.puan).toFixed(1) : "—") + '</b></div>' +
         '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + fill + '%"></div></div>' +
@@ -969,7 +953,7 @@
         if (hay.indexOf(q) === -1) return false;
       }
       if (v1) { if (type === "firma") { if (x.bolgeler.indexOf(v1) === -1) return false; } else if (x.sehir !== v1) return false; }
-      if (v2) { if (type === "kurye" && x.seviye !== v2) return false; if (type === "isletme" && x.tur !== v2) return false; }
+      if (v2) { if (type === "isletme" && x.tur !== v2) return false; }
       return true;
     });
     if (out.length) {
@@ -1028,7 +1012,6 @@
     var sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
     function uniq(getter) { var s = {}; src.forEach(function (x) { [].concat(getter(x)).forEach(function (v) { if (v) s[v] = 1; }); }); return Object.keys(s).sort(); }
     if (sel1) { if (type === "firma") fillSelect(sel1, uniq(function (x) { return x.bolgeler; })); else fillSelect(sel1, uniq(function (x) { return x.sehir; })); }
-    if (type === "kurye" && sel2) fillSelect(sel2, ["standart", "profesyonel", "premium"], { standart: T("level.standart"), profesyonel: T("level.profesyonel"), premium: T("level.premium") });
     if (type === "isletme" && sel2) fillSelect(sel2, uniq(function (x) { return x.tur; }));
     ["fSearch", "fSelect1", "fSelect2"].forEach(function (id) {
       var el = document.getElementById(id);
@@ -1155,10 +1138,6 @@
       ? '<span class="prf__badge prf__badge--ver" title="' + T("kyc.verified") + '">' + verSvg + T("kyc.verifiedShort") + '</span>'
       : '<span class="prf__badge prf__badge--pend">Doğrulanmadı</span>';
 
-    /* ── Level badge (kurye only) ─────────────────────────── */
-    var lvlCls = { standart: "prf__lvl--std", profesyonel: "prf__lvl--pro", premium: "prf__lvl--prm" };
-    var lvlIco  = { standart: "🥉", profesyonel: "🥈", premium: "🥇" };
-    var lvlLbl  = { standart: T("level.standart"), profesyonel: T("level.profesyonel"), premium: T("level.premium") };
 
     /* ── Quick-trust row (role-specific KPI pills) ────────── */
     function kpi(val, lbl, hi) {
@@ -1185,7 +1164,7 @@
     var sub = type === "kurye"    ? (x.sehir || "")
             : type === "isletme" ? [x.tur, x.sehir].filter(Boolean).join(" · ")
             : (x.bolgeler || []).slice(0, 2).join(", ");
-    var tagline = type === "kurye"    ? (lvlLbl[x.seviye] || "Kurye")
+    var tagline = type === "kurye"    ? "Kurye"
                 : type === "isletme" ? (x.tur || "Esnaf")
                 : "Kurye Firması";
 
@@ -1224,9 +1203,7 @@
               '<span class="prf__name">' + KB.esc(x.ad) + '</span>' +
               verHtml +
             '</div>' +
-            (type === "kurye"
-              ? '<span class="prf__lvl ' + (lvlCls[x.seviye] || "prf__lvl--std") + '">' + (lvlIco[x.seviye] || "") + ' ' + (lvlLbl[x.seviye] || x.seviye) + '</span>'
-              : '<span class="prf__tagline">' + KB.esc(tagline) + '</span>') +
+            '<span class="prf__tagline">' + KB.esc(tagline) + '</span>' +
             (sub ? '<div class="prf__loc"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + KB.esc(sub) + '</div>' : '') +
           '</div>' +
         '</div>' +
@@ -1256,9 +1233,7 @@
     }
 
     if (type === "kurye") {
-      /* Kariyer seviyesi */
-      sections += prfSection("Kariyer Seviyesi",
-        careerTrackHtml(x.seviye) +
+      sections += prfSection("Değerlendirme",
         '<div class="xp-bar" style="margin-top:14px">' +
           '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (x.puan ? Number(x.puan).toFixed(1) : "—") + ' / 5</b></div>' +
           '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + xpFill(x.puan) + '%"></div></div>' +
@@ -1821,21 +1796,9 @@
 
     if (role === "kurye") {
       var pu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.9";
-      var sv = prof ? (prof.seviye || "standart") : "premium";
-      var svLabel = T("level." + sv);
       var tm = prof ? (prof.tamamlanan || 0) : "1.240";
       var fill = xpFill(prof ? prof.puan : 4.9);
-      /* kariyer seviye progress + metrikler + profil gücü + insight */
-      var levels2 = ["standart", "profesyonel", "premium"];
-      var curIdx = levels2.indexOf(sv);
-      var clpHtml = '<div class="career-level-progress">';
-      var clpIcons = ["🥉","🥈","🥇"], clpLabels = [T("level.standart"), T("level.profesyonel"), T("level.premium")];
-      for (var ci = 0; ci < 3; ci++) {
-        var cls2 = ci < curIdx ? "done" : ci === curIdx ? "active" : "";
-        clpHtml += '<div class="clp__node"><div class="clp__ic ' + cls2 + '">' + clpIcons[ci] + '</div><div class="clp__label' + (ci === curIdx ? " active" : "") + '">' + clpLabels[ci] + '</div></div>';
-        if (ci < 2) clpHtml += '<div class="clp__seg' + (ci < curIdx ? " done" : "") + '"></div>';
-      }
-      clpHtml += '</div>';
+      /* metrikler + profil gücü + insight (seviye sistemi kaldirildi) */
       var tips = [];
       if (prof && !prof.arac) tips.push("🛵 " + T("career.tipVehicle"));
       if (prof && !(prof.bolgeler && prof.bolgeler.length)) tips.push("📍 " + T("career.tipRegion"));
@@ -1847,7 +1810,7 @@
         (tips.length ? '<div class="profile-strength__tips">' + tips.map(function (t) { return '<div class="profile-strength__tip"><span class="ic">→</span>' + t + '</div>'; }).join("") + '</div>' : '') +
       '</div>';
       var insightHtml = '<div class="insight-card"><div class="insight-card__h">💡 ' + T("career.insight") + '</div><p>' + T("career.insightMsg") + '</p></div>';
-      setHTML("kuryeMetrics", clpHtml + metric(pu, T("m.score")) + metric(svLabel, T("m.level")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")) + strengthHtml + insightHtml);
+      setHTML("kuryeMetrics", metric(pu, T("m.score")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")) + strengthHtml + insightHtml);
       if (online()) renderMyApplications();
       else setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
         return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');
@@ -1893,7 +1856,7 @@
       setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")));
       var kuryeler = await loadPool("kurye");
       setHTML("firmaPersonel", kuryeler.slice(0, 5).map(function (k) {
-        return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), KB.levelBadge(k.seviye));
+        return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), "");
       }).join(""));
       setHTML("firmaTeklif", listFor("firma"));
     }
@@ -1981,7 +1944,6 @@
         key: type + "-" + x.id, type: type, id: x.id,
         lat: +lat, lng: +lng, ad: ad || "", sub: sub || "",
         acil: !!(x.acil || x.acil_alinacak),
-        premium: !!(x.premium),
         maas: x.maas || x.ucret_min || x.ucret || null,
         action: type === "ilan"
           ? { apply: { id: x.id, baslik: ad } }
@@ -1994,7 +1956,7 @@
     isl.forEach(function(i) { pushItem("isletme", i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(" · ")); });
     frm.forEach(function(f) { pushItem("firma", f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(", ")); });
 
-    var activeLayers = { ilan: true, firma: true, acil: false, premium: false, yakin: false };
+    var activeLayers = { ilan: true, firma: true, acil: false, yakin: false };
     var saved = window.KB && KB.loadView && KB.loadView("flt_mx2");
     if (saved && saved.layers) {
       Object.keys(saved.layers).forEach(function(k) { if (k in activeLayers) activeLayers[k] = !!saved.layers[k]; });
@@ -2029,7 +1991,6 @@
       if (activeLayers.yakin && userLat !== null) {
         if (distKm(userLat, userLng, it.lat, it.lng) > 5) return false;
       }
-      if (activeLayers.premium && it.premium) return true;
       if (activeLayers.acil && it.type === "ilan" && it.acil) return true;
       if (activeLayers.ilan && it.type === "ilan" && !it.acil) return true;
       if (activeLayers.firma && (it.type === "firma" || it.type === "isletme" || it.type === "kurye")) return true;
@@ -2136,7 +2097,7 @@
       if (heatLayer) { heatLayer.setMap(null); heatLayer = null; }
       if (!heatmapOn || !window.google || !google.maps.visualization) return;
       var pts = list.map(function(it) {
-        return { location: new google.maps.LatLng(it.lat, it.lng), weight: it.premium ? 3 : (it.acil ? 2 : 1) };
+        return { location: new google.maps.LatLng(it.lat, it.lng), weight: it.acil ? 2 : 1 };
       });
       heatLayer = new google.maps.visualization.HeatmapLayer({
         data: pts, map: map, radius: 40, opacity: 0.65,

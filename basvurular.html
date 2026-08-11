@@ -218,7 +218,6 @@
       }
       if (k.deneyim >= 2) s += 15;
       if (k.sertifikalar && k.sertifikalar.length) s += 15;
-      if (k.seviye === 'premium' || k.seviye === 'profesyonel') s += 15;
       return Math.min(100, s);
     }
 
@@ -244,7 +243,7 @@
         // Aday profili — tamamı DB'den
         var k = {
           id: r.applicantId, ad: r.ad, sehir: r.sehir, arac: r.arac,
-          bolgeler: r.bolgeler, deneyim: r.deneyim, seviye: r.seviye,
+          bolgeler: r.bolgeler, deneyim: r.deneyim,
           sertifikalar: r.sertifikalar, tamamlanan: r.tamamlanan, puan: r.puan,
           aciklama: r.aciklama, avatar_url: r.avatar_url, dogrulama: r.dogrulama,
           calistigi: r.calistigi, referanslar: []
@@ -374,8 +373,6 @@
       var inits = (k.ad || '?').split(' ').map(function(w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || '?';
       var bTxt  = (k.bolgeler || []).slice(0, 2).join(', ');
       var mCls  = matchCls(a.match);
-      var sevB  = k.seviye === 'premium'      ? '<span class="ver-badge">★ Premium</span>'
-                : k.seviye === 'profesyonel'  ? '<span class="ver-badge">Pro</span>' : '';
       var cardCls = 'apc-card' + (a.shortlisted ? ' is-shortlisted' : '') +
                     (a.status === 'kabul' ? ' is-accepted' : a.status === 'red' ? ' is-rejected' : '');
 
@@ -384,10 +381,9 @@
         '<div class="apc-card__head">' +
           '<div class="apc-card__av">' +
             (k.avatar_url ? '<img src="' + esc(k.avatar_url) + '" alt="">' : inits) +
-            (k.seviye === 'premium' ? '<div class="apc-card__av-badge">★</div>' : '') +
           '</div>' +
           '<div class="apc-card__info">' +
-            '<div class="apc-card__name">' + esc(k.ad || '—') + sevB + '</div>' +
+            '<div class="apc-card__name">' + esc(k.ad || '—') + '</div>' +
             '<div class="apc-card__sub">📍 ' + esc(k.sehir || '') + (bTxt ? ' · ' + esc(bTxt) : '') +
               ' · ' + (k.deneyim ? k.deneyim + ' yıl deneyim' : 'Yeni başlayan') + '</div>' +
             '<div class="apc-card__comp">' +
@@ -405,7 +401,6 @@
           (k.arac      ? '<div class="apc-detail">🛵 <span>' + esc(k.arac) + '</span></div>' : '') +
           (bTxt        ? '<div class="apc-detail">📍 <span>' + esc(bTxt) + '</span></div>' : '') +
           (k.deneyim   ? '<div class="apc-detail">⏱ <span>' + k.deneyim + ' yıl deneyim</span></div>' : '') +
-          (k.seviye    ? '<div class="apc-detail">🏅 <span>' + esc(k.seviye.charAt(0).toUpperCase() + k.seviye.slice(1)) + '</span></div>' : '') +
           (k.tamamlanan? '<div class="apc-detail">📦 <span>' + k.tamamlanan + ' teslimat</span></div>' : '') +
           (k.puan      ? '<div class="apc-detail">⭐ <span>' + k.puan + ' puan</span></div>' : '') +
         '</div>' +
@@ -509,7 +504,7 @@
         '<div class="apc-mhead">' +
           '<div class="apc-mhead__av">' + (k.avatar_url ? '<img src="' + esc(k.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover">' : inits) + '</div>' +
           '<div class="apc-mhead__body">' +
-            '<div class="apc-mhead__name">' + esc(k.ad || '—') + (k.seviye === 'premium' ? '<span class="ver-badge">★ Premium</span>' : '') + '</div>' +
+            '<div class="apc-mhead__name">' + esc(k.ad || '—') + '</div>' +
             '<div class="apc-mhead__meta">📍 ' + esc(k.sehir || '') + ((k.bolgeler || []).length ? ' · ' + k.bolgeler.slice(0, 2).map(esc).join(', ') : '') + '</div>' +
             '<div class="apc-mhead__stats">' +
               (k.deneyim ? '<div class="apc-mhead__stat"><div class="apc-mhead__stat-val">' + k.deneyim + '</div><div class="apc-mhead__stat-lbl">Yıl Deneyim</div></div>' : '') +
@@ -535,7 +530,6 @@
         '<div class="apc-msec"><h3>Çalışma Bilgileri</h3><dl class="apc-mkv">' +
           '<dt>Araç</dt><dd>' + esc(k.arac || '—') + '</dd>' +
           '<dt>Deneyim</dt><dd>' + (k.deneyim ? k.deneyim + ' yıl' : '—') + '</dd>' +
-          '<dt>Seviye</dt><dd>' + esc(k.seviye ? k.seviye.charAt(0).toUpperCase() + k.seviye.slice(1) : '—') + '</dd>' +
           '<dt>Tamamlanan Teslimat</dt><dd>' + (k.tamamlanan || '—') + '</dd>' +
           '<dt>Ortalama Puan</dt><dd>' + (k.puan ? '⭐ ' + k.puan : '—') + '</dd>' +
         '</dl></div>' +

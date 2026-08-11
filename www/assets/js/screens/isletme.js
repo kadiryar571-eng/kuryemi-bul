@@ -35,7 +35,7 @@ window.IsletmeScreens = (function () {
       '<div class="person-card__info">' +
         '<div class="person-card__name">' + esc(name) + '</div>' +
         '<div class="person-card__sub">' + esc(sub) + '</div>' +
-        '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + score + '</span>' + badge + '</div>' +
+        '<div class="person-card__meta"><span class="kb-stars">' + ICON.star + esc(score) + '</span>' + badge + '</div>' +
       '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +
     '</div>';
@@ -156,20 +156,20 @@ window.IsletmeScreens = (function () {
 
   /* ── Esnaf dashboard helpers ──────────────────────────── */
   function _iMCard(icon, val, lbl, iconBg, iconColor, route) {
-    return '<div class="metric-card" onclick="Router.go(\'' + route + '\')">' +
-      '<div class="metric-card__icon" style="background:' + iconBg + ';color:' + iconColor + '">' + ICON[icon] + '</div>' +
-      '<div class="metric-card__val">' + val + '</div>' +
-      '<div class="metric-card__lbl">' + lbl + '</div>' +
+    return '<div class="metric-card" onclick="Router.go(\'' + escJs(route) + '\')">' +
+      '<div class="metric-card__icon" style="background:' + escAttr(iconBg) + ';color:' + escAttr(iconColor) + '">' + ICON[icon] + '</div>' +
+      '<div class="metric-card__val">' + esc(val) + '</div>' +
+      '<div class="metric-card__lbl">' + esc(lbl) + '</div>' +
     '</div>';
   }
 
   function _iCandCard(id, name, exp, loc, score) {
-    return '<div class="rec-cand-card" onclick="Router.go(\'/isletme/aday/' + id + '\')">' +
+    return '<div class="rec-cand-card" onclick="Router.go(\'/isletme/aday/' + escJs(id) + '\')">' +
       '<div class="kb-avatar" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
       '<div class="rec-cand-card__info">' +
         '<div class="rec-cand-card__name">' + esc(name) + '</div>' +
-        '<div class="rec-cand-card__sub">' + exp + ' · ' + loc + '</div>' +
-        '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + score + '</span></div>' +
+        '<div class="rec-cand-card__sub">' + esc(exp) + ' · ' + esc(loc) + '</div>' +
+        '<div class="rec-cand-card__meta"><span class="kb-stars">' + ICON.star + esc(score) + '</span></div>' +
       '</div>' +
       ICON.chevron +
     '</div>';
@@ -178,8 +178,8 @@ window.IsletmeScreens = (function () {
   function _iMiniMsg(name, preview, time, unread) {
     return '<div class="mini-msg" onclick="Router.go(\'/isletme/mesajlar\')">' +
       '<div class="kb-avatar" style="width:36px;height:36px;font-size:.78rem;background:var(--c-isletme)">' + initials(name) + '</div>' +
-      '<div class="mini-msg__info"><div class="mini-msg__name">' + esc(name) + '</div><div class="mini-msg__preview">' + preview + '</div></div>' +
-      '<div class="mini-msg__meta"><span class="mini-msg__time">' + time + '</span>' + (unread > 0 ? '<span class="mini-msg__badge" style="background:var(--c-isletme)">' + unread + '</span>' : '') + '</div>' +
+      '<div class="mini-msg__info"><div class="mini-msg__name">' + esc(name) + '</div><div class="mini-msg__preview">' + esc(preview) + '</div></div>' +
+      '<div class="mini-msg__meta"><span class="mini-msg__time">' + esc(time) + '</span>' + (unread > 0 ? '<span class="mini-msg__badge" style="background:var(--c-isletme)">' + unread + '</span>' : '') + '</div>' +
     '</div>';
   }
 
@@ -213,14 +213,14 @@ window.IsletmeScreens = (function () {
   var GEREK_LIST = ['Ehliyet (B)','Motorsiklet','Araç Sahibi','Akıllı Telefon','App Kullanımı'];
 
   function _sectionTitle(t) {
-    return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-isletme,#FF6B35);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(255,107,53,.2)">' + t + '</div>';
+    return '<div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-isletme,#FF6B35);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid rgba(255,107,53,.2)">' + esc(t) + '</div>';
   }
   function _chipChecks(ids, list, prefix) {
     return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">' +
       list.map(function(item, i) {
         var id = prefix + i;
         return '<label style="display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1.5px solid rgba(255,107,53,.35);background:var(--surface2,rgba(255,107,53,.08));font-size:.82rem;cursor:pointer;color:inherit">' +
-          '<input type="checkbox" id="' + id + '" value="' + item + '" style="accent-color:var(--c-isletme,#FF6B35);width:15px;height:15px;flex-shrink:0"> ' + item + '</label>';
+          '<input type="checkbox" id="' + escAttr(id) + '" value="' + escAttr(item) + '" style="accent-color:var(--c-isletme,#FF6B35);width:15px;height:15px;flex-shrink:0"> ' + esc(item) + '</label>';
       }).join('') +
     '</div>';
   }
@@ -612,13 +612,13 @@ window.IsletmeScreens = (function () {
             '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-isletme)">' + initials(name) + '</div>' +
             '<div>' +
               '<div style="font-size:1.1rem;font-weight:800">' + esc(name) + '</div>' +
-              '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + score + '</div>' +
+              '<div class="kb-stars" style="margin:4px 0">' + ICON.star + ' ' + esc(score) + '</div>' +
               durumBadge +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + sub + '</div></div>' : '') +
+        (sub ? '<div class="detail-section"><div class="detail-row">' + ICON.pin + esc(sub) + '</div></div>' : '') +
 
         (a.ilanBaslik ? '<div class="detail-section"><div class="detail-section__title">Başvurulan İlan</div>' +
           '<div class="detail-row">' + ICON.briefcase + esc(a.ilanBaslik) + '</div></div>' : '') +
@@ -632,7 +632,7 @@ window.IsletmeScreens = (function () {
 
         '<div class="detail-cta" style="display:flex;gap:10px">' +
           '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/mesajlar\')" style="flex:1;--c-accent:var(--c-isletme)">Mesaj Gönder</button>' +
-          '<button class="btn btn--success btn--sm" onclick="IsletmeScreens._kabul(\'' + id + '\')" style="flex:1">Kabul Et</button>' +
+          '<button class="btn btn--success btn--sm" onclick="IsletmeScreens._kabul(\'' + escJs(id) + '\')" style="flex:1">Kabul Et</button>' +
         '</div>' +
       '</div>'
     );
@@ -720,7 +720,7 @@ window.IsletmeScreens = (function () {
   }
 
   function _mi(label, icon, route) {
-    return '<div class="profile-menu-item" onclick="Router.go(\'' + route + '\')" style="padding:14px 16px">' +
+    return '<div class="profile-menu-item" onclick="Router.go(\'' + escJs(route) + '\')" style="padding:14px 16px">' +
       '<div class="profile-menu-item__icon" style="color:var(--c-isletme)">' + ICON[icon] + '</div>' +
       '<div class="profile-menu-item__label">' + esc(label) + '</div>' +
       '<div class="profile-menu-item__chevron">' + ICON.chevron + '</div>' +

@@ -125,12 +125,6 @@
     for (var i = 1; i <= 5; i++) s += (i <= n ? '★' : '☆');
     return '<span class="stars">' + s + '</span>';
   }
-  function levelBadge(level) {
-    var cls = { standart: 'standart', profesyonel: 'profesyonel', premium: 'premium' }[level] || 'standart';
-    var ico = { standart: '🥉', profesyonel: '🥈', premium: '🥇' }[level] || '';
-    var lbl = T('level.' + level) || level || 'Standart';
-    return '<span class="level-badge level-badge--' + cls + '">' + ico + ' ' + lbl + '</span>';
-  }
   function toast(msg, type) {
     if (window.KBMotion && KBMotion.showToast) { KBMotion.showToast(msg, type); return; }
     alert(msg);
@@ -554,7 +548,6 @@
     getParam:       getParam,
     findById:       findById,
     stars:          stars,
-    levelBadge:     levelBadge,
     toast:          toast,
 
     /* draft / view state */
