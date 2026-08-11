@@ -115,7 +115,14 @@ Gerekçe: CSP'nin `style-src` direktifi jsdelivr'a kapalı (kütüphane CSS'i CD
 yüklenemez); APK'nın CDN'e bağımlı olmaması gerekiyor; SRI hash bakımı ortadan
 kalkıyor.
 
-Kütüphane (~250 KB) yalnız harita olan sayfalara eklenir, her sayfaya değil.
+**Sürüm 5.24.0 (UMD) sabitlenir.** 6.x UMD build'ini bırakmıştır; yalnız ESM
+(`maplibre-gl.mjs` + kardeş `maplibre-gl-shared.mjs`) yayınlar. Bu kod tabanı
+baştan sona klasik `<script>` kullandığı için (CLAUDE.md yükleme sırasını kural
+olarak yazar) `type="module"`'a geçmek global `maplibregl`'i ve yükleme sırasını
+bozar. 5.24.0 tek dosya UMD'dir ve aktif sürümdür.
+
+Kütüphane diskte ~1.0 MB, sıkıştırılmış ~250 KB. Yalnız harita olan sayfalara
+eklenir, her sayfaya değil.
 
 ### 4.2 CSP değişiklikleri
 
@@ -200,7 +207,7 @@ JS tarafında bağlanır. Yeni bir yerel `esc()` kopyası **tanımlanmaz**.
 | Risk | Azaltma |
 |---|---|
 | MapLibre WebGL gerektirir; desteklemeyen cihazda harita açılmaz | Harita kurulumu WebGL yokluğunu yakalar, harita yerine boş durum mesajı gösterilir — sayfa çökmez |
-| APK ~250 KB büyür | Kabul edildi; kütüphane yalnız harita sayfalarına yüklenir |
+| APK ~250 KB büyür (kütüphane diskte 1.0 MB, APK içinde sıkıştırılmış) | Kabul edildi; kütüphane yalnız harita sayfalarına yüklenir |
 | `www/` değişikliği kullanıcıya ancak APK güncellemesiyle ulaşır | Beklenen davranış; `docs/` tarafı push ile anında canlıya çıkar |
 | OpenFreeMap tek bir gönüllü projesi — kesinti riski | Stil URL'i tek noktada sabit; sağlayıcı değişimi tek satırlık düzenleme olur |
 | 38 dosyada CSP düzenlemesi — biri atlanırsa sessizce bozulur | Uygulama sonunda repo geneli `maps.googleapis.com` araması; **0 sonuç** beklenir |

@@ -6,7 +6,7 @@
 
 **Architecture:** İki bağımsız uygulama var. `docs/` (statik web sitesi) içinde tek canlı harita `harita.html`'dedir ve `app.js` içindeki `initMap()` ile kurulur. `www/` (Capacitor SPA) içinde tek canlı harita `shared.js` içindeki `initPremiumMap()`'tir. Ortak modül kurulmaz — tekrarlanan kod yok. MapLibre kütüphanesi CDN'den değil, repoya vendor'lanarak yüklenir.
 
-**Tech Stack:** MapLibre GL JS 6.3.0 (vendored, UMD), OpenFreeMap vektör döşemeleri, Supabase (mevcut), framework yok, build adımı yok.
+**Tech Stack:** MapLibre GL JS 5.24.0 (vendored, UMD), OpenFreeMap vektör döşemeleri, Supabase (mevcut), framework yok, build adımı yok.
 
 **Tasarım dökümanı:** [specs/2026-08-11-maplibre-openfreemap-design.md](../2026-08-11-maplibre-openfreemap-design.md)
 
@@ -14,7 +14,14 @@
 
 - **`docs/` yayınlanan site köküdür.** İç döküman, spec, plan, test dosyası oraya konmaz.
 - **MapLibre koordinat sırası `[lng, lat]`** — Google'ın `{lat, lng}` sırasının tersi. Her dönüşümde kontrol edilecek; ters yazılırsa işaretçiler Türkiye yerine Somali açıklarına düşer.
-- **Kütüphane sürümü sabit: `maplibre-gl@6.3.0`.** `latest` kullanılmaz.
+- **Kütüphane sürümü sabit: `maplibre-gl@5.24.0` (UMD).** `latest` kullanılmaz.
+  **6.x KULLANILMAZ:** 6.x UMD build'ini bıraktı, yalnız ESM (`maplibre-gl.mjs`)
+  yayınlıyor ve o da `maplibre-gl-shared.mjs` kardeş dosyasına bağımlı. Bu kod
+  tabanı baştan sona klasik `<script>` kullanıyor (CLAUDE.md yükleme sırasını
+  kural olarak yazmış); `type="module"`'a geçmek global `maplibregl`'i kaybettirir
+  ve yükleme sırasını değiştirir. 5.24.0 tek dosya UMD'dir ve aktif sürümdür.
+- **WebGL tespiti mesajla yapılır.** 6.x'teki `GPUInitializationError` sınıfı
+  5.x'te yoktur; hata `"Failed to initialize WebGL"` mesajıyla gelir.
 - **Vendor yolu:** `docs/assets/vendor/maplibre/` ve `www/assets/vendor/maplibre/`.
 - **Stil URL'leri:** `docs/` → `https://tiles.openfreemap.org/styles/positron`, `www/` → `https://tiles.openfreemap.org/styles/dark`.
 - **CSP'de `worker-src blob:` zorunlu.** MapLibre blob URL'den Web Worker yaratır; eksikse harita hiç açılmaz ve konsoldaki hata başka bir şeyi işaret eder.
@@ -51,18 +58,18 @@ Harness scratchpad'e yazılır, repoya **girmez**.
 
 **Interfaces:**
 - Consumes: —
-- Produces: global `window.maplibregl` — `maplibregl.Map`, `maplibregl.Marker`, `maplibregl.Popup`, `maplibregl.NavigationControl`, `maplibregl.LngLatBounds`, `maplibregl.GPUInitializationError`
+- Produces: global `window.maplibregl` (UMD, klasik `<script>` ile yüklenir) — `maplibregl.Map`, `maplibregl.Marker`, `maplibregl.Popup`, `maplibregl.NavigationControl`, `maplibregl.LngLatBounds`
 
 - [ ] **Step 1: Paketi indir ve aç**
 
 ```bash
 mkdir -p /tmp/mlg && cd /tmp/mlg
-npm pack maplibre-gl@6.3.0
-tar -xzf maplibre-gl-6.3.0.tgz
+npm pack maplibre-gl@5.24.0
+tar -xzf maplibre-gl-5.24.0.tgz
 ls -la package/dist/maplibre-gl.js package/dist/maplibre-gl.css
 ```
 
-Beklenen: iki dosya da listelenir. `maplibre-gl.js` ~1 MB (minified UMD), `maplibre-gl.css` ~30 KB.
+Beklenen: iki dosya da listelenir. `maplibre-gl.js` 1.056.837 bayt (minified UMD), `maplibre-gl.css` 70.024 bayt.
 
 - [ ] **Step 2: Dört hedefe kopyala**
 
@@ -88,7 +95,7 @@ Beklenen: sürüm eşleşmesi bulunur, dört dosya da yerinde ve boyutları sıf
 
 ```bash
 git add docs/assets/vendor/maplibre www/assets/vendor/maplibre
-git commit -m "chore: maplibre-gl 6.3.0 vendor'landi (docs + www)"
+git commit -m "chore: maplibre-gl 5.24.0 vendor'landi (docs + www)"
 ```
 
 ---
@@ -139,8 +146,9 @@ Bu task kod değiştirmez. Amacı, uygulamaya başlamadan önce **CSP'nin doğru
     zoom: 5.2
   });
   map.on('error', function (e) {
-    if (e.error instanceof maplibregl.GPUInitializationError) { window.__t.gpuError = true; return; }
-    window.__t.errors.push(String(e.error && e.error.message || e.error));
+    var msg = (e && e.error && e.error.message) || '';
+    if (/webgl/i.test(msg)) { window.__t.gpuError = true; return; }
+    window.__t.errors.push(String(msg || e.error));
   });
   map.on('load', function () {
     window.__t.loaded = true;
@@ -278,9 +286,13 @@ Harness scratchpad'de, repoda değil. Commit edilecek bir şey yok.
       zoom: 5.2
     });
 
+    /* WebGL yoksa MapLibre 5.x "Failed to initialize WebGL" mesajlı bir hata
+       fırlatır. 6.x'teki GPUInitializationError sınıfı 5.x'te YOK — mesaja
+       bakmak zorundayız. */
     var gpuFailed = false;
     map.on("error", function (e) {
-      if (e.error instanceof maplibregl.GPUInitializationError) {
+      var msg = (e && e.error && e.error.message) || "";
+      if (/webgl/i.test(msg)) {
         gpuFailed = true;
         el.innerHTML = '<div class="empty">' + T("map.unsupported") + '</div>';
         return;
@@ -643,7 +655,8 @@ window.initPremiumMap = async function(role) {
   });
 
   map.on('error', function(e) {
-    if (e.error instanceof maplibregl.GPUInitializationError) {
+    var msg = (e && e.error && e.error.message) || '';
+    if (/webgl/i.test(msg)) {
       mapEl.innerHTML = '<div class="spm-empty">Harita bu cihazda gösterilemiyor.</div>';
       return;
     }
@@ -833,7 +846,7 @@ git commit -m "feat: www SPA MapLibre GL + OpenFreeMap'e gecti, isi haritasi kal
 ```markdown
 ### Harita
 
-MapLibre GL JS 6.3.0 (vendor'lanmış, `assets/vendor/maplibre/`) + OpenFreeMap
+MapLibre GL JS 5.24.0 (vendor'lanmış, `assets/vendor/maplibre/`) + OpenFreeMap
 vektör döşemeleri. **Anahtar yok, hesap yok, kota yok.**
 
 - `docs/` → `https://tiles.openfreemap.org/styles/positron` (açık tema)
