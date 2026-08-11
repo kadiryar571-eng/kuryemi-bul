@@ -209,7 +209,7 @@ window.FirmaScreens = (function () {
     var kbScreen = document.getElementById('kb-screen');
     if (kbScreen) kbScreen.style.overflow = 'hidden';
     renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
-    if (window._spmMapsReady && window.initPremiumMap) {
+    if (window.initPremiumMap) {
       setTimeout(function() { window.initPremiumMap('firma'); }, 200);
     } else {
       window._spmPendingRole = 'firma';

@@ -1496,10 +1496,6 @@ window._spmShell = function() {
         /* "AI Öneri" değil — ortada AI yok, sabit bir ilçe kısayolu. */
         '<span>Bölgeler</span>' +
       '</button>' +
-      '<button type="button" class="spm-fab" id="spmHeatBtn">' +
-        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>' +
-        '<span>Isı Hrts</span>' +
-      '</button>' +
       '<button type="button" class="spm-fab" id="spmLayersBtn">' +
         '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>' +
         '<span>Katman</span>' +
@@ -1525,9 +1521,6 @@ window._spmShell = function() {
         '<button type="button" class="spm-ai-zone" data-zone="umraniye">Ümraniye</button>' +
       '</div>' +
     '</div>' +
-    '<div class="spm-heat-legend" id="spmHeatLegend">' +
-      '<span>Az</span><div class="spm-heat-bar"></div><span>Yoğun</span>' +
-    '</div>' +
     '<div class="spm-sheet" id="spmSheet">' +
       '<div class="spm-sheet__handle"></div>' +
       '<div class="spm-sheet__count" id="spmCount"></div>' +
@@ -1537,10 +1530,7 @@ window._spmShell = function() {
 };
 
 window.initPremiumMap = async function(role) {
-  if (typeof google === 'undefined' || !google.maps) {
-    window._spmPendingRole = role;
-    return;
-  }
+  if (typeof maplibregl === 'undefined') return;
   var mapEl = document.getElementById('spm-map');
   if (!mapEl) {
     // renderScreen has 120ms fade delay — retry once
@@ -1553,40 +1543,26 @@ window.initPremiumMap = async function(role) {
   var scrollEl = document.getElementById('spmCardScroll');
   var aiCard   = document.getElementById('spmAiCard');
   var aiClose  = document.getElementById('spmAiClose');
-  var heatLeg  = document.getElementById('spmHeatLegend');
   var locBtn   = document.getElementById('spmLocateBtn');
   var aiBtn    = document.getElementById('spmAIBtn');
-  var heatBtn  = document.getElementById('spmHeatBtn');
   var layBtn   = document.getElementById('spmLayersBtn');
 
-  var ISTANBUL = { lat: 41.015, lng: 28.979 };
-  var DARK_STYLE = [
-    { elementType: 'geometry', stylers: [{ color: '#0f0b1e' }] },
-    { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#8a7aaa' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#0f0b1e' }] },
-    { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#1e1640' }] },
-    { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#c4b5fd' }] },
-    { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#5a4a7a' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#0d0a1e' }] },
-    { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#1e1540' }] },
-    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#2a1f55' }] },
-    { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#7060a0' }] },
-    { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#2a1f55' }] },
-    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a2b80' }] },
-    { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#4a3a95' }] },
-    { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#9080c5' }] },
-    { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#0f0b1e' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#07051a' }] },
-    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d2d6a' }] }
-  ];
+  var ISTANBUL = [28.979, 41.015];   /* [lng, lat] */
 
-  var map = new google.maps.Map(mapEl, {
-    zoom: 12, center: ISTANBUL,
-    mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
-    zoomControl: false,
-    styles: DARK_STYLE, gestureHandling: 'greedy', backgroundColor: '#0f0b1e',
-    clickableIcons: false
+  var map = new maplibregl.Map({
+    container: mapEl,
+    style: 'https://tiles.openfreemap.org/styles/dark',
+    center: ISTANBUL,
+    zoom: 11
+  });
+
+  map.on('error', function(e) {
+    var msg = (e && e.error && e.error.message) || '';
+    if (/webgl/i.test(msg)) {
+      mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:20px;color:rgba(255,255,255,.4);font-size:.85rem;text-align:center">Harita bu cihazda gösterilemiyor.</div>';
+      return;
+    }
+    console.error('Map error:', e.error);
   });
 
   var PIN = {
@@ -1620,7 +1596,6 @@ window.initPremiumMap = async function(role) {
   var activeLayers = { ilan: true, firma: true, acil: false, premium: false, yakin: false };
   var userLat = null, userLng = null, userMarker = null;
   var markers = {}, selectedKey = null;
-  var heatLayer = null, heatmapOn = false;
 
   function normText(s) {
     var o = ''; s = String(s == null ? '' : s).normalize('NFD');
@@ -1658,7 +1633,7 @@ window.initPremiumMap = async function(role) {
     return items.filter(function(it) { return isVisible(it, q); });
   }
 
-  function pinIcon(it, sel) {
+  function pinEl(it, sel) {
     var cfg = PIN[it.type], s = sel ? 56 : 44, r = sel ? 17 : 13, c = s / 2;
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '">' +
       '<circle cx="' + c + '" cy="' + c + '" r="' + (r+9) + '" fill="' + cfg.color + '" fill-opacity="0.15"/>' +
@@ -1667,24 +1642,37 @@ window.initPremiumMap = async function(role) {
       '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="' + (sel ? '2.5' : '2') + '"/>' +
       '<text x="' + c + '" y="' + c + '" font-size="' + (sel ? 14 : 11) + '" text-anchor="middle" dominant-baseline="central">' + cfg.emoji + '</text>' +
       '</svg>';
-    return { url: 'data:image/svg+xml,' + encodeURIComponent(svg), scaledSize: new google.maps.Size(s, s), anchor: new google.maps.Point(c, c) };
+    var el = document.createElement('div');
+    el.style.cssText = 'width:' + s + 'px;height:' + s + 'px;cursor:pointer';
+    el.innerHTML = svg;   /* içerik sabit — kullanıcı verisi YOK, emoji ve renk sabitlerden gelir */
+    return el;
   }
 
   function renderMarkers(list) {
-    Object.keys(markers).forEach(function(k) { if (markers[k]) markers[k].setMap(null); });
+    Object.keys(markers).forEach(function(k) { if (markers[k]) markers[k].remove(); });
     markers = {};
     list.forEach(function(it) {
-      var m = new google.maps.Marker({ position: { lat: it.lat, lng: it.lng }, map: map, title: it.ad, icon: pinIcon(it, it.key === selectedKey), zIndex: it.key === selectedKey ? 999 : 1 });
+      var m = new maplibregl.Marker({ element: pinEl(it, it.key === selectedKey) })
+        .setLngLat([it.lng, it.lat])
+        .addTo(map);
       m._it = it;
-      m.addListener('click', function() { select(it.key); });
+      m.getElement().addEventListener('click', function() { select(it.key); });
       markers[it.key] = m;
     });
   }
 
   function select(key) {
     selectedKey = key;
-    Object.keys(markers).forEach(function(k) { var m = markers[k]; if (m && m._it) { m.setIcon(pinIcon(m._it, k === key)); m.setZIndex(k === key ? 999 : 1); } });
-    if (key && markers[key]) map.panTo(markers[key].getPosition());
+    /* MapLibre'da ikon değiştirmek yok — işaretçi yeniden çizilir */
+    Object.keys(markers).forEach(function(k) {
+      var m = markers[k];
+      if (!m || !m._it) return;
+      var fresh = pinEl(m._it, k === key);
+      var old = m.getElement();
+      old.style.cssText = fresh.style.cssText;
+      old.innerHTML = fresh.innerHTML;
+    });
+    if (key && markers[key]) map.flyTo({ center: markers[key].getLngLat() });
     if (scrollEl) {
       var card = scrollEl.querySelector('[data-spmkey="' + key + '"]');
       if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -1729,17 +1717,10 @@ window.initPremiumMap = async function(role) {
     });
   }
 
-  function toggleHeatmap(list) {
-    if (heatLayer) { heatLayer.setMap(null); heatLayer = null; }
-    if (!heatmapOn || !google.maps.visualization) return;
-    var pts = list.map(function(it) { return { location: new google.maps.LatLng(it.lat, it.lng), weight: it.premium ? 3 : (it.acil ? 2 : 1) }; });
-    heatLayer = new google.maps.visualization.HeatmapLayer({ data: pts, map: map, radius: 40, opacity: 0.65, gradient: ['rgba(108,77,255,0)','rgba(108,77,255,0.6)','rgba(168,85,247,0.8)','rgba(245,158,11,0.9)','rgba(239,68,68,1)'] });
-  }
-
   function refresh() {
     var list = getVisible();
     if (selectedKey && !list.some(function(i) { return i.key === selectedKey; })) selectedKey = null;
-    renderMarkers(list); renderCards(list); toggleHeatmap(list);
+    renderMarkers(list); renderCards(list);
   }
 
   document.querySelectorAll('[data-spmlayer]').forEach(function(chip) {
@@ -1756,9 +1737,13 @@ window.initPremiumMap = async function(role) {
     navigator.geolocation.getCurrentPosition(function(pos) {
       locBtn.classList.remove('is-loading'); locBtn.classList.add('is-active');
       userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-      if (userMarker) userMarker.setMap(null);
-      userMarker = new google.maps.Marker({ position: { lat: userLat, lng: userLng }, map: map, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 }, zIndex: 2000, title: 'Konumunuz' });
-      map.panTo({ lat: userLat, lng: userLng }); map.setZoom(14);
+      if (userMarker) userMarker.remove();
+      var dot = document.createElement('div');
+      dot.style.cssText = 'width:20px;height:20px;border-radius:50%;background:#3b82f6;' +
+        'border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)';
+      userMarker = new maplibregl.Marker({ element: dot })
+        .setLngLat([userLng, userLat]).addTo(map);
+      map.flyTo({ center: [userLng, userLat], zoom: 14 });
       if (activeLayers.yakin) refresh();
     }, function() { locBtn.classList.remove('is-loading'); }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
   });
@@ -1768,10 +1753,8 @@ window.initPremiumMap = async function(role) {
 
   var AI_ZONES = { kadikoy:{lat:40.990,lng:29.030}, besiktas:{lat:41.043,lng:29.005}, sisli:{lat:41.061,lng:28.987}, atasehir:{lat:40.996,lng:29.118}, umraniye:{lat:41.016,lng:29.110} };
   document.querySelectorAll('[data-zone]').forEach(function(z) {
-    z.addEventListener('click', function() { var p = AI_ZONES[z.getAttribute('data-zone')]; if (p) { map.panTo(p); map.setZoom(13); } });
+    z.addEventListener('click', function() { var p = AI_ZONES[z.getAttribute('data-zone')]; if (p) { map.flyTo({ center: [p.lng, p.lat], zoom: 13 }); } });
   });
-
-  if (heatBtn) heatBtn.addEventListener('click', function() { heatmapOn = !heatmapOn; heatBtn.classList.toggle('is-active', heatmapOn); if (heatLeg) heatLeg.classList.toggle('is-visible', heatmapOn); toggleHeatmap(getVisible()); });
 
   if (layBtn) layBtn.addEventListener('click', function() {
     var cr = document.getElementById('spmChipsRow');
@@ -1784,9 +1767,9 @@ window.initPremiumMap = async function(role) {
   refresh();
 
   if (items.length) {
-    var bounds = new google.maps.LatLngBounds();
-    items.forEach(function(i) { bounds.extend({ lat: i.lat, lng: i.lng }); });
-    if (items.length < 80) { try { map.fitBounds(bounds); } catch(e) { map.setCenter(ISTANBUL); map.setZoom(12); } }
-    else { map.setCenter(ISTANBUL); map.setZoom(12); }
+    var bounds = new maplibregl.LngLatBounds([items[0].lng, items[0].lat], [items[0].lng, items[0].lat]);
+    items.forEach(function(i) { bounds.extend([i.lng, i.lat]); });
+    if (items.length < 80) { try { map.fitBounds(bounds, { padding: 50, maxZoom: 13 }); } catch(e) { map.jumpTo({ center: ISTANBUL, zoom: 12 }); } }
+    else { map.jumpTo({ center: ISTANBUL, zoom: 12 }); }
   }
 };
