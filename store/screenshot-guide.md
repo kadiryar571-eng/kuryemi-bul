@@ -57,7 +57,7 @@ Her ekranın üstünde kısa bir başlık overlay'i ekle.
 ### Ortak (3 ekran)
 
 **Ekran 6 — Kayıt / Onboarding**
-- URL: `giris.html` veya `onboarding.html`
+- URL: `index.html?auth=login` (giriş modalı) veya `onboarding.html`
 - Başlık: **"3 dakikada başla — Kurye, İşletme, Firma"**
 - EN: **"Start in 3 minutes — Courier, Business, Company"**
 - Bölüm: 3 rol seçim kartı

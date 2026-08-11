@@ -41,7 +41,7 @@ KuryemiBul
 | Ekran | Ortam | Rol | Durum | Dosya/route |
 |---|---|---|---|---|
 | Landing | Public | guest | ✅ | index.html |
-| Giriş / Kayıt | Public | guest | ✅ | giris.html |
+| Giriş / Kayıt | Public | guest | ✅ | index.html?auth=login (modal) |
 | Onboarding | Public→Priv | yeni | ✅ | onboarding.html |
 | Yasal (4) | Public | herkes | ✅ | kvkk/gizlilik/sartlar/cerez |
 | İlanlar | Her ikisi | herkes | ✅ | ilanlar.html |

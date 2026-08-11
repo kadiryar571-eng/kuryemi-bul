@@ -20,7 +20,7 @@ ihtiyaç duyan işletmeleri tek platformda buluşturan kurye ekosistem platformu
 | Yol | Açıklama |
 |-----|----------|
 | `index.html` | Landing (tanıtım) |
-| `giris.html` | Rol seçimli sahte giriş |
+| `index.html?auth=login` | Giriş / kayıt — ana sayfa üzerinde modal |
 | `kuryeler/isletmeler/firmalar.html` | Havuz listeleme + filtre |
 | `profil-*.html` | Profil detayları (`?id=` ile) |
 | `harita.html` | Leaflet haritası |

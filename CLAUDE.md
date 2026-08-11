@@ -150,7 +150,7 @@ Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 
 ### Auth Akışı ve Giriş Kapısı
 
-1. Kayıt: `giris.html` → `SB.signUp()` → email doğrulama → `verify-email.html`
+1. Kayıt: `index.html` üzerindeki giriş modalı → `SB.signUp()` → email doğrulama → `verify-email.html`
 2. Google OAuth: Web'de aynı sekmede redirect; Native Capacitor'da `Capacitor.Plugins.Browser` ile sistem tarayıcısı açılır, deep-link `com.kuryemibul.app://callback` ile geri döner
 3. Giriş sonrası: `runSessionGuard()` otomatik olarak rol'e göre panel sayfasına yönlendirir
 4. Rol ilk girişte `handle_new_user` Supabase trigger'ı ile `kurye` olarak atanır; kullanıcı `profil-duzenle.html`'de değiştirebilir
@@ -159,7 +159,7 @@ Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 **Giriş kapısı** `components.js` içinde:
 - `PUBLIC_PAGES` — misafire açık sayfalar (`index.html`, yasal sayfalar, `404.html`).
   Bunlarda uygulama kabuğu (sidebar/topbar) değil `renderPublicNav()` render edilir.
-- Listede olmayan her sayfa giriş ister; `runSessionGuard()` `giris.html?next=…`'e yollar.
+- Listede olmayan her sayfa giriş ister; `runSessionGuard()` `index.html?auth=login&next=…`'e yollar.
 - `safeNext()` yalnız aynı origin'deki `.html` yollarına izin verir (açık yönlendirme koruması).
 - `currentPage()` uzantısız yol gelirse `.html` ekler — `serve` `cleanUrls: true` ile
   uzantıyı düşürdüğü için şart. Ayrıca cleanUrls 301'i query string'i düşürdüğünden
@@ -171,7 +171,7 @@ Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 
 - `<div id="app-header"></div>` — Sayfa tipine göre farklı şey render eder:
   - Landing (`index.html`) ve yasal sayfalar: public navbar
-  - Auth sayfaları (`giris.html` vb.): hiçbir şey (kendi header'larını yönetirler)
+  - Auth sayfaları (`verify-email.html` vb.): hiçbir şey (kendi header'larını yönetirler)
   - Diğer tüm sayfalar: sidebar + topbar
 - `<div id="app-footer"></div>` — Footer (auth flow'da gereksiz)
 - `<nav id="kb-bottomnav">` — `renderBottomNav()` tarafından body'ye append edilir, placeholder gerekmez
@@ -261,7 +261,8 @@ Supabase Studio → SQL Editor üzerinden yapılır. Hazır sorgular:
 ### Sayfa Kategorileri
 
 - **Landing:** `index.html` — klasik header, space-bg, landing.js (misafire açık)
-- **Auth flow:** `giris.html`, `verify-email.html`, `sifre-sifirla.html`, `onboarding.html` — sidebar yok, bottom nav yok, kendi header'ları var
+- **Auth flow:** `verify-email.html`, `sifre-sifirla.html`, `onboarding.html` — sidebar yok, bottom nav yok, kendi header'ları var
+- **Giriş / kayıt:** ayrı sayfa YOKTUR. `index.html` üzerinde modal açılır (`auth-modal.js` kabuk + `auth-forms.js` form). Adres kalıbı `index.html?auth=login|register[&next=…]`. Google OAuth web dönüş adresi de `/index.html`'dir ve Supabase Redirect URLs listesinde kayıtlıdır.
 - **Paneller:** `panel-kurye.html`, `panel-isletme.html`, `panel-firma.html` — `.mob-dash` class'ı ile kendi mobil header'larını yönetir
 - **Havuzlar:** `kuryeler.html`, `isletmeler.html`, `firmalar.html` — arama + filtre + harita entegrasyonu (giriş gerekir)
 - **Profiller:** `profil-kurye.html?id=`, `profil-isletme.html?id=`, `profil-firma.html?id=` — `?id=` query param ile profil yüklenir

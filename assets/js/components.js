@@ -182,13 +182,9 @@
   };
 
   /* ─── SAYFA TİPİ ───────────────────────────────────────────── */
-  /* GEÇİCİ: 'giris.html' burada, çünkü dosya henüz silinmedi. Giriş artık
-     index.html üzerinde modal olarak açılıyor ve hiçbir yerden giris.html'e
-     link verilmiyor; dosya yalnız kaçış kapısı olarak duruyor (canlıda Google
-     girişi doğrulanana kadar). Listede olmasa oturum kapısı onu "korumalı
-     sayfa" sayıp ana sayfaya yönlendirirdi ve elle bile açılamazdı.
-     giris.html silindiğinde BU SATIRDAN DA ÇIKARILACAK. */
-  var AUTH_PAGES    = ['giris.html', 'verify-email.html', 'sifre-sifirla.html', 'onboarding.html', 'app-onboarding.html'];
+  /* Ayrı bir giriş sayfası YOKTUR. Giriş/kayıt index.html üzerinde modal
+     olarak açılır (auth-modal.js); adres kalıbı index.html?auth=login. */
+  var AUTH_PAGES    = ['verify-email.html', 'sifre-sifirla.html', 'onboarding.html', 'app-onboarding.html'];
   var LANDING_PAGES = ['index.html', '', '/'];
   /* Giriş GEREKTİRMEYEN herkese açık sayfalar.
      Yasal metinler burada olmak ZORUNDA: gizlilik.html Google Play Data Safety
