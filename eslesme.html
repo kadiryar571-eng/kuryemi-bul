@@ -61,7 +61,7 @@
       var host = document.getElementById('eslesmeRoot');
       if (!host) return;
       if (!window.SB || !SB.isOn() || !(KB.isAuthed && KB.isAuthed())) {
-        host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🤝</div><div class="kb-empty__t">Giriş yapmalısınız</div><a class="btn btn--primary btn--sm mt-24" href="giris.html">Giriş Yap</a></div>';
+        host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🤝</div><div class="kb-empty__t">Giriş yapmalısınız</div><a class="btn btn--primary btn--sm mt-24" href="index.html?auth=login">Giriş Yap</a></div>';
         return;
       }
       try {

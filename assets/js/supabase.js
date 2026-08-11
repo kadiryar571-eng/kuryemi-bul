@@ -62,7 +62,11 @@
   var LEGACY_REDIRECT = "com.kuryemibul.app://";   // yalnız geriye dönük yakalama
 
   // Google ile giriş/kayıt (OAuth).
-  // Web: aynı sekmede redirect → giris.html oturum tespiti.
+  // Web: aynı sekmede redirect → index.html oturum tespiti (giriş artık orada
+  //   modal olarak açılıyor; ayrı bir giriş sayfası yok).
+  //   DİKKAT: aşağıdaki redirectTo adresi de Supabase → Authentication →
+  //   URL Configuration → Redirect URLs listesinde EKLİ olmalıdır, yoksa
+  //   Google girişi "redirect not allowed" ile reddedilir.
   // Native (Capacitor app): Google WebView'i engellediği için sistem tarayıcısında aç,
   //   dönüşü deep-link (com.kuryemibul.app://callback) ile yakala (initNativeAuth).
   async function signInWithGoogle() {
@@ -80,7 +84,7 @@
     }
     return client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: location.origin + "/giris.html" }
+      options: { redirectTo: location.origin + "/index.html" }
     });
   }
   // Native deep-link dönüşü: Google'dan gelen code'u oturuma çevir + yönlendir

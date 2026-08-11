@@ -870,6 +870,29 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .modal form { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
 .modal .field { gap: 5px; }
 
+/* ─── 21b. GİRİŞ / KAYIT MODALI ───────────────────────────────
+   Kabuk yukarıdaki .modal-overlay / .modal desenini yeniden kullanır;
+   burada yalnız auth formuna özgü ayarlar var. Formun işaretlemesi
+   auth-forms.js'ten gelir ve .auth-tabs / .auth-divider / .auth-footer
+   gibi mevcut sınıfları taşır — o kurallar aynen geçerlidir.
+   Dar ekranda alttan açılan sayfa görünümü .modal'ın mevcut mobil
+   varyantından gelir (bkz. max-width: 680px bloğu). */
+/* Hafif bulanıklık — ana sayfa arkada durduğu için modalın önde olduğu
+   net anlaşılsın. Yalnız bu overlay'e uygulanır, diğer modallar değişmez. */
+.auth-modal-overlay { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.auth-modal { max-width: 440px; }
+.auth-modal__head h3 { font-weight: 800; color: var(--primary); font-size: 1.05rem; }
+.auth-modal__body { padding: 22px 28px 28px; }
+/* .modal form kuralı bu formlara yatay padding ekliyor; gövdede zaten
+   padding var, iki kez uygulanınca alanlar daralıyordu. */
+.auth-modal__body form { padding: 0; margin-top: 0; }
+.auth-modal__body .auth-tabs  { margin-bottom: 20px; }
+.auth-modal__body .auth-footer { margin-top: 16px; }
+
+@media (max-width: 480px) {
+  .auth-modal__body { padding: 18px 18px 24px; }
+}
+
 /* apply modal */
 .apply-modal .apply-summary { margin: 12px 24px; background: var(--surface-2); border-radius: var(--radius); padding: 12px 14px; }
 .apply-summary__row { display: flex; justify-content: space-between; gap: 8px; font-size: 0.875rem; padding: 4px 0; }

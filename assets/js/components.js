@@ -71,7 +71,7 @@
   function roleToPanel(role) {
     /* Yönetim Supabase Studio'dan yapılır; uygulama içi admin sayfası yoktur. */
     var map = { kurye: 'panel-kurye.html', isletme: 'panel-isletme.html', firma: 'panel-firma.html' };
-    return map[role] || 'giris.html';
+    return map[role] || 'index.html?auth=login';
   }
   function panelHref() { return roleToPanel(getRole()); }
 
@@ -182,6 +182,12 @@
   };
 
   /* ─── SAYFA TİPİ ───────────────────────────────────────────── */
+  /* GEÇİCİ: 'giris.html' burada, çünkü dosya henüz silinmedi. Giriş artık
+     index.html üzerinde modal olarak açılıyor ve hiçbir yerden giris.html'e
+     link verilmiyor; dosya yalnız kaçış kapısı olarak duruyor (canlıda Google
+     girişi doğrulanana kadar). Listede olmasa oturum kapısı onu "korumalı
+     sayfa" sayıp ana sayfaya yönlendirirdi ve elle bile açılamazdı.
+     giris.html silindiğinde BU SATIRDAN DA ÇIKARILACAK. */
   var AUTH_PAGES    = ['giris.html', 'verify-email.html', 'sifre-sifirla.html', 'onboarding.html', 'app-onboarding.html'];
   var LANDING_PAGES = ['index.html', '', '/'];
   /* Giriş GEREKTİRMEYEN herkese açık sayfalar.
@@ -192,7 +198,7 @@
                        'cerez.html', 'guvenlik.html'];
 
   /* Sayfa adını HER ZAMAN ".html" uzantılı döndür.
-     serve.json'daki cleanUrls yerelde uzantıyı düşürüyor (/giris.html → /giris);
+     serve.json'daki cleanUrls yerelde uzantıyı düşürüyor (/ilanlar.html → /ilanlar);
      normalize etmezsek AUTH_PAGES / PUBLIC_PAGES / LANDING_PAGES eşleşmez ve
      giriş sayfası bile "korumalı" sayılıp sonsuz yönlendirmeye girer. */
   function currentPage() {
@@ -312,7 +318,7 @@
         if (window.SB && SB.signOut) { try { await SB.signOut(); } catch (e) {} }
         SESSION.user = null; SESSION.profile = null;
         localStorage.removeItem('kb_rol');
-        location.href = 'giris.html';
+        gotoAuth('login');
       });
     }
 
@@ -351,14 +357,14 @@
     var links = PUBLIC_NAV_LINKS.map(function (l) {
       /* Havuz/ilan sayfaları giriş ister; oturumsuz ziyaretçiyi doğrudan
          giriş sayfasına gönder (önce açılıp sonra yönlendirilme olmasın). */
-      var href = authed ? l.href : 'giris.html?next=' + encodeURIComponent(l.href);
+      var href = authed ? l.href : 'index.html?auth=login&next=' + encodeURIComponent(l.href);
       return '<a href="' + href + '">' + esc(l.label) + '</a>';
     }).join('');
 
     var actions = authed
       ? '<a href="' + panelHref() + '" class="btn btn--primary btn--sm">Panelim</a>'
-      : '<a href="giris.html" class="btn btn--ghost btn--sm">Giriş Yap</a>' +
-        '<a href="giris.html?mode=register" class="btn btn--primary btn--sm">Kayıt Ol</a>';
+      : '<a href="index.html?auth=login" class="btn btn--ghost btn--sm">Giriş Yap</a>' +
+        '<a href="index.html?auth=register" class="btn btn--primary btn--sm">Kayıt Ol</a>';
 
     nav.innerHTML =
       '<a class="nav-brand" href="index.html">KuryemiBul</a>' +
@@ -425,7 +431,7 @@
 
   /* ─── SESSION GUARD ────────────────────────────────────────────
      Giriş yapmamış ziyaretçi uygulama sayfalarına (havuzlar, ilanlar,
-     paneller, mesajlar ...) erişemez; giris.html'e yönlendirilir ve
+     paneller, mesajlar ...) erişemez; index.html?auth=login'e yönlendirilir ve
      giriş sonrası gitmek istediği sayfaya döner (?next=).
      Landing, auth ve yasal/statik sayfalar bu korumanın dışındadır. */
 
@@ -440,8 +446,8 @@
     return v;
   }
   /* Dönüş adresi URL'de taşınır; Google OAuth dönüşünde URL temizlendiği için
-     (Google giris.html'e sade döner) ayrıca sessionStorage'a da yazılır.
-     Böylece hem guard hem giris.html aynı değeri görür. */
+     (Google index.html'e sade döner) ayrıca sessionStorage'a da yazılır.
+     Böylece hem guard hem giriş modalı aynı değeri görür. */
   var NEXT_KEY = 'kb_auth_next';
   function nextParam() {
     try {
@@ -451,6 +457,54 @@
     } catch (e) { return ''; }
   }
   function clearNext() { try { sessionStorage.removeItem(NEXT_KEY); } catch (e) {} }
+  /* Giriş modalı navigasyonsuz açıldığı için dönüş adresi URL'de taşınamaz;
+     değer doğrudan buraya yazılır. Doğrulayıcı aynı safeNext'tir — açık
+     yönlendirme koruması modalda da aynen geçerli. Yeni anahtar açmayın. */
+  function setNext(value) {
+    var v = safeNext(value);
+    if (!v) return '';
+    try { sessionStorage.setItem(NEXT_KEY, v); } catch (e) {}
+    return v;
+  }
+
+  /* ─── Giriş modalı niyeti ──────────────────────────────────────
+     Giriş artık index.html üzerinde modal olarak açılıyor; adres
+     "index.html?auth=login" biçiminde taşınıyor. Ama bazı statik
+     sunucular (ör. `serve` cleanUrls) .html uzantısını atarken query
+     string'i de düşürüyor — ?next= için zaten yapıldığı gibi niyeti
+     sessionStorage'a da yazıyoruz ki modal karşı tarafta yine açılsın.
+     takeAuthRequest okurken siler: bayrak tek kullanımlıktır. */
+  var AUTH_OPEN_KEY = 'kb_auth_open';
+  function requestAuth(mode) {
+    try { sessionStorage.setItem(AUTH_OPEN_KEY, mode === 'register' ? 'register' : 'login'); } catch (e) {}
+  }
+  function takeAuthRequest() {
+    try {
+      var v = sessionStorage.getItem(AUTH_OPEN_KEY);
+      sessionStorage.removeItem(AUTH_OPEN_KEY);
+      return v;
+    } catch (e) { return null; }
+  }
+  function gotoAuth(mode) {
+    requestAuth(mode);
+    location.href = 'index.html?auth=' + (mode === 'register' ? 'register' : 'login');
+  }
+
+  /* Giriş bağlantılarına tıklandığında niyeti kaydet ve navigasyonun
+     kendi yoluna devam etmesine izin ver. index.html'de bu tıklamayı
+     auth-modal.js ayrıca yakalayıp navigasyonsuz açar ve bayrağı tüketir.
+     YAKALAMA fazı: sayfadaki bazı düğmeler e.stopPropagation() çağırıyor
+     (ör. index.html rol kartları); kabarma fazında bu tıklamalar buraya
+     hiç ulaşmazdı. */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    var h = a.getAttribute('href') || '';
+    if (h.indexOf('index.html?auth=') !== 0) return;
+    requestAuth(h.indexOf('auth=register') !== -1 ? 'register' : 'login');
+    var m = h.match(/[?&]next=([^&]*)/);
+    if (m) { try { setNext(decodeURIComponent(m[1])); } catch (err) {} }
+  }, true);
 
   async function runSessionGuard() {
     /* Supabase yüklenemediyse yönlendirme yapma — aksi halde bağlantı
@@ -479,7 +533,8 @@
       if (!SESSION.user) {
         var hedef = safeNext(page + location.search);
         if (hedef) { try { sessionStorage.setItem(NEXT_KEY, hedef); } catch (e) {} }
-        location.replace('giris.html' + (hedef ? '?next=' + encodeURIComponent(hedef) : ''));
+        requestAuth('login');
+        location.replace('index.html?auth=login' + (hedef ? '&next=' + encodeURIComponent(hedef) : ''));
       }
     }
   }
@@ -541,6 +596,10 @@
     safeNext:       safeNext,     // açık yönlendirme korumalı ?next= doğrulayıcı
     nextParam:      nextParam,
     clearNext:      clearNext,
+    setNext:        setNext,      // modal navigasyonsuz açıldığında dönüş adresi
+    requestAuth:    requestAuth,  // giriş modalı niyeti (query düşse de yaşar)
+    takeAuthRequest: takeAuthRequest,
+    gotoAuth:       gotoAuth,
 
     /* helpers */
     esc:            esc,

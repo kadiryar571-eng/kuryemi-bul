@@ -311,12 +311,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 
   window.goRegister = function() {
     finish();
-    location.href = 'giris.html?mode=register' + (_role ? '&rol=' + _role : '');
+    if (window.KB && KB.requestAuth) KB.requestAuth('register');
+    location.href = 'index.html?auth=register' + (_role ? '&rol=' + _role : '');
   };
 
   window.goLogin = function() {
     finish();
-    location.href = 'giris.html';
+    KB.gotoAuth('login');
   };
 
   function finish() {

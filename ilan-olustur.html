@@ -978,7 +978,7 @@
         try {
           var role = KB.getRole && KB.getRole();
           if (!role || role === 'guest') {
-            location.href = 'giris.html';
+            KB.gotoAuth('login');
             return;
           }
         } catch(e) {}

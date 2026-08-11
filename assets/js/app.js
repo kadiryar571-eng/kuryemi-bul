@@ -132,7 +132,7 @@
     if (window.KB && KB.ready) await KB.ready();
     var on = online();
     if (on) {
-      if (!KB.isAuthed()) { KB.toast(T("modal.guest"), "error"); setTimeout(function () { location.href = "giris.html"; }, 1200); return; }
+      if (!KB.isAuthed()) { KB.toast(T("modal.guest"), "error"); setTimeout(function () { KB.gotoAuth("login"); }, 1200); return; }
     } else {
       if (KB.getRole() === "ziyaretci") { KB.toast(T("modal.guest"), "error"); return; }
     }
@@ -334,7 +334,7 @@
     if (!canPool()) {
       actionHtml = '<div class="jc-card-actions">' +
         '<a class="btn btn--ghost btn--sm" href="' + detailHref + '">Detay Gör</a>' +
-        '<a class="btn btn--primary btn--sm" href="giris.html">' + T("cta.signin") + '</a>' +
+        '<a class="btn btn--primary btn--sm" href="index.html?auth=login">' + T("cta.signin") + '</a>' +
       '</div>';
     } else if (owner) {
       actionHtml = '<div class="jc-card-actions">' +
@@ -650,7 +650,7 @@
     if (window.KB && KB.bindDraft) KB.bindDraft(document.getElementById("applyForm"), "apply_draft");
   }
   function openApplyModal(listingId, baslik, meta) {
-    if (!canPool()) { location.href = "giris.html"; return; }
+    if (!canPool()) { KB.gotoAuth("login"); return; }
     ensureApplyModal();
     meta = meta || {};
     var m = document.getElementById("applyModal");
@@ -1340,7 +1340,7 @@
     if (window.KB && KB.ready) await KB.ready();
     if (!(online() && KB.isAuthed && KB.isAuthed())) {
       grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pe.loginRequired") +
-        '<br><a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
+        '<br><a class="btn btn--primary btn--sm mt-24" href="index.html?auth=login">' + T("cta.signin") + '</a></div>';
       if (countEl) countEl.textContent = "";
       return;
     }
@@ -1756,7 +1756,7 @@
     if (window.KB && KB.ready) await KB.ready();
     // Rol koruması: online'da giriş yoksa girişe, farklı roldeyse kendi paneline yönlendir
     if (online()) {
-      if (!KB.isAuthed()) { location.href = "giris.html"; return; }
+      if (!KB.isAuthed()) { KB.gotoAuth("login"); return; }
       var myRole = KB.currentRole();
       // Admin tüm panelleri görebilir; diğerleri sadece kendi panelini
       var isAdmin = window._kbIsAdmin || false;
@@ -2261,7 +2261,7 @@
     function applyBtn(block) {
       var cls = "btn btn--primary" + (block ? " btn--lg btn--block" : " btn--sm");
       if (owner) return '<a class="btn btn--secondary btn--sm" href="ilan-olustur.html?edit=' + l.id + '">✏️ Düzenle</a>';
-      if (!canPool()) return '<a class="' + cls + '" href="giris.html">Giriş Yap &amp; Başvur</a>';
+      if (!canPool()) return '<a class="' + cls + '" href="index.html?auth=login">Giriş Yap &amp; Başvur</a>';
       if (applied) return '<span class="chip chip--ok" style="padding:8px 14px">✓ Başvuruldu</span>';
       return '<button class="' + cls + '" data-apply="' + l.id + '" data-baslik="' + KB.esc(l.baslik) + '" data-company="' + KB.esc(l.sahip || "") + '" data-loc="' + KB.esc(loc) + '">Başvur</button>';
     }
@@ -2567,7 +2567,7 @@
     // yalnız gerçek eşleşmelerden doğar.
     if (!(online() && KB.isAuthed && KB.isAuthed())) {
       root.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">💬</div><div class="kb-empty__t">' + T("msg.loginRequired") + '</div>' +
-        '<a class="btn btn--primary btn--sm mt-24" href="giris.html">' + T("cta.signin") + '</a></div>';
+        '<a class="btn btn--primary btn--sm mt-24" href="index.html?auth=login">' + T("cta.signin") + '</a></div>';
       return;
     }
     var listEl = document.getElementById("msgConvList");

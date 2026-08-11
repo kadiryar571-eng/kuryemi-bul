@@ -29,7 +29,7 @@
 <body class="auth-page">
 
   <header class="auth-header">
-    <a class="back-link" href="giris.html">
+    <a class="back-link" href="index.html?auth=login">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       Giriş sayfasına dön
     </a>
@@ -64,7 +64,7 @@
           Şifre sıfırlama bağlantısını <strong id="sent-email"></strong> adresine gönderdik.
           Bağlantıya tıklayarak yeni şifreni oluşturabilirsin.
         </p>
-        <a href="giris.html" class="btn btn--primary btn--block">Giriş sayfasına dön</a>
+        <a href="index.html?auth=login" class="btn btn--primary btn--block">Giriş sayfasına dön</a>
       </div>
 
       <!-- 3. Adım: Yeni şifre belirleme (token ile) -->
@@ -157,7 +157,7 @@
       try {
         await SB.updatePassword(pw);
         KBMotion.showToast('Şifren güncellendi!', 'success');
-        setTimeout(function () { location.href = 'giris.html'; }, 1500);
+        setTimeout(function () { location.href = 'index.html?auth=login'; }, 1500);
       } catch (err) {
         alertEl.textContent = (err && err.message) || 'Şifre güncellenemedi.';
         alertEl.style.display = '';

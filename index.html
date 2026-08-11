@@ -1240,7 +1240,8 @@
   <!-- ── NAV ─────────────────────────────────────────── -->
   <nav class="public-nav">
     <a class="nav-brand" href="index.html">KuryemiBul</a>
-    <!-- data-gated: giriş yoksa link giris.html?next=... olur (aşağıdaki script) -->
+    <!-- data-gated: giriş yoksa link index.html?auth=login&next=... olur (aşağıdaki
+         script). Modal bu adresi yakalar, sayfadan çıkmadan açar. -->
     <div class="nav-links">
       <a href="kuryeler.html"   data-gated>Kuryeler</a>
       <a href="isletmeler.html" data-gated>Esnaflar</a>
@@ -1248,8 +1249,8 @@
       <a href="ilanlar.html"    data-gated>İlanlar</a>
     </div>
     <div class="nav-actions">
-      <a href="giris.html" class="btn btn--ghost btn--sm">Giriş Yap</a>
-      <a href="giris.html?mode=register" class="btn btn--primary btn--sm">Kayıt Ol</a>
+      <a href="index.html?auth=login" class="btn btn--ghost btn--sm">Giriş Yap</a>
+      <a href="index.html?auth=register" class="btn btn--primary btn--sm">Kayıt Ol</a>
     </div>
   </nav>
 
@@ -1264,7 +1265,7 @@
           <h1 class="lp-hero__h1">Size uygun kurye işlerini kolayca bulun.</h1>
           <p class="lp-hero__sub">KuryemiBul ile bulunduğunuz bölgedeki aktif kurye ilanlarını inceleyin, başvurun ve işverenlerle doğrudan iletişime geçin.</p>
           <div class="lp-hero__cta">
-            <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hemen Başla</a>
+            <a href="index.html?auth=register" class="btn btn--primary btn--lg">Hemen Başla</a>
             <a href="ilanlar.html" class="btn btn--ghost btn--lg" data-gated>İlanları İncele</a>
             <a href="/downloads/kuryemibul.apk" class="btn btn--ghost btn--lg" download id="heroApk">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1609,7 +1610,7 @@
 
       <!-- CTA -->
       <div class="hiw-cta">
-        <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Şimdi Profil Oluştur</a>
+        <a href="index.html?auth=register" class="btn btn--primary btn--lg">Şimdi Profil Oluştur</a>
       </div>
 
     </div>
@@ -1641,7 +1642,7 @@
           <div class="rs-card__content">
             <div class="rs-card__title">Kurye</div>
             <p class="rs-card__desc">Size uygun iş ilanlarını bul, başvur ve işverenlerle iletişime geç.</p>
-            <a class="rs-card__btn" href="giris.html?mode=register&rol=kurye" data-role="kurye">Kurye Olarak Devam Et</a>
+            <a class="rs-card__btn" href="index.html?auth=register&rol=kurye" data-role="kurye">Kurye Olarak Devam Et</a>
           </div>
         </div>
 
@@ -1656,7 +1657,7 @@
           <div class="rs-card__content">
             <div class="rs-card__title">Esnaf</div>
             <p class="rs-card__desc">Kurye ihtiyacınızı yayınlayın ve başvuruları kolayca yönetin.</p>
-            <a class="rs-card__btn" href="giris.html?mode=register&rol=isletme" data-role="isletme">Esnaf Olarak Devam Et</a>
+            <a class="rs-card__btn" href="index.html?auth=register&rol=isletme" data-role="isletme">Esnaf Olarak Devam Et</a>
           </div>
         </div>
 
@@ -1676,7 +1677,7 @@
           <div class="rs-card__content">
             <div class="rs-card__title">Kurye Firması</div>
             <p class="rs-card__desc">Birden fazla kurye ilanını yönetin ve ekiplerinizi büyütün.</p>
-            <a class="rs-card__btn" href="giris.html?mode=register&rol=firma" data-role="firma">Kurye Firması Olarak Devam Et</a>
+            <a class="rs-card__btn" href="index.html?auth=register&rol=firma" data-role="firma">Kurye Firması Olarak Devam Et</a>
           </div>
         </div>
 
@@ -1691,8 +1692,8 @@
         <h2 class="fin-cta__title">Hazırsan başlayalım.</h2>
         <p class="fin-cta__sub">KuryemiBul ile bulunduğun bölgedeki iş fırsatlarını keşfet, başvur ve yeni işine daha hızlı ulaş.</p>
         <div class="fin-cta__btns">
-          <a href="giris.html?mode=register" class="btn btn--primary btn--lg">Hemen Kayıt Ol</a>
-          <a href="giris.html" class="btn btn--ghost btn--lg">Giriş Yap</a>
+          <a href="index.html?auth=register" class="btn btn--primary btn--lg">Hemen Kayıt Ol</a>
+          <a href="index.html?auth=login" class="btn btn--ghost btn--lg">Giriş Yap</a>
         </div>
         <div class="fin-cta__trust">
           <span>Gerçek işletmeler</span>
@@ -1723,7 +1724,7 @@
             <a href="index.html">Ana Sayfa</a>
             <a href="ilanlar.html" data-gated>İlanlar</a>
             <a href="#finHiw">Nasıl Çalışır</a>
-            <a href="giris.html">Giriş Yap</a>
+            <a href="index.html?auth=login">Giriş Yap</a>
           </div>
         </div>
 
@@ -1862,6 +1863,12 @@
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/presence.js"></script>
   <script src="assets/js/components.js"></script>
+  <!-- Giriş / kayıt modalı. auth-forms.js formun TEK kaynağıdır (eskiden
+       giris.html'e gömülüydü); auth-modal.js yalnız kabuğu sağlar ve
+       sayfadaki index.html?auth=… bağlantılarını yakalar. Sıra önemli:
+       auth-modal.js, auth-forms.js'e bağımlıdır. -->
+  <script src="assets/js/auth-forms.js"></script>
+  <script src="assets/js/auth-modal.js"></script>
   <script>
   /* Girişli kullanıcı landing'e gelirse doğrudan paneline gider.
      Girişsiz ziyaretçide ise korumalı linkler (data-gated) giriş sayfasına
@@ -1871,8 +1878,10 @@
     function gateLinks() {
       document.querySelectorAll('a[data-gated]').forEach(function (a) {
         var hedef = a.getAttribute('href');
-        if (!hedef || hedef.indexOf('giris.html') === 0) return;
-        a.setAttribute('href', 'giris.html?next=' + encodeURIComponent(hedef));
+        if (!hedef || hedef.indexOf('index.html?auth=') === 0) return;
+        /* Modal bu adresi tıklama anında okur ve navigasyon yapmadan açar
+           (auth-modal.js). JS çalışmazsa adres normal çalışır. */
+        a.setAttribute('href', 'index.html?auth=login&next=' + encodeURIComponent(hedef));
       });
     }
 
@@ -1880,10 +1889,15 @@
     try {
       var user = await SB.getUser();
       if (user) {
+        /* Bu sayfa artık Google OAuth'un web dönüş adresidir. Dönen
+           kullanıcıyı giris.html'in kullandığı akışın AYNISI karşılar:
+           rol yoksa onboarding, ?next= varsa oraya, yoksa rolün paneli.
+           Mantık auth-forms.js'te tek yerde. */
         var profile = await SB.myProfile();
+        if (window.KBAuthForms) { KBAuthForms.afterAuth(profile); return; }
         var role = profile && profile.role;
-        if (role && window.KB) { location.href = KB.roleToPanel(role); return; }
-        return;   // profili yarım kullanıcı: linklere dokunma, onboarding akışı devrede
+        if (role && window.KB) { location.href = KB.roleToPanel(role); }
+        return;
       }
       gateLinks();   // oturum yok → kapıla
     } catch (e) { gateLinks(); }

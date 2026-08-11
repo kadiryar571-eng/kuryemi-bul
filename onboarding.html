@@ -127,7 +127,7 @@
       if (!window.SB || !SB.isOn()) return;
       try {
         var user = await SB.getUser();
-        if (!user) { location.href = 'giris.html'; return; }
+        if (!user) { KB.gotoAuth('login'); return; }
         /* Zaten rol seçilmişse direkt panele git */
         var profile = await SB.myProfile();
         if (profile && profile.role) {
