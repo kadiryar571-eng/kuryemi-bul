@@ -135,9 +135,11 @@
         <div class="panel-box__head"><h3>Hızlı Erişim</h3></div>
         <div class="panel-box__body" style="display:flex;flex-wrap:wrap;gap:10px">
           <a href="kuryeler.html"    class="btn btn--primary">Kurye Bul</a>
-          <a href="basvurular.html"  class="btn btn--secondary">Başvurular <span id="panelHiringBadge" style="display:none;background:var(--primary);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
-          <a href="mesajlar.html"    class="btn btn--ghost">Mesajlar <span id="panelMsgBadge" style="display:none;background:var(--error);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
-          <a href="geri-bildirim.html" class="btn btn--ghost">Geri Bildirim <span id="panelFbBadge" style="display:none;background:var(--warning);color:#fff;border-radius:99px;padding:0 6px;font-size:0.7rem;font-weight:700;margin-left:4px"></span></a>
+          <!-- style="display:none" KALIR: rozetlerin başlangıç durumu odur,
+               JS sayı gelince 'inline' yazıyor (bkz. :450 civarı). -->
+          <a href="basvurular.html"  class="btn btn--secondary">Başvurular <span id="panelHiringBadge" class="kb-badge kb-badge--primary" style="display:none"></span></a>
+          <a href="mesajlar.html"    class="btn btn--ghost">Mesajlar <span id="panelMsgBadge" class="kb-badge kb-badge--error" style="display:none"></span></a>
+          <a href="geri-bildirim.html" class="btn btn--ghost">Geri Bildirim <span id="panelFbBadge" class="kb-badge kb-badge--warning" style="display:none"></span></a>
           <a href="havuzum.html"     class="btn btn--ghost">Havuzum</a>
           <a href="profil-duzenle.html" class="btn btn--ghost">Profili Düzenle</a>
         </div>
