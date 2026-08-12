@@ -40,15 +40,11 @@
         <div class="dash-welcome__greeting" id="welcomeGreeting">Merhaba!</div>
         <div class="dash-welcome__sub" id="welcomeSub">Profil verilerin yükleniyor…</div>
       </div>
+      <!-- İlerleme göstergesi BİLEREK yok — bkz. panel-firma.html'deki not.
+           profil_guc ile beslenen bu çubuk, profil motorunun istemcide
+           hesapladığı yüzdeyle çelişiyordu. Tek kaynak motordur. -->
       <div class="dash-welcome__right">
         <div class="dash-welcome__avatar" id="welcomeAvatar">—</div>
-        <div class="dash-welcome__progress">
-          <div class="dash-welcome__prog-bar">
-            <div class="dash-welcome__prog-bar-fill" id="welcomeProgFill" style="width:0%"></div>
-          </div>
-          <div class="dash-welcome__prog-label" id="welcomeProgLabel">Profil yükleniyor</div>
-          <a href="profil-duzenle.html" class="dash-welcome__prog-link" id="welcomeProgLink" style="display:none">Profili Tamamla →</a>
-        </div>
       </div>
     </div>
 
@@ -1113,10 +1109,6 @@
         var greeting = document.getElementById('welcomeGreeting');
         var sub = document.getElementById('welcomeSub');
         var avatar = document.getElementById('welcomeAvatar');
-        var progFill = document.getElementById('welcomeProgFill');
-        var progLabel = document.getElementById('welcomeProgLabel');
-        var progLink = document.getElementById('welcomeProgLink');
-
         if (profile) {
           var ad = profile.ad || 'Kurye';
           var firstName = ad.split(' ')[0];
@@ -1124,12 +1116,8 @@
           var gStr = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';
           greeting.textContent = gStr + ', ' + firstName + ' 👋';
 
-          var guc = profile.profil_guc || 0;
-          var pct = Math.min(100, Math.round(guc));
-          progFill.style.width = pct + '%';
-          progLabel.textContent = 'Profil %' + pct + ' tamamlandı';
-          if (pct < 100) { progLink.style.display = ''; }
-
+          /* profil_guc ile beslenen ilerleme çubuğu kaldırıldı — tek yüzde
+             kaynağı renderProfEngine(). */
           renderProfEngine(profile, 'kurye');
 
           var ilanSayisi = 0;

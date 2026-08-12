@@ -40,15 +40,13 @@
         <div class="dash-welcome__greeting" id="welcomeGreeting">Merhaba!</div>
         <div class="dash-welcome__sub" id="welcomeSub">Profil verilerin yükleniyor…</div>
       </div>
+      <!-- İlerleme göstergesi BİLEREK yok. Burada profile.profil_guc ile
+           beslenen ikinci bir çubuk vardı ve aşağıdaki profil motorunun
+           istemcide hesapladığı yüzdeyle çelişiyordu (canlıda %0 ve %17 aynı
+           ekranda görünüyordu). Tek kaynak motordur; o ayrıca hangi adımın
+           eksik olduğunu da söylüyor. -->
       <div class="dash-welcome__right">
         <div class="dash-welcome__avatar" id="welcomeAvatar">—</div>
-        <div class="dash-welcome__progress">
-          <div class="dash-welcome__prog-bar">
-            <div class="dash-welcome__prog-bar-fill" id="welcomeProgFill" style="width:0%"></div>
-          </div>
-          <div class="dash-welcome__prog-label" id="welcomeProgLabel">Profil yükleniyor</div>
-          <a href="profil-duzenle.html" class="dash-welcome__prog-link" id="welcomeProgLink" style="display:none">Profili Tamamla →</a>
-        </div>
       </div>
     </div>
 
@@ -110,18 +108,18 @@
           <a href="profil-duzenle.html" class="btn btn--ghost btn--sm">Profili Düzenle</a>
         </div>
         <div class="panel-box__body">
-          <div id="firmaMetrics" class="dash-stats-mini" style="margin:0;padding:0;border:none;gap:8px">
-            <div class="dash-stat" style="cursor:default">
+          <div id="firmaMetrics" class="dash-stats-mini dash-stats-mini--inset">
+            <div class="dash-stat dash-stat--static">
               <span class="dash-stat__label">Aktif Üye</span>
               <span class="dash-stat__value" id="metAktif">—</span>
               <span class="dash-stat__delta is-neutral">kurye</span>
             </div>
-            <div class="dash-stat" style="cursor:default">
+            <div class="dash-stat dash-stat--static">
               <span class="dash-stat__label">Bu Ay İşe Alım</span>
               <span class="dash-stat__value" id="metIseAl">—</span>
               <span class="dash-stat__delta is-up">+bu ay</span>
             </div>
-            <div class="dash-stat" style="cursor:default">
+            <div class="dash-stat dash-stat--static">
               <span class="dash-stat__label">Ortalama Puan</span>
               <span class="dash-stat__value" id="metPuan">—</span>
               <span class="dash-stat__delta is-neutral">/ 5.0</span>
@@ -148,7 +146,10 @@
       <!-- Yaklaşan Görüşmeler -->
       <div class="panel-box">
         <div class="iv-upcoming__header" style="padding:14px 16px 6px;">
-          <span class="iv-upcoming__title">📅 Yaklaşan Görüşmeler</span>
+          <span class="iv-upcoming__title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Yaklaşan Görüşmeler
+          </span>
           <a href="gorusmeler.html" class="iv-upcoming__link">Tümü →</a>
         </div>
         <div class="panel-box__body">
@@ -408,19 +409,14 @@
         var greet = document.getElementById('welcomeGreeting');
         var sub   = document.getElementById('welcomeSub');
         var av    = document.getElementById('welcomeAvatar');
-        var pFill = document.getElementById('welcomeProgFill');
-        var pLbl  = document.getElementById('welcomeProgLabel');
-        var pLink = document.getElementById('welcomeProgLink');
 
         if (profile) {
           var ad  = profile.ad || 'Kurye Firması';
           var fn  = ad.split(' ')[0];
           var h   = new Date().getHours();
           greet.textContent = (h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar') + ', ' + fn + '!';
-          var guc = Math.min(100, Math.round(profile.profil_guc || 0));
-          pFill.style.width = guc + '%';
-          pLbl.textContent  = 'Profil %' + guc + ' tamamlandı';
-          if (guc < 100) pLink.style.display = '';
+          /* profil_guc ile beslenen ilerleme çubuğu kaldırıldı — tek yüzde
+             kaynağı renderProfEngine(). Bkz. hoşgeldin bloğundaki not. */
           sub.textContent = 'Filo yönetiminizi ve kurye havuzunuzu buradan takip edin.';
           renderProfEngine(profile);
           if (profile.avatar_url) {
