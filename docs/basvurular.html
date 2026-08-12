@@ -34,7 +34,7 @@
 
   <div class="app-content">
 
-    <div class="page-header" style="margin-bottom:20px">
+    <div class="page-header">
       <div>
         <h1>Başvurular</h1>
         <p class="page-sub">İlanına gelen adayları burada yönet.</p>
@@ -44,17 +44,17 @@
 
     <!-- Job selector -->
     <div id="apcJobBar" class="apc-job-bar">
-      <div class="skel skel--line" style="width:200px;height:56px;border-radius:12px"></div>
-      <div class="skel skel--line" style="width:180px;height:56px;border-radius:12px"></div>
+      <div class="skel skel--line skel--tab" style="width:200px"></div>
+      <div class="skel skel--line skel--tab" style="width:180px"></div>
     </div>
 
     <!-- Stats -->
     <div id="apcStats" class="apc-stats" style="display:none"></div>
 
     <!-- Controls -->
-    <div id="apcControls" style="display:none;margin-bottom:12px">
+    <div id="apcControls" class="mb-12" style="display:none">
       <div class="filter-bar">
-        <input type="search" id="apcSearch" placeholder="Aday adı ara…" style="min-width:170px;flex:1">
+        <input type="search" id="apcSearch" placeholder="Aday adı ara…" class="search-grow">
         <select id="fBolge"><option value="">Tüm Bölgeler</option></select>
         <select id="fArac"><option value="">Tüm Araçlar</option></select>
         <select id="fDeneyim">
@@ -78,9 +78,12 @@
     </div>
 
     <!-- Tab bar -->
-    <div class="tab-bar" id="apcTabBar" style="display:none;margin-bottom:16px">
-      <button data-apctab="all" class="is-active">Tüm Başvurular <span id="apcAllBadge" style="background:var(--primary);color:#fff;border-radius:99px;padding:1px 7px;font-size:0.72rem;font-weight:700;margin-left:4px">0</span></button>
-      <button data-apctab="shortlist">⭐ Kısa Liste <span id="apcSlBadge" style="background:var(--warning);color:#fff;border-radius:99px;padding:1px 7px;font-size:0.72rem;font-weight:700;margin-left:4px">0</span></button>
+    <div class="tab-bar mb-16" id="apcTabBar" style="display:none">
+      <button data-apctab="all" class="is-active">Tüm Başvurular <span id="apcAllBadge" class="kb-badge kb-badge--primary">0</span></button>
+      <button data-apctab="shortlist">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/></svg>
+        Kısa Liste <span id="apcSlBadge" class="kb-badge kb-badge--warning">0</span>
+      </button>
     </div>
 
     <!-- Applicant grid -->

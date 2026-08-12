@@ -39,14 +39,14 @@
         <h1>Bildirimler</h1>
         <p class="page-sub">Başvuru, görüşme, mesaj ve karar güncellemeleri.</p>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div class="page-header__actions">
         <button class="btn btn--ghost btn--sm" id="btnMarkAll">Tümünü Okundu Say</button>
-        <button class="btn btn--ghost btn--sm" id="btnClearAll" style="color:var(--error)">Tümünü Sil</button>
+        <button class="btn btn--ghost btn--sm btn--text-danger" id="btnClearAll">Tümünü Sil</button>
       </div>
     </div>
 
     <!-- Filter pills -->
-    <div class="iv-filter-bar" id="notifFilterBar" style="margin-bottom:16px">
+    <div class="iv-filter-bar mb-16" id="notifFilterBar">
       <button class="iv-filter-pill is-active" data-filter="all">Tümü</button>
       <button class="iv-filter-pill" data-filter="basvuru">📋 Başvuru</button>
       <button class="iv-filter-pill" data-filter="gorusme">📅 Görüşme</button>
@@ -57,15 +57,15 @@
     </div>
 
     <!-- Stats row -->
-    <div class="iv-stats" id="notifStats" style="margin-bottom:16px"></div>
+    <div class="iv-stats mb-16" id="notifStats"></div>
 
     <!-- List -->
     <div class="panel-box">
-      <div class="panel-box__body" style="padding:0">
+      <div class="panel-box__body panel-box__body--flush">
         <div id="notifList">
-          <div class="skel-card"><span class="skel skel--line" style="width:80%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></div>
-          <div class="skel-card" style="margin-top:4px"><span class="skel skel--line" style="width:70%"></span><span class="skel skel--line" style="width:35%;margin-top:8px"></span></div>
-          <div class="skel-card" style="margin-top:4px"><span class="skel skel--line" style="width:75%"></span><span class="skel skel--line" style="width:45%;margin-top:8px"></span></div>
+          <div class="skel-card"><span class="skel skel--line skel--w80"></span><span class="skel skel--line skel--w40"></span></div>
+          <div class="skel-card mt-4"><span class="skel skel--line skel--w70"></span><span class="skel skel--line skel--w35"></span></div>
+          <div class="skel-card mt-4"><span class="skel skel--line skel--w75"></span><span class="skel skel--line skel--w45"></span></div>
         </div>
       </div>
     </div>
