@@ -330,7 +330,7 @@
 
   function renderActivityLog(jobId, kuryeId) {
     var log = getLog(jobId, kuryeId);
-    if (!log.length) return '<p style="color:var(--text-3);font-size:0.82rem;">Henüz işlem yok.</p>';
+    if (!log.length) return '<p class="text-muted-xs">Henüz işlem yok.</p>';
     return '<div class="hd-log">' +
       log.slice().reverse().map(function (entry) {
         return '<div class="hd-log-item">' +

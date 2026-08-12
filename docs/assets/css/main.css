@@ -919,6 +919,18 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 /* Bağlantıyı satır gibi gösteren sarmalayıcı (ayarlar listesi) */
 .link-plain { text-decoration: none; color: inherit; }
 
+/* ── JS ile üretilen işaretlemede sık tekrarlanan yardımcılar ──
+   Bu sınıflar, render fonksiyonlarındaki string'lere gömülü inline
+   stillerin yerini alır. */
+.flex-1      { flex: 1; min-width: 0; }
+.grid-full   { grid-column: 1 / -1; }
+.no-pointer  { pointer-events: none; }
+.mb-14       { margin-bottom: 14px; }
+.text-muted-xs { color: var(--text-3); font-size: 0.82rem; }
+/* İskelet parçaları */
+.skel--dot   { width: 14px; height: 14px; border-radius: 50%; display: block; }
+.skel--sq42  { width: 42px; height: 42px; border-radius: 8px; display: block; }
+
 /* Etiket yanındaki küçük açıklama — "(çoklu seçim)" gibi. Etiketin
    uppercase/letter-spacing biçimini devralmaması için sıfırlanır.
    profil-duzenle.html'de üç kez inline tekrarlanıyordu. */
@@ -5662,20 +5674,22 @@ a.dash-stat:hover {
    CSS değişkeni kullanmayan spesifik sınıflar için
    ═══════════════════════════════════════════════════════════════ */
 
-/* Tema toggle butonu */
-.theme-toggle-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-size: 1rem;
-  color: var(--text-2);
-  transition: var(--transition);
-  flex-shrink: 0;
+/* Tema toggle butonu — kutu biçimi artık .topbar-ico-btn'den gelir
+   (tek kullanıldığı yer topbar'dır, bkz. components.js:246). Buradaki
+   eski 34px/tam-yuvarlak tanım dosyada sonra geldiği için .topbar-ico-btn'i
+   eziyor ve düğme diğer ikon butonlarından farklı görünüyordu. Yalnız
+   sıfırlanması gerekenler bırakıldı. */
+.theme-toggle-btn { background: none; flex-shrink: 0; }
+
+/* Sidebar aktif öğesi — koyu temada okunaklı pill.
+   --primary-light dark'ta #192A50 olmasına rağmen bu öğe açık mavi
+   görünüyordu; koyu zeminde göze batan bir leke bırakıyordu. Burada
+   doğrudan koyu lacivert zemin + açık mavi metin veriliyor. */
+[data-theme="dark"] #app-sidebar .sidebar-nav a.active,
+[data-theme="dark"] #app-sidebar .sidebar-nav button.active {
+  background: rgba(91,158,255,.16);
+  color: #7DB3FF;
 }
-.theme-toggle-btn:hover { background: var(--surface-2); color: var(--text); }
 
 /* Durum badge'leri */
 [data-theme="dark"] .level-badge--standart    { background: #2D2006; color: #FCD34D; }

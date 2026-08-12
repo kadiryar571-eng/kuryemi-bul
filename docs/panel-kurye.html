@@ -21,7 +21,8 @@
   ">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard · KuryemiBul</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png">
   <link rel="icon" href="assets/logo.png" sizes="any">
   <link rel="apple-touch-icon" href="assets/logo.png">
   <link rel="stylesheet" href="assets/css/main.css">
@@ -106,9 +107,9 @@
         <button class="jf-pill" data-filter="acil">Acil İşler</button>
       </div>
       <div class="job-feed__list" id="jobFeedList">
-        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel" style="width:42px;height:42px;border-radius:8px;display:block"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:40%;margin-bottom:6px"></span><span class="skel skel--line" style="width:70%;margin-bottom:6px"></span><span class="skel skel--line" style="width:50%"></span></div></div></div>
-        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel" style="width:42px;height:42px;border-radius:8px;display:block"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:40%;margin-bottom:6px"></span><span class="skel skel--line" style="width:65%;margin-bottom:6px"></span><span class="skel skel--line" style="width:45%"></span></div></div></div>
-        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel" style="width:42px;height:42px;border-radius:8px;display:block"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:35%;margin-bottom:6px"></span><span class="skel skel--line" style="width:75%;margin-bottom:6px"></span><span class="skel skel--line" style="width:55%"></span></div></div></div>
+        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel skel--sq42"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:40%;margin-bottom:6px"></span><span class="skel skel--line" style="width:70%;margin-bottom:6px"></span><span class="skel skel--line" style="width:50%"></span></div></div></div>
+        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel skel--sq42"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:40%;margin-bottom:6px"></span><span class="skel skel--line" style="width:65%;margin-bottom:6px"></span><span class="skel skel--line" style="width:45%"></span></div></div></div>
+        <div class="job-card"><div class="job-card__row"><div class="job-card__ava"><span class="skel skel--sq42"></span></div><div class="job-card__main"><span class="skel skel--line" style="width:35%;margin-bottom:6px"></span><span class="skel skel--line" style="width:75%;margin-bottom:6px"></span><span class="skel skel--line" style="width:55%"></span></div></div></div>
       </div>
       <div class="job-feed__more">
         <button class="btn btn--ghost btn--sm" id="jobFeedMore" style="display:none">Daha Fazla Göster</button>
@@ -124,16 +125,16 @@
         </div>
       </div>
       <div class="atl-list" id="atlList">
-        <div class="atl-item" style="pointer-events:none">
-          <div class="atl-dot atl-dot--apply"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
+        <div class="atl-item no-pointer">
+          <div class="atl-dot atl-dot--apply"><span class="skel skel--dot"></span></div>
           <div class="atl-body"><span class="skel skel--line" style="width:65%;margin-bottom:8px"></span><span class="skel skel--line" style="width:35%"></span></div>
         </div>
-        <div class="atl-item" style="pointer-events:none">
-          <div class="atl-dot atl-dot--view"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
+        <div class="atl-item no-pointer">
+          <div class="atl-dot atl-dot--view"><span class="skel skel--dot"></span></div>
           <div class="atl-body"><span class="skel skel--line" style="width:55%;margin-bottom:8px"></span><span class="skel skel--line" style="width:30%"></span></div>
         </div>
-        <div class="atl-item" style="pointer-events:none">
-          <div class="atl-dot atl-dot--msg"><span class="skel" style="width:14px;height:14px;border-radius:50%;display:block"></span></div>
+        <div class="atl-item no-pointer">
+          <div class="atl-dot atl-dot--msg"><span class="skel skel--dot"></span></div>
           <div class="atl-body"><span class="skel skel--line" style="width:50%;margin-bottom:8px"></span><span class="skel skel--line" style="width:25%"></span></div>
         </div>
       </div>
@@ -281,7 +282,7 @@
         </div>
         <div class="panel-box__body">
           <div id="kuryeMetrics">
-            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:60%"></span></span></div></div>
+            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="flex-1"><span class="skel skel--line" style="width:60%"></span></span></div></div>
           </div>
         </div>
       </div>
@@ -304,7 +305,7 @@
         </div>
         <div class="panel-box__body">
           <div class="iv-upcoming" id="kuryeIvUpcoming">
-            <p style="color:var(--text-3);font-size:0.82rem;">Yükleniyor…</p>
+            <p class="text-muted-xs">Yükleniyor…</p>
           </div>
         </div>
       </div>
@@ -319,7 +320,7 @@
         </div>
         <div class="panel-box__body">
           <div id="kuryeBasvuru">
-            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:70%"></span></span></div></div>
+            <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="flex-1"><span class="skel skel--line" style="width:70%"></span></span></div></div>
           </div>
         </div>
       </div>

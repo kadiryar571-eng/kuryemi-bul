@@ -293,7 +293,7 @@
     var ROLE_LABELS = { isletme:'Esnaf', kurye:'Kurye' };
     var html = '<div class="fb-log">';
     log.slice().reverse().forEach(function(item) {
-      html += '<div class="fb-log-item"><div class="fb-log-dot"></div><div style="flex:1">';
+      html += '<div class="fb-log-item"><div class="fb-log-dot"></div><div class="flex-1">';
       html += '<span class="fb-log-text">' + (LOG_LABELS[item.action]||item.action) + '</span>';
       html += ' <span style="color:var(--text-3);font-size:0.72rem;">· ' + (ROLE_LABELS[item.role]||item.role) + '</span>';
       html += '<div class="fb-log-time">' + formatDate(item.at) + '</div></div></div>';

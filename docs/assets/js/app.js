@@ -20,7 +20,7 @@
   function skeletonCards(n) {
     var one = '<div class="skel-card">' +
       '<div class="skel-card__top"><span class="skel skel--ava"></span>' +
-      '<span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div>' +
+      '<span class="flex-1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div>' +
       '<span class="skel skel--line" style="width:90%;margin-top:14px"></span>' +
       '<span class="skel skel--chips" style="margin-top:14px"></span></div>';
     var out = ""; for (var i = 0; i < (n || 6); i++) out += one; return out;
@@ -94,7 +94,7 @@
       if (!nowOn && document.getElementById("myPoolGrid")) {
         var card = b.closest(".talent-card") || b.closest(".pcard"); if (card) card.remove();
         var grid = document.getElementById("myPoolGrid");
-        if (grid && !grid.querySelector(".pcard")) grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pool.empty") + '</div>';
+        if (grid && !grid.querySelector(".pcard")) grid.innerHTML = '<div class="empty grid-full">' + T("pool.empty") + '</div>';
       }
     } catch (err) { KB.toast(err.message || "Hata", "error"); }
     b.disabled = false;
@@ -398,7 +398,7 @@
       values.map(function (v) { return '<option value="' + KB.esc(v) + '">' + KB.esc(v) + '</option>'; }).join("");
   }
   function emptyState(icon, title, sub, withClear) {
-    return '<div class="kb-empty" style="grid-column:1/-1"><div class="kb-empty__ic">' + icon + '</div>' +
+    return '<div class="kb-empty grid-full"><div class="kb-empty__ic">' + icon + '</div>' +
       '<div class="kb-empty__t">' + title + '</div>' +
       (sub ? '<div class="kb-empty__d">' + sub + '</div>' : '') +
       (withClear ? '<button type="button" class="btn btn--primary btn--sm mt-24" id="jobClearFilters">' + T("ilan.clearFilters") + '</button>' : '') +
@@ -960,13 +960,13 @@
       grid.innerHTML = out.map(POOLV.cardFn).join("");
     } else if (POOLV.src.length) {
       // Kayıt var ama filtreye uymuyor → filtreleri gevşetmesini söyle
-      grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("common.noResult") + '</div>';
+      grid.innerHTML = '<div class="empty grid-full">' + T("common.noResult") + '</div>';
     } else {
       // Havuz gerçekten boş → "filtreleri değiştir" demek yanıltıcı olur
       var bosMetin = type === "kurye"   ? "Henüz yayında kurye yok."
                    : type === "isletme" ? "Henüz yayında esnaf yok."
                    :                      "Henüz yayında kurye firması yok.";
-      grid.innerHTML = '<div class="kb-empty" style="grid-column:1/-1">' +
+      grid.innerHTML = '<div class="kb-empty grid-full">' +
         '<div class="kb-empty__ic">👥</div>' +
         '<div class="kb-empty__t">' + bosMetin + '</div>' +
         '<div class="kb-empty__d">Yeni kayıtlar profillerini tamamladıkça burada görünecek.</div>' +
@@ -1339,7 +1339,7 @@
     var countEl = document.getElementById("myPoolCount");
     if (window.KB && KB.ready) await KB.ready();
     if (!(online() && KB.isAuthed && KB.isAuthed())) {
-      grid.innerHTML = '<div class="empty" style="grid-column:1/-1">' + T("pe.loginRequired") +
+      grid.innerHTML = '<div class="empty grid-full">' + T("pe.loginRequired") +
         '<br><a class="btn btn--primary btn--sm mt-24" href="index.html?auth=login">' + T("cta.signin") + '</a></div>';
       if (countEl) countEl.textContent = "";
       return;
@@ -1347,7 +1347,7 @@
     await loadPoolSet();
     var list = await SB.myPool();
     if (countEl) countEl.textContent = list.length ? T("common.results", { n: list.length }) : "";
-    if (!list.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">⭐<br>' + T("pool.empty") + '<br><a class="btn btn--primary btn--sm mt-24" href="kuryeler.html">' + T("pool.emptyCta") + '</a></div>'; return; }
+    if (!list.length) { grid.innerHTML = '<div class="empty grid-full">⭐<br>' + T("pool.empty") + '<br><a class="btn btn--primary btn--sm mt-24" href="kuryeler.html">' + T("pool.emptyCta") + '</a></div>'; return; }
     grid.innerHTML = list.map(function (x) {
       return x.role === "kurye" ? kuryeCard(x) : x.role === "isletme" ? isletmeCard(x) : firmaCard(x);
     }).join("");
@@ -2043,7 +2043,7 @@
 
   /* ============ KAYITLI İLANLAR (favoriler) ============ */
   function savedEmpty() {
-    return '<div class="kb-empty" style="grid-column:1/-1"><div class="kb-empty__ic">🔖</div><div class="kb-empty__t">' + T("fav.empty") + '</div>' +
+    return '<div class="kb-empty grid-full"><div class="kb-empty__ic">🔖</div><div class="kb-empty__t">' + T("fav.empty") + '</div>' +
       '<div class="kb-empty__d">' + T("fav.emptySub") + '</div>' +
       '<a class="btn btn--primary btn--sm mt-24" href="ilanlar.html">' + T("fav.browse") + '</a></div>';
   }
