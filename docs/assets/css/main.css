@@ -904,6 +904,20 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .stack-10 { display: flex; gap: 10px; }
 .stack-22 { display: flex; flex-direction: column; gap: 22px; }
 .ml-auto  { margin-left: auto; }
+/* Yatay aksiyon satırları — adım/sihirbaz sayfalarında tekrarlanıyordu */
+.row-end     { display: flex; justify-content: flex-end; }
+.row-between { display: flex; gap: 10px; justify-content: space-between; }
+/* İkincil, küçük punto açıklama metni */
+.text-muted-sm { color: var(--text-3); font-size: 0.85rem; }
+/* Geniş dolgulu kart (yasal metinler, durum panelleri) */
+.card--pad-lg { padding: 32px; }
+/* Ortalanmış durum paneli (boş/tamamlandı/yapım aşamasında ekranları) */
+.state-panel { text-align: center; padding: 48px 24px; }
+.state-panel__ic { font-size: 2.5rem; margin-bottom: 16px; color: var(--text-3); }
+.state-panel__t  { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.state-panel__d  { color: var(--text-2); font-size: 0.9rem; max-width: 380px; margin: 0 auto 24px; }
+/* Bağlantıyı satır gibi gösteren sarmalayıcı (ayarlar listesi) */
+.link-plain { text-decoration: none; color: inherit; }
 
 /* Etiket yanındaki küçük açıklama — "(çoklu seçim)" gibi. Etiketin
    uppercase/letter-spacing biçimini devralmaması için sıfırlanır.

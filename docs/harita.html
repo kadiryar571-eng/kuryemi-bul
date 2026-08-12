@@ -100,6 +100,12 @@
       margin-right: 4px;
       vertical-align: middle;
     }
+    /* Katman renkleri — işaretçilerin renkleriyle aynı olmak zorunda.
+       Eskiden lejantta inline yazılıydı; tek yerden yönetilsin diye
+       buraya alındı. */
+    .map-legend__dot--kurye { background: #22D3EE; }
+    .map-legend__dot--esnaf { background: #4F8BFF; }
+    .map-legend__dot--firma { background: #A855F7; }
   </style>
 </head>
 <body>
@@ -145,9 +151,9 @@
 
     <!-- Açıklama -->
     <div class="map-legend">
-      <span><span class="map-legend__dot" style="background:#22D3EE"></span>Kurye</span>
-      <span><span class="map-legend__dot" style="background:#4f8bff"></span>Esnaf</span>
-      <span><span class="map-legend__dot" style="background:#a855f7"></span>Kurye Firması</span>
+      <span><span class="map-legend__dot map-legend__dot--kurye"></span>Kurye</span>
+      <span><span class="map-legend__dot map-legend__dot--esnaf"></span>Esnaf</span>
+      <span><span class="map-legend__dot map-legend__dot--firma"></span>Kurye Firması</span>
     </div>
   </div>
 

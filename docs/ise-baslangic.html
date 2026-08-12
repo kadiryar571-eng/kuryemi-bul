@@ -71,21 +71,21 @@
       <div class="panel-box__head"><h3>Başlangıç Bilgileri</h3></div>
       <div class="panel-box__body">
         <div class="ob-info-grid" id="obInfoGrid">
-          <p style="color:var(--text-3);font-size:0.85rem">Yükleniyor…</p>
+          <p class="text-muted-sm">Yükleniyor…</p>
         </div>
       </div>
     </div>
 
-    <div class="panel-box" style="margin-top:16px">
+    <div class="panel-box mt-16">
       <div class="panel-box__head"><h3>İşveren İletişim</h3></div>
       <div class="panel-box__body">
         <div id="obContactBlock">
-          <p style="color:var(--text-3);font-size:0.85rem">Yükleniyor…</p>
+          <p class="text-muted-sm">Yükleniyor…</p>
         </div>
       </div>
     </div>
 
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+    <div class="row-end mt-16">
       <button class="btn btn--primary" data-next="belgeler">Devam → Belgeler</button>
     </div>
   </div>
@@ -95,22 +95,22 @@
     <div class="panel-box">
       <div class="panel-box__head">
         <h3>Gerekli Belgeler</h3>
-        <span style="font-size:0.78rem;color:var(--text-3)">İşe başlamadan önce hazır olması gerekenler</span>
+        <span class="text-muted-sm">İşe başlamadan önce hazır olması gerekenler</span>
       </div>
       <div class="panel-box__body">
         <div class="ob-checklist" id="obDocChecklist"></div>
       </div>
     </div>
 
-    <div class="panel-box" style="margin-top:16px">
+    <div class="panel-box mt-16">
       <div class="panel-box__head"><h3>Notlarım</h3></div>
       <div class="panel-box__body">
         <textarea id="obDocNotes" class="form-input" rows="3" placeholder="Belge ile ilgili notlarınızı buraya yazın…"></textarea>
-        <button class="btn btn--ghost btn--sm" id="btnSaveDocNotes" style="margin-top:8px">Notu Kaydet</button>
+        <button class="btn btn--ghost btn--sm mt-8" id="btnSaveDocNotes">Notu Kaydet</button>
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">
+    <div class="row-between mt-16">
       <button class="btn btn--ghost" data-prev="bilgiler">← Geri</button>
       <button class="btn btn--primary" data-next="ilk-gun">Devam → İlk Gün</button>
     </div>
@@ -122,19 +122,19 @@
       <div class="panel-box__head"><h3>İlk Gün Detayları</h3></div>
       <div class="panel-box__body">
         <div id="obFirstDayBlock">
-          <p style="color:var(--text-3);font-size:0.85rem">İlk gün bilgisi henüz girilmemiş.</p>
+          <p class="text-muted-sm">İlk gün bilgisi henüz girilmemiş.</p>
         </div>
       </div>
     </div>
 
-    <div class="panel-box" style="margin-top:16px">
+    <div class="panel-box mt-16">
       <div class="panel-box__head"><h3>İlk Gün Kontrol Listesi</h3></div>
       <div class="panel-box__body">
         <div class="ob-checklist" id="obDayChecklist"></div>
       </div>
     </div>
 
-    <div class="panel-box" style="margin-top:16px">
+    <div class="panel-box mt-16">
       <div class="panel-box__head"><h3>Konum & Rota</h3></div>
       <div class="panel-box__body">
         <div id="obLocationBlock" style="display:flex;align-items:center;gap:12px">
@@ -145,7 +145,7 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">
+    <div class="row-between mt-16">
       <button class="btn btn--ghost" data-prev="belgeler">← Geri</button>
       <button class="btn btn--primary" id="btnCompleteOnboard">Onboarding'i Tamamla ✓</button>
     </div>
@@ -287,7 +287,7 @@
             (ob.contactPhone ? '<div style="font-size:0.83rem;color:var(--text-3)">' + esc(ob.contactPhone) + '</div>' : '') + '</div>' +
             (ob.contactPhone ? '<a href="tel:' + esc(ob.contactPhone) + '" class="btn btn--primary btn--sm" style="margin-left:auto">Ara</a>' : '') +
           '</div>'
-        : '<p style="color:var(--text-3);font-size:0.85rem">İletişim bilgisi henüz eklenmedi.</p>';
+        : '<p class="text-muted-sm">İletişim bilgisi henüz eklenmedi.</p>';
     }
 
     /* Location block */
@@ -396,7 +396,7 @@
     }
     if (!ob) {
       var el0 = document.getElementById('obInfoGrid');
-      if (el0) el0.innerHTML = '<p style="color:var(--text-3);font-size:0.85rem">' +
+      if (el0) el0.innerHTML = '<p class="text-muted-sm">' +
         'İşveren henüz başlangıç bilgilerini göndermedi.</p>';
     }
 
