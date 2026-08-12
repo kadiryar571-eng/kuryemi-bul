@@ -35,30 +35,41 @@
 
   <div class="app-content">
 
-    <div class="page-header">
+    <div class="page-header page-header--row">
       <div>
         <h1>Kurye Havuzu</h1>
         <p class="page-sub">Bölge, şehir ve araç tipine göre kurye bul.</p>
       </div>
-      <div style="display:flex;gap:8px">
-        <a href="harita.html?type=kurye" class="btn btn--ghost btn--sm">🗺 Haritada Gör</a>
-        <button class="btn btn--ghost btn--sm" id="btnToggleView" title="Görünüm değiştir">⊟ Liste</button>
+      <div class="page-header__actions">
+        <a href="harita.html?type=kurye" class="btn btn--ghost btn--sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Haritada Gör
+        </a>
+        <button class="btn btn--ghost btn--sm" id="btnToggleView" title="Görünüm değiştir">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Liste
+        </button>
       </div>
     </div>
 
-    <!-- Pool stats banner -->
-    <div class="pool-stats-bar" id="poolStatsBanner" style="display:flex;gap:16px;padding:10px 16px;background:var(--primary-light);border-radius:var(--radius);margin-bottom:14px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:0.82rem;color:var(--primary);font-weight:600">✓ <span id="psBanner">Yükleniyor…</span></span>
-      <span style="font-size:0.78rem;color:var(--text-3);margin-left:auto">Match skoru: Profilinize göre hesaplanır</span>
+    <!-- Havuz özet şeridi -->
+    <div class="pool-stats-bar" id="poolStatsBanner">
+      <span class="pool-stats-bar__main">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="psBanner">Yükleniyor…</span>
+      </span>
+      <span class="pool-stats-bar__note">Match skoru: Profilinize göre hesaplanır</span>
     </div>
 
     <!-- Filter bar -->
     <div class="filter-bar">
-      <div class="search-wrap" style="position:relative;flex:1;min-width:180px">
-        <span class="search-ico" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none">
+      <!-- Konumlandırma ve padding main.css'teki .filter-bar .search-wrap
+           kurallarından gelir; burada tekrar edilmez. -->
+      <div class="search-wrap">
+        <span class="search-ico">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </span>
-        <input type="search" id="fSearch" placeholder="İsim, şehir, bölge ara…" autocomplete="off" style="padding-left:36px">
+        <input type="search" id="fSearch" placeholder="İsim, şehir, bölge ara…" autocomplete="off">
         <div class="suggest-box" id="poolSuggest"></div>
       </div>
       <select id="fSelect1"><option value="">Tüm Şehirler</option></select>
@@ -70,7 +81,7 @@
         <option value="Araç">🚗 Araç</option>
         <option value="Yaya">🚶 Yaya</option>
       </select>
-      <select id="fSort" onchange="sortPool(this.value)" style="min-width:130px">
+      <select id="fSort" onchange="sortPool(this.value)">
         <option value="match">Match Skoru</option>
         <option value="rating">En Yüksek Puan</option>
         <option value="experience">Deneyim</option>
@@ -86,18 +97,20 @@
 
     <!-- Card grid -->
     <div class="cards-grid" id="poolGrid">
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
     </div>
 
-    <!-- Load more -->
-    <div style="text-align:center;margin-top:24px" id="loadMoreWrap" style="display:none">
-      <button class="btn btn--ghost" id="btnLoadMore">Daha Fazla Göster</button>
-    </div>
+    <!-- NOT: "Daha Fazla Göster" bloğu KALDIRILDI. #loadMoreWrap ve
+         #btnLoadMore hiçbir JS dosyasında geçmiyordu — butona basınca hiçbir
+         şey olmuyordu. Üstelik sarmalayıcıda iki ayrı style attribute'u vardı
+         (style="text-align:center…" ve style="display:none"); HTML ayrıştırıcı
+         ikinciyi yok saydığı için gizlenmesi de hiç çalışmıyor, ölü buton her
+         zaman görünüyordu. Havuz listesi zaten tümünü tek seferde basıyor. -->
 
   </div>
 

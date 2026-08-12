@@ -34,12 +34,12 @@
   <nav id="app-sidebar"></nav>
 
   <div class="app-content">
-    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div class="page-header page-header--row">
       <div>
         <h1>İş İlanları</h1>
         <p class="page-sub">Açık kurye ilanlarını incele ve başvur.</p>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="page-header__actions">
         <span class="text-sm text-muted" id="listingsCount"></span>
         <a href="ilan-olustur.html" class="btn btn--primary btn--sm" id="btnCreateListing" style="display:none">+ İlan Oluştur</a>
       </div>
@@ -47,11 +47,11 @@
 
     <!-- Filtre çubuğu -->
     <div class="filter-bar">
-      <div class="search-wrap" style="position:relative;flex:1;min-width:200px">
-        <span class="search-ico" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none">
+      <div class="search-wrap">
+        <span class="search-ico">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </span>
-        <input type="search" id="jobSearch" placeholder="Pozisyon, firma, şehir ara…" autocomplete="off" style="padding-left:36px">
+        <input type="search" id="jobSearch" placeholder="Pozisyon, firma, şehir ara…" autocomplete="off">
         <div class="suggest-box" id="jobSuggest"></div>
       </div>
       <select id="jobCity"><option value="">Tüm Şehirler</option></select>
@@ -68,9 +68,9 @@
 
     <!-- İlan grid -->
     <div class="cards-grid" id="listingsGrid">
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava" style="border-radius:6px"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--line" style="width:90%;margin-top:14px"></span><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava" style="border-radius:6px"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--line" style="width:90%;margin-top:14px"></span><span class="skel skel--chips" style="margin-top:14px"></span></div>
-      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava" style="border-radius:6px"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--line" style="width:90%;margin-top:14px"></span><span class="skel skel--chips" style="margin-top:14px"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava skel--ava-sq"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--line skel--line-wide"></span><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava skel--ava-sq"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--line skel--line-wide"></span><span class="skel skel--chips"></span></div>
+      <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava skel--ava-sq"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--line skel--line-wide"></span><span class="skel skel--chips"></span></div>
     </div>
   </div>
 

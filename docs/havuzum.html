@@ -39,37 +39,37 @@
     </div>
 
     <!-- Sekmeler -->
-    <div class="tab-bar" id="havuzumTabs" style="margin-bottom:24px">
+    <div class="tab-bar mb-24" id="havuzumTabs">
       <button class="tab-btn is-active" data-tab="profiller">Profiller</button>
       <button class="tab-btn" data-tab="ilanlar">İlanlar</button>
     </div>
 
     <!-- Profiller sekmesi -->
     <div id="tabProfiller">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-head-row">
         <span class="text-sm text-muted" id="myPoolCount"></span>
       </div>
       <div class="cards-grid" id="myPoolGrid">
-        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
-        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span style="flex:1"><span class="skel skel--line" style="width:62%"></span><span class="skel skel--line" style="width:40%;margin-top:8px"></span></span></div><span class="skel skel--chips" style="margin-top:14px"></span></div>
+        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
+        <div class="skel-card"><div class="skel-card__top"><span class="skel skel--ava"></span><span class="skel-card__body"><span class="skel skel--line"></span><span class="skel skel--line"></span></span></div><span class="skel skel--chips"></span></div>
       </div>
     </div>
 
     <!-- İlanlar sekmesi (gizli) -->
     <div id="tabIlanlar" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="section-head-row">
         <span class="text-sm text-muted" id="savedJobsCount"></span>
-        <select id="savedSort" class="input" style="width:auto;padding:7px 12px;font-size:0.875rem">
+        <select id="savedSort" class="input select--inline">
           <option value="new">En yeni</option>
           <option value="company">Firmaya göre</option>
           <option value="location">Şehre göre</option>
         </select>
       </div>
       <div class="cards-grid" id="savedJobsGrid">
-        <div class="skel-card" style="height:120px"></div>
-        <div class="skel-card" style="height:120px"></div>
-        <div class="skel-card" style="height:120px"></div>
+        <div class="skel-card skel-card--tall"></div>
+        <div class="skel-card skel-card--tall"></div>
+        <div class="skel-card skel-card--tall"></div>
       </div>
     </div>
   </div>
