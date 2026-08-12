@@ -419,9 +419,13 @@
     var el = document.getElementById('app-footer');
     if (!el) return;
     if (isAuthPage()) { el.innerHTML = ''; return; }
+    /* Yıl çalışma anında üretilir. Sabit yazıldığında her yıl başında eskiyor
+       ve girişli kullanıcı bu kabuğu kullanan 33 sayfanın hepsinde yanlış yıl
+       görüyordu (index.html kendi footer'ında doğru yılı gösterdiği için
+       tutarsızlık da oluşuyordu). */
     el.innerHTML =
       '<footer style="background:var(--surface);border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:.8125rem;color:var(--text-3);margin-top:auto">' +
-        '© 2025 KuryemiBul · <a href="kvkk.html">KVKK</a> · <a href="gizlilik.html">Gizlilik</a> · <a href="sartlar.html">Şartlar</a>' +
+        '© ' + new Date().getFullYear() + ' KuryemiBul · <a href="kvkk.html">KVKK</a> · <a href="gizlilik.html">Gizlilik</a> · <a href="sartlar.html">Şartlar</a>' +
       '</footer>';
   }
 
