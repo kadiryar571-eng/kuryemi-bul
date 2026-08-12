@@ -300,7 +300,15 @@ window.IlanStatus = (function () {
     getJob:             getJob,
     getJobs:            getJobs,
     updateJob:          updateJob,
-    notify:             notify,
+    /* notify KALDIRILDI: bu dosyada hiç tanımlı değildi (tek geçtiği yer
+       burasıydı). Bildirim üretimi DB trigger'larına taşınırken silinmiş ama
+       dışa aktarım listesinden çıkarılmamış. Sonuç: bu satır ReferenceError
+       fırlatıyor, window.IlanStatus ATANAMIYOR ve dosyayı yükleyen 10 sayfada
+       nesne undefined kalıyordu — ilan durum rozetleri basılmıyor,
+       IlanStatus.logActivity / autoCheck korumasız çağrıldığı yerlerde
+       (ilan-olustur.html:732-734, panel-isletme.html:265) hata veriyordu.
+       IlanStatus.notify'ı çağıran hiçbir yer yok; kodda geçen .notify(
+       çağrılarının hepsi KBChat.notify'dır. */
     relTime:            relTime
   };
 })();
