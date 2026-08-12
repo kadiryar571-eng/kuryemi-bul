@@ -32,7 +32,7 @@
 <div id="sidebar-overlay"></div>
 <nav id="app-sidebar"></nav>
 
-<div class="app-content" style="padding:0;overflow:hidden;">
+<div class="app-content app-content--flush">
   <div class="mdt-layout" id="mdtLayout">
 
     <!-- ── Left: message thread ── -->
@@ -46,7 +46,7 @@
 
       <!-- Header -->
       <div class="mdt-hdr" id="mdtHdr">
-        <div style="padding:20px;color:var(--text-3)">Yükleniyor…</div>
+        <div class="mdt-loading">Yükleniyor…</div>
       </div>
 
       <!-- Messages -->
@@ -88,7 +88,9 @@
   </div>
 </div>
 
-<div id="app-footer"></div>
+<!-- app-footer BİLEREK YOK — bkz. mesajlar.html'deki not. Düzen
+     calc(100vh - var(--topbar-h)) yüksekliğinde; footer dikey taşma
+     yaratıyordu. -->
 
 <script src="assets/js/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js" integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

@@ -640,6 +640,12 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   min-width: 0;
 }
 
+/* Tam ekran düzen taşıyan sayfalar (mesajlaşma): içerik kendi içinde
+   kayar, dış dolgu ve taşma olmaz. */
+.app-content--flush { padding: 0; overflow: hidden; }
+/* Sohbet panelinin yükleniyor durumu */
+.mdt-loading { padding: 20px; color: var(--text-3); }
+
 /* Yasal/statik sayfalar (kb-public-view): sidebar yok, içerik ortalanır.
    Ziyaretçi giriş yapmış gibi bir uygulama kabuğu görmez. */
 .kb-public-view .app-content {
