@@ -483,13 +483,13 @@
         ? (k.sertifikalar.map(function(c) {
             return '<span class="apc-cert' + (c.indexOf('MYK') !== -1 ? ' apc-cert--mkv' : '') + '">📜 ' + esc(c) + '</span>';
           }).join(''))
-        : '<span style="font-size:0.85rem;color:var(--text-3)">Sertifika bulunmuyor</span>';
+        : '<span class="text-muted-sm">Sertifika bulunmuyor</span>';
 
       var expHtml = (k.calistigi || []).length
         ? (k.calistigi.map(function(c) {
             return '<div style="padding:8px 12px;background:var(--surface-2);border-radius:var(--radius);margin-bottom:6px;font-size:0.875rem">🏢 ' + esc(c) + '</div>';
           }).join(''))
-        : '<span style="font-size:0.85rem;color:var(--text-3)">Geçmiş iş bilgisi yok</span>';
+        : '<span class="text-muted-sm">Geçmiş iş bilgisi yok</span>';
 
       var refHtml = (k.referanslar || []).length
         ? (k.referanslar.map(function(r) {
@@ -497,7 +497,7 @@
               '<div style="font-weight:600;font-size:0.875rem">' + esc(r.ad) + ' <span style="font-size:0.75rem;color:var(--text-3)">· ' + esc(r.rol) + '</span></div>' +
               '<div style="font-size:0.82rem;color:var(--text-2);margin-top:4px;font-style:italic">"' + esc(r.not) + '"</div></div>';
           }).join(''))
-        : '<span style="font-size:0.85rem;color:var(--text-3)">Referans bulunmuyor</span>';
+        : '<span class="text-muted-sm">Referans bulunmuyor</span>';
 
       var modalEl = document.getElementById('apcModal');
       if (!modalEl) return;
