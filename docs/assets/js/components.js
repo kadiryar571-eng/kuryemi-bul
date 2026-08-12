@@ -50,9 +50,12 @@
     var t = theme === 'dark' ? 'dark' : 'light';
     localStorage.setItem('kb_theme', t);
     document.documentElement.setAttribute('data-theme', t);
-    /* Sync tüm tema toggle butonlarını güncelle */
+    /* Sync tüm tema toggle butonlarını güncelle.
+       innerHTML + SIC kullanılıyor: eskiden burada textContent'e emoji
+       yazılıyordu ve renderTopbar'ın çizdiği SVG ikonu ilk tema değişiminde
+       siliniyordu. İkon tanımı SIC'te tek yerde durur. */
     document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
-      btn.textContent = t === 'dark' ? '☀️' : '🌙';
+      btn.innerHTML = t === 'dark' ? SIC.sun : SIC.moon;
       btn.title = t === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç';
     });
   }
@@ -163,6 +166,11 @@
 
   /* ─── SIDEBAR SVG İKONLARI ─────────────────────────────────── */
   var SIC = {
+    /* Tema ikonları iki yerden kullanılıyor: renderTopbar ilk çizimde,
+       setTheme her değişimde. Tek kaynakta durmaları şart — ayrı ayrı
+       yazılırsa biri güncellenip diğeri unutuluyor. */
+    sun:          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    moon:         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>',
     dashboard:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
     couriers:     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg>',
     businesses:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M9 9h1m5 0h1M9 13h1m5 0h1"/></svg>',
@@ -236,9 +244,7 @@
            kullanıyor, emoji platformdan platforma değişip tek başına
            tutarsız duruyordu. Davranış (toggleTheme bağlaması) aynı. */
         '<button class="topbar-ico-btn theme-toggle-btn" id="topbarThemeToggle" title="' + (getTheme() === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç') + '" aria-label="Tema değiştir">' +
-          (getTheme() === 'dark'
-            ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
-            : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>') +
+          (getTheme() === 'dark' ? SIC.sun : SIC.moon) +
         '</button>' +
         /* style="display:none" KALIR — notifications.js:107 okunmamış sayısı
            varsa 'inline-flex' yazıyor, yoksa tekrar 'none'. */
