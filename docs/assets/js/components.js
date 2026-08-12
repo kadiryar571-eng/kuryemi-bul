@@ -220,21 +220,33 @@
 
     el.innerHTML =
       '<button class="topbar-ico-btn hamburger-btn" id="sidebar-toggle" aria-label="Menü">' + SIC.hamburger + '</button>' +
-      '<a class="topbar-brand" href="' + panelHr + '">KuryemiBul</a>' +
+      /* Marka işareti landing ile aynı: assets/logo-128.png. Yol dokümana
+         göre çözülür, script konumuna göre değil. */
+      '<a class="topbar-brand" href="' + panelHr + '">' +
+        '<img src="assets/logo-128.png" width="30" height="30" alt="">' +
+        '<span>KuryemiBul</span>' +
+      '</a>' +
       '<div class="topbar-search">' +
         '<span class="search-ico">' + SIC.search + '</span>' +
         '<input type="search" placeholder="Kurye, ilan, firma ara…" autocomplete="off">' +
       '</div>' +
       '<div class="topbar-spacer"></div>' +
       '<div class="topbar-actions">' +
-        '<button class="theme-toggle-btn" id="topbarThemeToggle" title="' + (getTheme() === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç') + '">' + (getTheme() === 'dark' ? '☀️' : '🌙') + '</button>' +
+        /* Emoji yerine SVG — sidebar/topbar'ın geri kalanı outline SVG ikon
+           kullanıyor, emoji platformdan platforma değişip tek başına
+           tutarsız duruyordu. Davranış (toggleTheme bağlaması) aynı. */
+        '<button class="topbar-ico-btn theme-toggle-btn" id="topbarThemeToggle" title="' + (getTheme() === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç') + '" aria-label="Tema değiştir">' +
+          (getTheme() === 'dark'
+            ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+            : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>') +
+        '</button>' +
         /* style="display:none" KALIR — notifications.js:107 okunmamış sayısı
            varsa 'inline-flex' yazıyor, yoksa tekrar 'none'. */
         '<a class="topbar-ico-btn topbar-ico-btn--rel" href="bildirimler.html" title="Bildirimler">' + SIC.bell + '<span id="kbNotifBadge" class="kb-badge kb-badge--error kb-badge--dot" style="display:none"></span></a>' +
         '<a class="topbar-ico-btn" href="mesajlar.html" title="Mesajlar">' + SIC.messages + '</a>' +
-        '<a class="topbar-ico-btn" href="profil-' + (role !== 'guest' ? role : 'kurye') + '.html" title="' + esc(name) + '" style="width:auto;padding:0 8px;gap:6px;font-size:.85rem;font-weight:600;color:var(--text-2)">' +
-          '<span style="width:30px;height:30px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0">' + esc(initial) + '</span>' +
-          '<span class="truncate topbar-profile-name" style="max-width:100px">' + esc(name) + '</span>' +
+        '<a class="topbar-ico-btn topbar-profile" href="profil-' + (role !== 'guest' ? role : 'kurye') + '.html" title="' + esc(name) + '">' +
+          '<span class="topbar-profile__ava">' + esc(initial) + '</span>' +
+          '<span class="truncate topbar-profile-name">' + esc(name) + '</span>' +
         '</a>' +
       '</div>';
 
