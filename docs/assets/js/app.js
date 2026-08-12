@@ -1420,7 +1420,11 @@
     function addMarkers(items, type) {
       items.forEach(function (x) {
         if (x.lat == null || x.lng == null) return;
-        var marker = new maplibregl.Marker({ element: mapPinEl(type) })
+        var pin = mapPinEl(type);
+        /* Hover ipucu. .title property ataması HTML olarak parse edilmez,
+           bu yüzden kaçış gerekmez — innerHTML'e YAZMAYIN. */
+        pin.title = x.ad || "";
+        var marker = new maplibregl.Marker({ element: pin })
           .setLngLat([+x.lng, +x.lat])
           .setPopup(new maplibregl.Popup({ offset: 18 }).setHTML(mapPopupHtml(x, type)))
           .addTo(map);

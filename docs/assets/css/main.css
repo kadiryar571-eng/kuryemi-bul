@@ -5640,3 +5640,13 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   color: #4ADE80; background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25);
 }
 .cards-grid--list .talent-card .online-dot { position: static; order: -1; align-self: flex-start; }
+
+/* ============ HARİTA POPUP (MapLibre) ============
+   MapLibre yalnız kutuyu biçimlendirir (.maplibregl-popup-content: beyaz
+   zemin, 15px/10px padding). İçerik hiyerarşisi bize ait. Google Maps
+   sürümünde bu stiller inline yazılıydı; sınıfa taşındı. */
+.map-popup { max-width: 220px; font-size: .82rem; line-height: 1.45; }
+.map-popup b { display: block; margin-bottom: 4px; font-size: .9rem; color: #111; }
+.map-popup__sub { display: block; margin-bottom: 8px; color: #666; font-size: .78rem; }
+.map-popup a { color: #0057FF; font-weight: 600; text-decoration: none; }
+.map-popup a:hover { text-decoration: underline; }
