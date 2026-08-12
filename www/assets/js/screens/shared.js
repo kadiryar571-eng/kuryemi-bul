@@ -1643,7 +1643,7 @@ window.initPremiumMap = async function(role) {
       '<text x="' + c + '" y="' + c + '" font-size="' + (sel ? 14 : 11) + '" text-anchor="middle" dominant-baseline="central">' + cfg.emoji + '</text>' +
       '</svg>';
     var el = document.createElement('div');
-    el.style.cssText = 'width:' + s + 'px;height:' + s + 'px;cursor:pointer';
+    el.style.cssText = 'width:' + s + 'px;height:' + s + 'px;cursor:pointer;z-index:' + (sel ? '999' : '1');
     el.innerHTML = svg;   /* içerik sabit — kullanıcı verisi YOK, emoji ve renk sabitlerden gelir */
     return el;
   }
@@ -1669,7 +1669,14 @@ window.initPremiumMap = async function(role) {
       if (!m || !m._it) return;
       var fresh = pinEl(m._it, k === key);
       var old = m.getElement();
-      old.style.cssText = fresh.style.cssText;
+      /* cssText'i EZME. MapLibre isaretcinin konumunu bu elemanin inline
+         transform'unda tutuyor (translate(-50%,-50%) translate(Xpx,Ypx)).
+         cssText'i komple yazmak transform'u siler ve TUM isaretciler harita
+         hareket edene kadar sol ust koseye yigilir. Olculdu, boyle oluyor.
+         Sadece degisen ozellikleri yaz. */
+      old.style.width  = fresh.style.width;
+      old.style.height = fresh.style.height;
+      old.style.zIndex = fresh.style.zIndex;
       old.innerHTML = fresh.innerHTML;
     });
     if (key && markers[key]) map.flyTo({ center: markers[key].getLngLat() });

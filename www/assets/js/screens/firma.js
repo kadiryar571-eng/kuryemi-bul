@@ -211,8 +211,6 @@ window.FirmaScreens = (function () {
     renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
     if (window.initPremiumMap) {
       setTimeout(function() { window.initPremiumMap('firma'); }, 200);
-    } else {
-      window._spmPendingRole = 'firma';
     }
   }
 
