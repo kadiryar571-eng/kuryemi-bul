@@ -48,3 +48,6 @@ android/.idea/
 
 # Playwright MCP geçici çıktıları
 .playwright-mcp/
+
+# SDD calisma alani (plan yurutme artiklari)
+.superpowers/

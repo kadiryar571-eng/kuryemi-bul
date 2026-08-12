@@ -11,7 +11,7 @@ ihtiyaç duyan işletmeleri tek platformda buluşturan kurye ekosistem platformu
 - 3 kullanıcı rolü: **Kurye / İşletme / Kurye Firması** (sağ üstten rol değiştirme)
 - **Havuz + arama/filtre:** kurye, işletme ve firma havuzları
 - **Profiller:** seviye (Standart/Profesyonel/Premium) ve yıldız puanı, referanslar, sertifikalar
-- **Harita:** Leaflet + OpenStreetMap, 3 katmanlı işaretçiler, bölge filtresi
+- **Harita:** MapLibre GL + OpenFreeMap (OpenStreetMap verisi), 3 katmanlı işaretçiler, bölge filtresi
 - **Teklif sistemi:** çok yönlü teklif akışı (modal) — `localStorage`'a kaydedilir, panelde listelenir
 - **Paneller:** role özel dashboard (özet, ilanlar, başvurular, teklifler; firma için ihale "Yakında")
 - Mobil uyumlu (responsive), hamburger menü, tamamen statik (build adımı yok)

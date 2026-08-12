@@ -1353,277 +1353,163 @@
     }).join("");
   }
 
-  /* ============ HARİTA ============ */
-  async function initMap() {
-    var el = document.getElementById("map");
-    if (!el || typeof L === "undefined") return;
-    var map = L.map("map").setView([39.5, 33.5], 6);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap" }).addTo(map);
+  /* ============ HARİTA (MapLibre GL + OpenFreeMap) ============ */
+  var MAP_STYLE = "https://tiles.openfreemap.org/styles/positron";
 
-    function mk(items, type, color, emoji) {
-      var group = L.layerGroup();
-      items.forEach(function (x) {
-        if (x.lat == null || x.lng == null) return;
-        var icon = L.divIcon({
-          className: "", html: '<div style="background:' + color + ';width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.3);display:grid;place-items:center"><span style="transform:rotate(45deg);font-size:15px">' + emoji + '</span></div>',
-          iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -28]
-        });
-        var page = type === "kurye" ? "profil-kurye.html" : type === "isletme" ? "profil-isletme.html" : "profil-firma.html";
-        L.marker([x.lat, x.lng], { icon: icon }).addTo(group)
-          .bindPopup('<div class="map-popup"><b>' + KB.esc(x.ad) + '</b>' +
-            (x.sehir ? KB.esc(x.sehir) : KB.esc((x.bolgeler || []).join(", "))) +
-            '<br><a href="' + page + '?id=' + x.id + '">' + T("map.viewProfile") + '</a></div>');
-      });
-      return group;
-    }
+  var MAP_PIN = {
+    kurye:   { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
+    isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
+    firma:   { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
+  };
 
-    var kData = await loadPool("kurye"), iData = await loadPool("isletme"), fData = await loadPool("firma");
-    var layers = {
-      kurye: mk(kData, "kurye", "#FF6B35", "🛵"),
-      isletme: mk(iData, "isletme", "#2D6CDF", "📦"),
-      firma: mk(fData, "firma", "#1A1A2E", "🏢")
-    };
-    Object.keys(layers).forEach(function (k) { layers[k].addTo(map); });
-    document.querySelectorAll("[data-layer]").forEach(function (cb) {
-      cb.addEventListener("change", function () {
-        var k = cb.getAttribute("data-layer");
-        if (cb.checked) layers[k].addTo(map); else map.removeLayer(layers[k]);
-      });
-    });
+  /* İşaretçi DOM elemanı. MapLibre custom marker'ı bir HTMLElement ister —
+     Google'daki SVG symbol path karşılığı budur. */
+  function mapPinEl(type) {
+    var cfg = MAP_PIN[type];
+    var el = document.createElement("div");
+    el.className = "kb-map-pin";
+    el.style.cssText = "width:30px;height:30px;border-radius:50%;background:" + cfg.color +
+      ";border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);" +
+      "display:grid;place-items:center;font-size:15px;cursor:pointer";
+    el.textContent = cfg.emoji;
+    return el;
   }
 
-  /* ============ GOOGLE MAPS - HARITA SAYFASI ============ */
-  async function initMapGoogle() {
-    if (typeof google === "undefined" || !google.maps) return;
-    var el = document.getElementById("map");
-    if (!el) return;
-    
-    var turkeyCenter = { lat: 39.5, lng: 33.5 };
-    var map = new google.maps.Map(el, {
-      zoom: 6,
-      center: turkeyCenter,
-      mapTypeControl: true,
-      fullscreenControl: true,
-      styles: [
-        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] }
-      ]
-    });
-    el.__gmap = map; // konumum butonu için referans
+  /* DİKKAT: item.ad / item.sehir / item.bolgeler başka kullanıcıdan gelir.
+     Hepsi KB.esc()'ten geçer. Popup içine onclick YAZILMAZ. */
+  function mapPopupHtml(item, type) {
+    var cfg = MAP_PIN[type];
+    var yer = item.sehir ? item.sehir : (item.bolgeler || []).join(", ");
+    return '<div class="map-popup">' +
+      '<b>' + cfg.emoji + ' ' + KB.esc(item.ad) + '</b><br>' +
+      '<span class="map-popup__sub">' + KB.esc(yer) + '</span><br>' +
+      '<a href="' + cfg.page + '?id=' + encodeURIComponent(item.id) + '">' +
+        T("map.viewProfile") + '</a>' +
+      '</div>';
+  }
 
-    var markerConfig = {
-      kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
-      isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
-      firma: { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
-    };
-    
-    var layers = {
-      kurye: [],
-      isletme: [],
-      firma: []
-    };
-    
-    function createMarker(item, type) {
-      if (item.lat == null || item.lng == null) return;
-      var config = markerConfig[type];
-      var marker = new google.maps.Marker({
-        position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
-        map: map,
-        title: item.ad,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: config.color,
-          fillOpacity: 0.85,
-          strokeColor: "#fff",
-          strokeWeight: 2.5
-        }
+  async function initMap() {
+    var el = document.getElementById("map");
+    if (!el || typeof maplibregl === "undefined") return;
+
+    var map = new maplibregl.Map({
+      container: el,
+      style: MAP_STYLE,
+      center: [33.5, 39.5],   /* [lng, lat] — Google'ın {lat,lng} sırasının TERSİ */
+      zoom: 5.2
+    });
+
+    /* WebGL yoksa MapLibre 5.x "Failed to initialize WebGL" mesajlı bir hata
+       fırlatır. 6.x'teki GPUInitializationError sınıfı 5.x'te YOK — mesaja
+       bakmak zorundayız. */
+    var gpuFailed = false;
+    map.on("error", function (e) {
+      var msg = (e && e.error && e.error.message) || "";
+      if (/webgl/i.test(msg)) {
+        gpuFailed = true;
+        el.innerHTML = '<div class="empty">' + T("map.unsupported") + '</div>';
+        return;
+      }
+      console.error("Map error:", e.error);
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    var layers = { kurye: [], isletme: [], firma: [] };
+
+    function addMarkers(items, type) {
+      items.forEach(function (x) {
+        if (x.lat == null || x.lng == null) return;
+        var marker = new maplibregl.Marker({ element: mapPinEl(type) })
+          .setLngLat([+x.lng, +x.lat])
+          .setPopup(new maplibregl.Popup({ offset: 18 }).setHTML(mapPopupHtml(x, type)))
+          .addTo(map);
+        layers[type].push(marker);
       });
-      
-      var contentString = '<div style="padding:10px;font-family:Arial,sans-serif;max-width:220px;">' +
-        '<div style="font-weight:bold;margin-bottom:6px;font-size:14px;">' + config.emoji + ' ' + KB.esc(item.ad) + '</div>' +
-        '<div style="font-size:12px;color:#666;margin-bottom:10px;">' + 
-        (item.sehir ? KB.esc(item.sehir) : KB.esc((item.bolgeler || []).join(", "))) + 
-        '</div>' +
-        '<a href="' + config.page + '?id=' + item.id + '" style="color:#4f8bff;text-decoration:none;font-size:12px;font-weight:bold;">Profili Gör →</a>' +
-        '</div>';
-      
-      var infoWindow = new google.maps.InfoWindow({ content: contentString });
-      marker.addListener("click", function () { infoWindow.open(map, marker); });
-      
-      return { marker: marker, infoWindow: infoWindow };
     }
-    
+
     try {
       var kData = await loadPool("kurye");
       var iData = await loadPool("isletme");
       var fData = await loadPool("firma");
-      
-      kData.forEach(function(x) { layers.kurye.push(createMarker(x, "kurye")); });
-      iData.forEach(function(x) { layers.isletme.push(createMarker(x, "isletme")); });
-      fData.forEach(function(x) { layers.firma.push(createMarker(x, "firma")); });
-      
+      if (gpuFailed) return;
+
+      addMarkers(kData, "kurye");
+      addMarkers(iData, "isletme");
+      addMarkers(fData, "firma");
+
       document.querySelectorAll("[data-layer]").forEach(function (cb) {
         cb.addEventListener("change", function () {
           var type = cb.getAttribute("data-layer");
-          layers[type].forEach(function(item) {
-            if (item && item.marker) {
-              item.marker.setMap(cb.checked ? map : null);
-            }
+          layers[type].forEach(function (m) {
+            m.getElement().style.display = cb.checked ? "" : "none";
           });
         });
       });
     } catch (e) {
       console.error("Map error:", e);
     }
+
+    initLocateButton(map);
   }
 
-  /* ============ GOOGLE MAPS - PANEL HARİTASI ============ */
-  async function initPanelMap(panelType) {
-    // panelType: "kurye", "isletme", "firma"
-    if (typeof google === "undefined" || !google.maps) return;
-    
-    var containerId = "panelMap" + (panelType.charAt(0).toUpperCase() + panelType.slice(1));
-    var el = document.getElementById(containerId);
-    if (!el) return;
-    
-    var turkeyCenter = { lat: 39.5, lng: 33.5 };
-    var map = new google.maps.Map(el, {
-      zoom: 6,
-      center: turkeyCenter,
-      mapTypeControl: true,
-      fullscreenControl: true,
-      styles: [
-        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
-        { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
-        { featureType: "poi", elementType: "geometry", stylers: [{ color: "#eeeeee" }] },
-        { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-        { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#e5e5e5" }] },
-        { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9c9c9" }] }
-      ]
-    });
+  /* Konum butonu — eskiden harita.html içindeki inline script'teydi.
+     Google Circle yerine GeoJSON poligon kullanılıyor: MapLibre'ın circle
+     katmanı yarıçapı PİKSEL alır, metre değil; zoom değişince doğruluk
+     çemberi yanlış boyutta kalırdı. */
+  function accuracyPolygon(lng, lat, meters) {
+    var coords = [], steps = 64;
+    var dLat = meters / 111320;
+    var dLng = meters / (111320 * Math.cos(lat * Math.PI / 180));
+    for (var i = 0; i <= steps; i++) {
+      var a = (i / steps) * 2 * Math.PI;
+      coords.push([lng + dLng * Math.cos(a), lat + dLat * Math.sin(a)]);
+    }
+    return { type: "Feature", geometry: { type: "Polygon", coordinates: [coords] }, properties: {} };
+  }
 
-    // Konumum butonu
-    var panelLocMarker = null;
-    var panelLocBtn = document.createElement('button');
-    panelLocBtn.className = 'gm-locate-btn';
-    panelLocBtn.title = 'Konumumu göster';
-    panelLocBtn.setAttribute('aria-label', 'Konumumu göster');
-    panelLocBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>';
-    panelLocBtn.style.margin = '0 10px 10px 0';
-    panelLocBtn.addEventListener('click', function () {
-      if (!navigator.geolocation) { if (window.KB) KB.toast('Konum desteklenmiyor.', 'error'); return; }
-      panelLocBtn.classList.add('is-loading'); panelLocBtn.classList.remove('is-active');
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        panelLocBtn.classList.remove('is-loading'); panelLocBtn.classList.add('is-active');
-        var ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        if (panelLocMarker) panelLocMarker.setMap(null);
-        panelLocMarker = new google.maps.Marker({
-          position: ll, map: map, title: 'Konumunuz',
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
-          zIndex: 1000
-        });
-        map.panTo(ll); map.setZoom(13);
-      }, function (err) {
-        panelLocBtn.classList.remove('is-loading');
-        if (window.KB) KB.toast(err.code === 1 ? 'Konum izni reddedildi.' : 'Konum alınamadı.', 'error');
-      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
-    });
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(panelLocBtn);
+  function initLocateButton(map) {
+    var btn = document.getElementById("locateBtn");
+    if (!btn) return;
+    var locMarker = null;
 
-    var markerConfig = {
-      kurye: { color: "#22D3EE", emoji: "🛵", page: "profil-kurye.html" },
-      isletme: { color: "#4f8bff", emoji: "📦", page: "profil-isletme.html" },
-      firma: { color: "#a855f7", emoji: "🏢", page: "profil-firma.html" }
-    };
-    
-    try {
-      var kData = await loadPool("kurye");
-      var iData = await loadPool("isletme");
-      var fData = await loadPool("firma");
-      
-      function createMarker(item, type) {
-        if (item.lat == null || item.lng == null) return;
-        var config = markerConfig[type];
-        var marker = new google.maps.Marker({
-          position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
-          map: map,
-          title: item.ad,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 12,
-            fillColor: config.color,
-            fillOpacity: 0.85,
-            strokeColor: "#fff",
-            strokeWeight: 2.5
-          }
-        });
-        
-        var contentString = '<div style="padding:10px;font-family:Arial,sans-serif;max-width:220px;">' +
-          '<div style="font-weight:bold;margin-bottom:6px;font-size:14px;">' + config.emoji + ' ' + KB.esc(item.ad) + '</div>' +
-          '<div style="font-size:12px;color:#666;margin-bottom:10px;">' + 
-          (item.sehir ? KB.esc(item.sehir) : KB.esc((item.bolgeler || []).join(", "))) + 
-          '</div>' +
-          '<a href="' + config.page + '?id=' + item.id + '" style="color:#4f8bff;text-decoration:none;font-size:12px;font-weight:bold;display:inline-block;">Profili Gör →</a>' +
-          '</div>';
-        
-        var infoWindow = new google.maps.InfoWindow({ content: contentString });
-        marker.addListener("click", function () { infoWindow.open(map, marker); });
+    btn.addEventListener("click", function () {
+      if (!navigator.geolocation) {
+        if (window.KBMotion) KBMotion.showErrorToast(T("map.noGeo"));
+        return;
       }
-      
-      kData.forEach(function(x) { createMarker(x, "kurye"); });
-      iData.forEach(function(x) { createMarker(x, "isletme"); });
-      fData.forEach(function(x) { createMarker(x, "firma"); });
-      
-    } catch (e) {
-      console.error("Panel map error:", e);
-    }
-  }
+      btn.classList.add("locating");
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        btn.classList.remove("locating");
+        var lng = pos.coords.longitude, lat = pos.coords.latitude;
 
-  /* ============ ANA SAYFA HARİTASI (seçmeli tek harita) ============ */
-  function homeMarker(map, group, x, type) {
-    if (x.lat == null || x.lng == null) return;
-    var colors = { kurye: "#22D3EE", isletme: "#3B82F6", firma: "#A78BFA" };
-    var emojis = { kurye: "🛵", isletme: "📦", firma: "🏢" };
-    var pages = { kurye: "profil-kurye.html", isletme: "profil-isletme.html", firma: "profil-firma.html" };
-    var icon = L.divIcon({
-      className: "", html: '<div style="background:' + colors[type] + ';width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.5);display:grid;place-items:center"><span style="transform:rotate(45deg);font-size:15px">' + emojis[type] + '</span></div>',
-      iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -28]
-    });
-    L.marker([x.lat, x.lng], { icon: icon }).addTo(group)
-      .bindPopup('<div class="map-popup"><b>' + KB.esc(x.ad) + '</b>' +
-        (x.sehir ? KB.esc(x.sehir) : KB.esc((x.bolgeler || []).join(", "))) +
-        '<br><a href="' + pages[type] + '?id=' + x.id + '">' + T("map.viewProfile") + '</a></div>');
-  }
-  async function initHomeMap() {
-    var el = document.getElementById("map");
-    if (!el || typeof L === "undefined") return;
-    var map = L.map("map", { scrollWheelZoom: false }).setView([39.5, 33.5], 6);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap" }).addTo(map);
+        if (locMarker) locMarker.remove();
+        var dot = document.createElement("div");
+        dot.style.cssText = "width:18px;height:18px;border-radius:50%;background:#0057FF;" +
+          "border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)";
+        locMarker = new maplibregl.Marker({ element: dot }).setLngLat([lng, lat]).addTo(map);
 
-    var data = { kurye: await loadPool("kurye"), isletme: await loadPool("isletme"), firma: await loadPool("firma") };
-    var layers = {};
-    Object.keys(data).forEach(function (type) {
-      var g = L.layerGroup();
-      data[type].forEach(function (x) { homeMarker(map, g, x, type); });
-      layers[type] = g;
-    });
+        var gj = accuracyPolygon(lng, lat, pos.coords.accuracy || 200);
+        if (map.getSource("kb-accuracy")) {
+          map.getSource("kb-accuracy").setData(gj);
+        } else {
+          map.addSource("kb-accuracy", { type: "geojson", data: gj });
+          map.addLayer({
+            id: "kb-accuracy-fill", type: "fill", source: "kb-accuracy",
+            paint: { "fill-color": "#0057FF", "fill-opacity": 0.1 }
+          });
+          map.addLayer({
+            id: "kb-accuracy-line", type: "line", source: "kb-accuracy",
+            paint: { "line-color": "#0057FF", "line-opacity": 0.25, "line-width": 1 }
+          });
+        }
 
-    var current = null;
-    function show(type) {
-      if (current && layers[current]) map.removeLayer(layers[current]);
-      layers[type].addTo(map); current = type;
-      var pts = data[type].filter(function (x) { return x.lat != null && x.lng != null; }).map(function (x) { return [x.lat, x.lng]; });
-      if (pts.length) map.fitBounds(pts, { padding: [50, 50], maxZoom: 11 });
-      document.querySelectorAll("[data-mapseg]").forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-mapseg") === type); });
-    }
-    document.querySelectorAll("[data-mapseg]").forEach(function (b) {
-      b.addEventListener("click", function () { show(b.getAttribute("data-mapseg")); });
+        map.flyTo({ center: [lng, lat], zoom: 13 });
+      }, function (err) {
+        btn.classList.remove("locating");
+        if (window.KBMotion) KBMotion.showErrorToast(T("map.locFailed") + " " + err.message);
+      }, { enableHighAccuracy: true, timeout: 8000 });
     });
-    show("kurye");
-    setTimeout(function () { map.invalidateSize(); }, 200);
   }
 
   /* ============ ANA SAYFA: CANLI İSTATİSTİK + YORUM CAROUSEL ============ */
@@ -1771,9 +1657,6 @@
       if (b) {
         var tab = b.getAttribute("data-tab");
         showPanel(tab);
-        if (tab === "harita") {
-          setTimeout(function() { initPanelMap(role); }, 100);
-        }
       }
     });
     showPanel(nav.querySelector("button[data-tab]").getAttribute("data-tab"));
@@ -1862,353 +1745,6 @@
     }
   }
   function setHTML(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html || '<div class="empty">' + T("empty.generic") + '</div>'; }
-
-  /* ============ HARİTA DENEYİMİ (senkron liste + harita) ============ */
-  async function initMapExperience() {
-    var mapEl = document.getElementById("map");
-    if (!mapEl || typeof google === "undefined" || !google.maps) return;
-
-    var searchEl = document.getElementById("mxSearch");
-    var countEl  = document.getElementById("mxCount");
-    var scrollEl = document.getElementById("mxCardScroll");
-    var aiCard   = document.getElementById("mxAiCard");
-    var aiClose  = document.getElementById("mxAiClose");
-    var heatLeg  = document.getElementById("mxHeatLegend");
-    var locBtn   = document.getElementById("mxLocateBtn");
-    var aiBtn    = document.getElementById("mxAIBtn");
-    var heatBtn  = document.getElementById("mxHeatBtn");
-    var layBtn   = document.getElementById("mxLayersBtn");
-
-    var ISTANBUL = { lat: 41.015, lng: 28.979 };
-
-    var DARK_STYLE = [
-      { elementType: "geometry", stylers: [{ color: "#0f0b1e" }] },
-      { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-      { elementType: "labels.text.fill", stylers: [{ color: "#8a7aaa" }] },
-      { elementType: "labels.text.stroke", stylers: [{ color: "#0f0b1e" }] },
-      { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1e1640" }] },
-      { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e90c0" }] },
-      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#c4b5fd" }] },
-      { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#5a4a7a" }] },
-      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0d0a1e" }] },
-      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#3a2a5a" }] },
-      { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#1e1540" }] },
-      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#2a1f55" }] },
-      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#7060a0" }] },
-      { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#2a1f55" }] },
-      { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3a2b80" }] },
-      { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#4a3a95" }] },
-      { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#9080c5" }] },
-      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#0f0b1e" }] },
-      { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#6050a0" }] },
-      { featureType: "water", elementType: "geometry", stylers: [{ color: "#07051a" }] },
-      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d2d6a" }] }
-    ];
-
-    var map = new google.maps.Map(mapEl, {
-      zoom: 12, center: ISTANBUL,
-      mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
-      zoomControl: true,
-      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
-      styles: DARK_STYLE,
-      gestureHandling: "greedy",
-      backgroundColor: "#0f0b1e"
-    });
-
-    var PIN = {
-      ilan:    { color: "#f59e0b", emoji: "💼", label: "İlan" },
-      kurye:   { color: "#22d3ee", emoji: "🛵", label: "Kurye" },
-      isletme: { color: "#4f8bff", emoji: "🏪", label: "Esnaf" },
-      firma:   { color: "#a855f7", emoji: "🏢", label: "Kurye Firması" }
-    };
-
-    if (window.KB && KB.ready) await KB.ready();
-    if (scrollEl) scrollEl.innerHTML = mxBcardSkel(3);
-
-    var map = new google.maps.Map(mapEl, {
-      zoom: 6, center: { lat: 39.5, lng: 33.5 },
-      mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
-      zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER }
-    });
-
-    var listings = [], kur = [], isl = [], frm = [];
-    try { if (online()) listings = await SB.openListings(); } catch (e) {}
-    kur = await loadPool("kurye");
-    isl = await loadPool("isletme");
-    frm = await loadPool("firma");
-
-    var items = [];
-    function pushItem(type, x, lat, lng, ad, sub) {
-      if (lat == null || lng == null) return;
-      items.push({
-        key: type + "-" + x.id, type: type, id: x.id,
-        lat: +lat, lng: +lng, ad: ad || "", sub: sub || "",
-        acil: !!(x.acil || x.acil_alinacak),
-        maas: x.maas || x.ucret_min || x.ucret || null,
-        action: type === "ilan"
-          ? { apply: { id: x.id, baslik: ad } }
-          : { view: "profil-" + type + ".html" }
-      });
-    }
-
-    listings.forEach(function(l) { pushItem("ilan", l, l.lat, l.lng, l.baslik, [l.sahip, l.sehir, l.bolge].filter(Boolean).join(" · ")); });
-    kur.forEach(function(k) { pushItem("kurye", k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler||[])[0]].filter(Boolean).join(" · ")); });
-    isl.forEach(function(i) { pushItem("isletme", i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(" · ")); });
-    frm.forEach(function(f) { pushItem("firma", f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(", ")); });
-
-    var activeLayers = { ilan: true, firma: true, acil: false, yakin: false };
-    var saved = window.KB && KB.loadView && KB.loadView("flt_mx2");
-    if (saved && saved.layers) {
-      Object.keys(saved.layers).forEach(function(k) { if (k in activeLayers) activeLayers[k] = !!saved.layers[k]; });
-    }
-    if (saved && saved.q && searchEl) searchEl.value = saved.q;
-
-    var userLat = null, userLng = null, userMarker = null;
-    var markers = {}, selectedKey = null;
-    var heatLayer = null, heatmapOn = false;
-
-    function saveState() {
-      if (window.KB && KB.saveView) KB.saveView("flt_mx2", { q: searchEl ? searchEl.value : "", layers: activeLayers });
-    }
-
-    /* matchScore KALDIRILDI — gerçek bir hesaplama değildi.
-       Kaydın anahtarını hash'leyip 72–93 arası bir sayı üretiyor ve bunu
-       "%81 eşleşme" diye gösteriyordu. Kullanıcı bu orana bakıp kiminle
-       iletişime geçeceğine karar veriyor.
-       CLAUDE.md: "hash'ten türetilmiş sahte 'uyum skoru' üretmek yasaktır."
-       DİKKAT: KBPrefs.matchScore BUNDAN FARKLIDIR ve GERÇEKTİR — kullanıcının
-       kayıtlı tercihlerini (çalışma tipi, asgari maaş, faydalar) ilanın
-       gerçek alanlarıyla karşılaştırır. O kullanılmaya devam ediyor. */
-
-    function distKm(lat1, lng1, lat2, lng2) {
-      var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
-      var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    function isVisible(it, q) {
-      if (q && norm(it.ad + " " + it.sub).indexOf(q) === -1) return false;
-      if (activeLayers.yakin && userLat !== null) {
-        if (distKm(userLat, userLng, it.lat, it.lng) > 5) return false;
-      }
-      if (activeLayers.acil && it.type === "ilan" && it.acil) return true;
-      if (activeLayers.ilan && it.type === "ilan" && !it.acil) return true;
-      if (activeLayers.firma && (it.type === "firma" || it.type === "isletme" || it.type === "kurye")) return true;
-      return false;
-    }
-
-    function visible() {
-      var q = norm(searchEl && searchEl.value || "");
-      return items.filter(function(it) { return isVisible(it, q); });
-    }
-
-    function pinIcon(it, sel) {
-      var cfg = PIN[it.type];
-      var s = sel ? 56 : 44, r = sel ? 17 : 13, c = s / 2;
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '">' +
-        '<circle cx="' + c + '" cy="' + c + '" r="' + (r + 9) + '" fill="' + cfg.color + '" fill-opacity="0.15"/>' +
-        (sel ? '<circle cx="' + c + '" cy="' + c + '" r="' + (r + 16) + '" fill="' + cfg.color + '" fill-opacity="0.07"/>' : '') +
-        '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="' + cfg.color + '" fill-opacity="' + (sel ? '1' : '0.88') + '"/>' +
-        '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="' + (sel ? '2.5' : '2') + '"/>' +
-        '<text x="' + c + '" y="' + c + '" font-size="' + (sel ? 14 : 11) + '" text-anchor="middle" dominant-baseline="central">' + cfg.emoji + '</text>' +
-        '</svg>';
-      return {
-        url: 'data:image/svg+xml,' + encodeURIComponent(svg),
-        scaledSize: new google.maps.Size(s, s),
-        anchor: new google.maps.Point(c, c)
-      };
-    }
-
-    function renderMarkers(list) {
-      Object.keys(markers).forEach(function(k) { markers[k].setMap(null); });
-      markers = {};
-      list.forEach(function(it) {
-        var m = new google.maps.Marker({
-          position: { lat: it.lat, lng: it.lng },
-          map: map, title: it.ad,
-          icon: pinIcon(it, it.key === selectedKey),
-          zIndex: it.key === selectedKey ? 999 : 1
-        });
-        m._it = it;
-        m.addListener("click", function() { select(it.key, true); });
-        markers[it.key] = m;
-      });
-    }
-
-    function select(key, fromMap) {
-      selectedKey = key;
-      Object.keys(markers).forEach(function(k) {
-        var m = markers[k];
-        if (m && m._it) { m.setIcon(pinIcon(m._it, k === key)); m.setZIndex(k === key ? 999 : 1); }
-      });
-      if (key && markers[key]) map.panTo(markers[key].getPosition());
-      if (key && scrollEl) {
-        var card = scrollEl.querySelector('[data-mxkey="' + key + '"]');
-        if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-      }
-      if (scrollEl) {
-        scrollEl.querySelectorAll(".mx-bcard").forEach(function(c) {
-          c.classList.toggle("is-selected", c.getAttribute("data-mxkey") === key);
-        });
-      }
-    }
-
-    function bcard(it) {
-      var cfg = PIN[it.type];
-      var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + " km" : null;
-      var maasHtml = it.maas ? '<div class="mx-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + KB.esc(String(it.maas)) + ' ₺</div>' : '';
-      var distHtml = dist ? '<div class="mx-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';
-      var actionHtml = it.action.apply
-        ? '<button class="mx-bcard__btn mx-bcard__btn--primary" data-apply="' + it.id + '" data-baslik="' + KB.esc(it.action.apply.baslik || "") + '">Hızlı Başvur</button>' +
-          '<a class="mx-bcard__btn mx-bcard__btn--ghost" href="ilan.html?id=' + it.id + '">Detay</a>'
-        : '<a class="mx-bcard__btn mx-bcard__btn--primary" href="' + it.action.view + '?id=' + it.id + '">Profili Gör</a>';
-      return '<div class="mx-bcard" data-mxkey="' + KB.esc(it.key) + '" tabindex="0">' +
-        '<div class="mx-bcard__top">' +
-          '<div class="mx-bcard__logo" style="border-color:' + cfg.color + '33">' + cfg.emoji + '</div>' +
-          '<div class="mx-bcard__info">' +
-            '<div class="mx-bcard__title">' + KB.esc(it.ad) + '</div>' +
-            '<div class="mx-bcard__sub">' + KB.esc(it.sub) + '</div>' +
-          '</div>' +
-          '<span class="mx-bcard__badge mx-bcard__badge--' + it.type + '">' + cfg.label + '</span>' +
-        '</div>' +
-        '<div class="mx-bcard__meta">' + maasHtml + distHtml + '</div>' +
-        /* Eşleşme yüzdesi ve çubuğu KALDIRILDI — sayı uydurmaydı. */
-        '<div class="mx-bcard__action">' + actionHtml + '</div>' +
-      '</div>';
-    }
-
-    function renderCards(list) {
-      if (!scrollEl) return;
-      if (countEl) countEl.textContent = list.length ? list.length + " SONUÇ" : "";
-      if (!list.length) {
-        scrollEl.innerHTML = '<div style="padding:20px 16px;color:rgba(255,255,255,.3);font-size:.82rem">Bu katmanda gösterilecek sonuç yok.</div>';
-        return;
-      }
-      scrollEl.innerHTML = list.map(bcard).join("");
-      scrollEl.querySelectorAll(".mx-bcard").forEach(function(card) {
-        card.addEventListener("click", function(e) {
-          if (e.target.closest("a,button")) return;
-          select(card.getAttribute("data-mxkey"), false);
-        });
-      });
-    }
-
-    function toggleHeatmap(list) {
-      if (heatLayer) { heatLayer.setMap(null); heatLayer = null; }
-      if (!heatmapOn || !window.google || !google.maps.visualization) return;
-      var pts = list.map(function(it) {
-        return { location: new google.maps.LatLng(it.lat, it.lng), weight: it.acil ? 2 : 1 };
-      });
-      heatLayer = new google.maps.visualization.HeatmapLayer({
-        data: pts, map: map, radius: 40, opacity: 0.65,
-        gradient: ["rgba(108,77,255,0)", "rgba(108,77,255,0.6)", "rgba(168,85,247,0.8)", "rgba(245,158,11,0.9)", "rgba(239,68,68,1)"]
-      });
-    }
-
-    function refresh() {
-      var list = visible();
-      if (selectedKey && !list.some(function(i) { return i.key === selectedKey; })) selectedKey = null;
-      renderMarkers(list);
-      renderCards(list);
-      toggleHeatmap(list);
-    }
-
-    // Chip toggles
-    document.querySelectorAll("[data-mxlayer]").forEach(function(chip) {
-      var t = chip.getAttribute("data-mxlayer");
-      chip.classList.toggle("is-on", !!activeLayers[t]);
-      chip.addEventListener("click", function() {
-        activeLayers[t] = !activeLayers[t];
-        chip.classList.toggle("is-on", activeLayers[t]);
-        refresh(); saveState();
-      });
-    });
-
-    if (searchEl) searchEl.addEventListener("input", function() { refresh(); saveState(); });
-
-    // Locate FAB
-    if (locBtn) locBtn.addEventListener("click", function() {
-      if (!navigator.geolocation) { if (window.KBMotion) KBMotion.showErrorToast("Konum desteklenmiyor."); return; }
-      locBtn.classList.add("is-loading"); locBtn.classList.remove("is-active");
-      navigator.geolocation.getCurrentPosition(
-        function(pos) {
-          locBtn.classList.remove("is-loading"); locBtn.classList.add("is-active");
-          userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-          if (userMarker) userMarker.setMap(null);
-          userMarker = new google.maps.Marker({
-            position: { lat: userLat, lng: userLng }, map: map,
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: "#3b82f6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
-            zIndex: 2000, title: "Konumunuz"
-          });
-          map.panTo({ lat: userLat, lng: userLng }); map.setZoom(14);
-          if (activeLayers.yakin) refresh();
-        },
-        function(err) {
-          locBtn.classList.remove("is-loading");
-          if (window.KBMotion) KBMotion.showErrorToast(err.code === 1 ? "Konum izni reddedildi." : "Konum alınamadı.");
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-      );
-    });
-
-    // AI FAB
-    if (aiBtn && aiCard) {
-      aiBtn.addEventListener("click", function() {
-        var on = aiCard.classList.toggle("is-visible");
-        aiBtn.classList.toggle("is-active", on);
-      });
-    }
-    if (aiClose && aiCard) {
-      aiClose.addEventListener("click", function() {
-        aiCard.classList.remove("is-visible");
-        if (aiBtn) aiBtn.classList.remove("is-active");
-      });
-    }
-
-    var AI_ZONES = { kadikoy: { lat: 40.990, lng: 29.030 }, besiktas: { lat: 41.043, lng: 29.005 }, sisli: { lat: 41.061, lng: 28.987 }, atasehir: { lat: 40.996, lng: 29.118 }, umraniye: { lat: 41.016, lng: 29.110 } };
-    document.querySelectorAll("[data-zone]").forEach(function(z) {
-      z.addEventListener("click", function() {
-        var pos = AI_ZONES[z.getAttribute("data-zone")];
-        if (pos) { map.panTo(pos); map.setZoom(13); }
-      });
-    });
-
-    // Heatmap FAB
-    if (heatBtn) heatBtn.addEventListener("click", function() {
-      heatmapOn = !heatmapOn;
-      heatBtn.classList.toggle("is-active", heatmapOn);
-      if (heatLeg) heatLeg.classList.toggle("is-visible", heatmapOn);
-      toggleHeatmap(visible());
-    });
-
-    // Layers FAB — toggle chips row visibility
-    if (layBtn) layBtn.addEventListener("click", function() {
-      var chipsRow = document.getElementById("mxChipsRow");
-      if (!chipsRow) return;
-      var hidden = chipsRow.style.display === "none";
-      chipsRow.style.display = hidden ? "" : "none";
-      layBtn.classList.toggle("is-active", hidden);
-    });
-
-    refresh();
-
-    if (items.length) {
-      var bounds = new google.maps.LatLngBounds();
-      items.forEach(function(i) { bounds.extend({ lat: i.lat, lng: i.lng }); });
-      if (items.length < 80) { map.fitBounds(bounds); } else { map.setCenter(ISTANBUL); map.setZoom(12); }
-    }
-  }
-  function mxBcardSkel(n) {
-    var one = '<div class="mx-bcard mx-bcard--skel">' +
-      '<div class="mx-bcard__top">' +
-      '<span class="mx-skel" style="width:42px;height:42px;border-radius:14px;flex:none"></span>' +
-      '<div class="mx-bcard__info"><span class="mx-skel" style="width:70%;height:13px;margin-bottom:7px"></span><span class="mx-skel" style="width:50%;height:10px"></span></div>' +
-      '</div>' +
-      '<span class="mx-skel" style="width:100%;height:4px;border-radius:2px;margin:10px 0"></span>' +
-      '<div style="display:flex;gap:6px;margin-top:10px"><span class="mx-skel" style="flex:1;height:34px;border-radius:11px"></span><span class="mx-skel" style="flex:1;height:34px;border-radius:11px"></span></div>' +
-      '</div>';
-    var out = ""; for (var i = 0; i < n; i++) out += one; return out;
-  }
 
   /* ============ İLAN DETAYI (Job Detail) ============ */
   function jobDetailSkeleton() {
@@ -2778,7 +2314,7 @@
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
-    initMap: initMap, initMapGoogle: initMapGoogle, initHomeMap: initHomeMap, initMapExperience: initMapExperience, initPanel: initPanel, openOfferModal: openOfferModal,
+    initMap: initMap, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings,
     renderJobDetail: renderJobDetail, buildJobDetailHtml: buildJobDetailHtml, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages,
     renderHomeStats: renderHomeStats, renderTestimonials: renderTestimonials

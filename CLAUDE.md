@@ -126,7 +126,7 @@ Her sayfa şu sırayı korumak zorunda:
 
 ```html
 <script src="assets/js/util.js"></script>   <!-- esc/escAttr/escJs -->
-<script src="https://maps.googleapis.com/..."></script>
+<script src="assets/vendor/maplibre/maplibre-gl.js"></script>   <!-- vendor, CDN değil -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/..."></script>
 <script src="assets/js/supabase.js"></script>
 <script src="assets/js/router.js"></script>
@@ -138,6 +138,49 @@ Her sayfa şu sırayı korumak zorunda:
 ```
 
 `util.js` en başta olmalı — tüm `screens/*` modülleri render sırasında `esc()` çağırır.
+
+### Harita
+
+**MapLibre GL JS 5.24.0 (vendor'lanmış) + OpenFreeMap.** Anahtar yok, hesap yok,
+kota yok, fatura yok.
+
+| Uygulama | Stil | Harita kodu |
+|---|---|---|
+| `docs/` | `https://tiles.openfreemap.org/styles/positron` (açık) | `app.js` → `initMap()`, yalnız `harita.html` |
+| `www/` | `https://tiles.openfreemap.org/styles/dark` (koyu) | `screens/shared.js` → `initPremiumMap(role)` |
+
+Kütüphane `assets/vendor/maplibre/` altındadır, **CDN'den çekilmez** — CSP'nin
+`style-src`'i jsdelivr'a kapalı ve APK'nın CDN'e bağımlı olmaması gerekiyor.
+Yalnız harita olan sayfalara eklenir (dosya 1.0 MB), her sayfaya değil.
+
+**Sürüm 6.x'e YÜKSELTMEYİN.** 6.x UMD build'ini bıraktı, yalnız ESM yayınlıyor
+(`maplibre-gl.mjs` + kardeş `maplibre-gl-shared.mjs`). Bu kod tabanı baştan sona
+klasik `<script>` kullanır; `type="module"`'a geçmek global `maplibregl`'i
+kaybettirir ve yükleme sırasını bozar.
+
+Üç kural — üçü de ihlal edilirse hata sessizdir:
+
+1. **CSP'de `worker-src blob:` zorunludur.** MapLibre worker'ını blob URL'den
+   yaratır. Eksikse harita hiç açılmaz ve konsoldaki hata bambaşka bir şeyi
+   işaret eder. `connect-src` ve `img-src`'ye de `https://tiles.openfreemap.org`
+   gerekir.
+2. **Koordinat sırası `[lng, lat]`** — Google Maps'in `{lat, lng}` sırasının
+   tersi. Ters yazılırsa işaretçiler Türkiye yerine Somali açıklarına düşer.
+3. **İşaretçi elemanının `style.cssText`'ini EZMEYİN.** MapLibre işaretçinin
+   konumunu o elemanın inline `transform`'unda tutar
+   (`translate(-50%,-50%) translate(Xpx,Ypx)`). `cssText` yazmak transform'u
+   siler ve tüm işaretçiler harita hareket edene kadar sol üst köşeye yığılır.
+   Tek tek özellik yazın (`style.width`, `style.zIndex`, …).
+
+WebGL yoksa MapLibre 5.x `"Failed to initialize WebGL"` mesajlı bir hata fırlatır;
+`map.on("error")` içinde mesaja bakılır. **6.x'teki `GPUInitializationError`
+sınıfı 5.x'te yoktur.**
+
+Attribution (OpenStreetMap + OpenFreeMap) kapatılmaz, gizlenmez — politika gereği.
+
+Google Maps kaldırıldı: faturalandırma zorunluluğu (Türkiye'de ₺1.500 tek seferlik
+ön ödeme) nedeniyle. Gerekçe ve alternatif değerlendirmesi:
+[specs/2026-08-11-maplibre-openfreemap-design.md](specs/2026-08-11-maplibre-openfreemap-design.md)
 
 ### CSS
 

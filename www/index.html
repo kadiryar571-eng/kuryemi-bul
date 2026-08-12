@@ -14,13 +14,14 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maps.googleapis.com;
+    script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
     style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src    'self' https://fonts.gstatic.com data:;
-    img-src     'self' data: blob: https://fdszypytpodndtlbuzuz.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com;
+    img-src     'self' data: blob: https://fdszypytpodndtlbuzuz.supabase.co https://tiles.openfreemap.org;
     media-src   'self' blob: mediastream:;
-    connect-src 'self' https://fdszypytpodndtlbuzuz.supabase.co wss://fdszypytpodndtlbuzuz.supabase.co https://maps.googleapis.com;
+    connect-src 'self' https://fdszypytpodndtlbuzuz.supabase.co wss://fdszypytpodndtlbuzuz.supabase.co https://tiles.openfreemap.org;
     frame-src   'none';
+    worker-src  blob:;
     object-src  'none';
     base-uri    'self';
     form-action 'self';
@@ -30,6 +31,7 @@
   <meta name="theme-color" content="#2563EB">
   <title>KuryemiBul</title>
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/vendor/maplibre/maplibre-gl.css">
 </head>
 <body>
   <div id="splash" class="splash">
@@ -50,9 +52,7 @@
        önce hazır olmalı — render sırasında çağrılıyorlar. -->
   <script src="assets/js/util.js"></script>
 
-  <script>window._spmMapsReady=false;</script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIs6NXw-WTa5O_JPJX1cRlVOvHJfoFpjU&libraries=visualization&callback=__spmMapsReady" async defer></script>
-  <script>function __spmMapsReady(){window._spmMapsReady=true;if(window.initPremiumMap&&window._spmPendingRole){var r=window._spmPendingRole;window._spmPendingRole=null;setTimeout(function(){window.initPremiumMap(r);},200);}}</script>
+  <script src="assets/vendor/maplibre/maplibre-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js" integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/router.js"></script>
