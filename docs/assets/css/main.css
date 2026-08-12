@@ -131,6 +131,9 @@ p  { line-height: 1.6; }
 .container--sm  { max-width: 640px; }
 .container--md  { max-width: 860px; }
 .container--lg  { max-width: 1400px; }
+/* Kabuk içindeki tek sütunlu sayfa gövdesi (görüşmeler, karar, geri
+   bildirim…). Üst/alt boşluk sayfalarda inline yazılıyordu. */
+.container--page { padding-top: 24px; padding-bottom: 64px; }
 
 /* flex utils */
 .flex           { display: flex; }
@@ -224,6 +227,9 @@ p  { line-height: 1.6; }
 .btn--light:hover { background: #d0e2ff; }
 
 .btn--sm { height: 32px; padding: 0 12px; font-size: 0.8125rem; }
+/* Dikey liste içinde soldan hizalı buton (yan panel bağlantıları).
+   Sayfalarda style="justify-content:flex-start" olarak tekrarlanıyordu. */
+.btn--start { justify-content: flex-start; }
 .btn--lg { height: 48px; padding: 0 28px; font-size: 1rem; }
 .btn--xl { height: 56px; padding: 0 36px; font-size: 1.0625rem; font-weight: 600; }
 
@@ -937,6 +943,27 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
   transition: opacity 0.2s;
 }
 .modal-overlay.is-open { opacity: 1; pointer-events: all; }
+
+/* Sayfaya gömülü basit örtü katmanı (görüşme/karar sayfalarındaki küçük
+   diyaloglar). .modal-overlay'den farkı: geçişi ve pointer-events oyunu
+   yok, görünürlüğü doğrudan JS'in yazdığı display ile yönetiliyor.
+   display BURADA TANIMLANMAZ — eleman inline display:none ile başlar,
+   JS 'flex' yapar. Sınıfa yazılsa hangisinin geçerli olduğu belirsizleşir. */
+.kb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,.4);
+  align-items: center;
+  justify-content: center;
+}
+/* Örtü içindeki diyalog kutusu */
+.kb-overlay__box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: min(440px, 94vw);
+}
 .modal {
   background: var(--surface);
   border-radius: var(--radius-xl);
@@ -5504,6 +5531,10 @@ a.dash-stat:hover {
 .fb-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
 .fb-main   { display: flex; flex-direction: column; gap: 16px; }
 .fb-sidebar { display: flex; flex-direction: column; gap: 16px; }
+/* Değerlendirme formları kabı. display BURADA TANIMLANMAZ: eleman gizli
+   başlar (inline display:none) ve JS onu 'flex' yapar. Sınıfa display
+   yazılırsa hangi durumun geçerli olduğu belirsizleşir. */
+.fb-forms { flex-direction: column; gap: 16px; }
 
 /* Hire list */
 .fb-hire-list { display: flex; flex-direction: column; gap: 10px; }

@@ -33,7 +33,7 @@
 <nav id="app-sidebar"></nav>
 
 <div class="app-content">
-  <div class="container" style="padding-top:24px;padding-bottom:60px;max-width:960px;">
+  <div class="container container--page" style="max-width:960px">
 
     <div class="hd-page-header">
       <h1>Geri Bildirim</h1>
@@ -56,7 +56,12 @@
         </div>
 
         <!-- Forms (shown when a hire is selected) -->
-        <div id="fbForms" style="display:none;display:flex;flex-direction:column;gap:16px;">
+        <!-- HATA DÜZELTMESİ: burada style="display:none;display:flex;…" yazıyordu.
+             Aynı bildirimde display iki kez geçince CSS sonuncuyu uygular, yani
+             flex kazanıyor ve bölüm sayfa açılır açılmaz görünüyordu — oysa bir
+             değerlendirme seçilene kadar gizli kalmalı. JS (:234, :397) zaten
+             display='flex' yazıyor; yön/boşluk .fb-forms sınıfına taşındı. -->
+        <div id="fbForms" class="fb-forms" style="display:none">
 
           <!-- Employer/courier feedback form -->
           <div class="panel-box" id="fbFormSection">
@@ -111,9 +116,9 @@
         <div class="panel-box">
           <div class="panel-box__head"><h3>Hızlı Bağlantılar</h3></div>
           <div class="panel-box__body" style="display:flex;flex-direction:column;gap:7px;">
-            <a href="karar.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">⚖️ İşe Alım Kararları</a>
-            <a href="gorusmeler.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📅 Görüşmeler</a>
-            <a href="mesajlar.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">💬 Mesajlar</a>
+            <a href="karar.html" class="btn btn--ghost btn--sm btn--start"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 7h14M6 7l-3 7h6zM18 7l3 7h-6z"/></svg> İşe Alım Kararları</a>
+            <a href="gorusmeler.html" class="btn btn--ghost btn--sm btn--start"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Görüşmeler</a>
+            <a href="mesajlar.html" class="btn btn--ghost btn--sm btn--start"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Mesajlar</a>
           </div>
         </div>
 

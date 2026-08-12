@@ -33,7 +33,7 @@
 <nav id="app-sidebar"></nav>
 
 <div class="app-content">
-<main class="container" style="padding-top:24px;padding-bottom:80px;max-width:900px;">
+<main class="container container--page" style="max-width:900px">
 
   <div class="hd-page-header">
     <h1>İşe Alım Kararı</h1>
@@ -112,10 +112,10 @@
       <div class="hd-section">
         <div style="font-size:0.82rem;font-weight:600;color:var(--text-2);margin-bottom:10px;">Hızlı Bağlantılar</div>
         <div style="display:flex;flex-direction:column;gap:7px;" id="hdQuickLinks">
-          <a href="basvurular.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📋 Başvurular</a>
-          <a href="gorusmeler.html" class="btn btn--ghost btn--sm" style="justify-content:flex-start;">📅 Görüşmeler</a>
-          <a href="mesajlar.html"   class="btn btn--ghost btn--sm" style="justify-content:flex-start;">💬 Mesajlar</a>
-          <a id="hdOnboardLink" href="ise-baslangic.html" class="btn btn--primary btn--sm" style="justify-content:flex-start;display:none;">🎉 İşe Başlangıç Bilgileri</a>
+          <a href="basvurular.html" class="btn btn--ghost btn--sm btn--start"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Başvurular</a>
+          <a href="gorusmeler.html" class="btn btn--ghost btn--sm btn--start"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Görüşmeler</a>
+          <a href="mesajlar.html"   class="btn btn--ghost btn--sm btn--start"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Mesajlar</a>
+          <a id="hdOnboardLink" href="ise-baslangic.html" class="btn btn--primary btn--sm btn--start" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> İşe Başlangıç Bilgileri</a>
         </div>
       </div>
 
@@ -127,8 +127,8 @@
 </div>
 
 <!-- Note modal -->
-<div id="hdNoteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:min(440px,94vw);">
+<div id="hdNoteModal" class="kb-overlay" style="display:none">
+  <div class="kb-overlay__box">
     <h2 style="font-size:1rem;font-weight:700;margin:0 0 14px;">Not Ekle</h2>
     <textarea id="hdModalNoteText" class="form-input" rows="4" placeholder="İç not (adaya gösterilmez)"></textarea>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
@@ -139,8 +139,8 @@
 </div>
 
 <!-- Reject modal -->
-<div id="hdRejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:min(440px,94vw);">
+<div id="hdRejectModal" class="kb-overlay" style="display:none">
+  <div class="kb-overlay__box">
     <h2 style="font-size:1rem;font-weight:700;margin:0 0 6px;">Başvuruyu Reddet</h2>
     <p style="font-size:0.83rem;color:var(--text-3);margin:0 0 14px;">Bu işlem geri alınamaz. Kurye bildirim alacak.</p>
     <div style="margin-bottom:12px;">
