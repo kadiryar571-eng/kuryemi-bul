@@ -1556,9 +1556,15 @@ window.initPremiumMap = async function(role) {
     zoom: 11
   });
 
+  /* WebGL yoksa harita nesnesi kullanilamaz durumda kalir. Bayrak, veri
+     geldikten sonra isaretci basmayi ve dinleyici baglamayi engeller —
+     yoksa calismayan bir harita uzerinde addTo/flyTo cagrilir. */
+  var gpuFailed = false;
+
   map.on('error', function(e) {
     var msg = (e && e.error && e.error.message) || '';
     if (/webgl/i.test(msg)) {
+      gpuFailed = true;
       mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:20px;color:rgba(255,255,255,.4);font-size:.85rem;text-align:center">Harita bu cihazda gösterilemiyor.</div>';
       return;
     }
@@ -1581,6 +1587,7 @@ window.initPremiumMap = async function(role) {
   try { if (window.SB && SB.isOn()) frm = await SB.pool('firma'); } catch (e) {}
 
   if (!document.getElementById('spm-map')) return;
+  if (gpuFailed) return;   /* WebGL yok — hata mesaji basildi, devami anlamsiz */
 
   var items = [];
   function pushItem(type, x, lat, lng, ad, sub) {
@@ -1645,6 +1652,10 @@ window.initPremiumMap = async function(role) {
     var el = document.createElement('div');
     el.style.cssText = 'width:' + s + 'px;height:' + s + 'px;cursor:pointer;z-index:' + (sel ? '999' : '1');
     el.innerHTML = svg;   /* içerik sabit — kullanıcı verisi YOK, emoji ve renk sabitlerden gelir */
+    /* Eski google.maps.Marker'in title: it.ad karsiligi. .title property
+       atamasi HTML olarak parse edilmez, kacis gerekmez. docs/ tarafiyla
+       parite icin burada da var. */
+    el.title = it.ad || '';
     return el;
   }
 

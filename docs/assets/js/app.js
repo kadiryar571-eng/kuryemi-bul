@@ -1454,6 +1454,9 @@
       console.error("Map error:", e);
     }
 
+    /* WebGL yoksa harita nesnesi kullanılamaz durumda; konum butonunu
+       bağlamak, tıklanınca çalışmayan bir haritada flyTo çağırmak demek. */
+    if (gpuFailed) return;
     initLocateButton(map);
   }
 
