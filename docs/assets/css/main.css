@@ -632,53 +632,17 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .auth-box .auth-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
 .auth-box .auth-sub   { color: var(--text-2); font-size: 0.9rem; margin-bottom: 28px; }
 
-/* Tab switch (Giriş / Kayıt Ol) */
-.auth-tabs {
-  display: flex;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 24px;
-  gap: 0;
-}
-.auth-tab {
-  flex: 1;
-  padding: 10px 0;
-  border: none;
-  background: transparent;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--text-2);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: color var(--transition), border-color var(--transition);
-}
-.auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-
-/* Divider "veya" */
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-3);
-  font-size: 0.8125rem;
-  margin: 20px 0;
-}
-.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-/* Sosyal giriş butonu */
-.btn--social {
-  background: var(--surface);
-  color: var(--text);
-  border: 1.5px solid var(--border);
-  width: 100%;
-  height: 44px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  justify-content: center;
-  gap: 10px;
-}
-.btn--social:hover { background: var(--surface-2); }
-
+/* NOT: .auth-tabs / .auth-tab / .auth-divider / .btn--social kuralları
+   buradan KALDIRILDI. Bu sınıfları yalnız auth-forms.js üretir, o da
+   yalnız index.html tarafından yüklenir; dolayısıyla giriş/kayıt modalına
+   özgüdürler ve stilleri index.html'in koyu tema bloğuna taşındı.
+   Bu bölümde kalanlar hâlâ canlıdır:
+     .auth-page/.auth-header/.auth-body/.auth-box → sifre-sifirla.html,
+       verify-email.html, onboarding.html
+     .auth-footer                                 → verify-email.html:50
+     .form-group                                  → profil-duzenle.html,
+       sifre-sifirla.html
+     .input-group                                 → sifre-sifirla.html */
 .auth-footer { text-align: center; margin-top: 20px; font-size: 0.8125rem; color: var(--text-2); }
 .auth-footer a { color: var(--primary); font-weight: 500; }
 
@@ -870,28 +834,11 @@ select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns
 .modal form { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
 .modal .field { gap: 5px; }
 
-/* ─── 21b. GİRİŞ / KAYIT MODALI ───────────────────────────────
-   Kabuk yukarıdaki .modal-overlay / .modal desenini yeniden kullanır;
-   burada yalnız auth formuna özgü ayarlar var. Formun işaretlemesi
-   auth-forms.js'ten gelir ve .auth-tabs / .auth-divider / .auth-footer
-   gibi mevcut sınıfları taşır — o kurallar aynen geçerlidir.
-   Dar ekranda alttan açılan sayfa görünümü .modal'ın mevcut mobil
-   varyantından gelir (bkz. max-width: 680px bloğu). */
-/* Hafif bulanıklık — ana sayfa arkada durduğu için modalın önde olduğu
-   net anlaşılsın. Yalnız bu overlay'e uygulanır, diğer modallar değişmez. */
-.auth-modal-overlay { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-.auth-modal { max-width: 440px; }
-.auth-modal__head h3 { font-weight: 800; color: var(--primary); font-size: 1.05rem; }
-.auth-modal__body { padding: 22px 28px 28px; }
-/* .modal form kuralı bu formlara yatay padding ekliyor; gövdede zaten
-   padding var, iki kez uygulanınca alanlar daralıyordu. */
-.auth-modal__body form { padding: 0; margin-top: 0; }
-.auth-modal__body .auth-tabs  { margin-bottom: 20px; }
-.auth-modal__body .auth-footer { margin-top: 16px; }
-
-@media (max-width: 480px) {
-  .auth-modal__body { padding: 18px 18px 24px; }
-}
+/* NOT: 21b "GİRİŞ / KAYIT MODALI" bölümü KALDIRILDI. Tanımladığı
+   .auth-modal* sınıflarını yalnız auth-modal.js üretir, o da yalnız
+   index.html tarafından yüklenir. Modalın iki sütunlu koyu tasarımı
+   index.html'in kendi stil bloğunda; `.modal form` padding'ini nötrleyen
+   kural da oraya taşındı. */
 
 /* apply modal */
 .apply-modal .apply-summary { margin: 12px 24px; background: var(--surface-2); border-radius: var(--radius); padding: 12px 14px; }

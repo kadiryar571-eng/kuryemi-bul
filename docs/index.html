@@ -22,6 +22,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KuryemiBul · Türkiye'nin Kurye İş Bulma Platformu</title>
   <meta name="description" content="Bölgenizdeki kurye ilanlarını inceleyin, başvurun ve işverenlerle doğrudan iletişime geçin.">
+  <meta name="theme-color" content="#070C16">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/logo.png" sizes="any">
   <link rel="apple-touch-icon" href="assets/logo.png">
@@ -43,1203 +44,1517 @@
   <meta name="twitter:description" content="Bulunduğunuz bölgedeki aktif kurye ilanlarını inceleyin ve başvurun.">
   <meta name="twitter:image" content="https://kuryemibul.com/assets/og-cover.jpg">
   <link rel="stylesheet" href="assets/css/main.css">
+  <!-- Hero görseli ilk ekranda; erken çekilsin ki LCP gecikmesin -->
+  <link rel="preload" as="image" href="assets/kurye-scooter.jpg">
+  <!-- Bölüm giriş animasyonları içeriği opacity:0 ile başlatır ve JS ile
+       açar. JS çalışmazsa sayfa boş görünürdü; bu bayrak sayesinde gizleme
+       kuralları YALNIZ JS varken devreye girer. Stil bloğundan ÖNCE
+       çalışmalı, yoksa içerik bir kare görünüp kaybolur. -->
+  <script>document.documentElement.className += ' js';</script>
   <style>
-    /* ── HERO ───────────────────────────────────────────── */
-    .lp-hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-    }
-    .lp-hero__inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 56px;
-      align-items: center;
-      padding: 72px 0 0;
-    }
-    .lp-hero__left {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 20px;
-      padding-bottom: 56px;
-    }
+  /* ════════════════════════════════════════════════════════════════
+     LANDING — koyu premium tema
+     ────────────────────────────────────────────────────────────────
+     Bu blok YALNIZ index.html'i etkiler. Kullanılan namespace'ler
+     (.lp- .sp- .hiw- .rs- .fin-) main.css'te TANIMLI DEĞİLDİR, yani
+     buradaki hiçbir kural başka bir sayfaya sızmaz.
 
-    /* Badge */
-    .lp-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #EEF3FF;
-      color: var(--primary);
-      border: 1px solid #C7D7FF;
-      border-radius: 99px;
-      padding: 5px 14px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-    }
-    .lp-badge::before {
-      content: '';
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--primary);
-      opacity: 0.7;
-    }
+     Token'lar :root'a değil BODY'ye yazılır. Sebep: main.css'in hazır
+     bileşenleri (.btn, .field, input, .modal, .alert) zaten var(--…)
+     okuyor; body seviyesinde ezince hepsi yeniden yazılmadan koyu
+     temaya geçer. Ayrıca body'deki tanım html[data-theme]'den gelen
+     değeri bastırdığı için landing tema toggle'ından ETKİLENMEZ —
+     her koşulda koyu kalır.
+     ════════════════════════════════════════════════════════════════ */
 
-    /* Headline */
-    .lp-hero__h1 {
-      font-size: clamp(1.9rem, 3.5vw, 2.9rem);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      color: var(--text);
-      margin: 0;
-    }
+  /* ─── 1. TOKEN KATMANI ──────────────────────────────────────── */
+  body {
+    --bg:            #070C16;   /* sayfa zemini */
+    --bg-2:          #0B1220;   /* bölüm zemini */
+    --surface:       #0E1626;   /* kart */
+    --surface-2:     #131D31;   /* kart üstü / input */
+    --surface-3:     #18233A;   /* hover */
 
-    /* Sub */
-    .lp-hero__sub {
-      font-size: 1rem;
-      color: var(--text-2);
-      line-height: 1.75;
-      max-width: 400px;
-      margin: 0;
-    }
+    --border:        rgba(255,255,255,.09);
+    --border-2:      rgba(255,255,255,.16);
+    --border-focus:  #3B82F6;
 
-    /* CTA row */
-    .lp-hero__cta {
-      display: flex;
-      gap: 10px;
+    --primary:       #2563EB;
+    --primary-2:     #3B82F6;
+    --primary-dark:  #1D4ED8;
+    --primary-light: rgba(37,99,235,.16);
+
+    --text:          #FFFFFF;
+    --text-2:        #A1A7B3;
+    --text-3:        #6B7482;
+
+    --success:       #22C55E;
+    --purple:        #8B5CF6;
+    --orange:        #F97316;   /* logodan gelen marka vurgusu — ölçülü */
+
+    --shadow-sm:     0 1px 2px rgba(0,0,0,.4);
+    --shadow:        0 8px 24px rgba(0,0,0,.45);
+    --shadow-lg:     0 24px 64px rgba(0,0,0,.55);
+    --glow:          0 0 0 1px rgba(59,130,246,.25), 0 12px 40px rgba(37,99,235,.28);
+
+    --r-sm: 8px; --r: 12px; --r-lg: 16px; --r-xl: 22px;
+
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Sayfa geneli atmosfer — sabit, kaydırmada yeniden boyanmaz */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(900px 520px at 78% -6%,  rgba(37,99,235,.20),  transparent 62%),
+      radial-gradient(700px 460px at 6%  12%,  rgba(59,130,246,.11), transparent 60%),
+      radial-gradient(800px 600px at 50% 108%, rgba(139,92,246,.10), transparent 62%);
+  }
+  body > * { position: relative; z-index: 1; }
+
+  /* ─── 2. TİPOGRAFİ ──────────────────────────────────────────── */
+  .lp-h2 {
+    font-size: clamp(1.5rem, 1.05rem + 1.6vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--text);
+  }
+  .lp-sub {
+    margin-top: 10px;
+    font-size: 1rem;
+    color: var(--text-2);
+    line-height: 1.65;
+  }
+  .lp-accent { color: var(--primary-2); }
+
+  .lp-sec-head { text-align: center; max-width: 640px; margin: 0 auto 44px; }
+
+  /* Bölüm dikey ritmi */
+  .lp-sec { padding: clamp(56px, 7vw, 96px) 0; }
+
+  /* ─── 3. BUTON EZMELERİ (main.css .btn üzerine) ─────────────── */
+  .btn { font-weight: 600; border-radius: 10px; }
+
+  .btn--primary {
+    background: linear-gradient(180deg, var(--primary-2), var(--primary));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(37,99,235,.32);
+  }
+  .btn--primary:hover {
+    background: linear-gradient(180deg, #4F91FF, #2E6BF0);
+    box-shadow: 0 10px 26px rgba(37,99,235,.44);
+    transform: translateY(-1px);
+  }
+
+  .btn--ghost {
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    border-color: var(--border-2);
+  }
+  .btn--ghost:hover {
+    background: rgba(255,255,255,.09);
+    border-color: rgba(255,255,255,.28);
+    transform: translateY(-1px);
+  }
+
+  .btn { transition: background .18s ease, border-color .18s ease,
+                     box-shadow .18s ease, transform .18s ease; }
+  .btn:active { transform: translateY(0); }
+
+  /* ─── 4. HEADER ─────────────────────────────────────────────── */
+  .public-nav {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 72px;
+    padding: 0 clamp(16px, 3vw, 40px);
+    background: rgba(7,12,22,.78);
+    -webkit-backdrop-filter: saturate(150%) blur(14px);
+    backdrop-filter: saturate(150%) blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* main.css §15 bu alt öğeleri `.public-nav X` olarak tanımlıyor (özgüllük
+     0,2,0). Aynı özgüllükte yazılmazsa buradaki kurallar ezilir. */
+  .public-nav .nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .public-nav .nav-brand img { width: 38px; height: 38px; display: block; }
+  .public-nav .nav-brand:hover { color: var(--text); text-decoration: none; }
+
+  .public-nav .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    padding: 0 0 0 12px;
+  }
+  .public-nav .nav-links a {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: .9375rem;
+    font-weight: 500;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color .16s ease, background .16s ease;
+  }
+  .public-nav .nav-links a:hover {
+    color: var(--text);
+    background: rgba(255,255,255,.06);
+    text-decoration: none;
+  }
+
+  .public-nav .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+  }
+
+  /* ─── 5. HERO ───────────────────────────────────────────────── */
+  .lp-hero { padding: clamp(36px, 5vw, 64px) 0 clamp(28px, 4vw, 48px); }
+
+  .lp-hero__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
+    gap: clamp(24px, 4vw, 56px);
+    align-items: center;
+  }
+
+  .lp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px 7px 10px;
+    border: 1px solid rgba(59,130,246,.34);
+    border-radius: 999px;
+    background: rgba(37,99,235,.12);
+    font-size: .8125rem;
+    font-weight: 500;
+    color: #BFD4FF;
+  }
+  .lp-badge svg { width: 15px; height: 15px; color: var(--primary-2); }
+
+  .lp-hero__h1 {
+    margin-top: 22px;
+    font-size: clamp(2.1rem, 1.1rem + 3.4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -.035em;
+    color: var(--text);
+  }
+
+  .lp-hero__sub {
+    margin-top: 18px;
+    max-width: 480px;
+    font-size: 1.0625rem;
+    line-height: 1.68;
+    color: var(--text-2);
+  }
+
+  .lp-hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .lp-hero__cta .btn svg { width: 17px; height: 17px; }
+
+  .lp-apk {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 22px;
+    padding: 4px 2px;
+    font-size: .9375rem;
+    font-weight: 500;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color .16s ease, gap .16s ease;
+  }
+  .lp-apk:hover { color: var(--text); gap: 13px; text-decoration: none; }
+  .lp-apk__ic { width: 19px; height: 19px; color: var(--success); flex-shrink: 0; }
+  .lp-apk__arrow { width: 15px; height: 15px; opacity: .65; }
+
+  /* ─── 6. HERO GÖRSELİ + TELEFON PANELLERİ ───────────────────── */
+  .lp-visual {
+    position: relative;
+    min-height: 520px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .lp-visual__rider {
+    width: min(100%, 430px);
+    height: auto;
+    display: block;
+    /* Görselin zemini #070C16 olarak gömülü; kenarları maskeyle
+       sayfaya eritiliyor ki dikdörtgen sınırı görünmesin. */
+    -webkit-mask-image: radial-gradient(120% 92% at 50% 52%, #000 56%, transparent 96%);
+    mask-image: radial-gradient(120% 92% at 50% 52%, #000 56%, transparent 96%);
+  }
+
+  .lp-phone {
+    position: absolute;
+    width: 200px;
+    padding: 9px;
+    border: 1px solid var(--border-2);
+    border-radius: 22px;
+    background: linear-gradient(165deg, #101B2E, #0A1220);
+    box-shadow: var(--shadow-lg);
+  }
+  .lp-phone--jobs    { left: 0;     top: 8%; }
+  .lp-phone--profile { right: -2%;  bottom: 4%; }
+
+  .lp-phone__screen {
+    border-radius: 15px;
+    background: #0B1220;
+    padding: 11px 10px;
+    overflow: hidden;
+  }
+
+  .lp-phone__bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding-bottom: 9px;
+    margin-bottom: 9px;
+    border-bottom: 1px solid var(--border);
+  }
+  .lp-phone__bar svg { width: 13px; height: 13px; color: var(--primary-2); }
+  .lp-phone__bar-title { font-size: .6875rem; font-weight: 600; color: var(--text); }
+
+  /* Telefon mockup'ındaki örnek ilan kartları (içerik HTML'de sabit) */
+  .lp-jcard {
+    padding: 8px 9px;
+    margin-bottom: 7px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .lp-jcard:last-child { margin-bottom: 0; }
+  .lp-jcard__title {
+    font-size: .625rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.35;
+  }
+  .lp-jcard__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: .5rem;
+    color: var(--text-2);
+  }
+  .lp-jcard__tag {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.07);
+    color: var(--text-2);
+    font-size: .5rem;
+  }
+  .lp-jcard__price {
+    margin-top: 5px;
+    font-size: .5625rem;
+    font-weight: 700;
+    color: var(--primary-2);
+  }
+  .lp-jbtn {
+    margin-top: 7px;
+    padding: 4px 0;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #fff;
+    font-size: .5rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* Telefon mockup'ındaki örnek kurye profili (içerik HTML'de sabit) */
+  .lp-pav {
+    width: 46px;
+    height: 46px;
+    margin: 2px auto 8px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(150deg, var(--primary-2), var(--primary-dark));
+    color: #fff;
+    font-size: .875rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .lp-pname {
+    font-size: .6875rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+  }
+  .lp-pstars {
+    margin-top: 3px;
+    font-size: .5rem;
+    color: #FBBF24;
+    text-align: center;
+  }
+  .lp-ptags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 9px;
+  }
+  .lp-ptag {
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface-2);
+    font-size: .5rem;
+    color: var(--text-2);
+  }
+
+  .lp-pstat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 9px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    background: rgba(255,255,255,.05);
+    font-size: .5rem;
+    color: var(--text-3);
+  }
+  .lp-pstat b { font-size: .5625rem; color: var(--text); }
+
+  .lp-pbtn, .lp-pbtn2 {
+    margin-top: 8px;
+    padding: 6px 0;
+    border-radius: 7px;
+    font-size: .5625rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .lp-pbtn  { background: var(--primary); color: #fff; }
+  .lp-pbtn2 { background: rgba(255,255,255,.06); color: var(--text-2); border: 1px solid var(--border); }
+
+  /* ─── 7. FEATURE STRIP ──────────────────────────────────────── */
+  .lp-trust { margin-top: clamp(28px, 4vw, 44px); }
+
+  .lp-trust__inner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: rgba(14,22,38,.72);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .lp-feat {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 16px 18px;
+    border-radius: var(--r);
+    transition: background .2s ease, transform .2s ease, opacity .5s ease;
+  }
+  /* Gizleme YALNIZ JS varken (html.js). JS yoksa içerik doğrudan görünür. */
+  .js .lp-feat { opacity: 0; transform: translateY(10px); }
+  .lp-feat.is-visible { opacity: 1; transform: none; }
+  .lp-feat:hover { background: rgba(255,255,255,.04); }
+
+  .lp-feat__ic {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+  }
+  .lp-feat__ic svg { width: 20px; height: 20px; }
+  .lp-feat__ic--blue   { background: rgba(37,99,235,.16);  color: #60A5FA; }
+  .lp-feat__ic--sky    { background: rgba(59,130,246,.16); color: #7DB3FF; }
+  .lp-feat__ic--green  { background: rgba(34,197,94,.15);  color: #4ADE80; }
+  .lp-feat__ic--purple { background: rgba(139,92,246,.16); color: #A78BFA; }
+
+  .lp-feat__t { font-size: .9375rem; font-weight: 600; color: var(--text); }
+  .lp-feat__d { margin-top: 2px; font-size: .8125rem; color: var(--text-3); }
+
+  /* ─── 8. İSTATİSTİKLER ──────────────────────────────────────── */
+  .lp-stats-sec { padding: clamp(56px, 7vw, 96px) 0; }
+
+  .lp-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .lp-stat-card {
+    position: relative;
+    padding: 26px 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: linear-gradient(165deg, rgba(19,29,49,.9), rgba(11,18,32,.9));
+    transition: opacity .5s ease, transform .5s ease, border-color .2s ease;
+  }
+  .js .lp-stat-card { opacity: 0; transform: translateY(14px); }
+  .lp-stat-card.is-visible { opacity: 1; transform: none; }
+  .lp-stat-card:hover { border-color: rgba(59,130,246,.34); }
+
+  .lp-stat-ic {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 16px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: rgba(37,99,235,.14);
+    color: #60A5FA;
+  }
+  .lp-stat-ic svg { width: 19px; height: 19px; }
+
+  .lp-stat-value {
+    font-size: clamp(1.9rem, 1.3rem + 2vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -.03em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .lp-stat-title {
+    margin-top: 8px;
+    font-size: .875rem;
+    color: var(--text-2);
+  }
+
+  .lp-live-online {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 26px;
+    padding: 9px 16px;
+    border: 1px solid rgba(34,197,94,.3);
+    border-radius: 999px;
+    background: rgba(34,197,94,.09);
+    font-size: .875rem;
+    color: var(--text-2);
+  }
+  .lp-live-online b { color: var(--text); font-weight: 700; }
+  .lp-live-online__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(34,197,94,.6);
+    animation: lpPulse 2s infinite;
+  }
+  @keyframes lpPulse {
+    70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0  rgba(34,197,94,0); }
+  }
+
+  .lp-infobar { margin-top: 40px; }
+  .lp-infobar__inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 32px;
+  }
+  .lp-infobar__item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: .875rem;
+    color: var(--text-2);
+  }
+  .lp-infobar__dot {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(34,197,94,.16);
+    color: var(--success);
+    font-size: .625rem;
+    font-weight: 700;
+  }
+
+  /* ─── 9. SİSTEM ÖNİZLEME ────────────────────────────────────── */
+  .sp-section { padding: clamp(56px, 7vw, 96px) 0; background: rgba(11,18,32,.5); }
+
+  .sp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+
+  .sp-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    background: linear-gradient(170deg, rgba(19,29,49,.85), rgba(11,18,32,.85));
+    overflow: hidden;
+    transition: opacity .55s ease, transform .55s ease, border-color .25s ease;
+  }
+  .js .sp-card { opacity: 0; transform: translateY(18px); }
+  .sp-card.is-visible { opacity: 1; transform: none; }
+  .sp-card:hover { border-color: rgba(59,130,246,.32); }
+
+  .sp-mock {
+    padding: 26px 22px 0;
+    display: flex;
+    justify-content: center;
+    background:
+      radial-gradient(70% 60% at 50% 0%, rgba(37,99,235,.16), transparent 70%);
+  }
+
+  /* Kurye mockup — telefon */
+  .sp-phone {
+    width: 176px;
+    padding: 8px;
+    border: 1px solid var(--border-2);
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    background: linear-gradient(165deg, #101B2E, #0A1220);
+  }
+  .sp-phone__body {
+    border-radius: 12px 12px 0 0;
+    background: #0B1220;
+    padding: 10px 9px 14px;
+  }
+  .sp-ph-topbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .625rem;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sp-ph-topbar svg { width: 12px; height: 12px; color: var(--primary-2); }
+  .sp-ph-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 8px 0;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface-2);
+    font-size: .5rem;
+    color: var(--text-2);
+  }
+  .sp-ph-filter svg { width: 10px; height: 10px; }
+
+  /* Sistem önizlemesindeki örnek ilan kartları (içerik HTML'de sabit) */
+  .sp-ph-jcard {
+    padding: 7px 8px;
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+  }
+  .sp-ph-jcard__t { font-size: .5625rem; font-weight: 600; color: var(--text); }
+  .sp-ph-jcard__s { margin-top: 2px; font-size: .5rem; color: var(--text-3); }
+  .sp-ph-jcard__p { margin-top: 3px; font-size: .5rem; font-weight: 700; color: var(--primary-2); }
+  .sp-ph-jcard__btn {
+    margin-top: 5px;
+    padding: 3px 0;
+    border-radius: 5px;
+    background: var(--primary);
+    color: #fff;
+    font-size: .4375rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* Esnaf mockup — ilan formu */
+  .sp-form {
+    width: 100%;
+    max-width: 232px;
+    border: 1px solid var(--border-2);
+    border-radius: 14px 14px 0 0;
+    border-bottom: 0;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .sp-form__bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+    background: rgba(37,99,235,.14);
+    border-bottom: 1px solid var(--border);
+    font-size: .625rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .sp-form__bar svg { width: 12px; height: 12px; color: var(--primary-2); }
+  .sp-form__body { padding: 11px 12px 16px; }
+  .sp-form__field {
+    padding: 6px 9px;
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface-2);
+    font-size: .5625rem;
+    color: var(--text-2);
+  }
+  .sp-form__submit {
+    margin-top: 9px;
+    padding: 6px 0;
+    border-radius: 7px;
+    background: var(--primary);
+    color: #fff;
+    font-size: .5625rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .sp-form__divider {
+    margin: 12px 0 7px;
+    font-size: .5rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .sp-form__app {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    margin-bottom: 5px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface-2);
+    font-size: .5rem;
+    color: var(--text-2);
+  }
+  .sp-form__av {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(37,99,235,.2);
+    color: #60A5FA;
+  }
+  .sp-form__av svg { width: 10px; height: 10px; }
+
+  /* Firma mockup — panel */
+  .sp-dash {
+    width: 100%;
+    max-width: 246px;
+    border: 1px solid var(--border-2);
+    border-radius: 12px 12px 0 0;
+    border-bottom: 0;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .sp-dash__bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 11px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: .5625rem;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+  .sp-dash__bar-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+  }
+  .sp-dash__bar-dot:first-child { background: var(--orange); }
+  .sp-dash__body { padding: 11px; }
+  .sp-dash__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .sp-dash__stat {
+    padding: 8px 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    text-align: center;
+  }
+  .sp-dash__stat-v { font-size: .8125rem; font-weight: 700; color: var(--text); }
+  .sp-dash__stat-l { margin-top: 1px; font-size: .4375rem; color: var(--text-3); }
+  .sp-dash__list-lbl {
+    margin: 12px 0 6px;
+    font-size: .5rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .sp-dash__item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    font-size: .5rem;
+    color: var(--text-2);
+  }
+  .sp-dash__item-dot {
+    width: 5px; height: 5px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--success);
+  }
+  .sp-dash__new {
+    margin-top: 8px;
+    padding: 6px 0;
+    border: 1px dashed rgba(59,130,246,.4);
+    border-radius: 7px;
+    color: var(--primary-2);
+    font-size: .5rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .sp-card__body { padding: 24px 22px 26px; }
+  .sp-card__role {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.06);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+  .sp-card__role svg { width: 13px; height: 13px; color: var(--primary-2); }
+  .sp-card__title {
+    margin-top: 13px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--text);
+  }
+  .sp-card__desc {
+    margin-top: 8px;
+    font-size: .9375rem;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+  .sp-features { list-style: none; margin-top: 16px; padding: 0; }
+  .sp-features li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 8px;
+    font-size: .875rem;
+    color: var(--text-2);
+  }
+  .sp-features li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px;
+    width: 14px; height: 8px;
+    border-left: 2px solid var(--success);
+    border-bottom: 2px solid var(--success);
+    transform: rotate(-45deg) scale(.85);
+    border-radius: 1px;
+  }
+
+  /* ─── 10. NASIL ÇALIŞIR ─────────────────────────────────────── */
+  .hiw-section { padding: clamp(56px, 7vw, 96px) 0; }
+
+  .hiw-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: start;
+    gap: 8px;
+  }
+
+  .hiw-step {
+    text-align: center;
+    padding: 0 12px;
+    transition: opacity .55s ease, transform .55s ease;
+  }
+  .js .hiw-step { opacity: 0; transform: translateY(16px); }
+  .hiw-step.is-visible { opacity: 1; transform: none; }
+
+  .hiw-step__ic-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
+  .hiw-step__ic {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(59,130,246,.3);
+    background: linear-gradient(160deg, rgba(37,99,235,.2), rgba(37,99,235,.05));
+    color: var(--primary-2);
+    box-shadow: 0 10px 30px rgba(37,99,235,.18);
+  }
+  .hiw-step__num {
+    position: absolute;
+    right: -8px;
+    bottom: -8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, var(--primary-2), var(--primary));
+    border: 3px solid var(--bg);
+    color: #fff;
+    font-size: .8125rem;
+    font-weight: 700;
+  }
+  .hiw-step h3 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--text);
+  }
+  .hiw-step p {
+    margin-top: 8px;
+    font-size: .9375rem;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  .hiw-conn { padding-top: 34px; min-width: 40px; }
+  .hiw-conn__line {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(59,130,246,.05), rgba(59,130,246,.45), rgba(59,130,246,.05));
+  }
+
+  .hiw-cta { margin-top: 48px; text-align: center; }
+
+  /* ─── 11. ROL SEÇİMİ ────────────────────────────────────────── */
+  .rs-section { padding: clamp(56px, 7vw, 96px) 0; background: rgba(11,18,32,.5); }
+
+  .rs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .rs-card {
+    display: flex;
+    flex-direction: column;
+    padding: 28px 24px 26px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    background: linear-gradient(170deg, rgba(19,29,49,.85), rgba(11,18,32,.85));
+    cursor: pointer;
+    transition: opacity .55s ease, transform .55s ease,
+                border-color .22s ease, box-shadow .22s ease;
+  }
+  .js .rs-card { opacity: 0; transform: translateY(18px); }
+  .rs-card.is-visible { opacity: 1; transform: none; }
+  .rs-card:hover {
+    border-color: rgba(59,130,246,.4);
+    box-shadow: 0 18px 44px rgba(0,0,0,.4);
+    transform: translateY(-3px);
+  }
+  .rs-card.is-active {
+    border-color: var(--primary-2);
+    box-shadow: var(--glow);
+  }
+
+  .rs-card__ic {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(59,130,246,.28);
+    background: rgba(37,99,235,.14);
+    color: var(--primary-2);
+  }
+  .rs-card__content { display: flex; flex-direction: column; flex: 1; }
+  .rs-card__title {
+    font-size: 1.1875rem;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--text);
+  }
+  .rs-card__desc {
+    margin-top: 9px;
+    font-size: .9375rem;
+    line-height: 1.62;
+    color: var(--text-2);
+    flex: 1;
+  }
+  .rs-card__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    margin-top: 22px;
+    padding: 0 18px;
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    background: rgba(255,255,255,.04);
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+  }
+  .rs-card__btn:hover,
+  .rs-card:hover .rs-card__btn {
+    background: linear-gradient(180deg, var(--primary-2), var(--primary));
+    border-color: transparent;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  /* ─── 12. FİNAL CTA ─────────────────────────────────────────── */
+  .fin-cta { padding: clamp(56px, 7vw, 96px) 0; }
+
+  .fin-cta__inner {
+    position: relative;
+    padding: clamp(40px, 6vw, 68px) clamp(24px, 4vw, 56px);
+    border: 1px solid rgba(59,130,246,.24);
+    border-radius: 28px;
+    background:
+      radial-gradient(90% 140% at 50% 0%, rgba(37,99,235,.28), transparent 62%),
+      linear-gradient(170deg, rgba(19,29,49,.94), rgba(9,14,26,.94));
+    text-align: center;
+    overflow: hidden;
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .js .fin-cta__inner { opacity: 0; transform: translateY(20px); }
+  .fin-cta.is-visible .fin-cta__inner { opacity: 1; transform: none; }
+
+  .fin-cta__title {
+    font-size: clamp(1.65rem, 1.1rem + 2.2vw, 2.25rem);
+    font-weight: 700;
+    letter-spacing: -.03em;
+    color: var(--text);
+  }
+  .fin-cta__sub {
+    max-width: 560px;
+    margin: 14px auto 0;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--text-2);
+  }
+  .fin-cta__btns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .fin-cta__trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 26px;
+    font-size: .875rem;
+    color: var(--text-3);
+  }
+  .fin-cta__trust-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--text-3);
+  }
+
+  /* ─── 13. FOOTER ────────────────────────────────────────────── */
+  .fin-foot {
+    border-top: 1px solid var(--border);
+    background: rgba(6,10,18,.82);
+    padding-top: 56px;
+  }
+
+  .fin-foot__grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 44px;
+  }
+
+  .fin-foot__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .fin-foot__brand img { width: 34px; height: 34px; display: block; }
+  .fin-foot__brand:hover { color: var(--text); text-decoration: none; }
+
+  .fin-foot__desc {
+    margin-top: 14px;
+    max-width: 320px;
+    font-size: .9375rem;
+    line-height: 1.65;
+    color: var(--text-3);
+  }
+
+  .fin-foot__col-label {
+    margin-bottom: 15px;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .fin-foot__links { display: flex; flex-direction: column; gap: 11px; }
+  .fin-foot__links a {
+    font-size: .9375rem;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color .16s ease;
+  }
+  .fin-foot__links a:hover { color: var(--text); text-decoration: none; }
+
+  .fin-foot__bar {
+    border-top: 1px solid var(--border);
+    padding: 20px 0;
+    font-size: .875rem;
+    color: var(--text-3);
+    text-align: center;
+  }
+
+  /* ─── 14. GİRİŞ / KAYIT MODALI ──────────────────────────────────
+     Kabuk auth-modal.js'te, form auth-forms.js'te üretilir. Buradaki
+     kurallar yalnız o markup'ı BOYAR — id/sınıf adları ve davranış
+     (ESC, odak tuzağı, arka plan kilidi) JS'te olduğu gibi kalır. */
+
+  .auth-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(3,6,12,.68);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    backdrop-filter: blur(8px) saturate(120%);
+    opacity: 0;
+    visibility: hidden;
+    /* visibility ANINDA çevrilir, süreye yayılmaz. Süreye yayılırsa modal
+       açılışın ilk 220 ms'sinde gizli kalır ve auth-modal.js'in 60 ms'de
+       çağırdığı focusFirst() sessizce başarısız olur (gizli elemana odak
+       verilemez). Kapanışta ise geçiş bitene kadar görünür kalmalı, bu
+       yüzden gecikme yalnız kapalı durumda. */
+    transition: opacity .22s ease, visibility 0s linear .22s;
+  }
+  .auth-modal-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .22s ease, visibility 0s linear 0s;
+  }
+
+  .auth-modal {
+    position: relative;
+    display: grid;
+    grid-template-columns: .82fr 1fr;
+    width: 100%;
+    max-width: 960px;
+    max-height: calc(100vh - 48px);
+    border: 1px solid var(--border-2);
+    border-radius: 22px;
+    background: linear-gradient(168deg, #101A2C, #090E1A);
+    box-shadow: 0 32px 90px rgba(0,0,0,.62);
+    overflow: hidden;
+    transform: translateY(8px) scale(.98);
+    opacity: 0;
+    transition: transform .24s cubic-bezier(.22,.9,.3,1), opacity .24s ease;
+  }
+  .auth-modal-overlay.is-open .auth-modal {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  /* Sol — marka paneli */
+  .auth-modal__brand {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 30px 0;
+    background:
+      radial-gradient(80% 55% at 50% 100%, rgba(37,99,235,.32), transparent 70%),
+      linear-gradient(170deg, #0F1D36, #070C16);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .auth-modal__logo { width: 74px; height: 74px; display: block; }
+  .auth-modal__welcome {
+    margin-top: 16px;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.28;
+    letter-spacing: -.025em;
+    color: var(--text);
+    text-align: center;
+  }
+  .auth-modal__welcome span { display: block; color: var(--primary-2); }
+  .auth-modal__lead {
+    margin-top: 10px;
+    max-width: 240px;
+    font-size: .875rem;
+    line-height: 1.6;
+    color: var(--text-2);
+    text-align: center;
+  }
+  /* Saydam PNG — maske gerekmiyor; hafif gölge derinlik veriyor */
+  .auth-modal__art {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    margin-top: auto;
+    display: block;
+    filter: drop-shadow(0 18px 34px rgba(0,0,0,.55));
+  }
+
+  /* Sağ — form paneli */
+  .auth-modal__panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-y: auto;
+  }
+  .auth-modal__head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 14px 16px 0;
+  }
+  .auth-modal__head .modal__close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 1.375rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .16s ease, color .16s ease, border-color .16s ease;
+  }
+  .auth-modal__head .modal__close:hover {
+    background: rgba(255,255,255,.07);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  .auth-modal__body { padding: 4px 40px 38px; }
+
+  /* Sekmeler */
+  .auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .auth-tab {
+    position: relative;
+    padding: 11px 0 13px;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: color .16s ease;
+  }
+  .auth-tab::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--primary-2);
+    transform: scaleX(0);
+    transition: transform .2s ease;
+  }
+  .auth-tab:hover { color: var(--text-2); }
+  .auth-tab.active { color: var(--primary-2); }
+  .auth-tab.active::after { transform: scaleX(1); }
+
+  /* Google butonu — eskiden main.css §16'daydı; oradaki tanım yalnız bu
+     modal tarafından kullanıldığı için buraya taşındı. */
+  .btn--social {
+    width: 100%;
+    height: 46px;
+    gap: 10px;
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .btn--social:hover {
+    background: rgba(255,255,255,.08);
+    border-color: rgba(255,255,255,.28);
+  }
+
+  .auth-divider {
+    position: relative;
+    margin: 20px 0;
+    text-align: center;
+    font-size: .8125rem;
+    color: var(--text-3);
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 26px);
+    height: 1px;
+    background: var(--border);
+  }
+  .auth-divider::before { left: 0; }
+  .auth-divider::after  { right: 0; }
+
+  /* Form alanları — main.css .field/.input-group üzerine, MODAL KAPSAMINDA.
+     Global tanımlara dokunulmuyor; sifre-sifirla.html ve profil-duzenle.html
+     aynı sınıfları kullandığı için kapsam dışına çıkmamalı. */
+  /* main.css §21'deki `.modal form { padding: 0 24px 24px; margin-top: 16px }`
+     kuralı bu formlara da uyuyor; gövdede zaten padding var, iki kez
+     uygulanınca alanlar daralıyor. Sıfırlanıyor. */
+  .auth-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0;
+    margin-top: 0;
+  }
+  .auth-modal .field label {
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--text-2);
+  }
+  .auth-modal input[type="text"],
+  .auth-modal input[type="email"],
+  .auth-modal input[type="password"],
+  .auth-modal input[type="tel"] {
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    background: rgba(255,255,255,.035);
+    color: var(--text);
+    font-size: .9375rem;
+  }
+  .auth-modal input::placeholder { color: var(--text-3); }
+  .auth-modal input[type="text"]:focus,
+  .auth-modal input[type="email"]:focus,
+  .auth-modal input[type="password"]:focus,
+  .auth-modal input[type="tel"]:focus {
+    border-color: var(--primary-2);
+    background: rgba(255,255,255,.05);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+  }
+
+  .auth-modal .input-group { position: relative; }
+  .auth-modal .input-group input { padding-right: 44px; }
+  .auth-modal .toggle-pw {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: color .16s ease, background .16s ease;
+  }
+  .auth-modal .toggle-pw:hover { color: var(--text); background: rgba(255,255,255,.07); }
+
+  .auth-modal .check-label {
+    font-size: .875rem;
+    line-height: 1.55;
+    color: var(--text-2);
+  }
+  .auth-modal .check-label a { color: var(--primary-2); }
+
+  .auth-modal .btn--block { height: 48px; font-size: 1rem; }
+
+  .auth-modal .auth-footer {
+    margin-top: 20px;
+    font-size: .875rem;
+    color: var(--text-2);
+    text-align: center;
+  }
+  .auth-modal .auth-footer a { color: var(--primary-2); font-weight: 600; }
+
+  .auth-modal .alert {
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: .875rem;
+  }
+  .auth-modal .alert--error {
+    border: 1px solid rgba(248,113,113,.32);
+    background: rgba(220,38,38,.14);
+    color: #FCA5A5;
+  }
+  .auth-modal .alert--success {
+    border: 1px solid rgba(34,197,94,.32);
+    background: rgba(34,197,94,.13);
+    color: #86EFAC;
+  }
+
+  /* Şifremi unuttum satırı — auth-forms.js inline stil ile hizalıyor */
+  .auth-modal .form-group > div > a { color: var(--text-2); font-size: .8125rem; }
+  .auth-modal .form-group > div > a:hover { color: var(--primary-2); }
+
+  /* ─── 15. RESPONSIVE ────────────────────────────────────────── */
+
+  /* Laptop */
+  @media (max-width: 1200px) {
+    .lp-phone { width: 178px; }
+    .lp-visual__rider { width: min(100%, 380px); }
+  }
+
+  @media (max-width: 1023px) {
+    .lp-hero__inner { grid-template-columns: 1fr; }
+    .lp-hero__sub { max-width: 620px; }
+    .lp-visual { min-height: 0; padding-top: 8px; }
+    /* Dar ekranda üst üste binen mutlak konumlar bozuluyor — akışa alınıyor */
+    .lp-visual__rider { display: none; }
+    .lp-phone { position: static; width: 100%; max-width: 230px; }
+    .lp-visual {
       flex-wrap: wrap;
-      margin-top: 4px;
-    }
-
-    /* ── PHONE MOCKUPS ──────────────────────────────────── */
-    .lp-phones {
-      position: relative;
-      height: 440px;
-      display: flex;
-      align-items: flex-end;
+      gap: 16px;
       justify-content: center;
+      align-items: stretch;
     }
 
-    .lp-phone {
+    .lp-trust__inner { grid-template-columns: repeat(2, 1fr); }
+    .lp-stat-grid    { grid-template-columns: repeat(2, 1fr); }
+    .sp-grid         { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+    .rs-grid         { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+
+    .hiw-flow { grid-template-columns: 1fr; gap: 36px; }
+    .hiw-conn { display: none; }
+
+    .fin-foot__grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+
+    /* Modal: tek sütun, marka paneli üstte ve kompakt */
+    .auth-modal { grid-template-columns: 1fr; max-width: 480px; }
+    /* Tek sütunda form paneli kendi içinde kayıyor; kapatma düğmesi panelin
+       başında kalırsa aşağı kaydırıldığında görünmez oluyor ve dokunmatikte
+       ESC alternatifi yok. Modalın üstüne sabitleniyor. */
+    .auth-modal__head {
       position: absolute;
-      width: 148px;
-      border-radius: 22px;
-      border: 2px solid #D8DEE9;
-      background: #FAFBFC;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Notch */
-    .lp-phone__notch {
-      width: 40px; height: 6px;
-      background: #DDE1E7;
-      border-radius: 99px;
-      margin: 10px auto 0;
-      flex-shrink: 0;
-    }
-
-    /* Phone screen body */
-    .lp-phone__screen {
-      flex: 1;
-      padding: 10px 10px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      overflow: hidden;
-    }
-
-    /* Phone topbar */
-    .lp-phone__bar {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-bottom: 4px;
-    }
-    .lp-phone__bar-title {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: #1A1A2E;
-    }
-    .lp-phone__bar-ic {
-      font-size: 0.7rem;
-    }
-
-    /* Mini job card */
-    .lp-jcard {
-      background: #fff;
-      border: 1px solid #E8ECF2;
-      border-radius: 8px;
-      padding: 7px 8px;
-    }
-    .lp-jcard__title { font-size: 0.6rem; font-weight: 700; color: #1A1A2E; margin-bottom: 3px; }
-    .lp-jcard__row   { display: flex; align-items: center; gap: 4px; font-size: 0.55rem; color: #6B7280; }
-    .lp-jcard__tag   { background: #EEF3FF; color: #0057FF; border-radius: 4px; padding: 1px 5px; font-size: 0.5rem; font-weight: 600; }
-    .lp-jcard__price { font-size: 0.6rem; font-weight: 700; color: #16A34A; margin-top: 4px; }
-    .lp-jbtn {
-      margin-top: 2px;
-      background: #0057FF;
-      color: #fff;
-      border-radius: 5px;
-      padding: 3px 0;
-      font-size: 0.5rem;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    /* Profile phone */
-    .lp-pav {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: #0057FF;
-      color: #fff;
-      font-size: 0.75rem;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      margin: 8px auto 6px;
-      flex-shrink: 0;
-    }
-    .lp-pname { font-size: 0.65rem; font-weight: 700; color: #1A1A2E; text-align: center; }
-    .lp-pstars { font-size: 0.55rem; color: #D97706; text-align: center; margin-top: 2px; }
-    .lp-ptags {
-      display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 6px;
-    }
-    .lp-ptag {
-      background: #F4F5F7; border: 1px solid #DDE1E7;
-      border-radius: 99px; padding: 2px 7px;
-      font-size: 0.5rem; color: #4B5563; font-weight: 500;
-    }
-    .lp-pbtn {
-      background: #0057FF; color: #fff; border-radius: 7px;
-      padding: 5px; font-size: 0.55rem; font-weight: 600;
-      text-align: center; margin-top: 8px;
-    }
-    .lp-pbtn2 {
-      background: #fff; border: 1.5px solid #0057FF; color: #0057FF; border-radius: 7px;
-      padding: 4px; font-size: 0.55rem; font-weight: 600;
-      text-align: center; margin-top: 4px;
-    }
-
-    /* Post form phone */
-    .lp-field {
-      display: flex; flex-direction: column; gap: 2px;
-    }
-    .lp-field label { font-size: 0.5rem; color: #6B7280; font-weight: 600; }
-    .lp-field .lp-finput {
-      background: #fff; border: 1px solid #DDE1E7; border-radius: 5px;
-      padding: 4px 7px; font-size: 0.55rem; color: #1A1A2E;
-    }
-    .lp-post-btn {
-      background: #0057FF; color: #fff; border-radius: 7px;
-      padding: 5px; font-size: 0.55rem; font-weight: 700;
-      text-align: center; margin-top: 6px;
-    }
-
-    /* Phone positioning */
-    .lp-phone--1 {
-      left: 0px;
-      bottom: 0;
-      height: 320px;
-      transform: rotate(-3deg) translateX(10px);
-      z-index: 1;
-    }
-    .lp-phone--2 {
-      left: 50%;
-      bottom: 0;
-      height: 390px;
-      transform: translateX(-50%);
-      z-index: 3;
-      border-color: #C2CBDC;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.11), 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .lp-phone--3 {
-      right: 0px;
-      bottom: 0;
-      height: 340px;
-      transform: rotate(3deg) translateX(-10px);
+      top: 10px;
+      right: 10px;
       z-index: 2;
+      padding: 0;
     }
-
-    /* Hover lift */
-    .lp-phone:hover {
-      transform: translateY(-6px) !important;
-      z-index: 10 !important;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.13) !important;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    .auth-modal__head .modal__close {
+      background: rgba(7,12,22,.55);
+      border-color: var(--border);
+      color: var(--text);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
     }
-
-    /* Fade-in animation */
-    @keyframes lp-fadein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-    .lp-hero__left > * { animation: lp-fadein 0.5s ease both; }
-    .lp-hero__left > *:nth-child(1) { animation-delay: 0.05s; }
-    .lp-hero__left > *:nth-child(2) { animation-delay: 0.12s; }
-    .lp-hero__left > *:nth-child(3) { animation-delay: 0.18s; }
-    .lp-hero__left > *:nth-child(4) { animation-delay: 0.24s; }
-
-    @keyframes lp-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .lp-phone--1 { animation: lp-rise 0.6s 0.15s ease both; }
-    .lp-phone--2 { animation: lp-rise 0.6s 0.05s ease both; }
-    .lp-phone--3 { animation: lp-rise 0.6s 0.25s ease both; }
-
-    /* ── TRUST STRIP ──────────────────────────────────── */
-    .lp-trust {
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      padding: 18px 0;
-    }
-    .lp-trust__inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 36px;
-      flex-wrap: wrap;
-    }
-    .lp-trust__item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-2);
-    }
-    .lp-trust__ic {
-      width: 28px; height: 28px;
-      border-radius: 8px;
-      background: #EEF3FF;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-
-    /* ── REST OF PAGE ────────────────────────────────── */
-    .lp-section { padding: 72px 0; }
-    .lp-section--gray {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
+    .auth-modal__brand {
+      padding: 28px 24px 22px;
+      border-right: 0;
       border-bottom: 1px solid var(--border);
     }
-    .lp-section__title {
-      font-size: 1.65rem;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 8px;
-      letter-spacing: -0.02em;
-    }
-    .lp-section__sub {
-      text-align: center;
-      color: var(--text-2);
-      font-size: 0.95rem;
-      max-width: 480px;
-      margin: 0 auto 40px;
-      line-height: 1.65;
-    }
+    .auth-modal__logo { width: 56px; height: 56px; }
+    .auth-modal__welcome { font-size: 1.1875rem; }
+    .auth-modal__art { display: none; }
+    .auth-modal__body { padding: 4px 26px 30px; }
+  }
 
-    /* ── HOW IT WORKS ────────────────────────────────── */
-    .hiw-section {
-      padding: 80px 0;
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-    }
-    .hiw-head {
-      text-align: center;
-      margin-bottom: 56px;
-    }
-    .hiw-head h2 {
-      font-size: 1.65rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-    .hiw-head p {
-      font-size: 0.95rem;
-      color: var(--text-2);
-      line-height: 1.65;
-      max-width: 440px;
-      margin: 0 auto;
-    }
+  @media (max-width: 767px) {
+    /* Özgüllük taban kuralla aynı olmalı (.public-nav X); aksi hâlde
+       yukarıdaki `.public-nav .nav-links { display:flex }` bunu ezer ve
+       menü dar ekranda gizlenmeyip yatay taşmaya yol açar. */
+    .public-nav { height: 64px; gap: 12px; }
+    .public-nav .nav-links { display: none; }
+    .public-nav .nav-brand img { width: 34px; height: 34px; }
 
-    /* 5-col grid: step | connector | step | connector | step */
-    .hiw-flow {
-      display: grid;
-      grid-template-columns: 1fr 72px 1fr 72px 1fr;
-      align-items: start;
-      margin-bottom: 48px;
-    }
+    .lp-trust__inner { grid-template-columns: 1fr; }
+    .lp-stat-grid    { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .lp-stat-card    { padding: 20px 16px; }
 
-    /* Connector line */
-    .hiw-conn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding-top: 32px; /* align with icon vertical center */
+    .auth-modal-overlay { padding: 0; align-items: stretch; }
+    .auth-modal {
+      max-width: none;
+      max-height: none;
+      min-height: 100%;
+      border: 0;
+      border-radius: 0;
+      grid-template-rows: auto 1fr;
     }
-    .hiw-conn__line {
-      width: 100%;
-      height: 0;
-      border-top: 2px dashed #D1D9E6;
-    }
+    .auth-modal__body { padding: 4px 20px 32px; }
+  }
 
-    /* Step card */
-    .hiw-step {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 14px;
-      opacity: 0;
-      /* hover transition — entry uses animation */
-      transition: box-shadow 0.2s ease, transform 0.2s ease;
-    }
-    .hiw-step:hover {
-      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-      transform: translateY(-2px);
-    }
-    @keyframes hiw-step-in {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .hiw-step.is-visible { animation: hiw-step-in 0.5s ease forwards; }
-    .hiw-step:nth-child(1).is-visible { animation-delay: 0.05s; }
-    .hiw-step:nth-child(3).is-visible { animation-delay: 0.18s; }
-    .hiw-step:nth-child(5).is-visible { animation-delay: 0.31s; }
+  @media (max-width: 420px) {
+    .lp-hero__cta { flex-direction: column; align-items: stretch; }
+    .lp-hero__cta .btn { width: 100%; }
+    .lp-stat-grid { grid-template-columns: 1fr; }
+    .fin-foot__grid { grid-template-columns: 1fr; gap: 28px; }
+  }
 
-    /* Icon circle */
-    .hiw-step__ic-wrap {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      flex-shrink: 0;
-    }
-    .hiw-step__ic {
-      width: 64px; height: 64px;
-      border-radius: 18px;
-      background: var(--primary);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* Step number badge */
-    .hiw-step__num {
-      position: absolute;
-      top: -7px; right: -7px;
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 2px solid var(--primary);
-      color: var(--primary);
-      font-size: 0.62rem;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-
-    .hiw-step h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; }
-    .hiw-step p  { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; margin: 0; }
-
-    /* Bottom CTA */
-    .hiw-cta { text-align: center; }
-
-    /* Roles */
-    .lp-roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .lp-role {
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .lp-role__ic  { font-size: 1.75rem; }
-    .lp-role__name { font-size: 1rem; font-weight: 700; }
-    .lp-role__desc { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; flex: 1; margin: 0; }
-
-    /* ── ROLE SELECTION ─────────────────────────────────── */
-    .rs-section {
-      padding: 80px 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-    }
-    .rs-head {
-      text-align: center;
-      margin-bottom: 48px;
-    }
-    .rs-head h2 {
-      font-size: 1.65rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-    .rs-head p {
-      font-size: 0.95rem;
-      color: var(--text-2);
-      line-height: 1.65;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    /* Grid */
-    .rs-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    /* Card */
-    .rs-card {
-      position: relative;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 32px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      cursor: pointer;
-      user-select: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
-      /* Entry animation */
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    @keyframes rs-in {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .rs-card.is-visible { animation: rs-in 0.5s ease forwards; }
-    .rs-card:nth-child(1).is-visible { animation-delay: 0.05s; }
-    .rs-card:nth-child(2).is-visible { animation-delay: 0.15s; }
-    .rs-card:nth-child(3).is-visible { animation-delay: 0.25s; }
-
-    /* Hover */
-    .rs-card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 4px 20px rgba(0, 87, 255, 0.09);
-      transform: translateY(-3px);
-    }
-
-    /* Active / selected */
-    .rs-card.is-active {
-      border-color: var(--primary);
-      background: #EEF3FF;
-      box-shadow: 0 4px 20px rgba(0, 87, 255, 0.12);
-    }
-    /* Checkmark badge */
-    .rs-card.is-active::after {
-      content: '';
-      position: absolute;
-      top: 14px; right: 14px;
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      background: var(--primary);
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 7L5.5 10L11.5 4' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
-      background-size: 14px;
-      background-repeat: no-repeat;
-      background-position: center;
-    }
-
-    /* Icon */
-    .rs-card__ic {
-      width: 56px; height: 56px;
-      border-radius: 14px;
-      background: #EEF3FF;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
-      flex-shrink: 0;
-      transition: background 0.2s ease;
-    }
-    .rs-card.is-active .rs-card__ic { background: rgba(0, 87, 255, 0.15); }
-
-    /* Text */
-    .rs-card__title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0;
-    }
-    .rs-card__desc {
-      font-size: 0.875rem;
-      color: var(--text-2);
-      line-height: 1.7;
-      margin: 0;
-      flex: 1;
-    }
-
-    /* CTA button (full-width anchor inside card) */
-    .rs-card__btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      padding: 11px 16px;
-      border-radius: 10px;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-      margin-top: 4px;
-    }
-    .rs-card:hover .rs-card__btn,
-    .rs-card.is-active .rs-card__btn {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
-    /* Arrow on button */
-    .rs-card__btn::after {
-      content: '→';
-      font-size: 1rem;
-      transition: transform 0.15s ease;
-    }
-    .rs-card:hover .rs-card__btn::after,
-    .rs-card.is-active .rs-card__btn::after { transform: translateX(3px); }
-
-    @media (max-width: 860px) {
-      .rs-grid { grid-template-columns: 1fr; gap: 14px; }
-      .rs-card { padding: 24px 20px; flex-direction: row; align-items: flex-start; gap: 16px; }
-      .rs-card__content { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
-      .rs-card__ic { flex-shrink: 0; }
-      .rs-card__btn { width: auto; align-self: flex-start; }
-    }
-
-    /* ── FINAL CTA ───────────────────────────────────────── */
-    .fin-cta {
-      padding: 100px 0 88px;
-      background: #F0F4FF;
-      border-top: 1px solid #D8E3FF;
-      text-align: center;
-    }
-    .fin-cta__inner {
-      max-width: 580px;
-      margin: 0 auto;
-    }
-    .fin-cta__title {
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--text);
-      margin: 0 0 16px;
-      line-height: 1.1;
-    }
-    .fin-cta__sub {
-      font-size: 1rem;
-      color: var(--text-2);
-      line-height: 1.75;
-      margin: 0 0 36px;
-    }
-    .fin-cta__btns {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-    }
-    .fin-cta__trust {
-      font-size: 0.8rem;
-      color: var(--text-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .fin-cta__trust-dot {
-      width: 3px; height: 3px;
-      border-radius: 50%;
-      background: var(--text-2);
-      opacity: 0.5;
-      flex-shrink: 0;
-    }
-
-    /* Entry fade */
-    .fin-cta__inner > * {
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.55s ease, transform 0.55s ease;
-    }
-    .fin-cta.is-visible .fin-cta__inner > *:nth-child(1) { opacity:1; transform:translateY(0); transition-delay:0.05s; }
-    .fin-cta.is-visible .fin-cta__inner > *:nth-child(2) { opacity:1; transform:translateY(0); transition-delay:0.15s; }
-    .fin-cta.is-visible .fin-cta__inner > *:nth-child(3) { opacity:1; transform:translateY(0); transition-delay:0.25s; }
-    .fin-cta.is-visible .fin-cta__inner > *:nth-child(4) { opacity:1; transform:translateY(0); transition-delay:0.35s; }
-
-    /* ── FOOTER ─────────────────────────────────────────── */
-    .fin-foot {
-      background: #111827;
-      color: rgba(255,255,255,.55);
-      padding-top: 56px;
-      font-size: 0.875rem;
-      line-height: 1.7;
-    }
-    .fin-foot__grid {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr 1fr 1fr;
-      gap: 48px 40px;
-      padding-bottom: 48px;
-    }
-
-    /* Brand column */
-    .fin-foot__brand {
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: #fff;
-      margin-bottom: 12px;
-      display: block;
-      text-decoration: none;
-      letter-spacing: -0.01em;
-    }
-    .fin-foot__desc {
-      font-size: 0.8375rem;
-      color: rgba(255,255,255,.45);
-      line-height: 1.75;
-      max-width: 220px;
-    }
-
-    /* Link columns */
-    .fin-foot__col-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: rgba(255,255,255,.3);
-      margin-bottom: 16px;
-    }
-    .fin-foot__links {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .fin-foot__links a {
-      color: rgba(255,255,255,.55);
-      text-decoration: none;
-      transition: color 0.15s ease;
-      font-size: 0.875rem;
-    }
-    .fin-foot__links a:hover { color: #fff; }
-
-    /* Bottom bar */
-    .fin-foot__bar {
-      border-top: 1px solid rgba(255,255,255,.07);
-      padding: 20px 0;
-      text-align: center;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,.28);
-    }
-
-    @media (max-width: 860px) {
-      .fin-foot__grid { grid-template-columns: 1fr 1fr; gap: 32px 24px; }
-      .fin-foot__desc { max-width: 100%; }
-    }
-    @media (max-width: 480px) {
-      .fin-foot__grid { grid-template-columns: 1fr; gap: 28px; }
-      .fin-cta { padding: 72px 0 64px; }
-    }
-
-    /* ── TRUST / STATS SECTION ──────────────────────── */
-    .lp-stats-sec {
-      padding: 72px 0 0;
-      background: var(--bg);
-    }
-    .lp-stats-sec__head {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    .lp-stats-sec__title {
-      font-size: 1.65rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .lp-stats-sec__sub {
-      font-size: 0.95rem;
-      color: var(--text-2);
-      line-height: 1.65;
-      max-width: 460px;
-      margin: 0 auto;
-    }
-
-    /* Stat cards grid */
-    .lp-stat-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 0;
-    }
-
-    /* Canlı çevrimiçi göstergesi — gerçek presence verisi */
-    .lp-live-online {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 20px;
-      font-size: 0.9rem;
-      color: var(--text-2);
-    }
-    .lp-live-online[hidden] { display: none; }
-    .lp-live-online b { color: var(--text-1); font-weight: 700; }
-    .lp-live-online__dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #16A34A;
-      box-shadow: 0 0 0 0 rgba(22,163,74,0.55);
-      animation: kbLivePulse 2s ease-out infinite;
-      flex: none;
-    }
-    @keyframes kbLivePulse {
-      0%   { box-shadow: 0 0 0 0 rgba(22,163,74,0.55); }
-      70%  { box-shadow: 0 0 0 8px rgba(22,163,74,0); }
-      100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .lp-live-online__dot { animation: none; }
-    }
-    .lp-stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.2s ease;
-    }
-    .lp-stat-card.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .lp-stat-card:hover {
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-    }
-    .lp-stat-card:nth-child(1) { transition-delay: 0s; }
-    .lp-stat-card:nth-child(2) { transition-delay: 0.08s; }
-    .lp-stat-card:nth-child(3) { transition-delay: 0.16s; }
-    .lp-stat-card:nth-child(4) { transition-delay: 0.24s; }
-
-    .lp-stat-ic {
-      width: 40px; height: 40px;
-      border-radius: 10px;
-      background: #EEF3FF;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
-    .lp-stat-value {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.03em;
-      line-height: 1;
-    }
-    .lp-stat-title {
-      font-size: 0.875rem;
-      color: var(--text-2);
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    /* Mini info bar */
-    .lp-infobar {
-      border-top: 1px solid var(--border);
-      margin-top: 0;
-      padding: 18px 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-    .lp-infobar__inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      flex-wrap: wrap;
-    }
-    .lp-infobar__item {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 0.8125rem;
-      font-weight: 500;
-      color: var(--text-2);
-      padding: 6px 24px;
-    }
-    .lp-infobar__item + .lp-infobar__item {
-      border-left: 1px solid var(--border);
-    }
-    .lp-infobar__dot {
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: #EEF3FF;
-      color: var(--primary);
-      font-size: 0.6rem;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
-    /* ── SYSTEM PREVIEW ─────────────────────────────────── */
-    .sp-section {
-      padding: 80px 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-    }
-    .sp-head {
-      text-align: center;
-      margin-bottom: 48px;
-    }
-    .sp-head h2 {
-      font-size: 1.65rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-    .sp-head p {
-      font-size: 0.95rem;
-      color: var(--text-2);
-      line-height: 1.65;
-      max-width: 460px;
-      margin: 0 auto;
-    }
-
-    /* 3-col card grid */
-    .sp-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    /* Card */
-    .sp-card {
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: var(--surface);
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(14px);
-      transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.2s ease;
-    }
-    .sp-card.is-visible { opacity: 1; transform: translateY(0); }
-    .sp-card:nth-child(1) { transition-delay: 0s; }
-    .sp-card:nth-child(2) { transition-delay: 0.1s; }
-    .sp-card:nth-child(3) { transition-delay: 0.2s; }
-    .sp-card:hover {
-      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-      transform: translateY(-2px);
-    }
-
-    /* Mockup area */
-    .sp-mock {
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      height: 210px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      position: relative;
-    }
-
-    /* Phone frame (Kurye) */
-    .sp-phone {
-      width: 106px;
-      height: 170px;
-      border-radius: 14px;
-      border: 2px solid #C8D1DC;
-      background: #fff;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-    }
-    .sp-phone__notch {
-      width: 32px; height: 5px;
-      background: #DDE1E7;
-      border-radius: 99px;
-      margin: 7px auto 0;
-      flex-shrink: 0;
-    }
-    .sp-phone__body {
-      flex: 1;
-      padding: 6px 7px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      overflow: hidden;
-    }
-    .sp-ph-topbar {
-      font-size: 0.48rem;
-      font-weight: 700;
-      color: #1A1A2E;
-      padding: 3px 0;
-      border-bottom: 1px solid #EEF1F5;
-      margin-bottom: 1px;
-    }
-    .sp-ph-filter {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      background: #F4F5F7;
-      border-radius: 4px;
-      padding: 2px 5px;
-      font-size: 0.44rem;
-      color: #6B7280;
-      font-weight: 500;
-    }
-    .sp-ph-jcard {
-      background: #fff;
-      border: 1px solid #E8ECF2;
-      border-radius: 5px;
-      padding: 4px 5px;
-    }
-    .sp-ph-jcard__t { font-size: 0.48rem; font-weight: 700; color: #1A1A2E; }
-    .sp-ph-jcard__s { font-size: 0.43rem; color: #6B7280; margin-top: 1px; }
-    .sp-ph-jcard__p { font-size: 0.46rem; font-weight: 700; color: #16A34A; margin-top: 2px; }
-    .sp-ph-jcard__btn {
-      margin-top: 3px;
-      background: #0057FF;
-      color: #fff;
-      border-radius: 3px;
-      padding: 2px 0;
-      font-size: 0.42rem;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    /* Form frame (İşletme) */
-    .sp-form {
-      width: 160px;
-      background: #fff;
-      border: 2px solid #C8D1DC;
-      border-radius: 10px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-      overflow: hidden;
-    }
-    .sp-form__bar {
-      background: #0057FF;
-      padding: 6px 10px;
-      font-size: 0.5rem;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .sp-form__body { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
-    .sp-form__field {
-      border: 1px solid #DDE1E7;
-      border-radius: 4px;
-      padding: 4px 7px;
-      font-size: 0.45rem;
-      color: #6B7280;
-      background: #FAFBFC;
-    }
-    .sp-form__submit {
-      background: #0057FF;
-      color: #fff;
-      border-radius: 4px;
-      padding: 4px 0;
-      font-size: 0.47rem;
-      font-weight: 700;
-      text-align: center;
-      margin-top: 2px;
-    }
-    .sp-form__divider {
-      font-size: 0.43rem;
-      color: #6B7280;
-      font-weight: 600;
-      border-top: 1px solid #EEF1F5;
-      padding-top: 5px;
-      margin-top: 2px;
-    }
-    .sp-form__app {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.43rem;
-      color: #4B5563;
-      padding: 2px 0;
-    }
-    .sp-form__av {
-      width: 13px; height: 13px;
-      border-radius: 50%;
-      background: #EEF3FF;
-      color: #0057FF;
-      font-size: 0.38rem;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
-    /* Dashboard frame (Firma) */
-    .sp-dash {
-      width: 190px;
-      background: #fff;
-      border: 2px solid #C8D1DC;
-      border-radius: 10px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-      overflow: hidden;
-    }
-    .sp-dash__bar {
-      background: #1A1A2E;
-      padding: 6px 10px;
-      font-size: 0.5rem;
-      font-weight: 700;
-      color: rgba(255,255,255,.9);
-      display: flex; align-items: center; gap: 4px;
-    }
-    .sp-dash__bar-dot {
-      width: 5px; height: 5px; border-radius: 50%;
-      background: rgba(255,255,255,.3);
-    }
-    .sp-dash__body { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .sp-dash__stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-    }
-    .sp-dash__stat {
-      background: #F4F5F7;
-      border-radius: 5px;
-      padding: 5px 4px;
-      text-align: center;
-    }
-    .sp-dash__stat-v { font-size: 0.65rem; font-weight: 800; color: #0057FF; }
-    .sp-dash__stat-l { font-size: 0.38rem; color: #6B7280; margin-top: 1px; }
-    .sp-dash__list-lbl { font-size: 0.43rem; font-weight: 700; color: #1A1A2E; padding-top: 2px; border-top: 1px solid #EEF1F5; }
-    .sp-dash__item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.43rem;
-      color: #4B5563;
-      padding: 2px 0;
-    }
-    .sp-dash__item-dot {
-      width: 5px; height: 5px; border-radius: 2px; flex-shrink: 0;
-      background: #0057FF; opacity: .5;
-    }
-    .sp-dash__new {
-      background: #EEF3FF;
-      color: #0057FF;
-      border-radius: 4px;
-      padding: 3px 0;
-      font-size: 0.45rem;
-      font-weight: 700;
-      text-align: center;
-      margin-top: 2px;
-    }
-
-    /* Card body (text + features) */
-    .sp-card__body { padding: 24px; }
-    .sp-card__role {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--primary);
-      background: #EEF3FF;
-      border-radius: 6px;
-      padding: 3px 10px;
-      margin-bottom: 12px;
-    }
-    .sp-card__title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .sp-card__desc {
-      font-size: 0.875rem;
-      color: var(--text-2);
-      line-height: 1.65;
-      margin-bottom: 18px;
-    }
-    .sp-features {
-      list-style: none;
-      padding: 0; margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .sp-features li {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font-size: 0.85rem;
-      color: var(--text-2);
-      font-weight: 500;
-    }
-    .sp-features li::before {
-      content: '';
-      width: 18px; height: 18px;
-      border-radius: 5px;
-      background: #EEF3FF;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 7L5.5 10L11.5 4' stroke='%230057FF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-size: 12px;
-      background-repeat: no-repeat;
-      background-position: center;
-      flex-shrink: 0;
-    }
-
-    @media (max-width: 860px) {
-      .sp-grid { grid-template-columns: 1fr; }
-      .sp-mock { height: 180px; }
-    }
-
-    @media (max-width: 860px) {
-      .lp-stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .lp-infobar__inner { flex-direction: column; align-items: stretch; }
-      .lp-infobar__item { padding: 8px 16px; justify-content: center; }
-      .lp-infobar__item + .lp-infobar__item { border-left: none; border-top: 1px solid var(--border); }
-      .lp-hero__inner { grid-template-columns: 1fr; padding: 48px 0 0; gap: 40px; }
-      .lp-hero__left { padding-bottom: 0; align-items: center; text-align: center; }
-      .lp-hero__sub { text-align: center; max-width: 100%; }
-      .lp-hero__cta { justify-content: center; }
-      .lp-phones { height: 320px; margin-bottom: -1px; }
-      .lp-phone--1 { left: 0; height: 230px; }
-      .lp-phone--2 { height: 290px; }
-      .lp-phone--3 { right: 0; height: 250px; }
-      .lp-how, .lp-roles { grid-template-columns: 1fr; }
-      .hiw-flow { grid-template-columns: 1fr; gap: 0; }
-      .hiw-conn { display: none; }
-      .hiw-step { flex-direction: row; text-align: left; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
-      .hiw-step__ic-wrap { flex-shrink: 0; }
-      .hiw-step h3 { text-align: left; }
-      .hiw-step p { text-align: left; }
-      .lp-trust__inner { gap: 20px; }
-    }
-
-    @media (max-width: 480px) {
-      .lp-stat-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-      .lp-phones { height: 260px; }
-      .lp-phone--1 { width: 110px; height: 190px; left: 4px; }
-      .lp-phone--2 { width: 130px; height: 240px; }
-      .lp-phone--3 { width: 110px; height: 200px; right: 4px; }
-    }
+  /* ─── 16. HAREKET AZALTMA ───────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .lp-feat, .lp-stat-card, .sp-card, .rs-card, .hiw-step, .fin-cta__inner {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    .lp-live-online__dot { animation: none; }
+    .auth-modal, .auth-modal-overlay { transition-duration: .01ms; }
+    .btn:hover, .rs-card:hover { transform: none; }
+  }
   </style>
 </head>
-<body style="background:var(--bg)">
+<body>
 
   <!-- ── NAV ─────────────────────────────────────────── -->
   <nav class="public-nav">
-    <a class="nav-brand" href="index.html">KuryemiBul</a>
+    <a class="nav-brand" href="index.html">
+      <img src="assets/logo-128.png" width="38" height="38" alt="KuryemiBul">
+      KuryemiBul
+    </a>
     <!-- data-gated: giriş yoksa link index.html?auth=login&next=... olur (aşağıdaki
          script). Modal bu adresi yakalar, sayfadan çıkmadan açar. -->
     <div class="nav-links">
@@ -1259,140 +1574,190 @@
     <div class="container">
       <div class="lp-hero__inner">
 
-        <!-- LEFT: Copy & CTAs -->
+        <!-- SOL: metin ve çağrılar -->
         <div class="lp-hero__left">
-          <div class="lp-badge">Türkiye'nin kurye iş bulma platformu</div>
-          <h1 class="lp-hero__h1">Size uygun kurye işlerini kolayca bulun.</h1>
-          <p class="lp-hero__sub">KuryemiBul ile bulunduğunuz bölgedeki aktif kurye ilanlarını inceleyin, başvurun ve işverenlerle doğrudan iletişime geçin.</p>
+          <div class="lp-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            Türkiye'nin kurye iş bulma platformu
+          </div>
+          <h1 class="lp-hero__h1">Doğru işi bul,<br>yoluna <span class="lp-accent">güvenle</span><br>devam et!</h1>
+          <p class="lp-hero__sub">Binlerce aktif ilan arasından sana uygun olanı bul, hemen başvur ve işverenlerle doğrudan iletişime geç.</p>
           <div class="lp-hero__cta">
-            <a href="index.html?auth=register" class="btn btn--primary btn--lg">Hemen Başla</a>
-            <a href="ilanlar.html" class="btn btn--ghost btn--lg" data-gated>İlanları İncele</a>
-            <a href="/downloads/kuryemibul.apk" class="btn btn--ghost btn--lg" download id="heroApk">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Android APK İndir
+            <a href="ilanlar.html" class="btn btn--primary btn--lg" data-gated>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              İlanları Keşfet
+            </a>
+            <a href="index.html?auth=register" class="btn btn--ghost btn--lg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Hemen Üye Ol
             </a>
           </div>
+          <a href="/downloads/kuryemibul.apk" class="lp-apk" download id="heroApk">
+            <svg class="lp-apk__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Android Uygulamamızı İndir
+            <svg class="lp-apk__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
         </div>
 
-        <!-- RIGHT: Phone mockups -->
-        <div class="lp-phones">
+        <!-- SAĞ: kurye görseli + gerçek veriyle dolan telefon panelleri -->
+        <div class="lp-visual">
+          <img class="lp-visual__rider" src="assets/kurye-scooter.jpg" width="820" height="1230"
+               alt="KuryemiBul kuryesi scooter üzerinde" fetchpriority="high" decoding="async">
 
-          <!-- Phone 1: İlan Listesi -->
-          <div class="lp-phone lp-phone--1">
-            <div class="lp-phone__notch"></div>
+          <!-- Panel 1: iş ilanları ekranı (örnek içerik) -->
+          <div class="lp-phone lp-phone--jobs">
             <div class="lp-phone__screen">
               <div class="lp-phone__bar">
-                <span class="lp-phone__bar-ic">🔍</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <span class="lp-phone__bar-title">İş İlanları</span>
               </div>
-              <!-- Kartlar GERÇEK açık ilanlardan doldurulur (fillHero) -->
-              <div id="lp-jcards"></div>
+              <!-- ÖRNEK İÇERİK — bilinçli olarak sabittir.
+                   Bu kartlar dekoratif bir cihaz mockup'ının içindedir; ürünün
+                   nasıl göründüğünü anlatır, platform verisi DEĞİLDİR. Eskiden
+                   canlı ilanlardan doldurulurdu; gerçek kullanıcı adları ve test
+                   kayıtları ("dsadad" gibi) tanıtım sayfasına düştüğü için
+                   örnek içerikle değiştirildi.
+                   DİKKAT: Sayfadaki gerçek sayaçlar (data-stat) buna DAHİL
+                   DEĞİLDİR; onlar platform_stats() ile canlı gelir. -->
+              <div class="lp-jcard">
+                <div class="lp-jcard__title">Moto Kurye</div>
+                <div class="lp-jcard__row"><span>İstanbul, Kadıköy</span></div>
+                <div class="lp-jcard__row" style="margin-top:3px">
+                  <span class="lp-jcard__tag">Motosiklet</span>
+                  <span class="lp-jcard__tag">Tam Zamanlı</span>
+                </div>
+                <div class="lp-jcard__price">₺32.000 – ₺38.000/ay</div>
+                <div class="lp-jbtn">Başvur →</div>
+              </div>
+              <div class="lp-jcard">
+                <div class="lp-jcard__title">Yaya Kurye</div>
+                <div class="lp-jcard__row"><span>Ankara, Çankaya</span></div>
+                <div class="lp-jcard__row" style="margin-top:3px">
+                  <span class="lp-jcard__tag">Yaya</span>
+                  <span class="lp-jcard__tag">Akşam (18-24)</span>
+                </div>
+                <div class="lp-jcard__price">₺18.000 – ₺22.000/ay</div>
+              </div>
+              <div class="lp-jcard">
+                <div class="lp-jcard__title">Depo Kuryesi</div>
+                <div class="lp-jcard__row"><span>İzmir, Bornova</span></div>
+                <div class="lp-jcard__row" style="margin-top:3px">
+                  <span class="lp-jcard__tag">Panelvan</span>
+                  <span class="lp-jcard__tag">Gündüz (08-18)</span>
+                </div>
+                <div class="lp-jcard__price">₺26.000 – ₺30.000/ay</div>
+              </div>
             </div>
           </div>
 
-          <!-- Phone 2: Kurye Profili -->
-          <div class="lp-phone lp-phone--2">
-            <div class="lp-phone__notch"></div>
+          <!-- Panel 2: kurye profili ekranı (örnek içerik) -->
+          <div class="lp-phone lp-phone--profile">
             <div class="lp-phone__screen">
               <div class="lp-phone__bar">
-                <span style="font-size:0.6rem;color:#6B7280">← Geri</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span class="lp-phone__bar-title">Kurye Profili</span>
               </div>
-              <!-- Profil GERÇEK havuz kaydından doldurulur -->
-              <div id="lp-pcard"></div>
+              <!-- ÖRNEK İÇERİK — temsilî kurye profili, gerçek bir kullanıcı
+                   değildir (bkz. yukarıdaki not). -->
+              <div class="lp-pav">MA</div>
+              <div class="lp-pname">Mert Aydın</div>
+              <div class="lp-pstars">★ 4.8 · 126 değerlendirme</div>
+              <div class="lp-ptags">
+                <span class="lp-ptag">Motosiklet</span>
+                <span class="lp-ptag">İstanbul</span>
+                <span class="lp-ptag">4 yıl</span>
+              </div>
+              <div class="lp-pstat"><span>Tamamlanan Teslimat</span><b>1.284</b></div>
               <div class="lp-pbtn">Teklif Gönder</div>
               <div class="lp-pbtn2">Mesaj Yaz</div>
             </div>
           </div>
-
-          <!-- Phone 3: İlan Ver -->
-          <div class="lp-phone lp-phone--3">
-            <div class="lp-phone__notch"></div>
-            <div class="lp-phone__screen">
-              <div class="lp-phone__bar">
-                <span class="lp-phone__bar-ic">✚</span>
-                <span class="lp-phone__bar-title">İlan Ver</span>
-              </div>
-              <div class="lp-field">
-                <label>Pozisyon</label>
-                <div class="lp-finput">Moto Kurye</div>
-              </div>
-              <div class="lp-field">
-                <label>Şehir</label>
-                <div class="lp-finput">İstanbul</div>
-              </div>
-              <div class="lp-field">
-                <label>Günlük Ücret</label>
-                <div class="lp-finput">₺150</div>
-              </div>
-              <div class="lp-field">
-                <label>Araç Tipi</label>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
-                  <span style="background:#0057FF;color:#fff;border-radius:4px;padding:2px 6px;font-size:0.5rem;font-weight:600">Motosiklet</span>
-                  <span style="background:#F4F5F7;color:#6B7280;border-radius:4px;padding:2px 6px;font-size:0.5rem">Bisiklet</span>
-                </div>
-              </div>
-              <div class="lp-post-btn">İlanı Yayınla</div>
-              <div style="font-size:0.47rem;color:#6B7280;text-align:center;margin-top:4px">Ücretsiz · Anında Yayınlanır</div>
-            </div>
-          </div>
-
         </div>
+
       </div>
     </div>
 
-    <!-- Trust strip -->
-    <div class="lp-trust">
-      <div class="container">
+    <!-- Öne çıkan özellikler -->
+    <div class="container">
+      <div class="lp-trust">
         <div class="lp-trust__inner">
-          <div class="lp-trust__item">
-            <div class="lp-trust__ic">✅</div>
-            Doğrulanmış Esnaflar
+          <div class="lp-feat">
+            <div class="lp-feat__ic lp-feat__ic--blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <div>
+              <div class="lp-feat__t">Doğrulanmış Esnaflar</div>
+              <div class="lp-feat__d">Güvenilir işverenler</div>
+            </div>
           </div>
-          <div class="lp-trust__item">
-            <div class="lp-trust__ic">📋</div>
-            Gerçek İş İlanları
+          <div class="lp-feat">
+            <div class="lp-feat__ic lp-feat__ic--sky">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div>
+              <div class="lp-feat__t">Gerçek &amp; Aktif İlanlar</div>
+              <div class="lp-feat__d">Güncel ve aktif ilanlar</div>
+            </div>
           </div>
-          <div class="lp-trust__item">
-            <div class="lp-trust__ic">⚡</div>
-            Hızlı Başvuru
+          <div class="lp-feat">
+            <div class="lp-feat__ic lp-feat__ic--green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div>
+              <div class="lp-feat__t">Hızlı Başvuru</div>
+              <div class="lp-feat__d">Tek tıkla başvur</div>
+            </div>
           </div>
-          <div class="lp-trust__item">
-            <div class="lp-trust__ic">📍</div>
-            Bölgesel Eşleşme
+          <div class="lp-feat">
+            <div class="lp-feat__ic lp-feat__ic--purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="lp-feat__t">Bölgesel Eşleşme</div>
+              <div class="lp-feat__d">Sana en uygun işler</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── TRUST / STATS ────────────────────────────────── -->
+  <!-- ── İSTATİSTİKLER ────────────────────────────────── -->
   <section class="lp-stats-sec" id="statsSection">
     <div class="container">
-      <div class="lp-stats-sec__head">
-        <h2 class="lp-stats-sec__title">KuryemiBul'da Neler Oluyor?</h2>
-        <p class="lp-stats-sec__sub">Her gün yeni iş ilanları yayınlanır ve kuryeler esnaflarla hızlıca buluşur.</p>
+      <div class="lp-sec-head">
+        <h2 class="lp-h2">KuryemiBul'da Neler Oluyor?</h2>
+        <p class="lp-sub">Her gün yeni iş ilanları yayınlanır ve kuryeler esnaflarla hızlıca buluşur.</p>
       </div>
       <!-- Sayaçların TAMAMI canlı veritabanı değeridir (platform_stats).
            data-stat anahtarı aşağıdaki sayaç script'i tarafından doldurulur;
            sabit sayı yoktur. -->
       <div class="lp-stat-grid">
         <div class="lp-stat-card">
-          <div class="lp-stat-ic">📋</div>
+          <div class="lp-stat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+          </div>
           <div class="lp-stat-value" data-stat="acik_ilan">—</div>
           <div class="lp-stat-title">Aktif İlanlar</div>
         </div>
         <div class="lp-stat-card">
-          <div class="lp-stat-ic">🛵</div>
+          <div class="lp-stat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7.5"/><path d="M5.5 15L9 7h4.5l3 5.5-4.5 2.5"/><path d="M18.5 8l2.5 1"/></svg>
+          </div>
           <div class="lp-stat-value" data-stat="kurye">—</div>
           <div class="lp-stat-title">Kayıtlı Kuryeler</div>
         </div>
         <div class="lp-stat-card">
-          <div class="lp-stat-ic">✅</div>
+          <div class="lp-stat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
           <div class="lp-stat-value" data-stat="dogrulanmis">—</div>
           <div class="lp-stat-title">Doğrulanmış Esnaflar</div>
         </div>
         <div class="lp-stat-card">
-          <div class="lp-stat-ic">⚡</div>
+          <div class="lp-stat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
           <div class="lp-stat-value" data-stat="bugun_basvuru">—</div>
           <div class="lp-stat-title">Bugün Yapılan Başvurular</div>
         </div>
@@ -1403,11 +1768,9 @@
         <span class="lp-live-online__dot" aria-hidden="true"></span>
         <span>Şu anda <b data-online-count>0</b> kişi çevrimiçi</span>
       </div>
-    </div>
 
-    <!-- Mini info bar -->
-    <div class="lp-infobar" style="margin-top:40px">
-      <div class="container">
+      <!-- Mini bilgi çubuğu -->
+      <div class="lp-infobar">
         <div class="lp-infobar__inner">
           <div class="lp-infobar__item">
             <div class="lp-infobar__dot">✓</div>
@@ -1430,31 +1793,55 @@
     </div>
   </section>
 
-  <!-- ── SYSTEM PREVIEW ───────────────────────────────── -->
+  <!-- ── SİSTEM ÖNİZLEME ──────────────────────────────── -->
   <section class="sp-section">
     <div class="container">
 
-      <div class="sp-head">
-        <h2>KuryemiBul Nasıl Çalışır?</h2>
-        <p>Kuryeler, işletmeler ve firmalar tek platformda kolayca buluşur.</p>
+      <div class="lp-sec-head">
+        <h2 class="lp-h2">KuryemiBul Nasıl Çalışır?</h2>
+        <p class="lp-sub">Kuryeler, işletmeler ve firmalar tek platformda kolayca buluşur.</p>
       </div>
 
       <div class="sp-grid">
 
-        <!-- Card 1: Kurye -->
+        <!-- Kart 1: Kurye -->
         <div class="sp-card">
           <div class="sp-mock">
             <div class="sp-phone">
-              <div class="sp-phone__notch"></div>
               <div class="sp-phone__body">
-                <div class="sp-ph-topbar">🔍 İş İlanları</div>
-                <div class="sp-ph-filter">📍 İstanbul &nbsp;▾</div>
-                <div id="sp-jcards"></div>
+                <div class="sp-ph-topbar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  İş İlanları
+                </div>
+                <div class="sp-ph-filter">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  İstanbul
+                </div>
+                <!-- ÖRNEK İÇERİK — hero'daki mockup ile aynı kurgu -->
+                <div class="sp-ph-jcard">
+                  <div class="sp-ph-jcard__t">Moto Kurye</div>
+                  <div class="sp-ph-jcard__s">İstanbul, Kadıköy</div>
+                  <div class="sp-ph-jcard__p">₺32.000 – ₺38.000/ay</div>
+                  <div class="sp-ph-jcard__btn">Başvur →</div>
+                </div>
+                <div class="sp-ph-jcard">
+                  <div class="sp-ph-jcard__t">Yaya Kurye</div>
+                  <div class="sp-ph-jcard__s">Ankara, Çankaya</div>
+                  <div class="sp-ph-jcard__p">₺18.000 – ₺22.000/ay</div>
+                </div>
+                <div class="sp-ph-jcard">
+                  <div class="sp-ph-jcard__t">Depo Kuryesi</div>
+                  <div class="sp-ph-jcard__s">İzmir, Bornova</div>
+                  <div class="sp-ph-jcard__p">₺26.000 – ₺30.000/ay</div>
+                </div>
               </div>
             </div>
           </div>
           <div class="sp-card__body">
-            <div class="sp-card__role">🛵 Kurye</div>
+            <div class="sp-card__role">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7.5"/><path d="M5.5 15L9 7h4.5l3 5.5-4.5 2.5"/></svg>
+              Kurye
+            </div>
             <div class="sp-card__title">İlanları bul ve başvur</div>
             <p class="sp-card__desc">Bulunduğun bölgedeki ilanları keşfet, filtrele ve anında başvur.</p>
             <ul class="sp-features">
@@ -1465,31 +1852,41 @@
           </div>
         </div>
 
-        <!-- Card 2: İşletme -->
+        <!-- Kart 2: Esnaf -->
         <div class="sp-card">
           <div class="sp-mock">
             <div class="sp-form">
-              <div class="sp-form__bar">✚ İlan Oluştur</div>
+              <div class="sp-form__bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                İlan Oluştur
+              </div>
               <div class="sp-form__body">
                 <div class="sp-form__field">Pozisyon: Moto Kurye</div>
-                <div class="sp-form__field">📍 İstanbul</div>
+                <div class="sp-form__field">İstanbul</div>
                 <div class="sp-form__field">₺150 / gün</div>
                 <div class="sp-form__submit">İlanı Yayınla</div>
                 <!-- Form önizlemesi: uydurma aday adı/sayısı yerine nötr yer tutucu -->
                 <div class="sp-form__divider">Gelen Başvurular</div>
                 <div class="sp-form__app">
-                  <div class="sp-form__av">👤</div>
+                  <div class="sp-form__av">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
                   Aday profili — Görüntüle →
                 </div>
                 <div class="sp-form__app">
-                  <div class="sp-form__av">👤</div>
+                  <div class="sp-form__av">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
                   Aday profili — Görüntüle →
                 </div>
               </div>
             </div>
           </div>
           <div class="sp-card__body">
-            <div class="sp-card__role">🏪 Esnaf</div>
+            <div class="sp-card__role">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Esnaf
+            </div>
             <div class="sp-card__title">İlan ver, başvuru al</div>
             <p class="sp-card__desc">Kurye ihtiyacını hızlıca yayınla ve başvuruları incele.</p>
             <ul class="sp-features">
@@ -1500,7 +1897,7 @@
           </div>
         </div>
 
-        <!-- Card 3: Firma -->
+        <!-- Kart 3: Firma -->
         <div class="sp-card">
           <div class="sp-mock">
             <div class="sp-dash">
@@ -1533,7 +1930,10 @@
             </div>
           </div>
           <div class="sp-card__body">
-            <div class="sp-card__role">🏢 Kurye Firması</div>
+            <div class="sp-card__role">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 012-2h8a2 2 0 012 2v18z"/><path d="M6 12H4a2 2 0 00-2 2v8h4"/><path d="M18 9h2a2 2 0 012 2v11h-4"/></svg>
+              Kurye Firması
+            </div>
             <div class="sp-card__title">Ekibini yönet ve büyüt</div>
             <p class="sp-card__desc">Birden fazla kurye ilanını yönet ve ekibini büyüt.</p>
             <ul class="sp-features">
@@ -1548,13 +1948,13 @@
     </div>
   </section>
 
-  <!-- ── HOW IT WORKS ─────────────────────────────────── -->
-  <section class="hiw-section">
+  <!-- ── İŞE BAŞLAMAK ─────────────────────────────────── -->
+  <section class="hiw-section" id="finHiw">
     <div class="container">
 
-      <div class="hiw-head">
-        <h2>İşe Başlamak Çok Kolay</h2>
-        <p>Sadece birkaç adımda sana uygun işleri bulmaya başlayabilirsin.</p>
+      <div class="lp-sec-head">
+        <h2 class="lp-h2">İşe Başlamak Çok Kolay</h2>
+        <p class="lp-sub">Sadece birkaç adımda sana uygun işleri bulmaya başlayabilirsin.</p>
       </div>
 
       <div class="hiw-flow">
@@ -1617,13 +2017,13 @@
     </div>
   </section>
 
-  <!-- ── ROLE SELECTION ───────────────────────────────── -->
+  <!-- ── ROL SEÇİMİ ───────────────────────────────────── -->
   <section class="rs-section">
     <div class="container">
 
-      <div class="rs-head">
-        <h2>KuryemiBul'u Nasıl Kullanmak İstiyorsun?</h2>
-        <p>Sana uygun deneyimi seç ve hemen başla.</p>
+      <div class="lp-sec-head">
+        <h2 class="lp-h2">KuryemiBul'u Nasıl Kullanmak İstiyorsun?</h2>
+        <p class="lp-sub">Sana uygun deneyimi seç ve hemen başla.</p>
       </div>
 
       <div class="rs-grid" id="rsGrid">
@@ -1686,7 +2086,7 @@
     </div>
   </section>
 
-  <!-- ── FINAL CTA ────────────────────────────────────── -->
+  <!-- ── FİNAL CTA ────────────────────────────────────── -->
   <section class="fin-cta" id="finCta">
     <div class="container">
       <div class="fin-cta__inner">
@@ -1714,7 +2114,10 @@
 
         <!-- Sütun 1: Marka -->
         <div>
-          <a class="fin-foot__brand" href="index.html">KuryemiBul</a>
+          <a class="fin-foot__brand" href="index.html">
+            <img src="assets/logo-128.png" width="34" height="34" alt="">
+            KuryemiBul
+          </a>
           <p class="fin-foot__desc">KuryemiBul, kurye ve işletmeleri buluşturan iş platformudur.</p>
         </div>
 
@@ -1729,18 +2132,7 @@
           </div>
         </div>
 
-        <!-- Sütun 3: Şirket -->
-        <div>
-          <div class="fin-foot__col-label">Şirket</div>
-          <div class="fin-foot__links">
-            <a href="#">Hakkımızda</a>
-            <a href="#">İletişim</a>
-            <a href="#">Sık Sorulan Sorular</a>
-            <a href="#">Destek</a>
-          </div>
-        </div>
-
-        <!-- Sütun 4: Yasal -->
+        <!-- Sütun 3: Yasal -->
         <div>
           <div class="fin-foot__col-label">Yasal</div>
           <div class="fin-foot__links">
@@ -1763,31 +2155,33 @@
   </footer>
 
   <script>
-  /* Stat kart animasyonu — IntersectionObserver ile tetiklenir */
+  /* Bölüm giriş animasyonları — IntersectionObserver ile tetiklenir.
+     Sayaç değerlerini BU blok yazmaz; canlı sayaçlar aşağıdaki
+     platform_stats bloğundadır (countUp). */
   (function () {
-    function animateValue(el, target, suffix) {
-      var start = 0;
-      var startTime = null;
-      var duration = 1100;
-      function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        var progress = Math.min((timestamp - startTime) / duration, 1);
-        var eased = 1 - Math.pow(1 - progress, 3); /* ease-out cubic */
-        var current = Math.floor(eased * target);
-        el.textContent = current.toLocaleString('tr-TR') + suffix;
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = target.toLocaleString('tr-TR') + suffix;
+    /* IntersectionObserver yoksa (eski tarayıcı) hiçbir eleman açılmaz ve
+       bölümler boş görünürdü. Bu yardımcı, destek yoksa animasyondan
+       vazgeçip elemanları doğrudan görünür yapar. Rol kartlarının tıklama
+       mantığı bu duruma bakmaksızın HER ZAMAN bağlanır. */
+    var ioVar = 'IntersectionObserver' in window;
+
+    function gorunurYap(elemanlar, esik) {
+      if (!elemanlar.length) return;
+      if (!ioVar) {
+        elemanlar.forEach(function (el) { el.classList.add('is-visible'); });
+        return;
       }
-      requestAnimationFrame(step);
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) e.target.classList.add('is-visible');
+        });
+      }, { threshold: esik });
+      elemanlar.forEach(function (el) { obs.observe(el); });
     }
 
-    /* Final CTA fade */
+    /* Final CTA */
     var finCta = document.getElementById('finCta');
-    if (finCta) {
-      new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting) finCta.classList.add('is-visible');
-      }, { threshold: 0.25 }).observe(finCta);
-    }
+    if (finCta) gorunurYap([finCta], 0.25);
 
     /* Role selection kartları */
     var rsCards = document.querySelectorAll('.rs-card');
@@ -1810,53 +2204,11 @@
         });
       }
     });
-    /* Entry animasyonu */
-    var rsObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('is-visible'); });
-    }, { threshold: 0.15 });
-    rsCards.forEach(function (c) { rsObs.observe(c); });
-
-    /* How-it-works adım kartları */
-    var hiwSteps = document.querySelectorAll('.hiw-step');
-    var hiwObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('is-visible'); });
-    }, { threshold: 0.2 });
-    hiwSteps.forEach(function (s) { hiwObs.observe(s); });
-
-    /* System preview kartları */
-    var spCards = document.querySelectorAll('.sp-card');
-    var spObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('is-visible'); });
-    }, { threshold: 0.15 });
-    spCards.forEach(function (c) { spObs.observe(c); });
-
-    var cards = document.querySelectorAll('.lp-stat-card');
-    var animated = false;
-
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-        }
-      });
-      /* Sayı animasyonu — tüm kartlar görünür olunca bir kez çalış */
-      if (!animated) {
-        var anyVisible = false;
-        cards.forEach(function (c) { if (c.classList.contains('is-visible')) anyVisible = true; });
-        if (anyVisible) {
-          animated = true;
-          cards.forEach(function (card) {
-            var valEl = card.querySelector('.lp-stat-value');
-            if (!valEl) return;
-            var target = parseInt(valEl.getAttribute('data-target'), 10);
-            var suffix = valEl.getAttribute('data-suffix') || '';
-            if (!isNaN(target)) animateValue(valEl, target, suffix);
-          });
-        }
-      }
-    }, { threshold: 0.2 });
-
-    cards.forEach(function (c) { observer.observe(c); });
+    /* Entry animasyonları */
+    gorunurYap([].slice.call(rsCards), 0.15);
+    gorunurYap([].slice.call(document.querySelectorAll('.hiw-step')), 0.2);
+    gorunurYap([].slice.call(document.querySelectorAll('.sp-card')), 0.15);
+    gorunurYap([].slice.call(document.querySelectorAll('.lp-stat-card, .lp-feat')), 0.2);
   })();
   </script>
   <script src="assets/js/i18n.js"></script>
@@ -1978,106 +2330,15 @@
       });
     }
 
-    /* ── HERO MOCKUP — GERÇEK VERİ ────────────────────────────
-       Telefon görsellerindeki kartlar gerçek açık ilanlardan ve gerçek
-       havuz profilinden doldurulur. Uydurma fiyat/isim/puan basılmaz.
-       Veri yoksa ilgili telefon gizlenir — boş kart bozuk görünür. */
-    function esc(v) {
-      return String(v == null ? '' : v)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function konum(l) {
-      return [l.sehir, l.bolge].filter(Boolean).join(', ');
-    }
-    function gizlePhone(el) {
-      if (!el) return;
-      var phone = el.closest('.lp-phone') || el.closest('.sp-phone') || el.closest('.sp-mock');
-      if (phone) phone.style.display = 'none';
-    }
-
-    async function fillHero() {
-      if (!(window.SB && SB.isOn())) return;
-
-      /* --- İş ilanı kartları (masaüstü + küçük ekran) --- */
-      var jc = document.getElementById('lp-jcards');
-      var sp = document.getElementById('sp-jcards');
-      try {
-        var list = (await SB.openListings()) || [];
-        var top  = list.slice(0, 3);
-
-        if (!top.length) { gizlePhone(jc); gizlePhone(sp); }
-        else {
-          if (jc) {
-            jc.innerHTML = top.map(function (l, i) {
-              var loc = konum(l);
-              return '<div class="lp-jcard">' +
-                '<div class="lp-jcard__title">' + esc(l.baslik || 'İlan') + '</div>' +
-                (loc ? '<div class="lp-jcard__row"><span>📍 ' + esc(loc) + '</span></div>' : '') +
-                (l.arac || l.vardiya_tipi
-                  ? '<div class="lp-jcard__row" style="margin-top:3px">' +
-                    (l.arac ? '<span class="lp-jcard__tag">' + esc(l.arac) + '</span>' : '') +
-                    (l.vardiya_tipi ? '<span class="lp-jcard__tag">' + esc(l.vardiya_tipi) + '</span>' : '') +
-                    '</div>'
-                  : '') +
-                (l.maas_aralik ? '<div class="lp-jcard__price">' + esc(l.maas_aralik) + '</div>' : '') +
-                (i === 0 ? '<div class="lp-jbtn">Başvur →</div>' : '') +
-              '</div>';
-            }).join('');
-          }
-          if (sp) {
-            sp.innerHTML = top.map(function (l, i) {
-              var loc = konum(l);
-              return '<div class="sp-ph-jcard">' +
-                '<div class="sp-ph-jcard__t">' + esc(l.baslik || 'İlan') + '</div>' +
-                (loc ? '<div class="sp-ph-jcard__s">' + esc(loc) + '</div>' : '') +
-                (l.maas_aralik ? '<div class="sp-ph-jcard__p">' + esc(l.maas_aralik) + '</div>' : '') +
-                (i === 0 ? '<div class="sp-ph-jcard__btn">Başvur →</div>' : '') +
-              '</div>';
-            }).join('');
-          }
-        }
-      } catch (e) { gizlePhone(jc); gizlePhone(sp); }
-
-      /* --- Kurye profil kartı --- */
-      var pc = document.getElementById('lp-pcard');
-      if (!pc) return;
-      try {
-        var kuryeler = (await SB.pool('kurye')) || [];
-        var k = kuryeler[0];
-        if (!k) { gizlePhone(pc); return; }
-
-        var bas = (k.ad || '?').trim().split(/\s+/)
-          .slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
-        var puan = Number(k.puan) || 0;
-        var deg  = Number(k.degerlendirme) || 0;
-
-        pc.innerHTML =
-          '<div class="lp-pav">' + esc(bas || '?') + '</div>' +
-          '<div class="lp-pname">' + esc(k.ad || 'Kurye') + '</div>' +
-          // Yıldız satırı YALNIZ gerçek değerlendirme varsa
-          (deg > 0
-            ? '<div class="lp-pstars">★ ' + puan.toFixed(1) + ' · ' + deg + ' değerlendirme</div>'
-            : '') +
-          '<div class="lp-ptags">' +
-            (k.arac  ? '<span class="lp-ptag">🛵 ' + esc(k.arac) + '</span>' : '') +
-            (k.sehir ? '<span class="lp-ptag">📍 ' + esc(k.sehir) + '</span>' : '') +
-            (k.deneyim > 0 ? '<span class="lp-ptag">' + k.deneyim + ' yıl</span>' : '') +
-          '</div>' +
-          // Tamamlanan teslimat gerçek alandan; 0 ise satır hiç basılmaz
-          (k.tamamlanan > 0
-            ? '<div style="display:flex;justify-content:space-between;background:#F4F5F7;' +
-              'border-radius:6px;padding:5px 8px;margin-top:10px">' +
-                '<span style="font-size:0.5rem;color:#6B7280">Tamamlanan Teslimat</span>' +
-                '<span style="font-size:0.55rem;font-weight:700;color:#1A1A2E">' + k.tamamlanan + '</span>' +
-              '</div>'
-            : '');
-      } catch (e) { gizlePhone(pc); }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', fillHero);
-    } else { fillHero(); }
+    /* ── HERO MOCKUP ──────────────────────────────────────────
+       Telefon mockup'larının içeriği artık HTML'de sabittir (örnek içerik).
+       Eskiden burada fillHero() vardı: kartları canlı ilanlardan ve havuzdaki
+       ilk kurye profilinden dolduruyordu. Kaldırıldı çünkü tanıtım sayfasında
+       gerçek kullanıcı adları ve test kayıtları görünüyordu. Beraberinde
+       yalnız bu iş için var olan esc/konum/gizlePhone yardımcıları ve iki
+       Supabase çağrısı (openListings, pool) da gitti.
+       Sayfadaki GERÇEK veriler etkilenmedi: data-stat sayaçları
+       platform_stats() ile, çevrimiçi göstergesi presence ile canlı gelir. */
   })();
   </script>
 

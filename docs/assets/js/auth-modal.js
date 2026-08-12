@@ -28,13 +28,33 @@
     overlay = document.createElement('div');
     overlay.className = 'modal-overlay auth-modal-overlay';
     overlay.id = 'kbAuthModal';
+    /* İki sütunlu kabuk: solda marka paneli, sağda form.
+       Buradaki HTML yalnız SUNUMDUR — id'ler (#kbAuthClose, #kbAuthBody),
+       ARIA nitelikleri ve kapatma/odak davranışı aynen korunur. Görseller
+       göreli yolla veriliyor; çözümleme script'e göre değil DOKÜMANA göre
+       yapıldığı için index.html'in yanındaki assets/ doğru hedeftir.
+       Sol paneldeki görseller dekoratiftir (alt=""), ekran okuyucu
+       modalın aria-label'ını ve form etiketlerini okur. */
     overlay.innerHTML =
       '<div class="modal auth-modal" role="dialog" aria-modal="true" aria-label="Giriş yap veya hesap oluştur">' +
-        '<div class="modal__head auth-modal__head">' +
-          '<h3>KuryemiBul</h3>' +
-          '<button type="button" class="modal__close" id="kbAuthClose" aria-label="Kapat">&times;</button>' +
+        '<aside class="auth-modal__brand">' +
+          '<img class="auth-modal__logo" src="assets/logo-128.png" width="74" height="74" alt="" decoding="async">' +
+          '<p class="auth-modal__welcome">KuryemiBul\'a<span>Hoş Geldin!</span></p>' +
+          /* Metin bilerek sekmeden bağımsız: sekmeye göre değiştirmek
+             auth-forms.js'in showLogin/showRegister mantığını değiştirmeyi
+             gerektirirdi. Bu cümle hem giriş hem kayıt sekmesinde doğru. */
+          '<p class="auth-modal__lead">Binlerce kurye iş fırsatına ulaşmaya başla.</p>' +
+          /* Saydam PNG — hero'daki JPEG sürümün zemini #070C16'ya gömülü ve
+             bu panelin ışıltılı zemininde dikdörtgen kenarı belli oluyordu.
+             Görsel yalnız modal ilk açıldığında (build) DOM'a girer. */
+          '<img class="auth-modal__art" src="assets/kurye-scooter-sm.png" width="360" height="540" alt="" loading="lazy" decoding="async">' +
+        '</aside>' +
+        '<div class="auth-modal__panel">' +
+          '<div class="modal__head auth-modal__head">' +
+            '<button type="button" class="modal__close" id="kbAuthClose" aria-label="Kapat">&times;</button>' +
+          '</div>' +
+          '<div class="auth-modal__body" id="kbAuthBody"></div>' +
         '</div>' +
-        '<div class="auth-modal__body" id="kbAuthBody"></div>' +
       '</div>';
     document.body.appendChild(overlay);
 

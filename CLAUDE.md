@@ -215,6 +215,17 @@ async function loadPool(type) {
 Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 "uyum skoru" veya "başvuru sayısı" üretmek yasaktır.
 
+> **Tek istisna — tanıtım mockup'ları (2026-08-12).** `index.html`'deki hero ve
+> "Nasıl Çalışır" bölümlerindeki telefon/panel görselleri **dekoratif ürün
+> tanıtımıdır**, veri yüzeyi değildir; içerikleri HTML'de sabittir (`Moto Kurye`,
+> `Mert Aydın` vb.). Eskiden bunlar canlı ilanlardan ve havuzdaki ilk kurye
+> profilinden doldurulurdu (`fillHero()`), ama tanıtım sayfasına **gerçek
+> kullanıcı adları ve test kayıtları** düşüyordu. Bu bir gerileme değil,
+> bilinçli bir karardır — geri almayın.
+>
+> İstisna yalnız bu mockup'ları kapsar. Aynı sayfadaki `data-stat` sayaçları,
+> çevrimiçi göstergesi ve diğer tüm sayfalar **canlı veriye bağlı kalır**.
+
 > **Sayaç animasyonu uyarısı:** `requestAnimationFrame` sekme arka plandayken
 > çalışmaz. Sayı animasyonu yazarken `document.hidden` ise hedef değeri doğrudan
 > bas — yoksa sayaç `—` olarak kalır.
