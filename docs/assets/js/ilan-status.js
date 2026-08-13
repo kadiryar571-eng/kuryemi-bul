@@ -4,22 +4,22 @@ window.IlanStatus = (function () {
 
   /* ─── Status definitions ─────────────────────────────────────── */
   var DEFS = {
-    taslak:       { lbl:'Taslak',       short:'Taslak',      ico:'📝', cls:'ilds-badge--taslak',  visible:false, searchable:false, accepting:false },
-    yayinda:      { lbl:'Yayında',      short:'Açık',        ico:'🟢', cls:'ilds-badge--yayinda', visible:true,  searchable:true,  accepting:true  },
-    inceleniyor:  { lbl:'İnceleniyor',  short:'İnceleniyor', ico:'🔍', cls:'ilds-badge--incelen', visible:false, searchable:false, accepting:false },
-    durduruldu:   { lbl:'Durduruldu',   short:'Durduruldu',  ico:'⏸', cls:'ilds-badge--durdu',   visible:false, searchable:false, accepting:false },
-    doldu:        { lbl:'Doldu',        short:'Doldu',       ico:'✅', cls:'ilds-badge--doldu',   visible:true,  searchable:false, accepting:false },
-    suresi_doldu: { lbl:'Süresi Doldu', short:'Süresi Doldu',ico:'⌛', cls:'ilds-badge--suresi',  visible:true,  searchable:false, accepting:false },
+    taslak:       { lbl:'Taslak',       short:'Taslak',      ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>', cls:'ilds-badge--taslak',  visible:false, searchable:false, accepting:false },
+    yayinda:      { lbl:'Yayında',      short:'Açık',        ico:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/></svg>', cls:'ilds-badge--yayinda', visible:true,  searchable:true,  accepting:true  },
+    inceleniyor:  { lbl:'İnceleniyor',  short:'İnceleniyor', ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>', cls:'ilds-badge--incelen', visible:false, searchable:false, accepting:false },
+    durduruldu:   { lbl:'Durduruldu',   short:'Durduruldu',  ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>', cls:'ilds-badge--durdu',   visible:false, searchable:false, accepting:false },
+    doldu:        { lbl:'Doldu',        short:'Doldu',       ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', cls:'ilds-badge--doldu',   visible:true,  searchable:false, accepting:false },
+    suresi_doldu: { lbl:'Süresi Doldu', short:'Süresi Doldu',ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M5 22h14M5 2h14M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/></svg>', cls:'ilds-badge--suresi',  visible:true,  searchable:false, accepting:false },
     iptal:        { lbl:'İptal Edildi', short:'Kapalı',      ico:'❌', cls:'ilds-badge--iptal',   visible:false, searchable:false, accepting:false }
   };
 
   /* ─── Action definitions ─────────────────────────────────────── */
   var ACTION_DEFS = {
-    yayinla:         { lbl:'Yayınla',            ico:'🚀', cls:'btn--primary',   toStatus:'yayinda',    logEvent:'published',  confirm:null },
-    taslaga_al:      { lbl:'Taslağa Al',          ico:'📝', cls:'btn--ghost',     toStatus:'taslak',     logEvent:'drafted',    confirm:'İlan taslağa alınacak ve herkese görünmez olacak. Devam et?' },
-    durdur:          { lbl:'Durdur',              ico:'⏸', cls:'btn--secondary', toStatus:'durduruldu', logEvent:'paused',     confirm:'İlan duraklatılacak. Yeni başvuru almaz, mevcut başvurular korunur.' },
-    yeniden_yayinla: { lbl:'Yeniden Yayınla',     ico:'🔄', cls:'btn--primary',   toStatus:'yayinda',    logEvent:'resumed',    confirm:null },
-    kapat:           { lbl:'Doldu Olarak Kapat',  ico:'✅', cls:'btn--secondary', toStatus:'doldu',      logEvent:'filled',     confirm:'İlan "Doldu" olarak kapatılacak. Yeni başvuru almaz.' },
+    yayinla:         { lbl:'Yayınla',            ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M4.5 16.5c-1.5 1.3-2 5.5-2 5.5s4.2-.5 5.5-2c.7-.9.7-2.2-.1-3a2.1 2.1 0 0 0-3 .1z"/><path d="M12 15 9 12a11 11 0 0 1 2-4.5A12.6 12.6 0 0 1 22 2c0 2.7-.8 7.7-4.5 11a11 11 0 0 1-4.5 2z"/></svg>', cls:'btn--primary',   toStatus:'yayinda',    logEvent:'published',  confirm:null },
+    taslaga_al:      { lbl:'Taslağa Al',          ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>', cls:'btn--ghost',     toStatus:'taslak',     logEvent:'drafted',    confirm:'İlan taslağa alınacak ve herkese görünmez olacak. Devam et?' },
+    durdur:          { lbl:'Durdur',              ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>', cls:'btn--secondary', toStatus:'durduruldu', logEvent:'paused',     confirm:'İlan duraklatılacak. Yeni başvuru almaz, mevcut başvurular korunur.' },
+    yeniden_yayinla: { lbl:'Yeniden Yayınla',     ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>', cls:'btn--primary',   toStatus:'yayinda',    logEvent:'resumed',    confirm:null },
+    kapat:           { lbl:'Doldu Olarak Kapat',  ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', cls:'btn--secondary', toStatus:'doldu',      logEvent:'filled',     confirm:'İlan "Doldu" olarak kapatılacak. Yeni başvuru almaz.' },
     iptal:           { lbl:'İptal Et',            ico:'❌', cls:'btn--danger',    toStatus:'iptal',      logEvent:'canceled',   confirm:'İlan kalıcı olarak iptal edilecek. Bu işlem geri alınamaz.' }
   };
 
@@ -36,15 +36,15 @@ window.IlanStatus = (function () {
 
   /* ─── Activity event labels ──────────────────────────────────── */
   var EVENT_LABELS = {
-    created:      { lbl:'İlan oluşturuldu',                ico:'📝' },
-    published:    { lbl:'İlan yayınlandı',                 ico:'🚀' },
-    drafted:      { lbl:'Taslağa alındı',                  ico:'📋' },
-    paused:       { lbl:'İlan durduruldu',                 ico:'⏸' },
-    resumed:      { lbl:'İlan yeniden yayınlandı',         ico:'🔄' },
-    filled:       { lbl:'İlan doldu olarak kapatıldı',     ico:'✅' },
-    canceled:     { lbl:'İlan iptal edildi',               ico:'❌' },
-    auto_expired: { lbl:'Süre doldu — otomatik kapatıldı', ico:'⌛' },
-    auto_filled:  { lbl:'Kontenjan doldu — otomatik kapatıldı', ico:'✅' }
+    created:      { lbl:'İlan oluşturuldu',                ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>' },
+    published:    { lbl:'İlan yayınlandı',                 ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M4.5 16.5c-1.5 1.3-2 5.5-2 5.5s4.2-.5 5.5-2c.7-.9.7-2.2-.1-3a2.1 2.1 0 0 0-3 .1z"/><path d="M12 15 9 12a11 11 0 0 1 2-4.5A12.6 12.6 0 0 1 22 2c0 2.7-.8 7.7-4.5 11a11 11 0 0 1-4.5 2z"/></svg>' },
+    drafted:      { lbl:'Taslağa alındı',                  ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>' },
+    paused:       { lbl:'İlan durduruldu',                 ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>' },
+    resumed:      { lbl:'İlan yeniden yayınlandı',         ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>' },
+    filled:       { lbl:'İlan doldu olarak kapatıldı',     ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+    canceled:     { lbl:'İlan iptal edildi',               ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>' },
+    auto_expired: { lbl:'Süre doldu — otomatik kapatıldı', ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M5 22h14M5 2h14M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/></svg>' },
+    auto_filled:  { lbl:'Kontenjan doldu — otomatik kapatıldı', ico:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="kb-ico"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' }
   };
 
   /* ─── Helpers ────────────────────────────────────────────────── */

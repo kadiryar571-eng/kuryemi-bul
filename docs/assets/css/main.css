@@ -3165,9 +3165,11 @@ a.dash-stat:hover {
 .jc-info-item { display:flex; flex-direction:column; gap:1px; min-width:0; }
 .jc-info-item__label { font-size:0.64rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
 .jc-info-item__val { font-size:0.79rem; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-/* İlan kartı satır içi ikonları — metinle AYNI satırda durmalı.
+/* Satır içi ikonlar — metinle AYNI satırda durmalı.
    main.css:107'deki `img, svg { display: block }` reset'i yüzünden metin
-   arasına konan SVG kendi satırına düşüyordu; burada satır içine alınıyor. */
+   arasına konan SVG kendi satırına düşüyordu; burada satır içine alınıyor.
+   .kb-ico genel ad, .jc-ico ilan kartı için eşanlamlısı. */
+.kb-ico,
 .jc-ico { display:inline-block; vertical-align:-2px; flex-shrink:0; }
 /* Maaş kesilmemeli. Diğer alanlar dar hücrede ellipsis'e düşebilir ama maaş
    ilana bakarken en belirleyici bilgi; "23.232 – 3.2…" gibi yarım bir değer
