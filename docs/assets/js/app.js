@@ -858,8 +858,29 @@
 
 
   /* ============ HAVUZ LİSTELEME ============ */
+  /* ── Kart ikonları — inline SVG.
+     Emoji kullanılmıyor: platformdan platforma değişiyor, kimi sistemde
+     kutu olarak çiziliyordu ve kabuğun outline ikon diliyle uyumsuzdu. */
+  var CIC = {
+    zarf:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+    arac:  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7.5"/><path d="M5.5 15L9 7h4.5l3 5.5-4.5 2.5"/></svg>',
+    konum: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    ekip:  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>'
+  };
+
+  /* Dolu parçaları ayraçla birleştirir; hiçbiri yoksa boş string döner.
+     Eskiden şehir/bölge boşken kartta yalnız " · " görünüyordu. */
+  function birlestir(parcalar, ayrac) {
+    var dolu = parcalar.filter(function (p) { return p != null && String(p).trim() !== ''; });
+    return dolu.length ? dolu.map(KB.esc).join(ayrac || ' · ') : '';
+  }
+  /* Alt satır — içerik yoksa elementin kendisi basılmaz */
+  function altSatir(metin) {
+    return metin ? '<div class="pcard__sub">' + metin + '</div>' : '';
+  }
+
   function teklifBtn(type, id) {
-    return '<button class="btn btn--light btn--sm" data-teklif="' + type + '" data-id="' + id + '">✉️ ' + T("btn.offer") + '</button>';
+    return '<button class="btn btn--light btn--sm" data-teklif="' + type + '" data-id="' + id + '">' + CIC.zarf + ' ' + T("btn.offer") + '</button>';
   }
   function viewBtn(page, id) {
     return '<a class="btn btn--primary btn--sm" href="' + page + '?id=' + id + '">' + T("btn.viewProfile") + '</a>';
@@ -880,46 +901,69 @@
     try { PRESENCE = await SB.presenceOf(list.map(function (x) { return x.id; })); } catch (e) {}
   }
 
+  /* Kart parçaları veri VARSA basılır. Eskiden hepsi koşulsuzdu ve kayıtları
+     eksik bir profil kartta şöyle görünüyordu: yalnız " · " içeren bir alt
+     satır, beş boş yıldız, değeri "—" olan bir puan çubuğu ve "0 teslimat"
+     rozeti. Yokluğu göstermek yerine bölümü atlıyoruz — hiçbir şey
+     uydurulmuyor, yalnız boşluk yer kaplamıyor. */
   function kuryeCard(k) {
-    var bolge = k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "");
-    var fill = xpFill(k.puan);
+    var bolge = k.bolgeler && k.bolgeler.length
+      ? k.bolgeler.slice(0, 2).join(", ") + (k.bolgeler.length > 2 ? "…" : "")
+      : "";
+    var puan = Number(k.puan) || 0;
+    var deneyim = Number(k.deneyim) || 0;
+    var teslimat = Number(k.tamamlanan) || 0;
+
     return '<article class="talent-card">' + poolStar(k.id) +
       onlineBadge(k.id) +
       '<div class="pcard__top"><div class="avatar">' + avInner(k) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(k.ad) + ' ' + verBadge(k.dogrulama) + '</div>' +
-          '<div class="pcard__sub">' + KB.esc(k.sehir) + ' · ' + KB.esc(bolge) + '</div></div></div>' +
-      '<div>' + KB.stars(k.puan) + '</div>' +
-      '<div class="career-score-mini">' +
-        '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + (k.puan ? Number(k.puan).toFixed(1) : "—") + '</b></div>' +
-        '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + fill + '%"></div></div>' +
+          altSatir(birlestir([k.sehir, bolge])) + '</div></div>' +
+      /* Puan yoksa yıldız satırı ve puan çubuğu hiç basılmaz */
+      (puan > 0
+        ? '<div>' + KB.stars(puan) + '</div>' +
+          '<div class="career-score-mini">' +
+            '<div class="xp-bar__labels"><span>' + T("kv.score") + '</span><b>' + puan.toFixed(1) + '</b></div>' +
+            '<div class="xp-bar__track"><div class="xp-bar__fill" style="width:' + xpFill(puan) + '%"></div></div>' +
+          '</div>'
+        : '') +
+      '<div class="pcard__meta">' +
+        (k.arac ? '<span class="chip">' + CIC.arac + ' ' + KB.esc(k.arac) + '</span>' : '') +
+        (deneyim > 0 ? '<span class="chip">' + T("pcard.exp", { n: deneyim }) + '</span>' : '') +
+        (teslimat > 0 ? '<span class="chip">' + T("pcard.deliveries", { n: teslimat }) + '</span>' : '') +
       '</div>' +
-      '<div class="pcard__meta"><span class="chip">🛵 ' + KB.esc(k.arac) + '</span>' +
-        '<span class="chip">' + T("pcard.exp", { n: k.deneyim }) + '</span>' +
-        '<span class="chip">' + T("pcard.deliveries", { n: k.tamamlanan }) + '</span></div>' +
       '<div class="pcard__foot">' + viewBtn("profil-kurye.html", k.id) + teklifBtn("kurye", k.id) + '</div>' +
     '</article>';
   }
   function isletmeCard(i) {
+    var acikIlan = Number(i.acikIlan) || 0;
     return '<article class="talent-card">' + poolStar(i.id) +
       onlineBadge(i.id) +
       '<div class="pcard__top"><div class="avatar avatar--blue">' + avInner(i) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(i.ad) + ' ' + verBadge(i.dogrulama) + '</div>' +
-          '<div class="pcard__sub">' + KB.esc(i.tur) + ' · ' + KB.esc(i.sehir) + '</div></div></div>' +
-      '<p class="pcard__sub">' + KB.esc(i.aciklama) + '</p>' +
-      '<div class="pcard__meta"><span class="chip">📍 ' + KB.esc(i.bolge) + '</span>' +
-        '<span class="chip">' + T("pcard.openListings", { n: i.acikIlan }) + '</span></div>' +
+          altSatir(birlestir([i.tur, i.sehir])) + '</div></div>' +
+      (i.aciklama ? '<p class="pcard__sub">' + KB.esc(i.aciklama) + '</p>' : '') +
+      '<div class="pcard__meta">' +
+        (i.bolge ? '<span class="chip">' + CIC.konum + ' ' + KB.esc(i.bolge) + '</span>' : '') +
+        (acikIlan > 0 ? '<span class="chip">' + T("pcard.openListings", { n: acikIlan }) + '</span>' : '') +
+      '</div>' +
       '<div class="pcard__foot">' + viewBtn("profil-isletme.html", i.id) + teklifBtn("isletme", i.id) + '</div>' +
     '</article>';
   }
   function firmaCard(f) {
+    var puan = Number(f.puan) || 0;
+    var kapasite = Number(f.kapasite) || 0;
+    var bolgeler = (f.bolgeler && f.bolgeler.length) ? f.bolgeler.join(", ") : "";
     return '<article class="talent-card">' + poolStar(f.id) +
       onlineBadge(f.id) +
       '<div class="pcard__top"><div class="avatar avatar--navy">' + avInner(f) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(f.ad) + ' ' + verBadge(f.dogrulama) + '</div>' +
-          '<div class="pcard__sub">' + KB.esc(f.bolgeler.join(", ")) + '</div></div></div>' +
-      '<p class="pcard__sub">' + KB.esc(f.aciklama) + '</p>' +
-      '<div>' + KB.stars(f.puan) + '</div>' +
-      '<div class="pcard__meta"><span class="chip">👥 ' + T("pcard.capacity", { n: f.kapasite }) + '</span></div>' +
+          altSatir(birlestir([bolgeler])) + '</div></div>' +
+      (f.aciklama ? '<p class="pcard__sub">' + KB.esc(f.aciklama) + '</p>' : '') +
+      (puan > 0 ? '<div>' + KB.stars(puan) + '</div>' : '') +
+      '<div class="pcard__meta">' +
+        (kapasite > 0 ? '<span class="chip">' + CIC.ekip + ' ' + T("pcard.capacity", { n: kapasite }) + '</span>' : '') +
+      '</div>' +
       '<div class="pcard__foot">' + viewBtn("profil-firma.html", f.id) + teklifBtn("firma", f.id) + '</div>' +
     '</article>';
   }

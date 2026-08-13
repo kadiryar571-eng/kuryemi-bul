@@ -57,7 +57,7 @@
     <div class="pool-stats-bar" id="poolStatsBanner">
       <span class="pool-stats-bar__main">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span id="psBanner">Yükleniyor…</span>
+        <span id="resultCount">Yükleniyor…</span>
       </span>
       <span class="pool-stats-bar__note">Match skoru: Profilinize göre hesaplanır</span>
     </div>
@@ -94,7 +94,6 @@
     <div class="active-chips" id="poolChips"></div>
 
     <!-- Result count -->
-    <p class="text-sm text-muted mb-16" id="resultCount"></p>
 
     <!-- Card grid -->
     <div class="cards-grid" id="poolGrid">
@@ -189,12 +188,9 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderPool) {
-        KBApp.renderPool('kurye').then(function () {
-          /* Update banner */
-          var countEl = document.getElementById('resultCount');
-          var banner  = document.getElementById('psBanner');
-          if (banner && countEl) banner.textContent = countEl.textContent;
-        });
+        /* Sonuç sayısını app.js doğrudan şeritteki #resultCount
+           elemanına yazıyor; ayrı bir kopyalama gerekmiyor. */
+        KBApp.renderPool('kurye');
       }
     });
   })();
