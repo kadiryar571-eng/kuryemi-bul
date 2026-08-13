@@ -148,7 +148,11 @@
       else                   date = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
     } catch (e) {}
 
-    var cls = 'notif-item' + (n.read ? '' : ' notif-item--unread') + (n.link ? ' notif-item--link' : '');
+    /* Okunmamış durumu 'is-unread' ile işaretlenir — main.css:2575 bu adı
+       bekliyor ve panel-kurye.html'deki bildirim bileşeni de aynı sözleşmeyi
+       kullanıyor. Burada 'notif-item--unread' yazılıydı; hiçbir kural
+       eşleşmediği için okunmamış satırlar okunmuşlardan ayırt edilemiyordu. */
+    var cls = 'notif-item' + (n.read ? '' : ' is-unread') + (n.link ? ' notif-item--link' : '');
     var onclick = n.link ? ' data-href="' + esc(n.link) + '"' : '';
 
     return '<div class="' + cls + '" data-nid="' + esc(n.id) + '"' + onclick + '>' +

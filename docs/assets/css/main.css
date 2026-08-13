@@ -2579,6 +2579,70 @@ a.dash-stat:hover {
 }
 .notif-item:not(.is-unread):hover { background: var(--surface-2); }
 
+/* ── Bildirim satırı (notifications.js) ──────────────────────────
+   Bu sınıfların CSS'i hiç yazılmamıştı: JS bir markup üretiyor, main.css
+   ise daha eski bir yapı için yazılmış sınıflar taşıyordu (.notif-text,
+   .notif-meta … onlar panel-kurye.html'deki ayrı bileşene ait, ölü değil).
+   Sonuç: bildirimler sayfasında ikon, başlık, tür etiketi ve aksiyon
+   düğmeleri tamamen stilsiz kalıyordu — düğmeler çıplak "✓" / "✕" olarak
+   kutu içinde görünüyordu. */
+.notif-ico {
+  width: 30px; height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+.notif-title { font-size: 0.875rem; color: var(--text); line-height: 1.5; }
+.notif-title strong { font-weight: 600; }
+.notif-type-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  margin-right: 2px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+.notif-item--link { cursor: pointer; }
+
+.notif-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+/* Dokunmatikte hover yok — düğmeler hep görünür ve dokunma hedefi büyür */
+.notif-item:hover .notif-actions,
+.notif-item:focus-within .notif-actions { opacity: 1; }
+@media (hover: none) {
+  .notif-actions { opacity: 1; }
+  .notif-read-btn,
+  .notif-del-btn { width: 40px; height: 40px; }
+}
+
+.notif-read-btn,
+.notif-del-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.notif-read-btn:hover { background: var(--success-bg); color: var(--success); }
+.notif-del-btn:hover  { background: var(--error-bg);   color: var(--error); }
+
 .notif-dot {
   width: 8px;
   height: 8px;
