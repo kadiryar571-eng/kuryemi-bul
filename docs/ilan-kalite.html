@@ -52,7 +52,7 @@
     <!-- Empty/prompt state -->
     <div id="ilqEmpty">
       <div class="apc-empty">
-        <div class="apc-empty__ico">📊</div>
+        <div class="apc-empty__ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
         <div class="apc-empty__t">Yukarıdan bir ilan seçin</div>
         <div class="apc-empty__s">İlan kalite analizini görmek için seç</div>
       </div>
@@ -181,7 +181,7 @@
       var el = document.getElementById('ilqJobBar');
       if (!el) return;
       if (!ALL_JOBS.length) {
-        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">📋</div>' +
+        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>' +
           '<div class="apc-empty__t">Henüz ilanınız yok</div>' +
           '<a href="ilan-olustur.html" class="btn btn--primary btn--sm" style="margin-top:12px">+ İlan Oluştur</a></div>';
         return;

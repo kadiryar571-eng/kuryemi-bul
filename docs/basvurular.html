@@ -35,7 +35,7 @@
 
   <div class="app-content">
 
-    <div class="page-header">
+    <div class="page-header page-header--row">
       <div>
         <h1>Başvurular</h1>
         <p class="page-sub">İlanına gelen adayları burada yönet.</p>
@@ -90,7 +90,9 @@
     <!-- Applicant grid -->
     <div id="apcGrid" class="apc-grid">
       <div class="apc-empty">
-        <div class="apc-empty__ico">👆</div>
+        <div class="apc-empty__ico">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
+        </div>
         <div class="apc-empty__t">Yukarıdan bir ilan seçin</div>
         <div class="apc-empty__s">Başvuruları yönetmek için bir ilanınızı seçin</div>
       </div>
@@ -156,10 +158,10 @@
 
     /* ── Status map ── */
     var STATUS = {
-      yeni:             { lbl:'Yeni Başvuru',     cls:'chip--apc-yeni',    ico:'🆕' },
-      inceleniyor:      { lbl:'İnceleniyor',      cls:'chip--apc-incel',   ico:'👁' },
-      mesaj_gonderildi: { lbl:'Mesaj Gönderildi', cls:'chip--apc-msg',     ico:'💬' },
-      mulakat:          { lbl:'Mülakat Aşaması',  cls:'chip--apc-mulakat', ico:'📞' },
+      yeni:             { lbl:'Yeni Başvuru',     cls:'chip--apc-yeni',    ico:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M12 2v4M12 18v4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M2 12h4M18 12h4M4.9 19.1l2.9-2.9M16.2 7.8l2.9-2.9"</svg>' },
+      inceleniyor:      { lbl:'İnceleniyor',      cls:'chip--apc-incel',   ico:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' },
+      mesaj_gonderildi: { lbl:'Mesaj Gönderildi', cls:'chip--apc-msg',     ico:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' },
+      mulakat:          { lbl:'Mülakat Aşaması',  cls:'chip--apc-mulakat', ico:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .3 1.9.6 2.8a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.2-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.8.6A2 2 0 0 1 22 16.9z"</svg>' },
       kabul:            { lbl:'Kabul Edildi',      cls:'chip--apc-kabul',   ico:'✓'  },
       red:              { lbl:'Reddedildi',        cls:'chip--apc-red',     ico:'✗'  }
     };
@@ -322,7 +324,7 @@
       var el = document.getElementById('apcJobBar');
       if (!el) return;
       if (!ALL_JOBS.length) {
-        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">📋</div>' +
+        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>' +
           '<div class="apc-empty__t">Henüz yayında ilanınız yok</div>' +
           '<a href="ilan-olustur.html" class="btn btn--primary btn--sm" style="margin-top:12px">+ İlan Oluştur</a></div>';
         return;
@@ -339,10 +341,10 @@
             '<div class="apc-job-btn__name">' + esc(j.baslik || 'İsimsiz İlan') + '</div>' +
             '<div style="margin-top:5px;display:flex;align-items:center;gap:6px">' +
               statusBadge +
-              (j.sehir ? '<span style="font-size:0.71rem;color:var(--text-3)">📍 ' + esc(j.sehir) + '</span>' : '') +
+              (j.sehir ? '<span style="font-size:0.71rem;color:var(--text-3)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + esc(j.sehir) + '</span>' : '') +
             '</div>' +
           '</div>' +
-          '<span class="apc-job-btn__count">' + count + ' aday</span>' +
+          '<span class="apc-job-btn__count' + (count ? '' : ' apc-job-btn__count--zero') + '">' + count + ' aday</span>' +
           (newCnt > 0 ? '<span style="position:absolute;top:-7px;right:-7px;background:var(--error);color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px">' + newCnt + '</span>' : '') +
         '</button>';
       }).join('');
@@ -388,7 +390,7 @@
           '</div>' +
           '<div class="apc-card__info">' +
             '<div class="apc-card__name">' + esc(k.ad || '—') + '</div>' +
-            '<div class="apc-card__sub">📍 ' + esc(k.sehir || '') + (bTxt ? ' · ' + esc(bTxt) : '') +
+            '<div class="apc-card__sub"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + esc(k.sehir || '') + (bTxt ? ' · ' + esc(bTxt) : '') +
               ' · ' + (k.deneyim ? k.deneyim + ' yıl deneyim' : 'Yeni başlayan') + '</div>' +
             '<div class="apc-card__comp">' +
               '<div class="apc-card__comp-bar"><div class="apc-card__comp-fill" style="width:' + a.pct + '%"></div></div>' +
@@ -402,10 +404,10 @@
         '</div>' +
 
         '<div class="apc-card__details">' +
-          (k.arac      ? '<div class="apc-detail">🛵 <span>' + esc(k.arac) + '</span></div>' : '') +
-          (bTxt        ? '<div class="apc-detail">📍 <span>' + esc(bTxt) + '</span></div>' : '') +
+          (k.arac      ? '<div class="apc-detail"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7.5"/><path d="M5.5 15L9 7h4.5l3 5.5-4.5 2.5"/></svg> <span>' + esc(k.arac) + '</span></div>' : '') +
+          (bTxt        ? '<div class="apc-detail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> <span>' + esc(bTxt) + '</span></div>' : '') +
           (k.deneyim   ? '<div class="apc-detail">⏱ <span>' + k.deneyim + ' yıl deneyim</span></div>' : '') +
-          (k.tamamlanan? '<div class="apc-detail">📦 <span>' + k.tamamlanan + ' teslimat</span></div>' : '') +
+          (k.tamamlanan? '<div class="apc-detail"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg> <span>' + k.tamamlanan + ' teslimat</span></div>' : '') +
           (k.puan      ? '<div class="apc-detail">⭐ <span>' + k.puan + ' puan</span></div>' : '') +
         '</div>' +
 
@@ -416,8 +418,8 @@
         '</div>' +
 
         '<div class="apc-card__acts">' +
-          '<button class="btn btn--ghost btn--sm" data-apc-action="profile">👤 Profili Gör</button>' +
-          '<button class="btn btn--ghost btn--sm" data-apc-action="message">💬 Mesaj</button>' +
+          '<button class="btn btn--ghost btn--sm" data-apc-action="profile"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profili Gör</button>' +
+          '<button class="btn btn--ghost btn--sm" data-apc-action="message"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Mesaj</button>' +
           '<button class="btn btn--ghost btn--sm" data-apc-action="shortlist">' + (a.shortlisted ? '★ Listeden Çıkar' : '☆ Kısa Liste') + '</button>' +
           '<button class="btn btn--primary btn--sm" data-apc-action="decide">⚖️ Karar Ver</button>' +
           (a.status !== 'kabul' && a.status !== 'red' ?
@@ -438,7 +440,7 @@
       var el = document.getElementById('apcGrid');
       if (!el) return;
       if (!SEL_JOB_ID) {
-        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico">👆</div>' +
+        el.innerHTML = '<div class="apc-empty"><div class="apc-empty__ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></div>' +
           '<div class="apc-empty__t">Yukarıdan bir ilan seçin</div>' +
           '<div class="apc-empty__s">Başvuruları görmek için ilanınızı seçin</div></div>';
         return;
@@ -447,7 +449,7 @@
       if (!filtered.length) {
         var emptyMsg = CUR_TAB === 'shortlist'
           ? '<div class="apc-empty__ico">⭐</div><div class="apc-empty__t">Kısa liste boş</div><div class="apc-empty__s">Adayları kısa listeye eklemek için ☆ Kısa Liste butonunu kullanın</div>'
-          : '<div class="apc-empty__ico">🔍</div><div class="apc-empty__t">Başvuru bulunamadı</div><div class="apc-empty__s">Filtre kriterlerinizi değiştirin</div>';
+          : '<div class="apc-empty__ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="apc-empty__t">Başvuru bulunamadı</div><div class="apc-empty__s">Filtre kriterlerinizi değiştirin</div>';
         el.innerHTML = '<div class="apc-empty">' + emptyMsg + '</div>';
         return;
       }
@@ -482,7 +484,7 @@
 
       var certsHtml = (k.sertifikalar || []).length
         ? (k.sertifikalar.map(function(c) {
-            return '<span class="apc-cert' + (c.indexOf('MYK') !== -1 ? ' apc-cert--mkv' : '') + '">📜 ' + esc(c) + '</span>';
+            return '<span class="apc-cert' + (c.indexOf('MYK') !== -1 ? ' apc-cert--mkv' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> ' + esc(c) + '</span>';
           }).join(''))
         : '<span class="text-muted-sm">Sertifika bulunmuyor</span>';
 
@@ -509,7 +511,7 @@
           '<div class="apc-mhead__av">' + (k.avatar_url ? '<img src="' + esc(k.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover">' : inits) + '</div>' +
           '<div class="apc-mhead__body">' +
             '<div class="apc-mhead__name">' + esc(k.ad || '—') + '</div>' +
-            '<div class="apc-mhead__meta">📍 ' + esc(k.sehir || '') + ((k.bolgeler || []).length ? ' · ' + k.bolgeler.slice(0, 2).map(esc).join(', ') : '') + '</div>' +
+            '<div class="apc-mhead__meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + esc(k.sehir || '') + ((k.bolgeler || []).length ? ' · ' + k.bolgeler.slice(0, 2).map(esc).join(', ') : '') + '</div>' +
             '<div class="apc-mhead__stats">' +
               (k.deneyim ? '<div class="apc-mhead__stat"><div class="apc-mhead__stat-val">' + k.deneyim + '</div><div class="apc-mhead__stat-lbl">Yıl Deneyim</div></div>' : '') +
               (k.tamamlanan ? '<div class="apc-mhead__stat"><div class="apc-mhead__stat-val">' + k.tamamlanan + '</div><div class="apc-mhead__stat-lbl">Teslimat</div></div>' : '') +
@@ -545,7 +547,7 @@
 
         /* ─ Footer ─ */
         '<div class="apc-mfoot">' +
-          '<a class="btn btn--ghost btn--sm" href="profil-kurye.html?id=' + esc(k.id) + '" target="_blank">🔗 Profil Sayfası</a>' +
+          '<a class="btn btn--ghost btn--sm" href="profil-kurye.html?id=' + esc(k.id) + '" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Profil Sayfası</a>' +
           '<button class="btn btn--ghost btn--sm" data-modal-action="message" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">💬 Mesaj Gönder</button>' +
           '<button class="btn btn--ghost btn--sm" data-modal-action="shortlist" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">' + (app.shortlisted ? '★ Listeden Çıkar' : '☆ Kısa Listeye Ekle') + '</button>' +
           (app.status !== 'kabul' && app.status !== 'red' ?

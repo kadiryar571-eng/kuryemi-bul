@@ -3609,6 +3609,10 @@ a.dash-stat:hover {
   flex-shrink:0;
 }
 .apc-job-btn.is-active .apc-job-btn__count { background:var(--primary-dark); }
+/* Sıfır aday dolu mavi rozetle vurgulanmamalı — dikkat çekmesi gereken şey
+   başvuru OLAN ilan. Temel kuraldan SONRA gelmeli, yoksa ezilir. */
+.apc-job-btn__count--zero { background:var(--surface-2); color:var(--text-3); font-weight:600; }
+.apc-job-btn.is-active .apc-job-btn__count--zero { background:rgba(255,255,255,.2); color:#fff; }
 
 /* Stats row */
 .apc-stats {
@@ -3733,7 +3737,9 @@ a.dash-stat:hover {
 
 /* Empty state */
 .apc-empty { padding:48px 24px; text-align:center; }
-.apc-empty__ico { font-size:2.5rem; margin-bottom:12px; }
+/* Emoji metin olarak ortalanıyordu; SVG ise blok (bkz. main.css:107 reset)
+   ve sola yaslanıyordu. Flex ile hem emoji hem SVG ortalanır. */
+.apc-empty__ico { font-size:2.5rem; margin-bottom:12px; display:flex; justify-content:center; color:var(--text-3); }
 .apc-empty__t   { font-size:1rem; font-weight:600; color:var(--text-2); }
 .apc-empty__s   { font-size:0.85rem; color:var(--text-3); margin-top:6px; }
 
