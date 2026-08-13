@@ -242,7 +242,7 @@
 
     /* ── Durum etiketleri ───────────────────────────────────── */
     var tags = '<span class="chip chip--open">● Açık</span>' +
-      (l.oncelik === 'acil' ? '<span class="chip chip--urgent">🔥 ACİL</span>' : '') +
+      (l.oncelik === 'acil' ? '<span class="chip chip--urgent"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1.5.7-2.8 1.5-3.8C10.5 8.7 12 7 12 2z"/><path d="M12 22a6 6 0 0 0 6-6c0-2-1-3.5-2-5"/></svg> ACİL</span>' : '') +
       (fresh ? '<span class="chip chip--new">' + T("ilan.new") + '</span>' : '') +
       (l.vardiya_tipi ? '<span class="chip">' + KB.esc(l.vardiya_tipi) + '</span>' : '') +
       (l.calisma_sekli && l.calisma_sekli !== l.vardiya_tipi
@@ -255,26 +255,26 @@
       var maasLabel = l.maas_modeli ? KB.esc(l.maas_modeli) : 'Maaş';
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">' + maasLabel + '</span>' +
-        '<span class="jc-info-item__val jc-info-item__val--salary">💰 ' + KB.esc(l.maas_aralik) + '</span></div>');
+        '<span class="jc-info-item__val jc-info-item__val--salary"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> ' + KB.esc(l.maas_aralik) + '</span></div>');
     }
     if (l.arac) {
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">Araç</span>' +
-        '<span class="jc-info-item__val">🛵 ' + KB.esc(l.arac) + '</span></div>');
+        '<span class="jc-info-item__val"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7.5"/><path d="M5.5 15L9 7h4.5l3 5.5-4.5 2.5"/></svg> ' + KB.esc(l.arac) + '</span></div>');
     }
     if (l.calisma_saatleri) {
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">Saat</span>' +
-        '<span class="jc-info-item__val">🕐 ' + KB.esc(l.calisma_saatleri) + '</span></div>');
+        '<span class="jc-info-item__val"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg> ' + KB.esc(l.calisma_saatleri) + '</span></div>');
     }
     if (l.deneyim) {
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">Deneyim</span>' +
-        '<span class="jc-info-item__val">📋 ' + KB.esc(l.deneyim) + '</span></div>');
+        '<span class="jc-info-item__val"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> ' + KB.esc(l.deneyim) + '</span></div>');
     } else if (l.sigorta) {
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">Sigorta</span>' +
-        '<span class="jc-info-item__val">🛡 ' + KB.esc(l.sigorta) + '</span></div>');
+        '<span class="jc-info-item__val"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> ' + KB.esc(l.sigorta) + '</span></div>');
     }
     if (l.son_basvuru) {
       var dlDays  = -daysSince(l.son_basvuru);
@@ -285,12 +285,12 @@
       var dlCls   = dlUrgent ? ' jc-info-item__val--deadline' : '';
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">Son Başvuru</span>' +
-        '<span class="jc-info-item__val' + dlCls + '">' + (dlUrgent ? '⚠️ ' : '📅 ') + dlFmt + dlExtra + '</span></div>');
+        '<span class="jc-info-item__val' + dlCls + '">' + (dlUrgent ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ') + dlFmt + dlExtra + '</span></div>');
     }
     if (l.kontenjan) {
       infoItems.push(
         '<div class="jc-info-item"><span class="jc-info-item__label">Kontenjan</span>' +
-        '<span class="jc-info-item__val">👥 ' + l.kontenjan + ' kişi</span></div>');
+        '<span class="jc-info-item__val"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> ' + l.kontenjan + ' kişi</span></div>');
     }
     var infoGridHtml = infoItems.length
       ? '<div class="jc-info-grid">' + infoItems.join('') + '</div>' : '';
@@ -338,8 +338,8 @@
       '</div>';
     } else if (owner) {
       actionHtml = '<div class="jc-card-actions">' +
-        '<a class="btn btn--ghost btn--sm" href="ilan-olustur.html?edit=' + l.id + '">✏️ Düzenle</a>' +
-        '<a class="btn btn--light btn--sm" href="basvurular.html?job=' + l.id + '">📋 Başvurular</a>' +
+        '<a class="btn btn--ghost btn--sm" href="ilan-olustur.html?edit=' + l.id + '"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Düzenle</a>' +
+        '<a class="btn btn--light btn--sm" href="basvurular.html?job=' + l.id + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Başvurular</a>' +
       '</div>';
     } else if (applied) {
       actionHtml = '<div class="jc-card-actions">' +
@@ -759,7 +759,7 @@
     var formHtml =
       '<div class="li-create-wrap">' +
         '<div class="li-create-head">' +
-          '<span class="li-create-head__title">📋 İlanlarım' + (mine.length ? ' <span class="chip chip--sm">' + mine.length + '</span>' : '') + '</span>' +
+          '<span class="li-create-head__title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> İlanlarım' + (mine.length ? ' <span class="chip chip--sm">' + mine.length + '</span>' : '') + '</span>' +
           '<button type="button" class="btn btn--primary btn--sm" id="liToggle">✚ Yeni İlan Oluştur</button>' +
         '</div>' +
         '<div class="li-create-form" id="liForm" style="display:none">' +
@@ -1828,7 +1828,7 @@
       : '<div class="jd-hero__logo--ph">' + inits + '</div>';
 
     var tagHtml = '<span class="chip chip--open">● Açık</span>' +
-      (l.oncelik === "acil" ? '<span class="chip chip--urgent">🔥 ACİL</span>' : "") +
+      (l.oncelik === "acil" ? '<span class="chip chip--urgent"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1.5.7-2.8 1.5-3.8C10.5 8.7 12 7 12 2z"/><path d="M12 22a6 6 0 0 0 6-6c0-2-1-3.5-2-5"/></svg> ACİL</span>' : "") +
       (isFresh(l.tarih) ? '<span class="chip chip--new">✦ Yeni</span>' : "") +
       (l.vardiya_tipi ? '<span class="chip">' + KB.esc(l.vardiya_tipi) + '</span>' : "") +
       (l.calisma_sekli ? '<span class="chip">' + KB.esc(l.calisma_sekli) + '</span>' : "") +
@@ -1940,10 +1940,10 @@
           '<span>📅 ' + timeAgo(l.tarih) + ' yayınlandı</span>' +
           deadlineMeta +
           // Gerçek başvuru adedi — opts.appCount ile DB'den gelir, yoksa basılmaz
-          (opts && opts.appCount != null ? '<span>👥 ' + opts.appCount + ' başvuru</span>' : '') +
+          (opts && opts.appCount != null ? '<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> ' + opts.appCount + ' başvuru</span>' : '') +
         '</div>' +
         '<div class="jd-hero__tags">' + tagHtml + '</div>' +
-        '<div class="jd-hero__actions">' + applyBtn(false) + (owner ? '<a class="btn btn--primary btn--sm" href="basvurular.html?job=' + l.id + '">📋 Başvuruları Yönet</a>' : '') + favSmall + shareBtn + '</div>' +
+        '<div class="jd-hero__actions">' + applyBtn(false) + (owner ? '<a class="btn btn--primary btn--sm" href="basvurular.html?job=' + l.id + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Başvuruları Yönet</a>' : '') + favSmall + shareBtn + '</div>' +
       '</div>' +
 
       '<div class="jd">' +
@@ -1995,7 +1995,7 @@
                   '<div class="jd-rel-item__body">' +
                     '<div class="jd-rel-item__title">' + KB.esc(r.baslik) + '</div>' +
                     '<div class="jd-rel-item__meta">' + KB.esc(r.sahip || "") + (r.sehir ? " · " + KB.esc(r.sehir) : '') + '</div>' +
-                    (r.maas_aralik ? '<div class="jd-rel-item__salary">💰 ' + KB.esc(r.maas_aralik) + '</div>' : '') +
+                    (r.maas_aralik ? '<div class="jd-rel-item__salary"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> ' + KB.esc(r.maas_aralik) + '</div>' : '') +
                   '</div>' +
                 '</a>';
               }).join("") +
@@ -2005,9 +2005,9 @@
 
         '<aside class="jd-side">' +
           '<div class="jd-apply-card">' +
-            (l.maas_aralik ? '<div class="jd-salary"><div class="jd-salary__val">💰 ' + KB.esc(l.maas_aralik) + '</div><div class="jd-salary__model">' + KB.esc(l.maas_modeli || "") + (l.sigorta ? " · " + KB.esc(l.sigorta) : '') + '</div></div>' : '') +
+            (l.maas_aralik ? '<div class="jd-salary"><div class="jd-salary__val"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> ' + KB.esc(l.maas_aralik) + '</div><div class="jd-salary__model">' + KB.esc(l.maas_modeli || "") + (l.sigorta ? " · " + KB.esc(l.sigorta) : '') + '</div></div>' : '') +
             deadlineRow +
-            (l.kontenjan ? '<p style="font-size:0.8rem;color:var(--text-2);margin:0 0 12px">👥 ' + l.kontenjan + ' açık pozisyon</p>' : '') +
+            (l.kontenjan ? '<p style="font-size:0.8rem;color:var(--text-2);margin:0 0 12px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> ' + l.kontenjan + ' açık pozisyon</p>' : '') +
             '<div class="jd-apply-card__act">' + applyBtn(true) + favLarge + '</div>' +
           '</div>' +
 

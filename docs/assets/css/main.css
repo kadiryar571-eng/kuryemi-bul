@@ -82,6 +82,17 @@
 /* ─── 3. RESET & BASE ────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* hidden niteliği HER ZAMAN kazanır.
+   Tarayıcının [hidden] için verdiği display:none, sınıfta tanımlı herhangi
+   bir display tarafından eziliyor — sınıf seçici daha özgül. JS bir elemanı
+   el.hidden = true ile gizlediğinde eleman ekranda kalmaya devam ediyordu.
+   İki yerde ölçüldü:
+     .jc-activity__dot (display:inline-block) — başvuru sayısı yokken ilan
+       kartında "40 gün önce ·" şeklinde sahipsiz bir ayraç bırakıyordu
+     .lp-live-online (display:inline-flex, index.html) — kimse çevrimiçi
+       değilken bile "Şu anda … kişi çevrimiçi" göstergesi görünüyordu */
+[hidden] { display: none !important; }
+
 html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
@@ -3154,7 +3165,14 @@ a.dash-stat:hover {
 .jc-info-item { display:flex; flex-direction:column; gap:1px; min-width:0; }
 .jc-info-item__label { font-size:0.64rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
 .jc-info-item__val { font-size:0.79rem; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.jc-info-item__val--salary  { color:#15803D; font-weight:700; }
+/* İlan kartı satır içi ikonları — metinle AYNI satırda durmalı.
+   main.css:107'deki `img, svg { display: block }` reset'i yüzünden metin
+   arasına konan SVG kendi satırına düşüyordu; burada satır içine alınıyor. */
+.jc-ico { display:inline-block; vertical-align:-2px; flex-shrink:0; }
+/* Maaş kesilmemeli. Diğer alanlar dar hücrede ellipsis'e düşebilir ama maaş
+   ilana bakarken en belirleyici bilgi; "23.232 – 3.2…" gibi yarım bir değer
+   kullanıcıya hiçbir şey söylemiyordu. Sarmasına izin veriliyor. */
+.jc-info-item__val--salary  { color:#15803D; font-weight:700; white-space:normal; overflow:visible; text-overflow:clip; }
 .jc-info-item__val--deadline{ color:#DC2626; font-weight:600; }
 .jc-benefit-tags { display:flex; flex-wrap:wrap; gap:5px; }
 .jc-benefit-tag { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-full); font-size:0.69rem; font-weight:500; color:var(--text-2); white-space:nowrap; }
