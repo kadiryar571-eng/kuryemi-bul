@@ -1057,9 +1057,18 @@
     document.addEventListener('DOMContentLoaded', async function () {
       if (window.KBApp && KBApp.initPanel) KBApp.initPanel('kurye');
 
-      /* Seed feedback demo data */
+      /* Bekleyen değerlendirme rozeti
+         getPendingFeedbacks() iki önbellekten okur: işe alım kararları
+         (KBHiring) ve gönderdiğim değerlendirmeler (KBFeedback). İkisi de
+         veritabanına bağlı ve senkron okunuyor — bu yüzden ÖNCE yüklenmeli.
+         Eskiden bu sayfada hiç load() çağrılmıyordu; rozet her zaman
+         gizli kalıyordu. */
       if (window.KBFeedback) {
         try {
+          await Promise.all([
+            window.KBHiring ? KBHiring.load() : Promise.resolve(),
+            KBFeedback.load()
+          ]);
           var fbUid = 'demo';
           try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
           var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'kurye').length;

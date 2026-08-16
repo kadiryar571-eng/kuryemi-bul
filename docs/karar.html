@@ -430,6 +430,8 @@
     }
 
     await KBHiring.load(true);   // gerçek kararlar veritabanından
+    /* Geri bildirim önbelleği — renderMiniCard() senkron okur. */
+    if (window.KBFeedback) { try { await KBFeedback.load(); } catch (e) {} }
 
     /* Kayıt yoksa 'beklemede' olarak aç — bu gerçek bir başvurunun
        değerlendirme kaydıdır, uydurma veri değildir. */

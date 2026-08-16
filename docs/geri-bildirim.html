@@ -234,7 +234,12 @@
     var myFbRole    = biz ? 'isletme' : 'kurye';
     var otherFbRole = biz ? 'kurye'   : 'isletme';
     var myFb    = KBFeedback.getFeedback(jobId, kuryeId, myFbRole);
-    var otherFb = KBFeedback.getFeedback(jobId, kuryeId, otherFbRole);
+    /* Karşı tarafın BENİM hakkımda yazdığı — DB'den gelir.
+       Eskiden getFeedback(..., otherFbRole) çağrılıyordu ama o, karşı
+       tarafın kendi tarayıcısındaki localStorage kaydını arıyordu ve
+       burada asla bulunamıyordu: "aldığın değerlendirme" bölümü hiç
+       görünmezdi. */
+    var otherFb = KBFeedback.getFeedbackAbout(jobId, kuryeId);
 
     /* Show forms section */
     var formsEl = document.getElementById('fbForms');
@@ -273,16 +278,23 @@
     }
 
     /* Activity log */
-    document.getElementById('fbActivityLog').innerHTML = KBFeedback.renderLog(jobId, kuryeId);
+    document.getElementById('fbActivityLog').innerHTML = KBFeedback.renderLog(jobId, kuryeId, myFbRole);
 
-    /* Other party's reputation in sidebar */
-    var otherProfileId   = biz ? kuryeId  : isletmeId;
-    var otherProfileRole = biz ? 'kurye'  : 'isletme';
-    var otherRepSection  = document.getElementById('fbOtherRepSection');
+    /* Other party's reputation in sidebar — gerçek veriden.
+       renderReputationBlock senkron olduğu için önce loadReputation()
+       ile DB'den çekiliyor; gelmeden önce "yükleniyor" basılır.
+       Veri yoksa boş durum gösterilir, uydurma sayı ÜRETİLMEZ. */
+    var otherProfileId  = biz ? kuryeId : isletmeId;
+    var otherRepSection = document.getElementById('fbOtherRepSection');
+    var otherRepContent = document.getElementById('fbOtherRepContent');
     otherRepSection.style.display = '';
     document.getElementById('fbOtherRepTitle').textContent = biz ? 'Kurye İtibarı' : 'Esnaf İtibarı';
-    document.getElementById('fbOtherRepContent').innerHTML =
-      KBFeedback.renderReputationBlock(otherProfileId, otherProfileRole);
+    otherRepContent.innerHTML = '<p class="fb-empty">Yükleniyor…</p>';
+    KBFeedback.loadReputation(otherProfileId).then(function () {
+      /* Kullanıcı bu arada başka bir işe geçmiş olabilir — yarış koşulu */
+      if (CUR_KID !== kuryeId || CUR_JOB !== jobId) return;
+      otherRepContent.innerHTML = KBFeedback.renderReputationBlock(otherProfileId);
+    });
   }
 
   /* ── Collect ratings from a form ── */
@@ -330,16 +342,22 @@
       var uid       = getUid();
       var ratings   = collectRatings(form);
       var text      = (form.querySelector('.fb-text')||{}).value || '';
-      var result    = KBFeedback.submitFeedback(uid, jobId, kuryeId, isletmeId, role, ratings, text);
-      if (result.error) {
-        if (window.KBMotion) KBMotion.showErrorToast(result.error);
-        return;
-      }
-      if (window.KBMotion) KBMotion.showSuccess('Değerlendirme Gönderildi!', '', 2000);
-      setTimeout(function() {
-        renderHireList();
-        selectHire(jobId, kuryeId, isletmeId);
-      }, 500);
+
+      /* submitFeedback artık Promise döner (veritabanına yazıyor).
+         Butonu kilitle: yavaş bağlantıda çift gönderim olmasın. */
+      var btn = e.target;
+      btn.disabled = true;
+      KBFeedback.submitFeedback(uid, jobId, kuryeId, isletmeId, role, ratings, text)
+        .then(function (result) {
+          btn.disabled = false;
+          if (result && result.error) {
+            if (window.KBMotion) KBMotion.showErrorToast(result.error);
+            return;
+          }
+          if (window.KBMotion) KBMotion.showSuccess('Değerlendirme Gönderildi!', '', 2000);
+          renderHireList();
+          selectHire(jobId, kuryeId, isletmeId);
+        });
     });
 
     /* Edit button */
@@ -372,32 +390,62 @@
     document.getElementById('fbDisputeSubmit').addEventListener('click', function() {
       var reason = document.getElementById('fbDisputeReason').value.trim();
       if (!reason) { if (window.KBMotion) KBMotion.showErrorToast('Lütfen şikayet nedeninizi yazın.'); return; }
-      KBFeedback.reportFeedback(CUR_JOB, CUR_KID, PENDING_REPORT_ROLE, reason);
-      document.getElementById('fbDisputeOverlay').classList.remove('is-open');
-      if (window.KBMotion) KBMotion.showSuccess('Şikayet İletildi', 'Admin ekibi inceleyecektir.', 2400);
-      setTimeout(function() { selectHire(CUR_JOB, CUR_KID, CUR_IID); }, 700);
+
+      /* Şikayet ARTIK gerçekten kaydediliyor (public.review_reports) ve
+         yönetim panelinde görünüyor. Başarı mesajı yalnız yazma işlemi
+         gerçekten başarılı olursa gösterilir — eskiden localStorage'a
+         yazıp koşulsuz "iletildi" deniyordu. */
+      var btn = this;
+      btn.disabled = true;
+      KBFeedback.reportFeedback(CUR_JOB, CUR_KID, PENDING_REPORT_ROLE, reason)
+        .then(function (r) {
+          btn.disabled = false;
+          if (r && r.error) {
+            if (window.KBMotion) KBMotion.showErrorToast(r.error);
+            return;
+          }
+          document.getElementById('fbDisputeOverlay').classList.remove('is-open');
+          if (window.KBMotion) KBMotion.showSuccess('Şikayet İletildi', 'Yönetim ekibi inceleyecek.', 2400);
+          selectHire(CUR_JOB, CUR_KID, CUR_IID);
+        });
     });
   }
 
   /* ── Boot ── */
-  function boot() {
-    var uid  = getUid();
-    var role = getRole();
-
-    /* Seed demo data */
+  /* Artık async: hem işe alım kararları hem geri bildirimler VERİTABANINDAN
+     gelir. İkisi de yüklenmeden çizim yapılırsa sayfa boş görünür — o yüzden
+     önce load(), sonra render. */
+  async function boot() {
+    var uid = getUid();
 
     /* URL params: direct link to a specific hire */
     var params = new URLSearchParams(window.location.search);
     var pJob = params.get('job'), pKid = params.get('kid'), pIid = params.get('iid');
     if (pJob && pKid) { CUR_JOB = pJob; CUR_KID = pKid; CUR_IID = pIid || uid; }
 
-    /* My reputation */
-    var myProfileRole = (role === 'kurye') ? 'kurye' : 'isletme';
-    document.getElementById('fbMyRep').innerHTML =
-      KBFeedback.renderReputationBlock(uid, myProfileRole);
+    try {
+      await Promise.all([
+        window.KBHiring   ? KBHiring.load()   : Promise.resolve(),
+        window.KBFeedback ? KBFeedback.load() : Promise.resolve()
+      ]);
+    } catch (e) { console.warn('geri-bildirim boot:', e); }
 
     renderHireList();
     wire();
+
+    /* Kendi itibarım — GERÇEK veriden.
+       Dikkat: getUid() auth.users id'sini döndürür, itibar ise profiles.id
+       ile çalışır. KBFeedback.myProfileId() doğru olanı verir. */
+    var myRepEl = document.getElementById('fbMyRep');
+    var myPid = KBFeedback.myProfileId();
+    if (myPid) {
+      myRepEl.innerHTML = '<p class="fb-empty">Yükleniyor…</p>';
+      KBFeedback.loadReputation(myPid).then(function () {
+        myRepEl.innerHTML = KBFeedback.renderReputationBlock(myPid);
+      });
+    } else {
+      myRepEl.innerHTML = '<p class="fb-empty">Henüz değerlendirme yok.</p>';
+    }
 
     /* If URL had params, also directly show the forms */
     if (CUR_JOB) {

@@ -138,8 +138,10 @@ const MUTATING = new Set([
   "users.suspend", "users.unsuspend", "users.delete", "users.resetPassword",
   "kyc.decide", "kyc.doc",
   "listings.close", "listings.delete",
+  "reports.resolve", "reports.conversation",
 ]);
-// kyc.doc okuma ama kimlik belgesi açıyor — KVKK gereği günlüğe yazılır.
+// kyc.doc ve reports.conversation okuma işlemleridir ama biri kimlik belgesi,
+// diğeri özel yazışma açıyor — KVKK gereği ikisi de günlüğe yazılır.
 
 serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -271,11 +273,12 @@ async function dispatch(action: string, ctx: Ctx): Promise<ActionResult> {
     /* ── PANO ─────────────────────────────────────────────────────────── */
     case "stats": {
       // platform_stats() ve online_counts_by_role() zaten var — yeniden yazma.
-      const [stats, online, pendingKyc, openListings] = await Promise.all([
+      const [stats, online, pendingKyc, openListings, pendingReports] = await Promise.all([
         svc.rpc("platform_stats"),
         svc.rpc("online_counts_by_role"),
         svc.from("kyc_submissions").select("profile_id", { count: "exact", head: true }).eq("durum", "pending"),
         svc.from("listings").select("id", { count: "exact", head: true }).eq("durum", "acik"),
+        svc.from("review_reports").select("id", { count: "exact", head: true }).eq("durum", "pending"),
       ]);
       return {
         data: {
@@ -283,6 +286,8 @@ async function dispatch(action: string, ctx: Ctx): Promise<ActionResult> {
           online: online.error ? null : online.data,
           bekleyenKyc: pendingKyc.count ?? 0,
           acikIlan: openListings.count ?? 0,
+          // migration-29 çalıştırılmadıysa tablo yoktur → hata yerine 0
+          bekleyenSikayet: pendingReports.error ? 0 : (pendingReports.count ?? 0),
         },
       };
     }
@@ -487,6 +492,111 @@ async function dispatch(action: string, ctx: Ctx): Promise<ActionResult> {
       if (onay !== "SIL") throw new Error("onay alanı 'SIL' olmalı");
       unwrap(await svc.from("listings").delete().eq("id", id).select());
       return { data: { ok: true }, targetTable: "listings", targetId: id };
+    }
+
+    /* ── ŞİKAYETLER (migration-29) ────────────────────────────────────── */
+    case "reports.list": {
+      const { durum = "pending", limit = 50, offset = 0 } = payload;
+      // Şikayet + şikayet edilen değerlendirme + tarafların adları tek sorguda.
+      let query = svc
+        .from("review_reports")
+        .select(
+          "id,reason,durum,admin_note,created_at,resolved_at," +
+          "reporter:reporter_profile(id,ad,role)," +
+          "review:review_id(id,puan,yorum,kriterler,gizli,created_at," +
+          "  target:target_id(id,ad,role), yazan:reviewer_profile(id,ad,role))",
+          { count: "exact" },
+        )
+        .order("created_at", { ascending: true })
+        .range(Number(offset), Number(offset) + Number(limit) - 1);
+      if (durum) query = query.eq("durum", durum);
+      const res = await query;
+      if (res.error) throw new Error(res.error.message);
+      return { data: { rows: res.data, total: res.count ?? 0 } };
+    }
+
+    case "reports.resolve": {
+      const { id, karar, not: adminNot } = payload;
+      if (!["resolved", "dismissed"].includes(karar)) {
+        throw new Error("karar 'resolved' (haklı) veya 'dismissed' (reddet) olmalı");
+      }
+      const rapor = unwrap(
+        await svc.from("review_reports").select("id,review_id").eq("id", id).maybeSingle(),
+      ) as any;
+      if (!rapor) throw new Error("şikayet bulunamadı");
+
+      // Şikayet HAKLI ise değerlendirme gizlenir — silinmez, denetim izi kalsın.
+      // `gizli = true` recompute_profile_rating'i tetikler ve puan ortalamasından
+      // düşer. guard_review_gizli service_role'e izin verir (auth.uid() NULL).
+      if (karar === "resolved") {
+        const g = await svc.from("reviews").update({ gizli: true }).eq("id", rapor.review_id);
+        if (g.error) throw new Error(g.error.message);
+      }
+
+      unwrap(
+        await svc.from("review_reports").update({
+          durum: karar,
+          admin_note: adminNot ?? null,
+          resolved_by: ctx.user.id,
+          resolved_at: new Date().toISOString(),
+        }).eq("id", id).select(),
+      );
+      return {
+        data: { ok: true },
+        targetTable: "review_reports",
+        targetId: id,
+        auditPayload: { karar, review_id: rapor.review_id, not: adminNot ?? null },
+      };
+    }
+
+    /* Şikayete konu konuşmayı aç.
+       Panelde özel mesajlar VARSAYILAN OLARAK KAPALIDIR; yalnız bu eylemle,
+       yani ortada gerçek bir şikayet kaydı varken açılabilir. Açılış
+       admin_audit_log'a yazılır (MUTATING listesinde). KVKK'nın "amaçla
+       sınırlılık" ilkesi gereği böyle tasarlandı. */
+    case "reports.conversation": {
+      const { report_id } = payload;
+      if (!report_id) throw new Error("report_id gerekli");
+
+      const rapor = unwrap(
+        await svc.from("review_reports")
+          .select("id, review:review_id(target_id, reviewer_profile)")
+          .eq("id", report_id).maybeSingle(),
+      ) as any;
+      if (!rapor || !rapor.review) throw new Error("şikayet bulunamadı");
+
+      const a = rapor.review.target_id;
+      const b = rapor.review.reviewer_profile;
+
+      // conversations tarafları kurye_id / employer_id ile tutar; hangisinin
+      // kurye hangisinin işveren olduğunu bilmediğimiz için iki yönü de dene.
+      const konusmalar = unwrap(
+        await svc.from("conversations").select("id,kurye_id,employer_id,last_message_at")
+          .or(`and(kurye_id.eq.${a},employer_id.eq.${b}),and(kurye_id.eq.${b},employer_id.eq.${a})`)
+          .order("last_message_at", { ascending: false }),
+      ) as any[];
+
+      if (!konusmalar || !konusmalar.length) {
+        return {
+          data: { mesajlar: [], not: "İki taraf arasında konuşma bulunamadı." },
+          targetTable: "conversations", targetId: String(report_id),
+          auditPayload: { report_id, sonuc: "konusma yok" },
+        };
+      }
+
+      const konusma = konusmalar[0];
+      const mesajlar = unwrap(
+        await svc.from("conv_messages")
+          .select("id,sender_user,sender_role,content,message_type,created_at")
+          .eq("conversation_id", konusma.id)
+          .order("created_at", { ascending: true }).limit(500),
+      );
+      return {
+        data: { konusmaId: konusma.id, mesajlar },
+        targetTable: "conv_messages",
+        targetId: String(konusma.id),
+        auditPayload: { report_id, taraflar: [a, b] },
+      };
     }
 
     /* ── DENETİM GÜNLÜĞÜ ──────────────────────────────────────────────── */

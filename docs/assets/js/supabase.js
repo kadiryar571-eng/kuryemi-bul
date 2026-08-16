@@ -488,11 +488,118 @@
   async function reviewsFor(targetId) {
     var r = await client.from("reviews")
       .select("puan,yorum,created_at, reviewer:reviewer_profile(ad,role)")
-      .eq("target_id", targetId).order("created_at", { ascending: false });
+      .eq("target_id", targetId).eq("gizli", false)
+      .order("created_at", { ascending: false });
     if (r.error) { console.warn("reviewsFor:", r.error); return []; }
     return (r.data || []).map(function (x) {
       return { puan: x.puan, yorum: x.yorum, tarih: (x.created_at || "").slice(0, 10), ad: (x.reviewer && x.reviewer.ad) || "Kullanıcı", rol: x.reviewer && x.reviewer.role };
     });
+  }
+
+  /* ---------- ÇOK KRİTERLİ GERİ BİLDİRİM (migration-29) ----------
+     feedback.js'in veri katmanı. Ayrı bir tablo YOK: aynı `reviews`
+     tablosuna yazılır, kriter kırılımı `kriterler` jsonb kolonunda,
+     hangi işe ait olduğu `hiring_id`'de durur. Böylece profil puanını
+     hesaplayan recompute_profile_rating trigger'ı ve bildirimler
+     kendiliğinden çalışır.
+
+     `puan` kriterlerin ortalamasının yuvarlanmışıdır (tablo 1..5 int
+     bekliyor); ham ortalama kriterler'den yeniden hesaplanabilir. */
+  var FB_SELECT = "id,target_id,reviewer_profile,reviewer_user,puan,yorum,kriterler," +
+                  "hiring_id,gizli,created_at, reviewer:reviewer_profile(ad,role)";
+
+  function feedbackFromDb(x) {
+    return {
+      id: x.id,
+      targetId: x.target_id,
+      reviewerProfile: x.reviewer_profile,
+      hiringId: x.hiring_id,
+      puan: x.puan,
+      kriterler: x.kriterler || {},
+      yorum: x.yorum || "",
+      gizli: !!x.gizli,
+      createdAt: x.created_at,
+      ad: (x.reviewer && x.reviewer.ad) || "Kullanıcı",
+      rol: x.reviewer && x.reviewer.role
+    };
+  }
+
+  // Benim yazdığım tüm geri bildirimler (feedback.js önbelleği bunu kullanır)
+  async function myFeedbacks() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("reviews").select(FB_SELECT)
+      .eq("reviewer_user", u.id).order("created_at", { ascending: false });
+    if (r.error) { console.warn("myFeedbacks:", r.error); return []; }
+    return (r.data || []).map(feedbackFromDb);
+  }
+
+  // Bir profil HAKKINDAKİ geri bildirimler (itibar bloğu bunu kullanır)
+  async function feedbacksFor(targetId) {
+    if (!targetId) return [];
+    var r = await client.from("reviews").select(FB_SELECT)
+      .eq("target_id", targetId).eq("gizli", false)
+      .order("created_at", { ascending: false });
+    if (r.error) { console.warn("feedbacksFor:", r.error); return []; }
+    return (r.data || []).map(feedbackFromDb);
+  }
+
+  /* Gönder/güncelle. hiring_id NULL olabilir ama normalde işe alım
+     kaydından gelir; unique index (reviewer, target, hiring) sayesinde
+     aynı çift farklı işler için ayrı ayrı değerlendirilebilir. */
+  async function submitFeedback(targetId, hiringId, kriterler, yorum) {
+    var u = await getUser();
+    if (!u) throw new Error("Oturum bulunamadı.");
+    var me = await myProfile();
+    if (!me || !me.id) throw new Error("Önce profilini oluştur.");
+    if (!targetId) throw new Error("Hedef profil belirtilmedi.");
+
+    var vals = Object.keys(kriterler || {})
+      .map(function (k) { return kriterler[k]; })
+      .filter(function (v) { return typeof v === "number" && v > 0; });
+    if (!vals.length) throw new Error("Lütfen tüm kriterleri puanlayın.");
+    var ort = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+    var puan = Math.min(5, Math.max(1, Math.round(ort)));
+
+    var r = await client.from("reviews").upsert({
+      reviewer_user: u.id, reviewer_profile: me.id, target_id: targetId,
+      hiring_id: hiringId || null,
+      puan: puan, kriterler: kriterler, yorum: yorum || ""
+    }, { onConflict: "reviewer_user,target_id,hiring_id" }).select(FB_SELECT).maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ? feedbackFromDb(r.data) : null;
+  }
+
+  /* Şikayet — artık GERÇEKTEN kaydediliyor.
+     Eskiden feedback.js bunu yalnız localStorage'a yazıyordu; kullanıcıya
+     "Admin ekibi inceleyecektir" deniyor ama hiçbir yöneticiye ulaşmıyordu. */
+  async function reportReview(reviewId, reason) {
+    var u = await getUser();
+    if (!u) throw new Error("Oturum bulunamadı.");
+    var me = await myProfile();
+    if (!me || !me.id) throw new Error("Profil bulunamadı.");
+    if (!reviewId) throw new Error("Değerlendirme belirtilmedi.");
+    if (!reason || !String(reason).trim()) throw new Error("Şikayet nedeni gerekli.");
+
+    var r = await client.from("review_reports").insert({
+      review_id: reviewId, reporter_user: u.id, reporter_profile: me.id,
+      reason: String(reason).trim(), durum: "pending"
+    }).select("id,durum,created_at").maybeSingle();
+    if (r.error) {
+      // unique(review_id, reporter_user) → aynı kaydı ikinci kez şikayet
+      if (String(r.error.code) === "23505") throw new Error("Bu değerlendirmeyi zaten şikayet ettiniz.");
+      throw r.error;
+    }
+    return r.data;
+  }
+
+  // Benim gönderdiğim şikayetler (durumunu kullanıcıya göstermek için)
+  async function myReviewReports() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("review_reports")
+      .select("id,review_id,reason,durum,created_at")
+      .eq("reporter_user", u.id);
+    if (r.error) { console.warn("myReviewReports:", r.error); return []; }
+    return r.data || [];
   }
 
   /* ---------- İLAN & BAŞVURU ---------- */
@@ -1467,6 +1574,8 @@
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,
     changePassword: changePassword, deleteMyData: deleteMyData,
     canReview: canReview, myReviewFor: myReviewFor, addReview: addReview, reviewsFor: reviewsFor,
+    myFeedbacks: myFeedbacks, feedbacksFor: feedbacksFor, submitFeedback: submitFeedback,
+    reportReview: reportReview, myReviewReports: myReviewReports,
     createListing: createListing, updateListing: updateListing, myListings: myListings, openListings: openListings, listingById: listingById,
     updateListingStatus: updateListingStatus, deleteListing: deleteListing,
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,

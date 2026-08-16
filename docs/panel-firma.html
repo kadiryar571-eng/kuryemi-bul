@@ -482,9 +482,12 @@
         try { await renderPendingDecisions(); } catch (e) {}
       }
 
-      /* Feedback badge */
+      /* Feedback badge
+         getPendingFeedbacks() senkron olarak önbellekten okur; KBFeedback
+         artık veritabanına bağlı olduğu için önce load() gerekiyor. */
       if (window.KBFeedback) {
         try {
+          await KBFeedback.load();
           var pfb = KBFeedback.getPendingFeedbacks(uid, 'firma').length;
           var fb = document.getElementById('panelFbBadge');
           if (fb && pfb > 0) { fb.textContent = pfb; fb.style.display = 'inline'; }

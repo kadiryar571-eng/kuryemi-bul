@@ -486,7 +486,21 @@
   }
 
   /* ─── Render: Feedback mini card ────────────────────────────── */
+  /* KBFeedback ve KBHiring önbelleklerini bir kez doldurur. renderFeedback()
+     senkron çalıştığı için yükleme bitince kendini yeniden çağırır. */
+  var _fbYuklendi = false;
+  function ensureFeedbackLoaded() {
+    if (_fbYuklendi || !window.KBFeedback) return;
+    _fbYuklendi = true;
+    Promise.all([
+      window.KBHiring ? KBHiring.load() : Promise.resolve(),
+      KBFeedback.load()
+    ]).then(function () { renderFeedback(); })
+      .catch(function (e) { console.warn('mesaj-detay feedback:', e); });
+  }
+
   function renderFeedback() {
+    ensureFeedbackLoaded();
     var el = document.getElementById('mdtFeedback');
     if (!el || !thread || !window.KBFeedback) return;
 

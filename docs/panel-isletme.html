@@ -296,9 +296,13 @@
         } catch(e) {}
       }
 
-      /* Pending feedback badge */
+      /* Pending feedback badge
+         KBFeedback artık veritabanından okuyor; getPendingFeedbacks()
+         senkron olduğu için ÖNCE load() gerekiyor, yoksa önbellek boş
+         olur ve rozet her zaman gizli kalır. */
       if (window.KBFeedback) {
         try {
+          await KBFeedback.load();
           var fbUid = 'demo';
           try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
           var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'isletme').length;
