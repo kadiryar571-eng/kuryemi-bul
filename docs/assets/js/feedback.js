@@ -231,10 +231,22 @@
       });
   }
 
-  /* Şikayet — artık gerçekten veritabanına yazılıyor. */
-  function reportFeedback(jobId, kuryeId, role, reason) {
+  /* Şikayet — artık gerçekten veritabanına yazılıyor.
+
+     Şikayet edilen kayıt, KARŞI TARAFIN BENİM HAKKIMDA yazdığı
+     değerlendirmedir; kendi yazdığımı şikayet edemem.
+
+     Eskiden burada getFeedback(jobId, kuryeId, karsiRol) çağrılıyordu.
+     O fonksiyon `_mine` içinde, yani BENİM yazdıklarımın arasında arıyor —
+     karşı tarafın kaydı orada asla bulunmaz. Sonuç: şikayet her zaman
+     "Şikayet edilecek değerlendirme bulunamadı" ile düşüyordu.
+     (localStorage döneminden kalma bir artıktı; o zaman da çalışmıyordu.)
+
+     `role` parametresi kaldırıldı: hangi kaydın şikayet edileceği roldden
+     değil, işe alım kaydından belirleniyor. */
+  function reportFeedback(jobId, kuryeId, reason) {
     if (!on()) return Promise.resolve({ error: 'Sunucuya bağlanılamadı.' });
-    var fb = getFeedback(jobId, kuryeId, role);
+    var fb = getFeedbackAbout(jobId, kuryeId);
     if (!fb) return Promise.resolve({ error: 'Şikayet edilecek değerlendirme bulunamadı.' });
 
     return SB.reportReview(fb.id, reason)

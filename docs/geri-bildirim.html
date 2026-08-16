@@ -164,7 +164,6 @@
   'use strict';
 
   var CUR_JOB = null, CUR_KID = null, CUR_IID = null;
-  var PENDING_REPORT_ROLE = null;
 
   function getUid() {
     try { var s = window.KB && KB.STATE && KB.STATE.user; if (s && s.id) return s.id; } catch(e) {}
@@ -375,7 +374,9 @@
     /* Report button */
     document.body.addEventListener('click', function(e) {
       if (!e.target.matches('[data-fb-action="report"]')) return;
-      PENDING_REPORT_ROLE = isBiz() ? 'kurye' : 'isletme';
+      /* Hangi kaydın şikayet edileceği rolden değil, seçili işe alımdan
+         belirleniyor (KBFeedback.getFeedbackAbout). PENDING_REPORT_ROLE
+         kaldırıldı — yanlış kaydı aratıyordu. */
       document.getElementById('fbDisputeOverlay').classList.add('is-open');
       document.getElementById('fbDisputeReason').value = '';
     });
@@ -397,7 +398,7 @@
          yazıp koşulsuz "iletildi" deniyordu. */
       var btn = this;
       btn.disabled = true;
-      KBFeedback.reportFeedback(CUR_JOB, CUR_KID, PENDING_REPORT_ROLE, reason)
+      KBFeedback.reportFeedback(CUR_JOB, CUR_KID, reason)
         .then(function (r) {
           btn.disabled = false;
           if (r && r.error) {
