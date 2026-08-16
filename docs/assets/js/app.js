@@ -1164,8 +1164,32 @@
     var host = document.getElementById("profileRoot");
     if (!host) return;
     var id = KB.getParam("id");
+
+    /* ?id= YOKSA KENDİ PROFİLİNİ GÖSTER.
+       Sidebar'daki "Profilim" bağlantısı id taşımıyor
+       (components.js → buildNavItems). loadProfile() id olmadan null
+       döndürdüğü için sayfa bomboş açılıyordu — üç rolde de. Sayfa bozuk
+       değildi, kendi profilini yükleyecek bir yol yoktu. */
+    if (!id && online()) {
+      try {
+        var me = await SB.myProfile();
+        if (me && me.id) id = me.id;
+      } catch (e) { console.warn("kendi profil:", e); }
+    }
+
     var x = await loadProfile(type, id);
-    if (!x) { host.innerHTML = '<div class="empty">' + T("empty.generic") + '</div>'; return; }
+    if (!x) {
+      /* Neden boş olduğunu söyle — "bir şey yok" demek yerine. */
+      var mesaj = !online()      ? "Sunucuya bağlanılamadı."
+                : !KB.isAuthed() ? "Profilini görmek için giriş yapmalısın."
+                : !id            ? "Henüz bir profilin yok. Profil oluşturmak için düzenleme sayfasına git."
+                                 : T("empty.generic");
+      host.innerHTML = '<div class="empty">' + KB.esc(mesaj) +
+        (!id && KB.isAuthed()
+          ? '<div class="mt-16"><a class="btn btn--primary" href="profil-duzenle.html">Profili Düzenle</a></div>'
+          : '') + '</div>';
+      return;
+    }
     await loadPoolSet();
     // Gerçek "profil görüntülendi" olayı — sahibine bildirim + dashboard sayacı.
     // Aynı ziyaretçi 24 saatte bir kez sayılır (sunucu tarafında).
