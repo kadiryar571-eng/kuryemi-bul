@@ -5901,6 +5901,53 @@ a.dash-stat:hover {
 }
 .cards-grid--list .talent-card .online-dot { position: static; order: -1; align-self: flex-start; }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   KOYU TEMA — EZMESİ UNUTULMUŞ AÇIK ZEMİNLER
+   ───────────────────────────────────────────────────────────────
+   Aşağıdaki kurallar zemini sabit açık bir hex ile veriyor ama kendi
+   yazı rengini belirlemiyor; yazı `--text`ten miras alınıyor. Koyu
+   temada `--text` açık olduğu için açık zemin üstüne açık yazı düşüyor
+   ve içerik okunamaz hale geliyordu — okunmamış bildirimlerdeki hatanın
+   aynısı (o ayrıca düzeltildi: .notif-item.is-unread artık token kullanıyor).
+
+   Burada zeminler anlamsal token'ların koyu karşılığına bağlanıyor:
+     yeşil (#F0FDF4, #BBF7D0)  → --success-bg / --success
+     kırmızı (#FEF2F2, #FEE2E2, #FECACA) → --error-bg / --error
+     sarı (#FEF3C7)            → --warning-bg
+     mavi (#F5F8FF, #d4e4ff)   → --primary-light
+
+   Yalnız koyu tema etkilenir; açık tema kuralları olduğu gibi kalır.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Mavi tonlu vurgular */
+[data-theme="dark"] .prof-step:hover     { background: var(--primary-light); }
+[data-theme="dark"] .pref-banner:hover   { background: var(--primary-light); }
+
+/* Yeşil tonlu bloklar (metin taşıyanlar) */
+[data-theme="dark"] .jd-salary,
+[data-theme="dark"] .hd-ob-block,
+[data-theme="dark"] .cs-next-action--success {
+  background: var(--success-bg);
+  border-color: rgba(52,211,153,.25);
+}
+
+/* Kırmızı tonlu bloklar (metin taşıyanlar) */
+[data-theme="dark"] .jc-err-summary,
+[data-theme="dark"] .cs-next-action--error {
+  background: var(--error-bg);
+  border-color: rgba(248,113,113,.25);
+}
+[data-theme="dark"] .jc-my-job-btn--del:hover { background: var(--error-bg); }
+
+/* Küçük ikon/nokta göstergeleri — metin taşımıyor ama açık zemin koyu
+   temada göz tırmalıyor; anlamsal renge çekildi. */
+[data-theme="dark"] .ilq-check-full__ico--warn { background: var(--warning-bg); }
+[data-theme="dark"] .ilq-check-full__ico--crit { background: var(--error-bg); }
+[data-theme="dark"] .hd-status-step.is-rejected .hd-status-dot,
+[data-theme="dark"] .cs-tl-step.is-rejected .cs-tl-dot,
+[data-theme="dark"] .cs-mini--olumsuz { background: var(--error-bg); }
+
 /* ============ HARİTA POPUP (MapLibre) ============
    MapLibre yalnız kutuyu biçimlendirir (.maplibregl-popup-content: beyaz
    zemin, 15px/10px padding). İçerik hiyerarşisi bize ait. Google Maps
