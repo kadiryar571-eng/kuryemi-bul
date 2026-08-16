@@ -79,6 +79,21 @@ istemcinin de etkileneceğini varsay. (Örn. migration-20 `profiles` tablosunu
 `authenticated`'a daralttı; `www/` SPA'sı zaten girişten sonra sorgu attığı
 için etkilenmedi — ama bu şans değil, kontrol edilmesi gereken bir şeydi.)
 
+### Üçüncü yüzey: yönetim paneli (BU REPODA DEĞİL)
+
+Ayrı bir **private** repo → Cloudflare Pages → `kb-yonetim.pages.dev`.
+
+Bu repoda yalnız sunucu tarafı vardır: `supabase/functions/admin-api/index.ts`.
+Şemayı üçüncü bir istemci olarak etkiler — migration yazarken onu da hesaba kat.
+
+**`docs/` ve `www/` yönetici kavramını HİÇ BİLMEZ.** `admins` tablosuna sorgu
+atmazlar, admin rolü tanımazlar, admin sayfası içermezler. Migration-28 sonrası
+`admins` tablosunun RLS policy'si de kaldırıldı; hiçbir istemci onu okuyamaz.
+**Bu iki uygulamaya admin özelliği EKLEMEYİN** — tam yetki `service_role`
+gerektirir, GitHub Pages statiktir ve sır tutamaz.
+
+`is_admin()` çalışmaya devam eder (`security definer` → RLS'i baypas eder).
+
 ## Architecture Overview
 
 **Tamamen statik bir web uygulaması** — framework yok, build adımı yok.
@@ -339,9 +354,23 @@ değişiklikler numaralı `migration-NN-*.sql` dosyalarıyla yapılır (idempote
   (`guard_profile_metrics` BEFORE UPDATE trigger'ı). Yalnız trigger zinciri
   (`pg_trigger_depth() > 1`), admin ve Studio değiştirebilir.
 - `offers` yalnız taraflar görebilir.
+- `admins` ve `admin_audit_log`: RLS açık, **hiç policy yok** → yalnız
+  `service_role` erişir (migration-28).
 
-**Yönetim arayüzü yoktur.** `admin.html` kaldırıldı; tüm yönetim işlemleri
-Supabase Studio → SQL Editor üzerinden yapılır. Hazır sorgular:
+> **İki guard trigger'ı `auth.uid()` NULL iken TERS davranır** — admin-api
+> yazarken bu belirleyicidir:
+> - `guard_dogrulama` (migration-21): `auth.uid()` NULL ise **reddeder**.
+>   `dogrulama` alanı ve `review_kyc()` yöneticinin **kendi JWT'si** ile
+>   çağrılmalı; `service_role` ile "yetki yok" hatası alırsınız.
+> - `guard_profile_metrics` (migration-20): `auth.uid()` NULL ise **serbest
+>   bırakır**. Metrikler yalnız `service_role` ile düzeltilebilir.
+>
+> `list_pending_kyc()` / `list_kyc_history()` de `is_admin(auth.uid())`
+> kontrolü yapar → aynı sebeple kullanıcı JWT'si ister.
+
+**Yönetim bu repoda DEĞİLDİR.** Ayrı bir private repo + Cloudflare Pages
+(`kb-yonetim.pages.dev`). Sunucu tarafı bu repoda:
+`supabase/functions/admin-api/index.ts`. Acil durum SQL reçeteleri:
 [supabase/ADMIN-REHBERI.md](supabase/ADMIN-REHBERI.md).
 
 ### CSS Breakpoint'leri

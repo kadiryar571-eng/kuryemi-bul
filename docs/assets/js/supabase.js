@@ -723,22 +723,14 @@
     return r.data || null;
   }
 
-  /* ---------- ADMIN ---------- */
-  async function amIAdmin() {
-    var u = await getUser(); if (!u) return false;
-    var r = await client.from("admins").select("user_id").eq("user_id", u.id).maybeSingle();
-    return !!(r && r.data);
-  }
-  async function listPendingKyc() {
-    var r = await client.rpc("list_pending_kyc");
-    if (r.error) throw r.error;
-    return r.data || [];
-  }
-  async function reviewKyc(profileId, decision) {
-    var r = await client.rpc("review_kyc", { p_profile_id: profileId, p_decision: decision });
-    if (r.error) throw r.error;
-    return true;
-  }
+  /* ---------- YÖNETİM — BU DOSYADA YOK ----------
+     amIAdmin / listPendingKyc / reviewKyc kaldırıldı. Bu site yönetici
+     kavramını hiç bilmez: `admins` tablosuna sorgu atmaz, admin rolü tanımaz.
+     Yönetim ayrı bir uygulamadadır (kb-yonetim.pages.dev) ve yetkiyi sunucu
+     tarafında `admin-api` Edge Function'ı doğrular. Sunucudaki review_kyc() /
+     list_pending_kyc() RPC'leri duruyor; yalnız buradan çağrılmıyor.
+     Bkz. supabase/ADMIN-REHBERI.md
+     ------------------------------------------------ */
 
   /* ---------- MESAJLAŞMA (yalnız eşleşenler) ---------- */
   async function myPid() {
@@ -1480,7 +1472,6 @@
     applyToListing: applyToListing, myApplications: myApplications, appliedListingIds: appliedListingIds,
     listingApplications: listingApplications, updateApplication: updateApplication,
     submitKyc: submitKyc, myKycSubmission: myKycSubmission,
-    amIAdmin: amIAdmin, listPendingKyc: listPendingKyc, reviewKyc: reviewKyc,
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken, vapidPublicKey: vapidPublicKey,
     myListingStats: myListingStats, myFleet: myFleet,

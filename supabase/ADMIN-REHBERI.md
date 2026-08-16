@@ -1,13 +1,39 @@
-# Yönetim Rehberi — Supabase Studio
+# Yönetim Rehberi
 
-Uygulama içi admin sayfası (`admin.html`) kaldırıldı. Tüm yönetim işlemleri
-**Supabase Dashboard → SQL Editor** üzerinden yapılır.
+## Yönetim artık ayrı bir paneldedir → **kb-yonetim.pages.dev**
+
+Günlük işlerin tamamı (kimlik doğrulama onayı, kullanıcı yönetimi, ilan
+denetimi) orada yapılır. Panel her işlemi `admin_audit_log` tablosuna
+yazar — Studio'nun hiç vermediği şey budur: **kim, ne zaman, neyi
+değiştirdi kaydı kalır.**
+
+| | Panel | Studio (bu belge) |
+|---|---|---|
+| Günlük işler | ✅ | — |
+| Denetim izi | ✅ otomatik | ❌ hiç yok |
+| Yanlış `update` riski | düşük (kelime onayı) | yüksek |
+| Şema değişikliği, migration | ❌ | ✅ |
+| Panel bozulursa | — | ✅ acil durum yedeği |
+
+**Aşağıdaki SQL reçeteleri acil durum yedeği olarak korunuyor.** Panel
+çalışmıyorsa ya da şemaya dokunman gerekiyorsa buradan devam et.
 
 **Proje:** `fdszypytpodndtlbuzuz` · https://supabase.com/dashboard
 
 > Studio'da sorgular `postgres` rolüyle çalışır; RLS ve `auth.uid()` tabanlı
 > koruyucu trigger'lar devreye girmez. Bu yüzden aşağıdaki işlemler doğrudan
 > yapılabilir. Aynı sorguları uygulama içinden çalıştırmak mümkün değildir.
+>
+> **DİKKAT:** Studio'dan yapılan hiçbir işlem denetim günlüğüne yazılmaz.
+> Yapabildiğin bir işi panelden yap.
+
+### Web sitesi ve mobil uygulamada admin YOKTUR
+
+`docs/` (site) ve `www/` (APK) yönetici kavramını hiç bilmez: `admins`
+tablosuna sorgu atmaz, admin rolü tanımaz, admin sayfası içermez.
+Migration-28 sonrası `admins` tablosunun RLS policy'si de kaldırıldı —
+hiçbir istemci o tabloyu okuyamaz. `is_admin()` çalışmaya devam eder
+(`security definer` olduğu için RLS'i baypas eder).
 
 ---
 
@@ -107,14 +133,64 @@ select public.close_expired_listings();
 ---
 
 ## 5. Admin yetkisi
-`admins` tablosu `is_admin()` fonksiyonu ve `review_kyc()` RPC'si tarafından
-kullanılır. Uygulama içi admin arayüzü olmadığı için zorunlu değildir, ama
-ileride gerekirse:
+
+`admins` tablosu artık **zorunludur** — yönetim paneline giriş yapabilmenin
+tek koşulu budur. `admin-api` Edge Function'ı her istekte bu tabloyu sorgular;
+satırı olmayan bir kullanıcı doğru parolayla giriş yapsa bile 403 alır (ve
+deneme `admin_audit_log`'a `auth.denied` olarak yazılır).
+
 ```sql
 insert into public.admins(user_id) values ('<auth_user_id>')
   on conflict do nothing;
 ```
 Kullanıcının `auth_user_id` değeri: **Authentication → Users** ekranında.
+
+### Yetkiyi geri alma
+```sql
+delete from public.admins where user_id = '<auth_user_id>';
+```
+Etkisi anındadır — bir sonraki istekte 403 alır. Oturumu kapatmaya gerek yok.
+
+### Kim yönetici?
+```sql
+select a.user_id, u.email, a.created_at
+  from public.admins a
+  join auth.users u on u.id = a.user_id
+ order by a.created_at;
+```
+
+---
+
+## 5b. Denetim günlüğü (migration-28)
+
+Panelden yapılan her değiştiren işlem buraya yazılır. Tablo hiçbir arayüzden
+silinemez/değiştirilemez: RLS açık ve **hiç policy yok**, yalnız
+`service_role` yazabilir.
+
+```sql
+-- Son 50 işlem
+select created_at, admin_email, action, target_table, target_id, result
+  from public.admin_audit_log
+ order by created_at desc limit 50;
+
+-- Yetkisiz erişim denemeleri — panel adresini bilen ama yetkisi olmayan biri
+select created_at, admin_email, ip
+  from public.admin_audit_log
+ where action = 'auth.denied'
+ order by created_at desc;
+
+-- Kimlik belgesi kimler tarafından açıldı (KVKK — erişim kaydı)
+select created_at, admin_email, target_id
+  from public.admin_audit_log
+ where action = 'kyc.doc'
+ order by created_at desc;
+
+-- Silinen hesaplar
+select created_at, admin_email, target_id
+  from public.admin_audit_log
+ where action in ('users.delete', 'listings.delete')
+ order by created_at desc;
+```
 
 ---
 

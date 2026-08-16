@@ -62,7 +62,7 @@
   function toggleTheme() { setTheme(getTheme() === 'dark' ? 'light' : 'dark'); }
 
   /* ─── ROLE / PANEL ─────────────────────────────────────────── */
-  var ROLE_LABELS = { guest: 'Ziyaretçi', ziyaretci: 'Ziyaretçi', kurye: 'Kurye', isletme: 'Esnaf', firma: 'Kurye Firması', admin: 'Admin' };
+  var ROLE_LABELS = { guest: 'Ziyaretçi', ziyaretci: 'Ziyaretçi', kurye: 'Kurye', isletme: 'Esnaf', firma: 'Kurye Firması' };
 
   function getRole() {
     var p = SESSION.profile;
@@ -72,7 +72,8 @@
   function currentRole() { return getRole(); }
 
   function roleToPanel(role) {
-    /* Yönetim Supabase Studio'dan yapılır; uygulama içi admin sayfası yoktur. */
+    /* Yönetim ayrı bir uygulamadadır (kb-yonetim.pages.dev); bu sitede admin
+       rolü, admin sayfası ve admin kavramı YOKTUR. Bkz. supabase/ADMIN-REHBERI.md */
     var map = { kurye: 'panel-kurye.html', isletme: 'panel-isletme.html', firma: 'panel-firma.html' };
     return map[role] || 'index.html?auth=login';
   }
@@ -83,18 +84,6 @@
   function isAuthed() {
     if (isOnline()) return !!(SESSION.user);
     return getRole() !== 'guest';
-  }
-
-  /* admin check */
-  var _adminChecked = false;
-  async function amIAdmin() {
-    if (!isOnline() || !SESSION.user) return false;
-    if (window._kbIsAdmin !== undefined) return window._kbIsAdmin;
-    try {
-      var res = await window.SB._sb.from('admins').select('user_id').eq('user_id', SESSION.user.id).maybeSingle();
-      window._kbIsAdmin = !!(res && res.data);
-    } catch (e) { window._kbIsAdmin = false; }
-    return window._kbIsAdmin;
   }
 
   /* ─── HELPERS ──────────────────────────────────────────────── */
@@ -182,7 +171,6 @@
     applications: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
     profile:      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     settings:     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    admin:        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
     hamburger:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
     search:       '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
     bell:         '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
@@ -294,7 +282,7 @@
       { href: 'mesajlar.html',  label: 'Mesajlar',  ic: SIC.messages },
     ];
 
-    /* Uygulama içi admin sayfası kaldırıldı — yönetim Supabase Studio'dan yapılır. */
+    /* Uygulama içi admin sayfası yoktur — yönetim ayrı panelde (bkz. satır 75). */
 
     var footer = [
       { href: 'profil-' + (role !== 'guest' ? role : 'kurye') + '.html', label: 'Profilim', ic: SIC.profile },
@@ -577,10 +565,6 @@
       var profile = null;
       if (user) {
         try { profile = await window.SB.myProfile(); } catch (e) {}
-        /* Admin kontrolü */
-        try {
-          window._kbIsAdmin = await window.SB.amIAdmin();
-        } catch (e) { window._kbIsAdmin = false; }
       }
       resolveReady({ user: user, profile: profile });
       /* Oturum çözülünce arayüzü tazele. Public sayfalarda yalnız navbar var:
@@ -607,7 +591,6 @@
     /* auth */
     isOnline:       isOnline,
     isAuthed:       isAuthed,
-    amIAdmin:       amIAdmin,
     getRole:        getRole,
     currentRole:    currentRole,
     roleToPanel:    roleToPanel,
