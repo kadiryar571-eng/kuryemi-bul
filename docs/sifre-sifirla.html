@@ -149,20 +149,38 @@
       vBtn.disabled = true;
 
       (async function () {
+        /* 1) Token'ı oturuma çevir. Yalnız BU adımın hatası kullanıcıya
+              "bağlantı geçersiz" olarak gösterilebilir. */
         try {
           if (!window.SB || !SB.isOn()) throw new Error('Sunucuya bağlanılamadı.');
           var r = await SB.verifyEmail(query.get('token_hash'), 'recovery');
           if (r && r.error) throw r.error;
           vBtn.disabled = false;
-          /* Tek kullanımlık token adres çubuğunda kalmasın (tarayıcı
-             geçmişi, omuz üstü, kazara paylaşım). */
-          history.replaceState(null, '', location.pathname);
         } catch (err) {
           vAlert.textContent = 'Bağlantı geçersiz veya süresi dolmuş. '
             + 'Lütfen yeni bir sıfırlama bağlantısı isteyin.'
             + ((err && err.message) ? ' (' + err.message + ')' : '');
           vAlert.style.display = '';
+          return;
         }
+
+        /* 2) Tek kullanımlık token'ı adres çubuğundan sil (tarayıcı geçmişi,
+              omuz üstü, kazara paylaşım). AYRI try — bu tamamen kozmetik bir
+              adım ve BAŞARISIZ OLSA BİLE kullanıcıya hata gösterilmemeli.
+
+              Eskiden bu satır yukarıdaki try'ın içindeydi: doğrulama başarılı
+              olduğu halde buradan gelen hata "bağlantı geçersiz" diye
+              raporlanıyor, şifresi değişmiş kullanıcı boşuna korkuyordu.
+
+              Çift eğik çizgi tuzağı: Supabase'in gönderdiği adres
+              `kuryemibul.com//sifre-sifirla.html` olabiliyor; o zaman
+              location.pathname = "//sifre-sifirla.html" olur. Tarayıcı bunu
+              PROTOKOL-GÖRELİ bir adres (https://sifre-sifirla.html/) sayar,
+              yani farklı origin, ve replaceState güvenlik hatası fırlatır.
+              Ardışık eğik çizgileri tekile indirerek engelliyoruz. */
+        try {
+          history.replaceState(null, '', location.pathname.replace(/\/{2,}/g, '/'));
+        } catch (e) { /* önemsiz */ }
       }());
     }
 
