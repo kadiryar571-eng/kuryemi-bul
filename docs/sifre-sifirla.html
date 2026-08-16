@@ -114,11 +114,56 @@
       if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
     });
 
-    /* Hash'te access_token varsa yeni şifre adımına geç */
-    var hash = new URLSearchParams(location.hash.slice(1));
-    if (hash.get('type') === 'recovery' && hash.get('access_token')) {
+    /* ── Sıfırlama bağlantısını tanı ─────────────────────────────────
+       Supabase iki AYRI biçimde dönebilir; ikisi de desteklenmeli:
+
+         #access_token=…&type=recovery   eski implicit akış — supabase-js
+                                         oturumu URL'den kendisi açar
+         ?token_hash=…&type=recovery     güncel akış — token'ı oturuma
+                                         çevirmek BİZİM işimiz (verifyOtp)
+
+       ESKİDEN yalnız birincisi kontrol ediliyordu. Supabase'in varsayılan
+       e-posta şablonu ikincisini gönderdiği için, bağlantıya tıklayan
+       kullanıcı "yeni şifre" adımını hiç göremiyor ve baştaki e-posta
+       formuna düşüyordu — yani şifre sıfırlama uçtan uca çalışmıyordu.
+       Sonsuz döngü gibi görünüyordu ama sebep buydu. */
+    var hash  = new URLSearchParams(location.hash.slice(1));
+    var query = new URLSearchParams(location.search);
+
+    function yeniSifreAdimi() {
       stepRequest.style.display = 'none';
+      stepSent.style.display    = 'none';
       stepNewpw.style.display   = '';
+    }
+
+    if (hash.get('type') === 'recovery' && hash.get('access_token')) {
+      yeniSifreAdimi();
+
+    } else if (query.get('type') === 'recovery' && query.get('token_hash')) {
+      yeniSifreAdimi();
+
+      /* Token'ı oturuma çevirene kadar butonu kilitle — kullanıcı erken
+         gönderirse updateUser() oturumsuz çalışır ve anlamsız hata verir. */
+      var vAlert = document.getElementById('newpw-alert');
+      var vBtn   = document.getElementById('newpw-btn');
+      vBtn.disabled = true;
+
+      (async function () {
+        try {
+          if (!window.SB || !SB.isOn()) throw new Error('Sunucuya bağlanılamadı.');
+          var r = await SB.verifyEmail(query.get('token_hash'), 'recovery');
+          if (r && r.error) throw r.error;
+          vBtn.disabled = false;
+          /* Tek kullanımlık token adres çubuğunda kalmasın (tarayıcı
+             geçmişi, omuz üstü, kazara paylaşım). */
+          history.replaceState(null, '', location.pathname);
+        } catch (err) {
+          vAlert.textContent = 'Bağlantı geçersiz veya süresi dolmuş. '
+            + 'Lütfen yeni bir sıfırlama bağlantısı isteyin.'
+            + ((err && err.message) ? ' (' + err.message + ')' : '');
+          vAlert.style.display = '';
+        }
+      }());
     }
 
     /* 1. Şifre sıfırlama e-postası gönder */
