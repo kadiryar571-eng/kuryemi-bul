@@ -2573,7 +2573,10 @@ a.dash-stat:hover {
 }
 .notif-item:not(:last-child) { border-bottom: 1px solid var(--border); }
 .notif-item.is-unread {
-  background: #F8F9FF;
+  /* SABİT RENK DEĞİL: eskiden #F8F9FF yazıyordu. Yazı rengi temadan
+     miras alındığı için koyu temada açık zemin üstüne açık yazı düşüyor
+     ve okunmamış bildirimler tamamen okunamaz hale geliyordu. */
+  background: var(--primary-light);
   border-left: 3px solid var(--primary);
   padding-left: 7px;
 }
