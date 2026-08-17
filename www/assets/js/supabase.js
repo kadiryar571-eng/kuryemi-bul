@@ -308,6 +308,48 @@
     return r.data ? fromDb(r.data) : null;
   }
 
+  /* ---------- İŞ DENEYİMİ (migration-34) ----------
+     Kurye bu kayıtları web sitesindeki profil düzenleme sayfasında
+     doldurur. Mobilde işveren aday detayında görebilsin diye okunuyor.
+     İki kaynak: temel tablo (RLS — sahip + ilana başvurulan işveren,
+     referans alanları DAHİL) ve work_experience_public view'ı
+     (referans alanları YOK). Ayrıntı: migration-34. */
+  /* migration-34 çalıştırılmadıysa tablo/view yoktur — bir kez işaretle
+     ve sus; aksi halde her aday görüntülemede iki boşa istek gider. */
+  var _weYok = false;
+  function _weEksikMi(err) {
+    if (!err) return false;
+    var m = (err.message || "") + " " + (err.code || "");
+    return /Could not find the table|does not exist|42P01|PGRST205/i.test(m);
+  }
+
+  async function workExperienceFor(profileId) {
+    if (!profileId || _weYok) return [];
+    function esle(rows) {
+      return (rows || []).map(function (r) {
+        return {
+          id: r.id, sirket: r.sirket || "", pozisyon: r.pozisyon || "",
+          model: r.model || "", sehir: r.sehir || "",
+          baslangic: r.baslangic || "", bitis: r.bitis || "",
+          aktif: !!r.aktif, aciklama: r.aciklama || "",
+          etiketler: r.etiketler || [],
+          referansAd: r.referans_ad || "", referansTel: r.referans_tel || ""
+        };
+      });
+    }
+    var r = await client.from("work_experience").select("*")
+      .eq("profile_id", profileId).order("baslangic", { ascending: false, nullsFirst: false });
+    if (r.error && _weEksikMi(r.error)) { _weYok = true; return []; }
+    if (!r.error && r.data && r.data.length) return esle(r.data);
+    var v = await client.from("work_experience_public").select("*")
+      .eq("profile_id", profileId).order("baslangic", { ascending: false, nullsFirst: false });
+    if (v.error) {
+      if (_weEksikMi(v.error)) { _weYok = true; return []; }
+      console.warn("workExperienceFor:", v.error); return [];
+    }
+    return esle(v.data);
+  }
+
   /* ---------- HAVUZUM (kayıtlı profiller) ---------- */
   async function poolIds() {
     var u = await getUser();
@@ -1008,6 +1050,7 @@
     uploadFirmaBelge: uploadFirmaBelge, uploadFirmaFoto: uploadFirmaFoto,
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,
+    workExperienceFor: workExperienceFor,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
     myNotifications: myNotifications, unreadCount: unreadCount, markNotificationRead: markNotificationRead,
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,

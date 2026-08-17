@@ -2042,8 +2042,66 @@
     function getUid() { try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch(e) {} return null; }
     function expKey() { return 'kb_exp_' + getUid(); }
     function logKey() { return 'kb_exp_log_' + getUid(); }
-    function loadExps() { try { return JSON.parse(localStorage.getItem(expKey())) || []; } catch(e) { return []; } }
-    function saveExps(arr) { try { localStorage.setItem(expKey(), JSON.stringify(arr)); } catch(e) { toast('Depolama alanı dolu!', 'error'); } }
+    /* ── İş deneyimi: ARTIK VERİTABANINDA (migration-34) ────────
+       Kayıtlar yalnız bu tarayıcının localStorage'ındaydı: işveren aday
+       detayında hiçbirini göremiyor, kurye telefonunda girdiğini
+       bilgisayarında bulamıyor, tarayıcı verisi silinince her şey
+       kayboluyordu. Kurye kimsenin görmediği bir formu dolduruyordu.
+
+       Çizim kodu senkron (`loadExps()` çağırıyor), o yüzden KBHiring /
+       KBFeedback'teki desen uygulanıyor: bir kez `refreshExps()` ile
+       DB'den çekilip `_exps` önbelleğine konur, `loadExps()` önbellekten
+       okur, yazma işlemleri async olup ardından önbelleği tazeler. */
+    var _exps = [];
+    function loadExps() { return _exps; }
+
+    async function refreshExps() {
+      if (!(window.SB && SB.isOn() && SB.myWorkExperience)) { _exps = []; return; }
+      try {
+        _exps = (await SB.myWorkExperience()).map(function (w) {
+          /* Çizim kodunun beklediği alan adlarına çevir */
+          return {
+            id: w.id, sirket: w.sirket, pozisyon: w.pozisyon, model: w.model,
+            sehir: w.sehir, baslangic: w.baslangic, bitis: w.bitis, aktif: w.aktif,
+            aciklama: w.aciklama, etiketler: w.etiketler,
+            referans_ad: w.referansAd, referans_tel: w.referansTel,
+            createdAt: w.createdAt, updatedAt: w.updatedAt,
+            /* `verified` alanı şemada yok; rozet hesabı bunu okuyor.
+               Sunucuda doğrulanmış deneyim kavramı henüz olmadığı için
+               daima false — uydurma "doğrulanmış" rozeti basmıyoruz. */
+            verified: false
+          };
+        });
+      } catch (e) { console.warn('refreshExps:', e); _exps = []; }
+    }
+
+    /* Eski localStorage kayıtlarını BİR KEZ sunucuya taşı.
+       Kullanıcı daha önce girdiklerini kaybetmesin. Taşınan kayıtlar
+       yerelden silinir ki tekrar tekrar yüklenmesin. */
+    async function migrateLocalExps() {
+      if (!(window.SB && SB.isOn() && SB.addWorkExperience)) return;
+      var eski = [];
+      try { eski = JSON.parse(localStorage.getItem(expKey())) || []; } catch (e) { return; }
+      if (!eski.length) return;
+      var tasinan = 0;
+      for (var i = eski.length - 1; i >= 0; i--) {     // en eski önce eklensin
+        var e = eski[i];
+        if (!e || !e.sirket) continue;
+        try {
+          await SB.addWorkExperience({
+            sirket: e.sirket, pozisyon: e.pozisyon, model: e.model, sehir: e.sehir,
+            baslangic: e.baslangic, bitis: e.bitis, aktif: e.aktif,
+            aciklama: e.aciklama, etiketler: e.etiketler,
+            referansAd: e.referans_ad, referansTel: e.referans_tel
+          });
+          tasinan++;
+        } catch (err) { console.warn('deneyim taşınamadı:', err); return; }  // yarım bırakma
+      }
+      if (tasinan) {
+        try { localStorage.removeItem(expKey()); } catch (e2) {}
+        toast(tasinan + ' deneyim kaydı hesabına taşındı.', 'success');
+      }
+    }
     function loadLog()  { try { return JSON.parse(localStorage.getItem(logKey())) || []; } catch(e) { return []; } }
     function addLog(action, note) {
       var log = loadLog();
@@ -2057,7 +2115,8 @@
       return (window.KB && KB.esc) ? KB.esc(s)
         : String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; });
     }
-    function genId() { return 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
+    /* genId() KALDIRILDI — kimlikleri artık veritabanı üretiyor
+       (work_experience.id, gen_random_uuid). */
     function toast(msg, type) {
       if (window.KBMotion) { type === 'success' ? KBMotion.showSuccess(msg, '', 2200) : KBMotion.showErrorToast(msg); }
     }
@@ -2189,10 +2248,9 @@
       var descHtml = exp.aciklama
         ? '<div class="exp-card__desc">' + esc(exp.aciklama).replace(/\n/g, '<br>') + '</div>' : '';
 
-      /* Up/down move buttons */
+      /* ↑/↓ sıralama düğmeleri KALDIRILDI — sıralama artık sunucuda
+         başlangıç tarihine göre. Bkz. moveExp'in kaldırıldığı yerdeki not. */
       var moveHtml = '';
-      if (idx > 0)          moveHtml += '<button class="btn btn--ghost btn--sm" data-act="up"   data-id="' + exp.id + '" title="Yukarı">↑</button>';
-      if (idx < total - 1)  moveHtml += '<button class="btn btn--ghost btn--sm" data-act="down" data-id="' + exp.id + '" title="Aşağı">↓</button>';
 
       return '<div class="' + cls + '">' +
         '<div class="' + cardCls + '">' +
@@ -2326,7 +2384,7 @@
       var el = document.getElementById('expFormErr'); if (el) el.style.display = 'none';
     }
 
-    function saveForm() {
+    async function saveForm() {
       var sirket    = (document.getElementById('expSirket').value    || '').trim();
       var pozisyon  = (document.getElementById('expPozisyon').value  || '').trim();
       var baslangic = getDate('expBaslangicAy', 'expBaslangicYil');
@@ -2342,57 +2400,62 @@
       document.querySelectorAll('.exp-tag-toggle.is-active').forEach(function(t){ etiketler.push(t.dataset.tag); });
 
       var editId = document.getElementById('expEditId').value;
-      var exps   = loadExps();
-      var now    = new Date().toISOString();
       var data   = {
         sirket: sirket, pozisyon: pozisyon,
         model: (document.getElementById('expModel').value || ''),
         sehir: (document.getElementById('expSehir').value    || '').trim(),
         baslangic: baslangic, bitis: bitis, aktif: aktif,
-        aciklama:     (document.getElementById('expAciklama').value || '').trim(),
-        referans_ad:  (document.getElementById('expRefAd').value    || '').trim(),
-        referans_tel: (document.getElementById('expRefTel').value   || '').trim(),
-        etiketler: etiketler, updatedAt: now
+        aciklama:    (document.getElementById('expAciklama').value || '').trim(),
+        referansAd:  (document.getElementById('expRefAd').value    || '').trim(),
+        referansTel: (document.getElementById('expRefTel').value   || '').trim(),
+        etiketler: etiketler
       };
 
-      if (editId) {
-        var found = false;
-        exps = exps.map(function(e){ if (e.id === editId) { found = true; return Object.assign({}, e, data); } return e; });
-        if (found) {
+      /* Kayıt SUNUCUYA yazılır; başarı mesajı yalnız yazma tuttuysa. */
+      if (!(window.SB && SB.isOn() && SB.addWorkExperience)) {
+        showFormErr('Sunucuya bağlanılamadı — deneyim kaydedilemedi.');
+        return;
+      }
+      try {
+        if (editId) {
+          await SB.updateWorkExperience(editId, data);
           addLog('edit', '"' + sirket + '" deneyimi düzenlendi.');
           toast('Deneyim güncellendi.', 'success');
+        } else {
+          await SB.addWorkExperience(data);
+          addLog('add', '"' + sirket + '" deneyimi eklendi.');
+          toast('Deneyim eklendi.', 'success');
         }
-      } else {
-        exps.unshift(Object.assign({ id: genId(), verified: false, createdAt: now }, data));
-        addLog('add', '"' + sirket + '" deneyimi eklendi.');
-        toast('Deneyim eklendi.', 'success');
+      } catch (err) {
+        showFormErr((err && err.message) || 'Deneyim kaydedilemedi.');
+        return;
       }
-      saveExps(exps);
+      await refreshExps();
       closeForm();
       render();
     }
 
     /* ── CRUD işlemleri ── */
-    function deleteExp(id) {
-      var exps = loadExps();
-      var exp  = exps.filter(function(e){ return e.id === id; })[0];
+    async function deleteExp(id) {
+      var exp = loadExps().filter(function(e){ return e.id === id; })[0];
       if (!exp || !confirm('"' + exp.sirket + '" deneyimi silinsin mi?')) return;
-      saveExps(exps.filter(function(e){ return e.id !== id; }));
+      if (!(window.SB && SB.isOn() && SB.deleteWorkExperience)) {
+        toast('Sunucuya bağlanılamadı — silinemedi.', 'error'); return;
+      }
+      try { await SB.deleteWorkExperience(id); }
+      catch (err) { toast((err && err.message) || 'Silinemedi.', 'error'); return; }
+      await refreshExps();
       addLog('delete', '"' + exp.sirket + '" deneyimi silindi.');
       toast('Deneyim silindi.', 'success');
       render();
     }
 
-    function moveExp(id, dir) {
-      var exps = loadExps(), idx = -1;
-      exps.forEach(function(e, i){ if (e.id === id) idx = i; });
-      if (idx === -1) return;
-      var ni = idx + dir;
-      if (ni < 0 || ni >= exps.length) return;
-      var tmp = exps[idx]; exps[idx] = exps[ni]; exps[ni] = tmp;
-      saveExps(exps);
-      render();
-    }
+    /* moveExp (↑/↓ elle sıralama) KALDIRILDI.
+       Sıralama artık sunucuda `baslangic` alanına göre (yeniden eskiye)
+       yapılıyor — özgeçmişin doğal sırası budur ve her cihazda aynıdır.
+       Elle sıralamayı korumak için ayrı bir `sira` kolonu gerekirdi;
+       yerel dizi sırasını değiştirmek ise yalnız o tarayıcıda görünen,
+       sayfa yenilenince kaybolan sahte bir düzen üretirdi. */
 
     /* ── Wire ── */
     function wireForm() {
@@ -2420,16 +2483,22 @@
           if (exp) openForm(exp);
         }
         if (act === 'delete') deleteExp(id);
-        if (act === 'up')     moveExp(id, -1);
-        if (act === 'down')   moveExp(id,  1);
       });
     }
 
-    /* ── Init ── */
+    /* ── Init ──
+       Sıra önemli: önce eski localStorage kayıtlarını sunucuya taşı,
+       sonra sunucudan çek, sonra çiz. Aksi halde taşınan kayıtlar ilk
+       çizimde görünmezdi. */
     document.addEventListener('DOMContentLoaded', function() {
       if (!document.getElementById('expTimeline')) return;
       var ready = (window.KB && KB.ready) ? KB.ready() : Promise.resolve();
-      ready.then(function() { wireForm(); render(); renderActivityLog(); }).catch(function() { wireForm(); render(); renderActivityLog(); });
+      ready
+        .then(function () { return migrateLocalExps(); })
+        .catch(function () {})
+        .then(function () { return refreshExps(); })
+        .catch(function () {})
+        .then(function () { wireForm(); render(); renderActivityLog(); });
     });
 
   })();

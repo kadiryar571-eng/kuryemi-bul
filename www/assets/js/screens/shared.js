@@ -1416,8 +1416,187 @@ window.SharedScreens = (function () {
     }
   }
 
+  /* ── İŞVEREN PROFİLİ (esnaf / kurye firması) ──────────────
+     ============================================================
+     Mobilde işvereni GÖRÜNTÜLEYECEK bir ekran hiç yoktu. Haritada
+     bir Esnaf ya da Kurye Firması işaretçisine dokunan kurye,
+     adından başka hiçbir şey içermeyen bir kart görüyordu: profil
+     yok, teklif yok, ilanlarına gidiş yok. Web sitesinde bunun
+     karşılığı profil-isletme.html / profil-firma.html.
+
+     Tek ekran iki rolü de karşılar; alanlar role göre değişir
+     (esnaf: tür + açık ilan, firma: kapasite + hizmetler).
+     ============================================================ */
+  function isverenProfil(ctx) {
+    var id = ctx && ctx.params ? ctx.params.id : null;
+    if (!id) { toast('Profil bulunamadı'); Router.back(); return; }
+
+    showAppBar('Profil', true);
+    showBottomNav();
+    renderScreen('<div id="ip-root"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>');
+
+    if (!(window.SB && SB.isOn() && SB.profileById)) {
+      whenEl('ip-root', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">📡</div>' +
+          '<div class="kb-empty__title">Bağlantı kurulamadı</div></div>';
+      });
+      return;
+    }
+
+    SB.profileById(id).then(function (p) {
+      whenEl('ip-root', function (el) {
+        if (!p) {
+          el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">🔍</div>' +
+            '<div class="kb-empty__title">Profil bulunamadı</div></div>';
+          return;
+        }
+        showAppBar(p.ad || 'Profil', true);
+
+        var firma  = p.role === 'firma';
+        var renk   = firma ? 'var(--c-firma)' : 'var(--c-isletme)';
+        var etiket = firma ? 'Kurye Firması' : 'Esnaf';
+        var puanVar = Number(p.degerlendirme) > 0;
+
+        /* Puan yalnız GERÇEK değerlendirme varsa gösterilir; yoksa
+           "0.0" yazmak kötü puan gibi okunuyor. */
+        var puanHtml = puanVar
+          ? '<div class="kb-stars">' + ICON.star + ' ' + esc(Number(p.puan).toFixed(1)) +
+            ' <span style="color:var(--muted);font-weight:500">(' + esc(p.degerlendirme) + ' değerlendirme)</span></div>'
+          : '<div style="font-size:.8rem;color:var(--muted)">Henüz değerlendirilmemiş</div>';
+
+        var satirlar = [];
+        if (p.sehir)    satirlar.push('<div class="detail-row">' + ICON.pin + esc(p.sehir) + '</div>');
+        if (firma) {
+          if (Number(p.kapasite) > 0) satirlar.push('<div class="detail-row">' + ICON.users + esc(p.kapasite) + ' kurye kapasitesi</div>');
+        } else {
+          if (p.tur)                  satirlar.push('<div class="detail-row">' + ICON.briefcase + esc(p.tur) + '</div>');
+          if (Number(p.acikIlan) > 0) satirlar.push('<div class="detail-row">' + ICON.list + esc(p.acikIlan) + ' açık ilan</div>');
+        }
+
+        var bolge = (p.bolgeler || []).filter(Boolean);
+        var hizmet = (p.hizmetler || []).filter(Boolean);
+        function cipler(baslik, arr) {
+          if (!arr.length) return '';
+          return '<div class="detail-section"><div class="detail-section__title">' + baslik + '</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+            arr.map(function (s) { return '<span class="kb-chip">' + esc(s) + '</span>'; }).join('') +
+            '</div></div>';
+        }
+
+        el.innerHTML =
+          '<div class="detail-hero">' +
+            '<div style="display:flex;align-items:center;gap:16px">' +
+              '<div class="kb-avatar kb-avatar--xl" style="background:' + renk + '">' + initials(p.ad || '?') + '</div>' +
+              '<div style="min-width:0">' +
+                '<div style="font-size:1.1rem;font-weight:800">' + esc(p.ad || '—') + '</div>' +
+                '<div style="font-size:.8rem;color:var(--muted);margin:2px 0 6px">' + etiket + '</div>' +
+                puanHtml +
+              '</div>' +
+            '</div>' +
+            (p.dogrulama === 'verified'
+              ? '<div style="margin-top:12px">' + _dogrulamaRozet() + '</div>' : '') +
+          '</div>' +
+
+          (satirlar.length ? '<div class="detail-section">' + satirlar.join('') + '</div>' : '') +
+          (p.aciklama ? '<div class="detail-section"><div class="detail-section__title">Hakkında</div>' +
+            '<div style="font-size:.86rem;color:var(--text);line-height:1.6">' + escLines(p.aciklama) + '</div></div>' : '') +
+          (!firma && p.ihtiyac ? '<div class="detail-section"><div class="detail-section__title">Kurye İhtiyacı</div>' +
+            '<div style="font-size:.86rem;color:var(--text);line-height:1.6">' + escLines(p.ihtiyac) + '</div></div>' : '') +
+          cipler('Hizmet Bölgeleri', bolge) +
+          (firma ? cipler('Verdiği Hizmetler', hizmet) : '') +
+
+          '<div class="detail-cta" style="display:flex;gap:10px">' +
+            '<button class="btn btn--outline" style="flex:1" onclick="Router.go(\'' + escJs(_ilanlarRotasi()) + '\')">İlanlarına Bak</button>' +
+            '<button class="btn btn--primary" style="flex:1" onclick="SharedScreens._isverenMesaj(\'' + escJs(id) + '\')">Mesaj Gönder</button>' +
+          '</div>';
+      });
+    }).catch(function (e) {
+      console.warn('isverenProfil:', e);
+      whenEl('ip-root', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">⚠️</div>' +
+          '<div class="kb-empty__title">Profil yüklenemedi</div></div>';
+      });
+    });
+  }
+
+  function _dogrulamaRozet() {
+    return '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>';
+  }
+
+  /* ── İŞ DENEYİMİ (migration-34) ──────────────────────────
+     Kurye bunu web sitesindeki profil düzenleme sayfasında dolduruyor.
+     Kayıtlar eskiden yalnız o tarayıcının localStorage'ındaydı; hiçbir
+     işveren göremiyordu. Referans satırı yalnız ilişkisi olan işverene
+     döner (RLS); dönmediyse hiç basılmaz — "referans yok" gibi yanlış
+     bir bilgi göstermiyoruz. */
+  var _WE_AY = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  function _weTarih(iso) {
+    if (!iso) return '';
+    var p = String(iso).slice(0, 10).split('-');
+    if (p.length < 2) return String(iso);
+    return (_WE_AY[parseInt(p[1], 10) - 1] || '') + ' ' + p[0];
+  }
+  function renderIsDeneyimi(list) {
+    if (!list || !list.length) return '';
+    return '<div class="detail-section"><div class="detail-section__title">İş Deneyimi</div>' +
+      list.map(function (w) {
+        var aralik = [_weTarih(w.baslangic), w.aktif ? 'Devam ediyor' : _weTarih(w.bitis)]
+          .filter(Boolean).join(' — ');
+        var alt = [w.sirket, w.model, w.sehir].filter(Boolean).map(esc).join(' · ');
+        var ref = (w.referansAd || w.referansTel)
+          ? '<div style="font-size:.76rem;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)">👤 ' +
+            esc(w.referansAd || '') + (w.referansTel ? ' · 📞 ' + esc(w.referansTel) : '') + '</div>'
+          : '';
+        return '<div style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">' +
+          '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+            '<span style="font-weight:700;font-size:.86rem">' + esc(w.pozisyon || '—') + '</span>' +
+            (aralik ? '<span style="font-size:.72rem;color:var(--muted)">' + esc(aralik) + '</span>' : '') +
+          '</div>' +
+          (alt ? '<div style="font-size:.8rem;color:var(--muted);margin-top:2px">' + alt + '</div>' : '') +
+          (w.aciklama ? '<div style="font-size:.8rem;color:var(--text);line-height:1.5;margin-top:6px">' + escLines(w.aciklama) + '</div>' : '') +
+          ref +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+
+  /* Aday detay ekranlarının ortak kullandığı yükleyici.
+     hedefId: yazılacak elemanın id'si (renderScreen gecikmesi için whenEl). */
+  function loadIsDeneyimi(profileId, hedefId) {
+    if (!profileId || !(window.SB && SB.isOn() && SB.workExperienceFor)) return;
+    SB.workExperienceFor(profileId).then(function (list) {
+      if (!list || !list.length) return;
+      whenEl(hedefId, function (el) { el.innerHTML += renderIsDeneyimi(list); });
+    }).catch(function (e) { console.warn('is deneyimi:', e); });
+  }
+
+  /* Kullanıcının rolüne göre ilan listesi rotası */
+  function _ilanlarRotasi() {
+    var r = (window.APP && APP.role) || 'kurye';
+    return r === 'kurye' ? '/kurye/ilanlar' : '/' + r + '/ilanlarim';
+  }
+
+  /* Mesaj: konuşma ancak bir başvuru/teklif ilişkisi varsa açılabilir
+     (RLS). Doğrudan konuşma açmayı denemek yerine kullanıcıyı mesajlar
+     ekranına götürüp durumu söylüyoruz — sessizce başarısız olmasın. */
+  function _isverenMesaj(profileId) {
+    var r = (window.APP && APP.role) || 'kurye';
+    if (window.SB && SB.isOn() && SB.canMessage) {
+      SB.canMessage(profileId).then(function (ok) {
+        if (ok) Router.go('/' + r + '/mesajlar');
+        else toast('Mesajlaşmak için önce bu işverenin bir ilanına başvurmalısın.');
+      }).catch(function () { Router.go('/' + r + '/mesajlar'); });
+    } else {
+      Router.go('/' + r + '/mesajlar');
+    }
+  }
+
   return {
     bildirimler : bildirimler,
+    isverenProfil : isverenProfil,
+    _isverenMesaj : _isverenMesaj,
+    renderIsDeneyimi : renderIsDeneyimi,
+    loadIsDeneyimi   : loadIsDeneyimi,
     favoriler   : favoriler,
     ayarlar     : ayarlar,
     yardim      : yardim,
@@ -1757,6 +1936,12 @@ window.initPremiumMap = async function(role) {
       actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/firma/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
     } else if (it.type === 'kurye' && r === 'isletme') {
       actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isletme/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
+    } else if (it.type === 'isletme' || it.type === 'firma') {
+      /* ESKİDEN BURADA HİÇBİR ŞEY YOKTU.
+         Esnaf ve Kurye Firması işaretçilerine dokunan kullanıcı, adından
+         başka bir şey içermeyen ölü bir kart görüyordu — profil yok,
+         iletişim yok. Artık yeni işveren profili ekranına gidiyor. */
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isveren/' + escJs(it.id)+ '\')">Profili Gör</button>';
     }
     var maasHtml = it.maas ? '<div class="spm-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' + esc(it.maas)+ ' ₺</div>' : '';
     var distHtml = dist ? '<div class="spm-bcard__meta-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + dist + '</div>' : '';

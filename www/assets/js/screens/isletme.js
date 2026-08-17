@@ -628,9 +628,18 @@ window.IsletmeScreens = (function () {
 
         '<div id="aday-profil-extra"></div>' +
 
-        '<div class="detail-cta" style="display:flex;gap:10px">' +
-          '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/mesajlar\')" style="flex:1;--c-accent:var(--c-isletme)">Mesaj Gönder</button>' +
-          '<button class="btn btn--success btn--sm" onclick="IsletmeScreens._kabul(\'' + escJs(id) + '\')" style="flex:1">Kabul Et</button>' +
+        /* Karar verilmiş başvuruda aksiyon gösterilmez. */
+        '<div class="detail-cta" style="display:flex;flex-direction:column;gap:8px">' +
+          '<div style="display:flex;gap:10px">' +
+            '<button class="btn btn--outline btn--sm" onclick="Router.go(\'/isletme/mesajlar\')" style="flex:1;--c-accent:var(--c-isletme)">Mesaj Gönder</button>' +
+            (durum !== 'accepted' && durum !== 'rejected'
+              ? '<button class="btn btn--success btn--sm" onclick="IsletmeScreens._kabul(\'' + escJs(id) + '\')" style="flex:1">Kabul Et</button>'
+              : '') +
+          '</div>' +
+          /* REDDET — mobilde bu düğme hiç yoktu. */
+          (durum !== 'accepted' && durum !== 'rejected'
+            ? '<button class="btn btn--ghost btn--sm" style="color:var(--c-danger)" onclick="IsletmeScreens._reddet(\'' + escJs(id) + '\')">Reddet</button>'
+            : '') +
         '</div>' +
       '</div>'
     );
@@ -651,6 +660,8 @@ window.IsletmeScreens = (function () {
           if (rows.length) {
             el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
           }
+          /* Ayrıntılı iş deneyimi (migration-34) — bkz. firma.js'teki eşi. */
+          SharedScreens.loadIsDeneyimi(a.applicantId, 'aday-profil-extra');
         });
       }).catch(function() {});
     }
@@ -673,17 +684,37 @@ window.IsletmeScreens = (function () {
      fonksiyon doğru değeri yazıyor — bu yalnız bu dosyada bozuktu.
 
      Ayrıca hata yutuluyordu; mesaj artık yalnız yazma başarılıysa. */
-  async function _kabul(id) {
-    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return; }
-    try {
-      await SB.updateApplication(id, 'accepted');
-    } catch (e) {
-      toast('İşe alım kaydedilemedi — tekrar deneyin');
-      return;
+  /* Başvuru durumu yazma — TEK YOL.
+     DİKKAT: SB.updateApplication PostgREST yanıtını döndürür, HATA
+     FIRLATMAZ; `try/catch` bir veritabanı hatasını yakalamaz. Dönen
+     nesnenin .error alanına bakmak gerekir. (firma.js'te aynı yardımcı.) */
+  async function _durumYaz(id, durum) {
+    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return false; }
+    var r;
+    try { r = await SB.updateApplication(id, durum); }
+    catch (e) { r = { error: e }; }
+    if (r && r.error) {
+      console.warn('durum yazilamadi:', r.error);
+      toast('İşlem başarısız — tekrar deneyin');
+      return false;
     }
     var idx = _basCache.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) _basCache[idx].durum = 'accepted';
+    if (idx >= 0) _basCache[idx].durum = durum;
+    return true;
+  }
+
+  async function _kabul(id) {
+    if (!(await _durumYaz(id, 'accepted'))) return;
     toast('Aday kabul edildi! ✓');
+    setTimeout(function () { Router.back(); }, 700);
+  }
+
+  /* REDDETME — mobilde bu yol hiç yoktu; olumsuz sonuçlanan başvurular
+     sonsuza kadar "bekliyor"da kalıyor, aday cevap alamıyordu. */
+  async function _reddet(id) {
+    if (!confirm('Bu başvuruyu reddetmek istediğinize emin misiniz?')) return;
+    if (!(await _durumYaz(id, 'rejected'))) return;
+    toast('Başvuru reddedildi.');
     setTimeout(function () { Router.back(); }, 700);
   }
 
@@ -762,7 +793,8 @@ window.IsletmeScreens = (function () {
     _ilanFilter: _ilanFilter,
     _ilanToggle: _ilanToggle,
     _yayinla   : _yayinla,
-    _kabul     : _kabul
+    _kabul     : _kabul,
+    _reddet    : _reddet
   };
 
 })();

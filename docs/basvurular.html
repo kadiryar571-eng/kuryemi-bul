@@ -557,7 +557,12 @@
         '</dl></div>' +
 
         '<div class="apc-msec"><h3>Sertifikalar &amp; Belgeler</h3>' + certsHtml + '</div>' +
-        '<div class="apc-msec"><h3>Geçmiş İş Deneyimi</h3>' + expHtml + '</div>' +
+        '<div class="apc-msec"><h3>Çalıştığı Yerler</h3>' + expHtml + '</div>' +
+        /* Ayrıntılı iş deneyimi ASENKRON dolar (migration-34).
+           Kurye bunu profilinde dolduruyordu ama kayıtlar yalnız kendi
+           tarayıcısındaydı; işveren HİÇBİRİNİ göremiyordu. Referans
+           bilgisi RLS gereği yalnız ilana başvurmuş adayda döner. */
+        '<div class="apc-msec" id="apcWorkExp" style="display:none"><h3>İş Deneyimi</h3><div id="apcWorkExpBody"></div></div>' +
         (k.aciklama ? '<div class="apc-msec"><h3>Hakkında</h3><p style="font-size:0.875rem;color:var(--text-2);line-height:1.7">' + esc(k.aciklama) + '</p></div>' : '') +
 
         /* ─ Footer ─ */
@@ -574,6 +579,21 @@
 
       var overlay = document.getElementById('apcModalOverlay');
       if (overlay) { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+
+      /* Ayrıntılı iş deneyimini çek ve varsa göster.
+         Kayıt yoksa bölüm HİÇ açılmaz — boş bir "İş Deneyimi" başlığı
+         göstermek, veri olmadığını değil özelliğin bozuk olduğunu
+         düşündürüyor. */
+      if (window.SB && SB.isOn() && SB.workExperienceFor && window.KBApp && KBApp.renderWorkExperience) {
+        SB.workExperienceFor(k.id).then(function (list) {
+          if (!list || !list.length) return;
+          var box  = document.getElementById('apcWorkExp');
+          var body = document.getElementById('apcWorkExpBody');
+          if (!box || !body) return;
+          body.innerHTML = KBApp.renderWorkExperience(list);
+          box.style.display = '';
+        }).catch(function (e) { console.warn('apc iş deneyimi:', e); });
+      }
     }
 
     function closeModal() {

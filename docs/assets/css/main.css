@@ -5979,3 +5979,36 @@ a.dash-stat:hover {
 .map-popup__sub { display: block; margin-bottom: 8px; color: #666; font-size: .78rem; }
 .map-popup a { color: #0057FF; font-weight: 600; text-decoration: none; }
 .map-popup a:hover { text-decoration: underline; }
+
+/* ============================================================
+   İŞ DENEYİMİ — profil sayfası + başvurular aday kartı
+   Kaynak: public.work_experience (migration-34). Kayıtlar eskiden
+   yalnız localStorage'daydı; işveren hiç göremiyordu.
+   ============================================================ */
+.we-list { display: flex; flex-direction: column; gap: 12px; }
+.we-item {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.we-item__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.we-item__pos  { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.we-item__date { font-size: 0.75rem; color: var(--text-3); white-space: nowrap; }
+.we-item__co   { font-size: 0.84rem; color: var(--text-2); margin-top: 2px; }
+.we-item__meta { color: var(--text-3); }
+.we-item__desc {
+  font-size: 0.82rem; color: var(--text-2);
+  line-height: 1.6; margin-top: 8px;
+}
+.we-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+/* Referans satırı yalnız ilişkisi olan işverene döner (RLS); bu yüzden
+   görsel olarak da ayrılıyor — herkese açık bir bilgi değil. */
+.we-ref {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.8rem; color: var(--text-2);
+}

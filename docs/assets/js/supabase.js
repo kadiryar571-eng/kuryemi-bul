@@ -1161,6 +1161,105 @@
     return r.data ? r.data.id : null;
   }
 
+  /* ---------- İŞ DENEYİMİ (migration-34) ----------
+     Kayıtlar eskiden yalnız localStorage'daydı; işveren hiç göremiyordu.
+
+     OKUMA İKİ KAYNAKLI:
+       1) Temel tablo (work_experience) — RLS yalnız SAHİBİNE ve adayın
+          başvurduğu ilanın SAHİBİ olan işverene satır döndürür. Bu yol
+          referans alanlarını da getirir.
+       2) work_experience_public view'ı — referans alanları YOK, her
+          oturum açmış kullanıcı okuyabilir.
+     Önce (1) denenir; boş dönerse (2)'ye düşülür. Böylece ilişkisi olan
+     işveren referansı görür, havuzu gezen diğer kullanıcılar görmez.
+     Ayrıntı ve gerekçe: migration-34 başlığındaki not. */
+  function workExpFromDb(r) {
+    return {
+      id: r.id, profileId: r.profile_id,
+      sirket: r.sirket || '', pozisyon: r.pozisyon || '',
+      model: r.model || '', sehir: r.sehir || '',
+      baslangic: r.baslangic || '', bitis: r.bitis || '',
+      aktif: !!r.aktif, aciklama: r.aciklama || '',
+      etiketler: r.etiketler || [],
+      /* View'da bu iki alan yoktur → undefined gelir, '' olur. */
+      referansAd: r.referans_ad || '', referansTel: r.referans_tel || '',
+      createdAt: r.created_at, updatedAt: r.updated_at
+    };
+  }
+  var WE_ORDER = { column: 'baslangic', ascending: false, nullsFirst: false };
+
+  async function myWorkExperience() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from('work_experience').select('*')
+      .eq('user_id', u.id).order(WE_ORDER.column, { ascending: false, nullsFirst: false });
+    if (r.error) { console.warn('myWorkExperience:', r.error); return []; }
+    return (r.data || []).map(workExpFromDb);
+  }
+
+  /* migration-34 çalıştırılmadıysa tablo/view yoktur. Her aday
+     görüntülemede boşa iki istek atmamak için bir kez işaretleyip
+     susuyoruz (profiles_public'teki _viewYok deseniyle aynı). */
+  var _weYok = false;
+  function _weEksikMi(err) {
+    if (!err) return false;
+    var m = (err.message || '') + ' ' + (err.code || '');
+    return /Could not find the table|does not exist|42P01|PGRST205/i.test(m);
+  }
+
+  async function workExperienceFor(profileId) {
+    if (!profileId || _weYok) return [];
+    /* 1) Referanslı yol — RLS izin veriyorsa satır döner */
+    var r = await client.from('work_experience').select('*')
+      .eq('profile_id', profileId).order(WE_ORDER.column, { ascending: false, nullsFirst: false });
+    if (r.error && _weEksikMi(r.error)) { _weYok = true; return []; }
+    if (!r.error && r.data && r.data.length) return r.data.map(workExpFromDb);
+    /* 2) Referanssız genel görünüm */
+    var v = await client.from('work_experience_public').select('*')
+      .eq('profile_id', profileId).order(WE_ORDER.column, { ascending: false, nullsFirst: false });
+    if (v.error) {
+      if (_weEksikMi(v.error)) { _weYok = true; return []; }
+      console.warn('workExperienceFor:', v.error); return [];
+    }
+    return (v.data || []).map(workExpFromDb);
+  }
+
+  function _weRow(d) {
+    return {
+      sirket: d.sirket || '', pozisyon: d.pozisyon || '',
+      model: d.model || '', sehir: d.sehir || '',
+      baslangic: d.baslangic || null,
+      bitis: d.aktif ? null : (d.bitis || null),
+      aktif: !!d.aktif, aciklama: d.aciklama || '',
+      etiketler: d.etiketler || [],
+      referans_ad: d.referansAd || d.referans_ad || '',
+      referans_tel: d.referansTel || d.referans_tel || ''
+    };
+  }
+
+  async function addWorkExperience(data) {
+    var u = await getUser(); if (!u) throw new Error('oturum yok');
+    var pid = await myPid2(); if (!pid) throw new Error('Önce profilini oluştur.');
+    var row = Object.assign(_weRow(data), { profile_id: pid, user_id: u.id });
+    var r = await client.from('work_experience').insert(row).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ? workExpFromDb(r.data) : null;
+  }
+
+  async function updateWorkExperience(id, data) {
+    var u = await getUser(); if (!u) throw new Error('oturum yok');
+    var r = await client.from('work_experience').update(_weRow(data))
+      .eq('id', id).eq('user_id', u.id).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data ? workExpFromDb(r.data) : null;
+  }
+
+  async function deleteWorkExperience(id) {
+    var u = await getUser(); if (!u) throw new Error('oturum yok');
+    var r = await client.from('work_experience').delete().eq('id', id).eq('user_id', u.id);
+    if (r.error) throw r.error;
+    return true;
+  }
+
   // Görüşme satırı → ekranların (KBInterview.renderCard) beklediği nesne
   function interviewFromDb(r) {
     var er = r.interviewer || {}, ee = r.interviewee || {}, l = r.listing || {};
@@ -1606,6 +1705,10 @@
     savePushSubscription: savePushSubscription, deletePushSubscription: deletePushSubscription,
     savePushToken: savePushToken, vapidPublicKey: vapidPublicKey,
     myListingStats: myListingStats, myFleet: myFleet,
+    /* İş deneyimi (migration-34) */
+    myWorkExperience: myWorkExperience, workExperienceFor: workExperienceFor,
+    addWorkExperience: addWorkExperience, updateWorkExperience: updateWorkExperience,
+    deleteWorkExperience: deleteWorkExperience,
     createInterview: createInterview, myInterviews: myInterviews, updateInterview: updateInterview,
     interviewById: interviewById, subscribeInterviews: subscribeInterviews,
     createHiringDecision: createHiringDecision, myHiringDecisions: myHiringDecisions,

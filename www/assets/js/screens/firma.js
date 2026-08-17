@@ -702,13 +702,24 @@ window.FirmaScreens = (function () {
 
         '<div id="aday-profil-extra"></div>' +
 
+        /* Karar verilmiş başvuruda aksiyon gösterilmez; aksi halde
+           kabul edilmiş adayı tekrar reddetmek mümkün görünüyordu. */
         '<div class="detail-cta" style="display:flex;flex-direction:column;gap:8px">' +
           '<div style="display:flex;gap:10px">' +
             '<button class="btn btn--outline" onclick="Router.go(\'/firma/mesajlar\')" style="flex:1">Mesaj Gönder</button>' +
-            '<button class="btn btn--success" onclick="FirmaScreens._kabul(\'' + escJs(id) + '\')" style="flex:1">Kabul Et</button>' +
+            (durum !== 'accepted' && durum !== 'rejected'
+              ? '<button class="btn btn--success" onclick="FirmaScreens._kabul(\'' + escJs(id) + '\')" style="flex:1">Kabul Et</button>'
+              : '') +
           '</div>' +
-          (durum !== 'reviewed' && durum !== 'accepted' ?
-            '<button class="btn btn--ghost btn--sm" onclick="FirmaScreens._degerlendir(\'' + escJs(id) + '\')">İncelendi olarak işaretle</button>' : '') +
+          (durum !== 'accepted' && durum !== 'rejected'
+            ? '<div style="display:flex;gap:10px">' +
+                (durum !== 'reviewed'
+                  ? '<button class="btn btn--ghost btn--sm" style="flex:1" onclick="FirmaScreens._degerlendir(\'' + escJs(id) + '\')">İncelendi işaretle</button>'
+                  : '') +
+                /* REDDET — mobilde bu düğme hiç yoktu. */
+                '<button class="btn btn--ghost btn--sm" style="flex:1;color:var(--c-danger)" onclick="FirmaScreens._reddet(\'' + escJs(id) + '\')">Reddet</button>' +
+              '</div>'
+            : '') +
         '</div>' +
       '</div>'
     );
@@ -733,6 +744,12 @@ window.FirmaScreens = (function () {
           if (rows.length) {
             el.innerHTML = '<div class="detail-section"><div class="detail-section__title">Profil</div>' + rows.join('') + '</div>';
           }
+          /* Ayrıntılı iş deneyimi (migration-34) — kurye bunu web'deki
+             profil düzenleme sayfasında dolduruyor. Eskiden kayıtlar
+             yalnız kendi tarayıcısındaydı ve işveren HİÇBİRİNİ
+             göremiyordu. Referans satırı yalnız ilana başvurmuş adayda
+             döner (RLS). */
+          SharedScreens.loadIsDeneyimi(a.applicantId, 'aday-profil-extra');
         });
       }).catch(function() {});
     }
@@ -743,17 +760,41 @@ window.FirmaScreens = (function () {
      "Aday değerlendirmeye alındı." deniyor ve ekrandan çıkılıyordu:
      yazma başarısız olsa bile işveren işlemin tamamlandığını sanıyordu.
      Bağlantı yokken de aynı mesaj çıkıyordu. */
-  async function _degerlendir(id) {
-    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return; }
-    try {
-      await SB.updateApplication(id, 'reviewed');
-    } catch (e) {
+  /* Başvuru durumu yazma — TEK YOL.
+     DİKKAT: SB.updateApplication PostgREST yanıtını döndürür, HATA
+     FIRLATMAZ. Yani `try { await ... } catch` bir veritabanı hatasını
+     YAKALAMAZ; dönen nesnenin .error alanına bakmak gerekir. Üç çağıran
+     da (kabul / reddet / incelendi) bu yardımcıyı kullanır. */
+  async function _durumYaz(id, durum) {
+    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return false; }
+    var r;
+    try { r = await SB.updateApplication(id, durum); }
+    catch (e) { r = { error: e }; }
+    if (r && r.error) {
+      console.warn('durum yazilamadi:', r.error);
       toast('İşlem başarısız — tekrar deneyin');
-      return;
+      return false;
     }
     var idx = _basCache.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) _basCache[idx].durum = 'reviewed';
+    if (idx >= 0) _basCache[idx].durum = durum;
+    return true;
+  }
+
+  async function _degerlendir(id) {
+    if (!(await _durumYaz(id, 'reviewed'))) return;
     toast('Aday değerlendirmeye alındı.');
+    setTimeout(function () { Router.back(); }, 700);
+  }
+
+  /* REDDETME — mobilde bu yol HİÇ YOKTU.
+     İşveren yalnız kabul edebiliyor ya da "incelendi" işaretleyebiliyordu;
+     olumsuz sonuçlanan başvurular sonsuza kadar "bekliyor" durumunda
+     kalıyor, aday cevap alamıyordu. 'rejected' yazmak migration-32
+     trigger'ı üzerinden karar kaydını da açar ve adaya bildirim gider. */
+  async function _reddet(id) {
+    if (!confirm('Bu başvuruyu reddetmek istediğinize emin misiniz?')) return;
+    if (!(await _durumYaz(id, 'rejected'))) return;
+    toast('Başvuru reddedildi.');
     setTimeout(function () { Router.back(); }, 700);
   }
 
@@ -763,15 +804,7 @@ window.FirmaScreens = (function () {
      trigger'ı üzerinden işe alım kaydı da açtığı için sessiz başarısızlık
      değerlendirme akışını da bozuyordu. */
   async function _kabul(id) {
-    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return; }
-    try {
-      await SB.updateApplication(id, 'accepted');
-    } catch (e) {
-      toast('İşe alım kaydedilemedi — tekrar deneyin');
-      return;
-    }
-    var idx = _basCache.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) _basCache[idx].durum = 'accepted';
+    if (!(await _durumYaz(id, 'accepted'))) return;
     toast('Kurye ekibinize katıldı! ✓');
     setTimeout(function () { Router.back(); }, 700);
   }
@@ -1051,6 +1084,7 @@ window.FirmaScreens = (function () {
     _yayinla     : _yayinla,
     _degerlendir : _degerlendir,
     _kabul       : _kabul,
+    _reddet      : _reddet,
     _saveAdres   : _saveAdres,
     _saveHizmetler : _saveHizmetler,
     _pickBelge   : _pickBelge,

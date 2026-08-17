@@ -1200,6 +1200,47 @@
     for (var i = 1; i <= 5; i++) s += '<button type="button" class="rev-star' + (i <= val ? " on" : "") + '" data-star="' + i + '" aria-label="' + i + '">★</button>';
     return '<div class="rev-picker" data-val="' + (val || 0) + '">' + s + '</div>';
   }
+  /* ---------- İŞ DENEYİMİ (migration-34) ----------
+     Hem profil sayfası hem başvurular ekranı aynı biçimi kullanır.
+     `referansAd`/`referansTel` yalnız ilişkisi olan işverene döner
+     (RLS + work_experience_public view'ı); gelmediyse satır basılmaz —
+     "referans yok" gibi YANLIŞ bir bilgi göstermiyoruz. */
+  var WE_AYLAR = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+  function weTarih(iso) {
+    if (!iso) return "";
+    var p = String(iso).slice(0, 10).split("-");
+    if (p.length < 2) return KB.esc(String(iso));
+    var ay = parseInt(p[1], 10) - 1;
+    return (WE_AYLAR[ay] || "") + " " + p[0];
+  }
+  function renderWorkExperience(list) {
+    if (!list || !list.length) return "";
+    return '<div class="we-list">' + list.map(function (w) {
+      var bas = weTarih(w.baslangic);
+      var bit = w.aktif ? "Devam ediyor" : weTarih(w.bitis);
+      var aralik = [bas, bit].filter(Boolean).join(" — ");
+      var altSat = [w.model, w.sehir].filter(Boolean).map(KB.esc).join(" · ");
+      var etiket = (w.etiketler && w.etiketler.length)
+        ? '<div class="we-tags">' + w.etiketler.map(function (t) {
+            return '<span class="chip">' + KB.esc(t) + '</span>'; }).join("") + '</div>'
+        : "";
+      var ref = (w.referansAd || w.referansTel)
+        ? '<div class="we-ref">👤 ' + KB.esc(w.referansAd || "") +
+          (w.referansTel ? ' · 📞 ' + KB.esc(w.referansTel) : "") + '</div>'
+        : "";
+      return '<div class="we-item">' +
+        '<div class="we-item__head">' +
+          '<span class="we-item__pos">' + KB.esc(w.pozisyon || "—") + '</span>' +
+          (aralik ? '<span class="we-item__date">' + KB.esc(aralik) + '</span>' : "") +
+        '</div>' +
+        '<div class="we-item__co">' + KB.esc(w.sirket || "") +
+          (altSat ? ' <span class="we-item__meta">· ' + altSat + '</span>' : "") + '</div>' +
+        (w.aciklama ? '<p class="we-item__desc">' + KB.esc(w.aciklama).replace(/\n/g, "<br>") + '</p>' : "") +
+        etiket + ref +
+      '</div>';
+    }).join("") + '</div>';
+  }
+
   function reviewsBox(targetId, reviews, canRev, myRev) {
     var inner = "";
     if (canRev) {
@@ -1446,9 +1487,23 @@
         sections += prfSection(T("prof.certs"), '<p class="prf-empty-sub">' + T("prof.noCert") + '</p>');
       }
 
-      /* Çalışma geçmişi */
+      /* Çalışma geçmişi — kısa etiket listesi (profiles.calistigi) */
       sections += prfSection(T("prof.worked"),
         (x.calistigi && x.calistigi.length) ? prfChips(x.calistigi) : '<p class="prf-empty-sub">' + T("prof.noHistory") + '</p>');
+
+      /* Ayrıntılı iş deneyimi (migration-34).
+         Kurye bunu profil-duzenle.html'de dolduruyor; eskiden yalnız
+         kendi tarayıcısında duruyordu ve buraya HİÇ yansımıyordu.
+         Referans bilgisi yalnız ilişkisi olan işverene döner (RLS);
+         dönmediyse o satır hiç basılmaz. */
+      var weHtml = '';
+      if (online() && SB.workExperienceFor) {
+        try {
+          var weList = await SB.workExperienceFor(x.id);
+          if (weList && weList.length) weHtml = renderWorkExperience(weList);
+        } catch (e) { console.warn('workExperienceFor:', e); }
+      }
+      if (weHtml) sections += prfSection("İş Deneyimi", weHtml);
 
       /* "Referanslar" bölümü KALDIRILDI — arkasındaki alan hayaletti.
          supabase.js/fromDb `referanslar` diye sabit boş bir dizi
@@ -2505,6 +2560,8 @@
     setPoolSort: function (v) { POOLV.sort = v || ""; poolApply(); },
     initMap: initMap, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings,
-    renderJobDetail: renderJobDetail, buildJobDetailHtml: buildJobDetailHtml, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages
+    renderJobDetail: renderJobDetail, buildJobDetailHtml: buildJobDetailHtml, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages,
+    /* basvurular.html aday kartında da aynı biçimi kullanıyor */
+    renderWorkExperience: renderWorkExperience
   };
 })();

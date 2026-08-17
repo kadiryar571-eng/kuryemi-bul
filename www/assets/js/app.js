@@ -445,6 +445,11 @@
     Router.define('/isletme/profil',      IsletmeScreens.profil);
 
     /* Shared */
+    /* İşveren profili — üç rol de görüntüleyebilir.
+       Mobilde bu ekran HİÇ YOKTU: haritada Esnaf/Firma işaretçisine
+       dokunan kullanıcı adından başka bir şey göremiyordu. */
+    Router.define('/isveren/:id',    SharedScreens.isverenProfil);
+
     Router.define('/bildirimler',    SharedScreens.bildirimler);
     Router.define('/favoriler',      SharedScreens.favoriler);
     Router.define('/ayarlar',        SharedScreens.ayarlar);
