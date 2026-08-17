@@ -1331,11 +1331,37 @@
         (ok ? '<span class="prf-verif__status">Doğrulandı</span>' : '<span class="prf-verif__status prf-verif__status--no">Bekliyor</span>') +
       '</div>';
     }
+    /* DOĞRULAMA LİSTESİ — yalnız gerçekten bilinen şeyler.
+       ============================================================
+       Eskiden dört satır vardı ve üçü sorunluydu:
+
+       1) "Telefon"  → !!(x.telefon) okuyordu. Ama profileById yalnız
+          profiles/profiles_public'ten seçiyor ve telefon O TABLODA DEĞİL
+          (KVKK gereği ayrı profile_contacts tablosunda). Yani x.telefon
+          HER ZAMAN boş; telefonunu girmiş kullanıcılarda bile satır
+          kalıcı olarak "Bekliyor" görünüyordu.
+       2) "Platform Üyeliği" → verifItem(true, …), yani koşulsuz yeşil.
+          Herkesin sağladığı bir şeyi "doğrulama" diye göstermek listeyi
+          olduğundan dolu gösteriyordu.
+       3) "Güvenilir Hesap" → "Kimlik Doğrulama" ile AYNI koşul. Tek bir
+          olgu iki satır olarak sayılıyor, 4'te 2 doğrulama varmış gibi
+          görünüyordu. Bu bir GÜVEN yüzeyi; şişirmek yanıltıcı.
+
+       Telefon artık profile_contacts'tan okunuyor. RLS yalnız kendi
+       profilinde (ve kabul edilmiş teklifin karşı tarafında) izin verir;
+       okunamıyorsa satır "Bekliyor" demek yerine HİÇ BASILMAZ — bilgi
+       yokluğunu olumsuz bilgi gibi göstermiyoruz. */
+    var telefonVar = null;                     // null = okunamadı
+    if (online() && SB.contactOf) {
+      try {
+        var kisi = await SB.contactOf(x.id);
+        if (kisi) telefonVar = !!kisi.telefon;
+      } catch (e) { /* RLS engelledi — bilinmiyor */ }
+    }
+
     var verifHtml =
       verifItem(x.dogrulama === "verified", "Kimlik Doğrulama") +
-      verifItem(!!(x.telefon), "Telefon") +
-      verifItem(true, "Platform Üyeliği") +
-      verifItem(x.dogrulama === "verified", "Güvenilir Hesap");
+      (telefonVar === null ? "" : verifItem(telefonVar, "Telefon"));
 
     /* ── KYC back-link (built into page-head via JS rendered hero) */
     var backHref = type === "kurye" ? "kuryeler.html" : type === "isletme" ? "isletmeler.html" : "firmalar.html";
@@ -1424,16 +1450,11 @@
       sections += prfSection(T("prof.worked"),
         (x.calistigi && x.calistigi.length) ? prfChips(x.calistigi) : '<p class="prf-empty-sub">' + T("prof.noHistory") + '</p>');
 
-      /* Referanslar */
-      if (x.referanslar && x.referanslar.length) {
-        sections += prfSection(T("prof.refs"),
-          '<div class="prf-ref-list">' + x.referanslar.map(function(r){
-            return '<div class="prf-ref"><div class="prf-ref__head"><span class="prf-ref__name">' + KB.esc(r.ad) + '</span><span class="prf-ref__role">' + KB.esc(r.rol) + '</span></div>' +
-              '<p class="prf-ref__note">"' + KB.esc(r.not) + '"</p></div>';
-          }).join("") + '</div>');
-      } else {
-        sections += prfSection(T("prof.refs"), '<p class="prf-empty-sub">' + T("prof.noRef") + '</p>');
-      }
+      /* "Referanslar" bölümü KALDIRILDI — arkasındaki alan hayaletti.
+         supabase.js/fromDb `referanslar` diye sabit boş bir dizi
+         döndürüyordu (şemada böyle bir kolon yok), dolayısıyla bu bölüm
+         HER profilde "referans bulunmuyor" gösteriyordu. Ayrıntı ve
+         gerekirse nasıl eklenir: fromDb içindeki not. */
 
     } else if (type === "isletme") {
       sections += prfSection("Doğrulama Merkezi", '<div class="prf-verif">' + verifHtml + '</div>');

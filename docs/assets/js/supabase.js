@@ -35,7 +35,16 @@
       lat: p.lat, lng: p.lng,
       arac: p.arac, bolgeler: p.bolgeler || [], deneyim: p.deneyim || 0,
       seviye: p.seviye || "standart", puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0, dogrulama: p.dogrulama || "none", tamamlanan: p.tamamlanan || 0,
-      sertifikalar: p.sertifikalar || [], calistigi: p.calistigi || [], referanslar: [],
+      sertifikalar: p.sertifikalar || [], calistigi: p.calistigi || [],
+      /* `referanslar: []` KALDIRILDI — hayalet alan.
+         Şemada referans kolonu YOK; burada sabit boş dizi dönüyordu ve
+         iki yerde (profil sayfası + başvurular aday kartı) "Referanslar"
+         bölümü olarak render ediliyordu. Dolayısıyla o bölümler HER
+         KULLANICIDA "referans bulunmuyor" gösteriyordu.
+         Referans bilgisi bugün yalnız profil-duzenle.html'deki iş
+         deneyimi kayıtlarının içinde ve YALNIZ localStorage'da duruyor;
+         sunucuya giden bir yolu yok. Gerçekten istenirse profiles'a
+         kolon (ya da ayrı tablo) + kaydetme yolu gerekir — ayrı bir iş. */
       bolge: (p.bolgeler && p.bolgeler[0]) || "", tur: p.tur, acikIlan: p.acik_ilan || 0, ihtiyac: p.ihtiyac,
       kapasite: p.kapasite || 0, hizmetler: p.hizmetler || [],
       /* Havuzdaki "En Yeni" sıralaması bunu kullanır.

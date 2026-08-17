@@ -255,6 +255,12 @@
     return html;
   }
 
+  /* Gönderim başarısız olunca (chat.js sunucuya yazamayınca) balonun
+     "⚠ Gönderilemedi" işaretini alması için ekranı tazele. */
+  document.addEventListener('kb-chat-change', function () {
+    try { renderMessages(); } catch (e) {}
+  });
+
   /* ─── Render: Messages ──────────────────────────────────────── */
   function renderMessages() {
     var el = document.getElementById('mdtBubbles');
@@ -275,13 +281,21 @@
       var cls    = 'msg-bubble ' + (isOut ? 'msg-bubble--out' : 'msg-bubble--in');
       var icon   = m.type === 'file' ? '📎 ' : m.type === 'location' ? '📍 ' : m.type === 'image' ? '🖼 ' : '';
       var isLast = idx === msgs.length - 1;
-      var receipt = (isOut && isLast)
-        ? '<div class="mdt-read ' + (m.read ? 'mdt-read--read' : 'mdt-read--delivered') + '">' +
-            (m.read ? '✓✓ Görüldü' : '✓ İletildi') + '</div>'
-        : '';
-      return '<div class="' + cls + '">' +
+      /* GÖNDERİLEMEYEN MESAJA "İLETİLDİ" DAMGASI VURULMUYOR.
+         Bu satır eskiden son giden mesaja koşulsuz "✓ İletildi" yazıyordu.
+         chat.js gönderim hatasını yuttuğu için (artık yutmuyor) sunucuya
+         hiç ulaşmamış bir mesaj da "iletildi" görünüyordu — mesajlaşmada
+         verilebilecek en yanıltıcı geri bildirim. */
+      var receipt = '';
+      if (isOut && m.failed) {
+        receipt = '<div class="mdt-read mdt-read--failed">⚠ Gönderilemedi</div>';
+      } else if (isOut && isLast) {
+        receipt = '<div class="mdt-read ' + (m.read ? 'mdt-read--read' : 'mdt-read--delivered') + '">' +
+                    (m.read ? '✓✓ Görüldü' : '✓ İletildi') + '</div>';
+      }
+      return '<div class="' + cls + (m.failed ? ' msg-bubble--failed' : '') + '">' +
         '<div class="msg-bubble-text">' + icon + esc(m.content) + '</div>' +
-        '<div class="msg-bubble-time">' + formatTime(m.ts) + '</div>' +
+        '<div class="msg-bubble-time">' + (m.failed ? '' : formatTime(m.ts)) + '</div>' +
         receipt +
       '</div>';
     }).join('');
@@ -921,7 +935,7 @@
       try {
         if (window.KBChat && KBChat.load) {
           var u = KB.STATE && KB.STATE.user;
-          var r = (KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'kurye';
+          var r = (KB.STATE && KB.STATE.role) || 'kurye';   // kb_rol yedeği kaldırıldı
           await KBChat.load(u ? u.id : null, r);
         }
       } catch (e) { console.warn('KBChat.load:', e); }

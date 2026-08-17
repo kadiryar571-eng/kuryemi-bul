@@ -193,22 +193,39 @@
       });
     }
 
-    function renderProfEngine(profile, role) {
+    /* hasPhone: profile_contacts'tan gelir (profiles'ta telefon yok).
+       serverPct: my_dashboard_stats().profil_tamamlanma — tek yüzde
+       kaynağı sunucu olsun diye. Yoksa adımlardan hesaplanır. */
+    function renderProfEngine(profile, role, hasPhone, serverPct) {
       var el = document.getElementById('profEngine');
       if (!el || !profile) return;
+      /* Adımlar sunucudaki public.profile_completion() ile AYNI ölçütleri
+         kullanır. Eskiden şemada OLMAYAN alanlar okunuyordu:
+           profile.hakkinda / profile.bio     → yok (doğrusu: aciklama)
+           profile.web / profile.telefon      → yok; telefon KVKK gereği
+                                                ayrı profile_contacts'ta
+           profile.tercihler / profile.tercih → yok (doğrusu: ihtiyac)
+         Altı adımın üçü hiçbir zaman tamamlanamıyordu: kullanıcı profilinin
+         tamamını doldursa bile "Profilini Tamamla" kutusu kapanmıyordu.
+         (panel-firma.html'de aynı hata düzeltildi; not oradaki gibi.) */
       var STEPS = {
         isletme: [
-          { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
-          { label: 'Faaliyet bölgeni belirle',      done: !!(profile.sehir) },
-          { label: 'Esnaf bilgilerini doldur',    done: !!(profile.hakkinda || profile.bio) },
-          { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
-          { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
-          { label: 'Çalışma tercihlerini belirle',  done: !!(profile.tercihler || profile.tercih) },
+          { label: 'Esnaf adını gir',              done: !!(profile.ad && profile.ad.length > 1) },
+          { label: 'Faaliyet şehrini belirle',     done: !!profile.sehir },
+          { label: 'İşletme hakkında bilgi ekle',  done: !!profile.aciklama },
+          { label: 'Harita konumunu işaretle',     done: profile.lat != null && profile.lng != null },
+          { label: 'İletişim telefonu ekle',       done: !!hasPhone },
+          { label: 'İşletme türünü seç',           done: !!profile.tur },
+          { label: 'Kurye ihtiyacını yaz',         done: !!profile.ihtiyac },
+          { label: 'Kimlik doğrulamasını tamamla', done: profile.dogrulama === 'verified' }
         ],
       };
       var steps = STEPS[role] || STEPS.isletme;
       var doneCount = steps.filter(function(s){ return s.done; }).length;
-      var pct = Math.round((doneCount / steps.length) * 100);
+      /* Sunucu yüzdesi varsa o kazanır — tek kaynak ilkesi. */
+      var pct = (serverPct != null && !isNaN(serverPct))
+        ? Number(serverPct)
+        : Math.round((doneCount / steps.length) * 100);
       if (pct >= 100) { el.style.display = 'none'; return; }
       el.style.display = '';
       document.getElementById('profPct').textContent = '%' + pct;
@@ -343,8 +360,21 @@
           greeting.textContent = gStr + ', ' + firstName + ' 👋';
 
           /* profil_guc ile beslenen ilerleme çubuğu kaldırıldı — tek yüzde
-             kaynağı renderProfEngine(). */
-          renderProfEngine(profile, 'isletme');
+             kaynağı renderProfEngine().
+             Telefon profiles'ta değil (KVKK: profile_contacts); yüzdeyi de
+             sunucudan alıyoruz ki istemci hesabıyla çelişmesin. */
+          var telefonVar = false, sunucuPct = null;
+          try {
+            if (SB.contactOf && profile.id) {
+              var kisi = await SB.contactOf(profile.id);
+              telefonVar = !!(kisi && kisi.telefon);
+            }
+          } catch (e) {}
+          try {
+            var ds2 = SB.myDashboardStats ? await SB.myDashboardStats() : null;
+            if (ds2 && ds2.profil_tamamlanma != null) sunucuPct = ds2.profil_tamamlanma;
+          } catch (e) {}
+          renderProfEngine(profile, 'isletme', telefonVar, sunucuPct);
           sub.textContent = 'İlanlarını yönet ve uygun kuryeleri keşfet.';
 
           if (profile.avatar_url) {
@@ -423,23 +453,31 @@
           lsHost.innerHTML =
             '<div style="font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:10px">📋 Oluşturduğunuz İlanlar (' + lsJobs.length + ')</div>' +
             lsJobs.map(function(j) {
+              /* İlan başlığı/şehri kaçırılmadan basılıyordu. Bunlar
+                 kullanıcının kendi ilanları (self-XSS) ama '<' içeren bir
+                 başlık düzeni de bozuyordu; kaçış her durumda doğrusu. */
+              var E = function (s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); };
               var loc = [j.sehir, j.bolge].filter(Boolean).join(' · ');
-              var badge = window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'taslak') : ('<span class="chip">' + (j.durum||'taslak') + '</span>');
+              var badge = window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'taslak') : ('<span class="chip">' + E(j.durum || 'taslak') + '</span>');
               var qScore = window.IlanQuality ? IlanQuality.calcScore(j) : null;
               var qColor = qScore !== null ? IlanQuality.scoreColor(qScore) : 'var(--text-3)';
               var qBadge = qScore !== null ? '<span style="font-size:0.7rem;font-weight:700;color:' + qColor + ';background:var(--surface-2);border-radius:99px;padding:2px 8px;border:1px solid var(--border)" title="İlan kalitesi">%' + qScore + ' Kalite</span>' : '';
+              /* Durum/başvuru sayfaları ilanı VERİTABANI kimliğiyle arıyor;
+                 yerel taslak kimliği ('ilan_<zaman>') gönderilirse boş
+                 ekran açılıyordu (bkz. ilan-olustur.html'deki aynı düzeltme). */
+              var jid = encodeURIComponent(j.sbId || j.id || '');
               return '<div class="jc-ls-item">' +
                 '<div class="jc-ls-main">' +
-                  '<div class="jc-ls-title">' + (j.baslik || 'Başlıksız') + '</div>' +
-                  '<div class="jc-ls-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + (loc || '') + (j.tarih ? ' · ' + j.tarih : '') + ' ' + qBadge + '</div>' +
+                  '<div class="jc-ls-title">' + E(j.baslik || 'Başlıksız') + '</div>' +
+                  '<div class="jc-ls-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + E(loc || '') + (j.tarih ? ' · ' + E(j.tarih) : '') + ' ' + qBadge + '</div>' +
                 '</div>' +
                 '<div class="jc-ls-right">' +
                   badge +
                   '<div class="jc-ls-acts">' +
-                    '<a href="ilan-kalite.html?job=' + j.id + '" class="btn btn--ghost btn--sm" title="Kalite Analizi">✨ Kalite</a>' +
-                    '<a href="ilan-durum.html?job=' + j.id + '" class="btn btn--ghost btn--sm">📊 Durum</a>' +
-                    '<a href="ilan-olustur.html?edit=' + j.id + '" class="btn btn--ghost btn--sm">Düzenle</a>' +
-                    '<a href="basvurular.html?job=' + j.id + '" class="btn btn--light btn--sm">📋 Başvurular</a>' +
+                    '<a href="ilan-kalite.html?job=' + jid + '" class="btn btn--ghost btn--sm" title="Kalite Analizi">✨ Kalite</a>' +
+                    '<a href="ilan-durum.html?job=' + jid + '" class="btn btn--ghost btn--sm">📊 Durum</a>' +
+                    '<a href="ilan-olustur.html?edit=' + encodeURIComponent(j.id || '') + '" class="btn btn--ghost btn--sm">Düzenle</a>' +
+                    '<a href="basvurular.html?job=' + jid + '" class="btn btn--light btn--sm">📋 Başvurular</a>' +
                   '</div>' +
                 '</div>' +
               '</div>';

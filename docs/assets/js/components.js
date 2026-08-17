@@ -105,10 +105,14 @@
   /* ─── ROLE / PANEL ─────────────────────────────────────────── */
   var ROLE_LABELS = { guest: 'Ziyaretçi', ziyaretci: 'Ziyaretçi', kurye: 'Kurye', isletme: 'Esnaf', firma: 'Kurye Firması' };
 
+  /* Rol YALNIZ oturumdaki profilden gelir.
+     Buradaki `localStorage.getItem('kb_rol')` yedeği demo döneminden
+     kalmaydı: kullanıcının kendi yazabildiği bir değer rol belirliyordu.
+     Veritabanı RLS ile korunduğu için veri sızdırmıyordu ama arayüz
+     yanlış rolü çiziyordu (ör. kuryeye işveren aksiyonları). */
   function getRole() {
     var p = SESSION.profile;
-    if (p && p.role) return p.role;
-    return localStorage.getItem('kb_rol') || 'guest';
+    return (p && p.role) ? p.role : 'guest';
   }
   function currentRole() { return getRole(); }
 
@@ -122,10 +126,12 @@
 
   /* ─── AUTH ─────────────────────────────────────────────────── */
   function isOnline() { return !!(window.SB && window.SB.isOn && window.SB.isOn()); }
-  function isAuthed() {
-    if (isOnline()) return !!(SESSION.user);
-    return getRole() !== 'guest';
-  }
+  /* Oturum var mı? Tek ölçüt gerçek Supabase oturumudur.
+     Çevrimdışı dal `getRole() !== 'guest'` diyordu; yani localStorage'a
+     kb_rol yazan biri "giriş yapmış" sayılıyordu. Uygulamada
+     istismar edilemiyordu (runSessionGuard doğrudan SESSION.user'a
+     bakıyor ve çevrimdışıyken hiç çalışmıyor) ama yanlış bir ölçüttü. */
+  function isAuthed() { return !!SESSION.user; }
 
   /* ─── HELPERS ──────────────────────────────────────────────── */
   /* Projedeki TEK kaçış (escape) kaynağı; diğer modüller buraya delege eder.

@@ -332,9 +332,13 @@
       var isOut = isBusinessRole() ? m.from === 'isletme' : m.from === 'kurye';
       var cls   = 'msg-bubble ' + (isOut ? 'msg-bubble--out' : 'msg-bubble--in');
       var typeIcon = m.type === 'file' ? '📎 ' : m.type === 'location' ? '📍 ' : '';
-      return '<div class="' + cls + '">' +
+      /* Sunucuya yazılamayan mesaj işaretlenir (chat.js → msg.failed).
+         Eskiden gönderilemeyen mesaj da normal balon gibi görünüyordu. */
+      return '<div class="' + cls + (m.failed ? ' msg-bubble--failed' : '') + '">' +
         '<div class="msg-bubble-text">' + typeIcon + esc(m.content) + '</div>' +
-        '<div class="msg-bubble-time">' + formatTime(m.ts) + '</div>' +
+        '<div class="msg-bubble-time">' +
+          (m.failed ? '⚠ Gönderilemedi' : formatTime(m.ts)) +
+        '</div>' +
       '</div>';
     }).join('');
   }
@@ -401,6 +405,12 @@
     var thread = KBChat.getThreads(uid).find(function (t) { return t.id === currentTid; });
     if (thread) renderDetail(thread);
   }
+
+  /* Gönderim başarısız olduğunda (chat.js sunucuya yazamayınca) balonun
+     "⚠ Gönderilemedi" işaretini alması için ekranı tazele. */
+  document.addEventListener('kb-chat-change', function () {
+    if (currentTid) refreshDetail();
+  });
 
   /* ─── Wire events ───────────────────────────────────────────── */
   function wire() {

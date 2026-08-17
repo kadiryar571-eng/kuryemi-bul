@@ -66,7 +66,24 @@
     var email  = params.get('email');
     if (email) {
       var el = document.getElementById('email-text');
-      if (el) el.innerHTML = '<strong>' + email + '</strong> adresine';
+      if (el) {
+        /* YANSIMALI XSS DÜZELTMESİ.
+           Burada `el.innerHTML = '<strong>' + email + '</strong> adresine'`
+           yazıyordu: adres çubuğundan gelen değer hiç kaçırılmadan HTML
+           olarak basılıyordu. verify-email.html giriş İSTEMEYEN bir sayfa
+           (AUTH_PAGES) yani herkese açık; CSP'de 'unsafe-inline' bulunduğu
+           için enjekte edilen script gerçekten çalışıyordu. Sayfa aynı
+           zamanda açık oturumu kontrol edip panele yönlendirdiği için
+           kurban çoğu zaman oturumu açık bir kullanıcı oluyordu.
+
+           DOM düğümü kurarak basıyoruz — metin hiçbir zaman HTML olarak
+           ayrıştırılmaz. */
+        el.textContent = '';
+        var b = document.createElement('strong');
+        b.textContent = email;
+        el.appendChild(b);
+        el.appendChild(document.createTextNode(' adresine'));
+      }
     }
 
     var resendBtn = document.getElementById('resend-btn');

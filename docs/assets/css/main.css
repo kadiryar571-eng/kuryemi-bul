@@ -4516,6 +4516,14 @@ a.dash-stat:hover {
 .msg-bubble-time { font-size: 0.65rem; margin-top: 4px; opacity: 0.65; }
 .msg-bubble--out .msg-bubble-time { color: rgba(255,255,255,0.8); text-align: right; }
 .msg-bubble--in  .msg-bubble-time { color: var(--text-3); }
+/* Sunucuya yazılamamış mesaj — gönderen ile alıcı arasında sessiz kayıp
+   olmasın diye görsel olarak ayrılır (chat.js → msg.failed). */
+.msg-bubble--failed {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+.msg-bubble--failed .msg-bubble-time { color: var(--error); opacity: 1; font-weight: 600; }
 
 /* Business actions bar (isletme only) */
 .msg-biz-actions {
@@ -4884,6 +4892,8 @@ a.dash-stat:hover {
 .mdt-read { font-size: 0.62rem; margin-top: 2px; }
 .mdt-read--read      { color: var(--primary); }
 .mdt-read--delivered { color: var(--text-3); }
+/* Sunucuya yazılamamış mesaj (chat.js → msg.failed) */
+.mdt-read--failed    { color: var(--error); font-weight: 700; }
 
 /* ── Mobile tabs ── */
 .mdt-tabs { display: none; border-bottom: 1px solid var(--border); background: var(--surface); }

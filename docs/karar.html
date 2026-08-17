@@ -201,7 +201,8 @@
     if (window.SB && SB.isOn()) {
       try { var p = await SB.myProfile(); if (p && p.role) return p.role; } catch (e) {}
     }
-    return localStorage.getItem('kb_rol') || 'kurye';
+    /* localStorage'daki kb_rol yedeği kaldırıldı — bkz. gorusmeler.html. */
+    return (window.KB && KB.STATE && KB.STATE.role) || 'kurye';
   }
 
   function renderApplicant(dec) {

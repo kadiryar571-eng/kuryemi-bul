@@ -2,10 +2,18 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <!-- main.css ilk satırında Google Fonts'u @import ediyor (Inter).
+       Bu sayfanın style-src'i yalnız 'self' idi: @import engelleniyor,
+       konsola CSP ihlali düşüyor ve sayfa sitenin geri kalanından farklı
+       bir yazı tipiyle çiziliyordu. Diğer sayfalarla aynı izin listesine
+       hizalandı.
+       NOT: CSP içeriğinde YORUM KULLANILMAZ — tarayıcı '/*' ifadesini
+       direktif adı sanıp politikanın tamamını geçersiz kılar. -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src  'self' 'unsafe-inline';
-    style-src   'self' 'unsafe-inline';
+    style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src    'self' https://fonts.gstatic.com data:;
     img-src     'self' data:;
     connect-src 'self';
     frame-src   'none';

@@ -98,6 +98,14 @@
   /* ─── Yardımcılar ───────────────────────────────────────────── */
   function SBon() { return !!(window.SB && SB.isOn && SB.isOn()); }
 
+  /* Önbellek dışarıdan görünür şekilde değiştiğinde sayfaların kendini
+     tazelemesi için. Kayıt defteri kurmak yerine DOM olayı kullanıyoruz:
+     dinlemek isteyen sayfa `document.addEventListener('kb-chat-change', …)`
+     der, ilgilenmeyen hiçbir şey yapmaz. */
+  function _emitChange() {
+    try { document.dispatchEvent(new CustomEvent('kb-chat-change')); } catch (e) {}
+  }
+
   function preview(text) {
     var s = String(text == null ? '' : text);
     return s.length > 65 ? s.slice(0, 65) + '…' : s;
@@ -324,7 +332,21 @@
     if (SBon() && from !== 'system') {
       SB.sendConvMessage(threadId, content, type === 'text' ? 'text' : type)
         .then(function (row) { if (row && row.id) msg.id = row.id; })
-        .catch(function (e) { console.warn('KBChat.sendMessage:', e); });
+        .catch(function (e) {
+          /* GÖNDERİM BAŞARISIZ — kullanıcıya SÖYLENİR.
+             Burada hata yalnız console.warn ile yutuluyordu. Mesaj
+             iyimser olarak ekrana basıldığı için gönderen kendi
+             balonunu görüyor ve iletildiğini sanıyordu; oysa karşı
+             tarafa hiç ulaşmıyor, sayfa yenilenince de kayboluyordu.
+             Mesajlaşma çekirdek bir akış — sessiz kayıp kabul edilemez. */
+          console.warn('KBChat.sendMessage:', e);
+          msg.failed = true;
+          if (window.KBMotion && KBMotion.showErrorToast) {
+            KBMotion.showErrorToast('Mesaj gönderilemedi — bağlantını kontrol et.');
+          }
+          /* Balonun "gönderilemedi" işaretini alması için ekranı tazele */
+          try { _emitChange(); } catch (e2) {}
+        });
     }
     return msg;
   }

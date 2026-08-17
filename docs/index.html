@@ -2186,24 +2186,17 @@
 
     /* Role selection kartları */
     var rsCards = document.querySelectorAll('.rs-card');
-    /* Kart seçimi */
+    /* Kart seçimi — yalnız görsel vurgulama.
+       Buradaki localStorage.setItem('kb_rol', …) çağrıları KALDIRILDI:
+       artık hiçbir yer kb_rol'ü okumuyor (rol oturumdaki profilden gelir).
+       Kullanıcının seçtiği rol, kart bağlantısındaki ?rol= parametresiyle
+       taşınıyor ve kayıt sonrası ilk oturumda gerçekten uygulanıyor
+       (auth-modal.js → rolNiyetiniSakla, components.js → applyPendingRole). */
     rsCards.forEach(function (card) {
-      card.addEventListener('click', function (e) {
-        /* Butona tıklanmışsa seçimi uygula + role kaydet */
-        var role = card.getAttribute('data-role');
-        if (role) localStorage.setItem('kb_rol', role);
+      card.addEventListener('click', function () {
         rsCards.forEach(function (c) { c.classList.remove('is-active'); });
         card.classList.add('is-active');
       });
-      /* Buton tıklaması kart click'ini de tetikler (event bubbles) */
-      var btn = card.querySelector('.rs-card__btn');
-      if (btn) {
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var role = btn.getAttribute('data-role');
-          if (role) localStorage.setItem('kb_rol', role);
-        });
-      }
     });
     /* Entry animasyonları */
     gorunurYap([].slice.call(rsCards), 0.15);

@@ -206,13 +206,23 @@
       ALL_JOBS.forEach(function(j) { if (JOB_COUNTS[j.id] == null) JOB_COUNTS[j.id] = 0; });
     }
 
+    /* Profil tamamlanma yüzdesi — yalnız GERÇEKTEN doldurulabilen alanlar.
+       Eskiden 10 puanı `k.referanslar` alanına ayrılmıştı; o alan hayalet
+       olduğu için (bkz. supabase.js/fromDb) hiç kazanılamıyor ve profilini
+       eksiksiz dolduran bir adayın yüzdesi bile %90'da tavan yapıyordu.
+       Artık sağlanan ölçüt sayısı üzerinden hesaplanıyor; hepsi doluysa
+       gerçekten %100. */
     function profilePct(k) {
-      var pts = 0;
-      if (k.ad) pts += 15; if (k.sehir) pts += 15; if (k.arac) pts += 15;
-      if (k.deneyim > 0) pts += 15; if (k.aciklama) pts += 15;
-      if (k.sertifikalar && k.sertifikalar.length) pts += 15;
-      if (k.referanslar && k.referanslar.length) pts += 10;
-      return Math.min(100, pts);
+      var olcutler = [
+        !!k.ad,
+        !!k.sehir,
+        !!k.arac,
+        (Number(k.deneyim) || 0) > 0,
+        !!k.aciklama,
+        !!(k.sertifikalar && k.sertifikalar.length)
+      ];
+      var dolu = olcutler.filter(Boolean).length;
+      return Math.round(dolu * 100 / olcutler.length);
     }
 
     function docStatus(k) {
@@ -261,7 +271,7 @@
           bolgeler: r.bolgeler, deneyim: r.deneyim,
           sertifikalar: r.sertifikalar, tamamlanan: r.tamamlanan, puan: r.puan,
           aciklama: r.aciklama, avatar_url: r.avatar_url, dogrulama: r.dogrulama,
-          calistigi: r.calistigi, referanslar: []
+          calistigi: r.calistigi
         };
         return {
           appId:      r.id,           // gerçek applications.id
@@ -503,13 +513,10 @@
           }).join(''))
         : '<span class="text-muted-sm">Geçmiş iş bilgisi yok</span>';
 
-      var refHtml = (k.referanslar || []).length
-        ? (k.referanslar.map(function(r) {
-            return '<div style="padding:10px 14px;background:var(--surface-2);border-radius:var(--radius);margin-bottom:8px">' +
-              '<div style="font-weight:600;font-size:0.875rem">' + esc(r.ad) + ' <span style="font-size:0.75rem;color:var(--text-3)">· ' + esc(r.rol) + '</span></div>' +
-              '<div style="font-size:0.82rem;color:var(--text-2);margin-top:4px;font-style:italic">"' + esc(r.not) + '"</div></div>';
-          }).join(''))
-        : '<span class="text-muted-sm">Referans bulunmuyor</span>';
+      /* refHtml KALDIRILDI — `k.referanslar` hayalet bir alandı.
+         supabase.js/fromDb onu sabit boş dizi olarak döndürüyordu (şemada
+         referans kolonu yok), yani bu bölüm HER adayda "Referans
+         bulunmuyor" gösteriyordu. Ayrıntı: fromDb içindeki not. */
 
       var modalEl = document.getElementById('apcModal');
       if (!modalEl) return;
@@ -551,7 +558,6 @@
 
         '<div class="apc-msec"><h3>Sertifikalar &amp; Belgeler</h3>' + certsHtml + '</div>' +
         '<div class="apc-msec"><h3>Geçmiş İş Deneyimi</h3>' + expHtml + '</div>' +
-        '<div class="apc-msec"><h3>Referanslar</h3>' + refHtml + '</div>' +
         (k.aciklama ? '<div class="apc-msec"><h3>Hakkında</h3><p style="font-size:0.875rem;color:var(--text-2);line-height:1.7">' + esc(k.aciklama) + '</p></div>' : '') +
 
         /* ─ Footer ─ */

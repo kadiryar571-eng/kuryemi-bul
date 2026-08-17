@@ -155,7 +155,9 @@
         if (p && p.role) return p.role;
       } catch (e) {}
     }
-    return localStorage.getItem('kb_rol') || 'kurye';
+    /* localStorage'daki kb_rol yedeği kaldırıldı — kullanıcının kendi
+       yazabildiği bir değere göre işveren/kurye arayüzü seçiliyordu. */
+    return (window.KB && KB.STATE && KB.STATE.role) || 'kurye';
   }
 
   function isBiz() { return ROLE === 'isletme' || ROLE === 'firma'; }

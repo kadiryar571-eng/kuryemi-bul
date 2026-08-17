@@ -104,10 +104,15 @@
     confirmBtn.addEventListener('click', async function () {
       if (!selected) return;
 
-      /* Offline / demo mod */
+      /* Bağlantı yoksa rol KAYDEDİLEMEZ.
+         Eskiden burada localStorage'a 'kb_rol' yazılıp panele
+         yönlendiriliyordu. İki sorunu vardı: (1) rol sunucuya hiç
+         yazılmadığı için seçim kayboluyordu — kullanıcı rolünü seçtiğini
+         sanıyordu; (2) panel zaten oturum istediği için kullanıcı anında
+         giriş ekranına düşüyor, ne olduğunu anlamıyordu. */
       if (!window.SB || !SB.isOn()) {
-        localStorage.setItem('kb_rol', selected);
-        location.href = 'panel-' + selected + '.html';
+        alertEl.textContent = 'Sunucuya bağlanılamadı. Rolünü kaydedebilmek için bağlantını kontrol edip tekrar dene.';
+        alertEl.style.display = '';
         return;
       }
 

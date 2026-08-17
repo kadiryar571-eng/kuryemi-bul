@@ -1110,12 +1110,39 @@
     async function savePersonal(showUI) {
       if (!validate()) return false;
       var fields = collectFields();
-      if (pendingAvatarFile && window.SB && SB.uploadAvatar) {
-        try { var url = await SB.uploadAvatar(pendingAvatarFile); if (url) fields.avatar_url = url; }
-        catch(e) {}
+
+      /* BAĞLANTI YOKSA KAYDEDİLMİŞ GİBİ GÖSTERME.
+         `if (SB.isOn()) await updateMyProfile(...)` koşulu sağlanmayınca
+         yazma sessizce atlanıyor, ama alt taraf yine "kaydedildi" geri
+         bildirimi basıyordu. Kullanıcı profilini güncellediğini sanıp
+         sayfadan çıkıyordu. */
+      /* NOT: showToast() bu script bloğunda TANIMLI DEĞİL (aşağıdaki ikinci
+         blokta). Hata bildirimi için genel KBMotion katmanını kullanıyoruz. */
+      function hataGoster(msg) {
+        if (window.KBMotion && KBMotion.showErrorToast) KBMotion.showErrorToast(msg);
+        else console.warn(msg);
       }
+
+      if (!(window.SB && SB.isOn())) {
+        if (showUI) hataGoster('Sunucuya bağlanılamadı — değişiklikler kaydedilmedi.');
+        return false;
+      }
+
+      if (pendingAvatarFile && SB.uploadAvatar) {
+        try {
+          var url = await SB.uploadAvatar(pendingAvatarFile);
+          if (url) fields.avatar_url = url;
+        } catch (e) {
+          /* Yükleme hatası yutuluyordu: fotoğraf yüklenmemesine rağmen
+             profil kaydediliyor ve "kaydedildi" deniyordu. Kullanıcı
+             fotoğrafının yüklendiğini sanıyordu. */
+          if (showUI) hataGoster('Fotoğraf yüklenemedi — diğer bilgiler kaydedilmedi.');
+          return false;
+        }
+      }
+
       try {
-        if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+        await SB.updateMyProfile(fields);
         if (profile) Object.assign(profile, fields);
         if (showUI) {
           populateView(profile);
@@ -1128,6 +1155,9 @@
         }
         return true;
       } catch(err) {
+        /* Hata sessizce yutuluyordu; kullanıcı neden kaydedilmediğini
+           anlamıyordu. */
+        if (showUI) hataGoster((err && err.message) || 'Değişiklikler kaydedilemedi.');
         return false;
       }
     }

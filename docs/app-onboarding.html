@@ -285,7 +285,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 
   window.selectRole = function(role) {
     _role = role;
-    localStorage.setItem('kb_rol', role);
+    /* localStorage.setItem('kb_rol', …) KALDIRILDI — artık hiçbir yer
+       okumuyor. Seçim goRegister()'daki ?rol= parametresiyle taşınıyor
+       ve kayıt sonrası ilk oturumda gerçekten uygulanıyor. */
     ['kurye','isletme','firma'].forEach(function(r){
       var el = document.getElementById('role' + r.charAt(0).toUpperCase() + r.slice(1));
       if (el) el.classList.toggle('is-selected', r === role);
