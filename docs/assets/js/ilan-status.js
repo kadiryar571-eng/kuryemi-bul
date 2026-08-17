@@ -50,7 +50,9 @@ window.IlanStatus = (function () {
   /* ─── Helpers ────────────────────────────────────────────────── */
   function getUid() {
     try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
-    return 'demo';
+    /* Oturum yoksa 'demo' anahtarına yazılıyordu; aynı tarayıcıyı
+       kullanan farklı kişiler aynı ilan kutusunu paylaşıyordu. */
+    return null;
   }
   function relTime(dateStr) {
     if (!dateStr) return '';
@@ -81,12 +83,41 @@ window.IlanStatus = (function () {
 
   /* Veritabanından gerçek ilanları çek, önbelleği tazele.
      Sayfalar render'dan önce bunu await eder. */
+  /* Veritabanındaki ilanları yerel çalışma kopyasıyla BİRLEŞTİRİR.
+     ============================================================
+     ÖNCEDEN ÜZERİNE YAZIYORDU — iki somut kayba yol açıyordu:
+
+     1) YAYINLANMAMIŞ TASLAKLAR SİLİNİYORDU.
+        ilan-olustur.html taslakları yerel tutar (id = 'ilan_<zaman>',
+        yayınlanınca sbId ile DB satırına bağlanır). syncFromDb sonucu
+        doğrudan saveJobs() ile yazdığı için, ilan-durum.html'i açmak
+        DB'de karşılığı olmayan tüm taslakları siliyordu.
+
+     2) İŞVERENİN AYRINTILI DURUM ETİKETİ KORUNMUYORDU.
+        Eski kayıt `prev[l.id]` ile aranıyordu; ama ilan-olustur'dan
+        gelen kaydın id'si 'ilan_...', DB satırınınki UUID. Eşleşme
+        hiçbir zaman tutmuyor, "durduruldu/doldu" gibi etiketler her
+        senkronda 'taslak'a düşüyordu. Artık sbId üzerinden de bakılıyor.
+     ============================================================ */
   async function syncFromDb(uid) {
     if (!(window.SB && SB.isOn() && SB.myListings)) return getJobs(uid);
     var rows = [];
     try { rows = await SB.myListings(); } catch(e) { console.warn('syncFromDb:', e); return getJobs(uid); }
-    var prev = {}, today = new Date().toISOString().slice(0, 10);
-    getJobs(uid).forEach(function(j) { prev[j.id] = j; });
+
+    var yerel = getJobs(uid);
+    var today = new Date().toISOString().slice(0, 10);
+
+    /* Eski kaydı hem kendi id'siyle hem de bağlı olduğu sbId ile indeksle */
+    var prev = {};
+    yerel.forEach(function (j) {
+      if (j.id) prev[j.id] = j;
+      if (j.sbId) prev[j.sbId] = j;
+    });
+
+    /* DB'de karşılığı olan yerel kayıtları işaretle ki mükerrer olmasın */
+    var dbIds = {};
+    rows.forEach(function (l) { dbIds[l.id] = 1; });
+
     var jobs = rows.map(function(l) {
       var old = prev[l.id] || {};
       var durum;
@@ -104,6 +135,13 @@ window.IlanStatus = (function () {
         updated_at: old.updated_at || l.tarih
       });
     });
+
+    /* Yalnız yerelde olan kayıtlar (yayınlanmamış taslaklar) korunur */
+    yerel.forEach(function (j) {
+      var dbdeVar = (j.sbId && dbIds[j.sbId]) || dbIds[j.id];
+      if (!dbdeVar) jobs.push(j);
+    });
+
     saveJobs(jobs, uid);
     return jobs;
   }

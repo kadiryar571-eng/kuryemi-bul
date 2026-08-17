@@ -115,9 +115,14 @@
   var searchQ      = '';
 
   /* ─── Helpers ───────────────────────────────────────────────── */
+  /* Merkezî kaçışa delege eder — yerel kopya tek tırnağı atlıyordu
+     (CLAUDE.md §1). Bu sayfa mesaj içeriği basıyor; kaçışın eksiksiz
+     olması burada kritik. */
   function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (window.KB && KB.esc) return KB.esc(s);
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
   }
   function initials(name) {
     return String(name || '?').split(' ').filter(Boolean).slice(0, 2)
@@ -538,10 +543,10 @@
 
   /* ─── Boot ──────────────────────────────────────────────────── */
   function boot() {
-    role = (window.KB && KB.STATE && KB.STATE.role)
-      || localStorage.getItem('kb_rol') || 'isletme';
+    /* Rol ve kimlik OTURUMDAN; uydurma 'demo_<rol>' kimliği kaldırıldı. */
+    role = (window.KB && KB.STATE && KB.STATE.role) || 'kurye';
     var user = window.KB && KB.STATE && KB.STATE.user;
-    uid = user ? user.id : ('demo_' + role);
+    uid = user ? user.id : null;
 
     /* Auto-run status check on open */
     if (window.IlanStatus) {
@@ -581,9 +586,9 @@
 
   if (window.KB && KB.ready) {
     KB.ready().then(async function () {
-      role = (KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme';
+      role = (KB.STATE && KB.STATE.role) || 'kurye';
       var user = KB.STATE && KB.STATE.user;
-      uid  = user ? user.id : ('demo_' + role);
+      uid  = user ? user.id : null;
       // Görüşmeleri Supabase'den yükle. KBChat artık localStorage değil
       // conversations/conv_messages tablolarını kullanıyor; load() bir kez
       // çağrıldıktan sonra getThreads/getMsgs senkron çalışmaya devam eder.

@@ -140,7 +140,11 @@
       var s = JSON.parse(localStorage.getItem('kb_session') || 'null');
       if (s && s.user && s.user.id) return (UID = s.user.id);
     } catch (e) {}
-    return (UID = localStorage.getItem('kb_demo_uid') || 'demo_user');
+    /* Oturum yoksa kimlik de yoktur. Burada "demo_user" dönüyordu; bu
+       uydurma kimlik veritabanında hiçbir kayda karşılık gelmediği için
+       sorgular sessizce boş dönüyordu (data.js kaldırıldığından beri
+       geriye kalmış bir kalıntı). */
+    return (UID = null);
   }
 
   /* Rol gerçek profilden gelir; localStorage yalnız ilk çizim için ipucu. */

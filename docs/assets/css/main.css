@@ -5157,11 +5157,23 @@ a.dash-stat:hover {
   white-space: nowrap;
   flex-shrink: 0;
 }
-.hd-chip--beklemede          { background: #F3F4F6; color: var(--text-2); border: 1px solid var(--border); }
+/* Zemin sabit açık olduğu için yazı rengi de SABİT koyu olmalı.
+   Burada eskiden var(--text-2) vardı: koyu temada o token #9BA4B8'e
+   dönüyor ve #F3F4F6 zemin üzerinde kontrast 2.25:1'e düşüyordu
+   (WCAG eşiği 4.5:1) — rozet okunmuyordu. Kardeş kuralların hepsi
+   zaten sabit renk kullanıyor; bu tek istisnaydı. */
+.hd-chip--beklemede          { background: #F3F4F6; color: #4B5563; border: 1px solid #DDE1E7; }
 .hd-chip--kisa_listede       { background: #FEF9C3; color: #92400E; }
 .hd-chip--mulakat_tamamlandi { background: #EDE9FE; color: #6D28D9; }
 .hd-chip--kabul              { background: var(--success-bg); color: var(--success); }
 .hd-chip--reddedildi         { background: #FEE2E2; color: var(--error); }
+.hd-chip--tamamlandi         { background: #DBEAFE; color: #1D4ED8; }
+
+/* Filo üyesi çevrimiçi durumu.
+   panel-firma.html bu iki sınıfı basıyordu ama CSS'te karşılıkları YOKTU;
+   çevrimiçi ve çevrimdışı kuryeler birebir aynı görünüyordu. */
+.hd-chip--online  { background: var(--success-bg); color: var(--success); }
+.hd-chip--offline { background: #F3F4F6; color: #6B7280; border: 1px solid #DDE1E7; }
 
 /* Status progress bar */
 .hd-status-bar {

@@ -74,9 +74,14 @@
 
       /* localStorage preview for jobs created via ilan-olustur.html */
       if (id && id.indexOf('ilan_') === 0) {
-        var uid = 'demo';
+        /* Taslak önizlemesi yalnız SAHİBİ içindir. Burada oturum yoksa
+           uid 'demo' oluyordu ve 'kb_my_ilanlar_demo' anahtarı okunuyordu —
+           aynı tarayıcıyı kullanan farklı kişiler bu kutuyu paylaşıyordu.
+           Oturum yoksa taslak da yoktur; normal ilan akışına düşülür. */
+        var uid = null;
         try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) uid = s.user.id; } } catch(e) {}
         var jobs = [];
+        if (!uid) { if (window.KBApp && KBApp.renderJobDetail) KBApp.renderJobDetail(); return; }
         try { jobs = JSON.parse(localStorage.getItem('kb_my_ilanlar_' + uid)) || []; } catch(e) {}
         var job = null;
         for (var i = 0; i < jobs.length; i++) { if (jobs[i].id === id) { job = jobs[i]; break; } }
@@ -85,10 +90,10 @@
           if (root) {
             var r = KBApp.buildJobDetailHtml(job, { owner: true, applied: false, saved: false, myProfile: null });
             root.innerHTML =
-              '<a class="jd-back" href="ilan-olustur.html?edit=' + job.id + '">← İlanı Düzenle</a>' +
+              '<a class="jd-back" href="ilan-olustur.html?edit=' + encodeURIComponent(job.id) + '">← İlanı Düzenle</a>' +
               '<div style="background:#EFF6FF;border:1px solid rgba(0,87,255,.2);border-radius:8px;padding:10px 16px;font-size:0.82rem;color:#0057FF;margin-bottom:16px">' +
                 '✏️ Bu ilan sizin tarafınızdan oluşturuldu. ' +
-                '<a href="ilan-olustur.html?edit=' + job.id + '" style="font-weight:600;color:#0057FF">Düzenle →</a>' +
+                '<a href="ilan-olustur.html?edit=' + encodeURIComponent(job.id) + '" style="font-weight:600;color:#0057FF">Düzenle →</a>' +
               '</div>' +
               r.html;
             document.title = r.title;

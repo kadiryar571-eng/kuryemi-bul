@@ -34,10 +34,51 @@
   /* ─── SESSION PROMISE ──────────────────────────────────────── */
   var _readyResolve;
   var _readyPromise = new Promise(function (res) { _readyResolve = res; });
+  /* Kayıt sırasında seçilen rolü ilk oturumda uygular.
+     ============================================================
+     index.html'deki "Nasıl Kullanmak İstiyorsun?" kartları
+     index.html?auth=register&rol=kurye|isletme|firma adresine bağlanıyor
+     ama `rol` parametresini HİÇBİR YER OKUMUYORDU. Üç kart da aynı işi
+     yapıyor, kullanıcının seçimi sessizce atılıyordu: herkes
+     handle_new_user trigger'ının verdiği varsayılan 'kurye' rolüyle
+     başlıyordu. Bölümün tamamı işlevsizdi.
+
+     Rol kayıt anında yazılamaz — profil ancak e-posta doğrulandıktan
+     sonra oluşuyor. O yüzden seçim saklanır ve ilk gerçek oturumda,
+     YALNIZCA profil hâlâ varsayılan roldeyse uygulanır. Kullanıcı daha
+     sonra rolünü değiştirdiyse bu bayrak onu geri almaz. */
+  var PENDING_ROL_KEY = 'kb_pending_rol';
+  function applyPendingRole() {
+    var istenen;
+    try { istenen = localStorage.getItem(PENDING_ROL_KEY); } catch (e) { return; }
+    if (!istenen) return;
+    if (['kurye', 'isletme', 'firma'].indexOf(istenen) === -1) {
+      try { localStorage.removeItem(PENDING_ROL_KEY); } catch (e) {}
+      return;
+    }
+    var mevcut = SESSION.profile && SESSION.profile.role;
+    /* Yalnız varsayılandan farklıysa ve profil hâlâ varsayılandaysa yaz */
+    if (mevcut !== 'kurye' || istenen === 'kurye') {
+      try { localStorage.removeItem(PENDING_ROL_KEY); } catch (e) {}
+      return;
+    }
+    if (!(window.SB && SB.isOn() && SB.updateMyProfile)) return;
+    SB.updateMyProfile({ role: istenen })
+      .then(function () {
+        try { localStorage.removeItem(PENDING_ROL_KEY); } catch (e) {}
+        if (SESSION.profile) SESSION.profile.role = istenen;
+        setState({ role: istenen });
+      })
+      .catch(function (e) { console.warn('rol uygulanamadı:', e); });
+  }
+
   function resolveReady(sess) {
     SESSION.user = (sess && sess.user) || null;
     SESSION.profile = (sess && sess.profile) || null;
-    if (SESSION.user) setState({ auth: { status: 'authed' }, user: SESSION.user, role: (SESSION.profile && SESSION.profile.role) || 'guest' });
+    if (SESSION.user) {
+      setState({ auth: { status: 'authed' }, user: SESSION.user, role: (SESSION.profile && SESSION.profile.role) || 'guest' });
+      applyPendingRole();
+    }
     _readyResolve(SESSION);
   }
   function session() { return SESSION; }
@@ -105,6 +146,22 @@
   }
   function getParam(key) {
     try { return new URLSearchParams(location.search).get(key); } catch (e) { return null; }
+  }
+  /* Yalnız http(s), data:image ve site-içi kök yollara izin verir.
+     ============================================================
+     esc() BU İŞİ YAPMAZ: HTML karakterlerini kaçırır ama şemaya
+     bakmaz. Başka bir kullanıcıdan gelen bir adres href/src'ye
+     doğrudan konursa `javascript:` şeması çalışır — CSP'de
+     'unsafe-inline' bulunduğu için engellenmez de. Görüşme
+     "meeting link"i tam olarak böyle bir alan: karşı taraf yazıyor,
+     siz tıklıyorsunuz.
+     www/assets/js/util.js'teki safeUrl ile aynı kurallar. */
+  function safeUrl(u) {
+    var s = String(u == null ? '' : u).trim();
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^data:image\/(png|jpe?g|gif|webp);base64,[a-z0-9+/=]+$/i.test(s)) return s;
+    if (/^\/(?!\/)/.test(s)) return s;    // site-içi kök yol (// = protokol-göreli, dışarı çıkar)
+    return '';
   }
   function findById(arr, id) {
     if (!arr) return null;
@@ -612,6 +669,7 @@
 
     /* helpers */
     esc:            esc,
+    safeUrl:        safeUrl,
     initials:       initials,
     getParam:       getParam,
     findById:       findById,

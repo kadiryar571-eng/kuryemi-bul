@@ -1475,15 +1475,25 @@ window._spmShell = function() {
           '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
           '<input type="search" id="spmSearch" autocomplete="off" placeholder="Bölge, firma veya ilan ara...">' +
         '</div>' +
-        '<button type="button" class="spm-filter-btn" id="spmFilterBtn">' +
-          '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>' +
-        '</button>' +
+        /* #spmFilterBtn KALDIRILDI: hiçbir JS'te geçmiyordu, basınca hiçbir
+           şey olmuyordu. İşlevi zaten sağ alttaki "Katman" düğmesinde var
+           (çip satırını açıp kapatır). */
       '</div>' +
+      /* Çip renkleri PIN tanımıyla AYNI olmalı — kullanıcı haritadaki
+         işaretçiyi çiple eşleştiriyor. "Yakınımda" bir tür değil, mesafe
+         süzgeci; o yüzden nötr renk aldı (eskiden kurye pini ile aynı
+         #22d3ee idi ve kafa karıştırıyordu). */
       '<div class="spm-chips-row" id="spmChipsRow">' +
         '<button type="button" class="spm-chip is-on" data-spmlayer="ilan"><span class="spm-chip__dot" style="background:#f59e0b"></span>İş İlanları</button>' +
-        '<button type="button" class="spm-chip is-on" data-spmlayer="firma"><span class="spm-chip__dot" style="background:#a855f7"></span>Kurye Firmaları</button>' +
+        /* Kurye katmanı AYRILDI. Eskiden kuryeler "Kurye Firmaları" çipine
+           bağlıydı: o çip kapatılınca kuryeler ve esnaflar da haritadan
+           siliniyordu — etiket yaptığı işi anlatmıyordu ve kuryeleri tek
+           başına süzmenin yolu yoktu. Mobilde kurye havuzuna en yakın
+           yüzey burası olduğu için bu ayrım önemli. */
+        '<button type="button" class="spm-chip is-on" data-spmlayer="kurye"><span class="spm-chip__dot" style="background:#22d3ee"></span>Kuryeler</button>' +
+        '<button type="button" class="spm-chip is-on" data-spmlayer="firma"><span class="spm-chip__dot" style="background:#a855f7"></span>Firma &amp; Esnaf</button>' +
         '<button type="button" class="spm-chip" data-spmlayer="acil"><span class="spm-chip__dot" style="background:#ef4444"></span>Acil Alım</button>' +
-        '<button type="button" class="spm-chip" data-spmlayer="yakin"><span class="spm-chip__dot" style="background:#22d3ee"></span>Yakınımda</button>' +
+        '<button type="button" class="spm-chip" data-spmlayer="yakin"><span class="spm-chip__dot" style="background:#94a3b8"></span>Yakınımda</button>' +
       '</div>' +
     '</div>' +
     '<div class="spm-fabs" id="spmFabs">' +
@@ -1529,6 +1539,35 @@ window._spmShell = function() {
   '</div>';
 };
 
+/* Acik haritayi yok eder.
+   ============================================================
+   NEDEN VAR — OLCULMUS SIZINTI:
+   Harita ekrani her acildiginda `new maplibregl.Map(...)` cagriliyor ama
+   hicbir yerde `map.remove()` YOKTU. renderScreen yalnizca #kb-screen'in
+   innerHTML'ini degistirdigi icin eski harita DOM'dan dusuyor, fakat
+   MapLibre nesnesi yasamaya devam ediyor: WebGL baglami, render dongusu,
+   worker'lari ve ag istekleri ayakta kaliyor.
+
+   Emulatorde olculdu (Pixel 7, Chrome 150 WebView):
+     6 ziyaret  -> 6 baglam olustu, 0 serbest birakildi
+     11 ziyaret -> tarayici sinira dayandi, EN ESKI baglamlari zorla
+                   oldurmeye basladi (webglcontextlost)
+     14 ziyaret -> olusan 20, KAYBEDILEN 12, geri gelen 0
+
+   Sonuc: yeterince harita acan kullanicida hem harita bos/donmus
+   gorunuyor hem de arka planda calisan olu render donguleri ana is
+   parcacigini mesgul ederek tum uygulamayi tutuk hale getiriyor.
+
+   renderScreen (app.js) her ekran degisiminde burayi cagirir; boylece
+   temizlik tek noktadan ve hangi ekrana gidildiginden bagimsiz calisir.
+   ============================================================ */
+window.destroyPremiumMap = function() {
+  var m = window.__spmMap;
+  if (!m) return;
+  window.__spmMap = null;
+  try { m.remove(); } catch (e) { /* zaten yikilmis olabilir */ }
+};
+
 window.initPremiumMap = async function(role) {
   if (typeof maplibregl === 'undefined') return;
   var mapEl = document.getElementById('spm-map');
@@ -1537,6 +1576,10 @@ window.initPremiumMap = async function(role) {
     setTimeout(function() { window.initPremiumMap(role); }, 250);
     return;
   }
+
+  /* Savunma amacli: ayni ekrana ust uste girilirse iki harita birden
+     yasamasin. Normalde renderScreen zaten temizlemis olur. */
+  window.destroyPremiumMap();
 
   var searchEl = document.getElementById('spmSearch');
   var countEl  = document.getElementById('spmCount');
@@ -1555,6 +1598,8 @@ window.initPremiumMap = async function(role) {
     center: ISTANBUL,
     zoom: 11
   });
+  /* Yikim icin kuresel referans — bkz. destroyPremiumMap. */
+  window.__spmMap = map;
 
   /* WebGL yoksa harita nesnesi kullanilamaz durumda kalir. Bayrak, veri
      geldikten sonra isaretci basmayi ve dinleyici baglamayi engeller —
@@ -1600,7 +1645,10 @@ window.initPremiumMap = async function(role) {
   isl.forEach(function(i) { pushItem('isletme', i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(' · ')); });
   frm.forEach(function(f) { pushItem('firma', f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(', ')); });
 
-  var activeLayers = { ilan: true, firma: true, acil: false, premium: false, yakin: false };
+  /* premium KALDIRILDI: onu açacak bir çip hiç yoktu ve süzdüğü `it.premium`
+     alanı şemada da yok (profiles.seviye='premium' AYRI bir alan). Yani
+     hem erişilemez hem her zaman false olan ölü bir katmandı. */
+  var activeLayers = { ilan: true, kurye: true, firma: true, acil: false, yakin: false };
   var userLat = null, userLng = null, userMarker = null;
   var markers = {}, selectedKey = null;
 
@@ -1628,10 +1676,10 @@ window.initPremiumMap = async function(role) {
   function isVisible(it, q) {
     if (q && normText(it.ad + ' ' + it.sub).indexOf(q) === -1) return false;
     if (activeLayers.yakin && userLat !== null && distKm(userLat, userLng, it.lat, it.lng) > 5) return false;
-    if (activeLayers.premium && it.premium) return true;
     if (activeLayers.acil && it.type === 'ilan' && it.acil) return true;
     if (activeLayers.ilan && it.type === 'ilan' && !it.acil) return true;
-    if (activeLayers.firma && (it.type === 'firma' || it.type === 'isletme' || it.type === 'kurye')) return true;
+    if (activeLayers.kurye && it.type === 'kurye') return true;
+    if (activeLayers.firma && (it.type === 'firma' || it.type === 'isletme')) return true;
     return false;
   }
 

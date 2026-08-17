@@ -71,15 +71,17 @@
     </div>
 
     <!-- Bildirimler -->
+    <!-- "E-posta Bildirimleri" anahtarı KALDIRILDI.
+         Sabit `checked` yazılıydı ve hiçbir JS ona dokunmuyordu; üstelik
+         arkasında saklanacak bir alan da yok — şemada e-posta tercihi
+         diye bir kolon bulunmuyor. Yani kullanıcı kapatsa bile hiçbir şey
+         değişmiyor, e-postalar (migration-03 / migration-11 trigger'ları)
+         gitmeye devam ediyordu. Kullanıcıyı sessizce yok sayan bir
+         anahtar, hiç anahtar olmamasından kötüdür.
+         Gerçekten gerekiyorsa: profiles'a tercih kolonu + e-posta
+         trigger'larında kontrol gerekir — ayrı bir iş. -->
     <div class="settings-section">
       <div class="settings-section__title">Bildirimler</div>
-      <div class="settings-row">
-        <div class="settings-row__left">
-          E-posta Bildirimleri
-          <div class="settings-row__sub">Teklif ve eşleşme e-postaları</div>
-        </div>
-        <label class="toggle-sw"><input type="checkbox" id="toggleEmail" checked><span class="toggle-sw__track"></span></label>
-      </div>
       <div class="settings-row">
         <div class="settings-row__left">
           Push Bildirimleri
@@ -98,8 +100,9 @@
           Profili Herkese Açık
           <div class="settings-row__sub">Kapalıysa havuzda görünmezsiniz</div>
         </div>
-        <label class="toggle-sw"><input type="checkbox" id="togglePublic" checked><span class="toggle-sw__track"></span></label>
+        <label class="toggle-sw"><input type="checkbox" id="togglePublic"><span class="toggle-sw__track"></span></label>
       </div>
+      <div class="settings-row__hint" id="publicHint" hidden></div>
     </div>
 
     <!-- Güvenlik -->
@@ -215,6 +218,75 @@
 
       // KB.ready() oturum yüklenince resolve olur; abonelik durumu
       // kullanıcıya bağlı olduğu için önce onu bekliyoruz.
+      if (window.KB && typeof KB.ready === 'function') {
+        KB.ready().then(refresh).catch(refresh);
+      } else {
+        refresh();
+      }
+    })();
+
+    /* ── Profil görünürlüğü ───────────────────────────────────────────────
+       Bu anahtar da sabit `checked` yazılıydı ve hiçbir JS'e bağlı değildi.
+       Altında "Kapalıysa havuzda görünmezsiniz" yazmasına rağmen kapatmak
+       hiçbir şey yapmıyordu — kullanıcı havuzdan çekildiğini sanıyor ama
+       profili görünmeye devam ediyordu. Bu bir GİZLİLİK kontrolü olduğu
+       için çalışmaması yalnızca "eksik özellik" değil.
+
+       Gerçek karşılığı profiles.yayinda alanıdır (havuz sorguları
+       .eq('yayinda', true) ile süzüyor). Artık oradan okunuyor ve oraya
+       yazılıyor. */
+    (function () {
+      var box  = document.getElementById('togglePublic');
+      var hint = document.getElementById('publicHint');
+      if (!box) return;
+
+      function setHint(msg, warn) {
+        if (!hint) return;
+        if (!msg) { hint.hidden = true; return; }
+        hint.hidden = false;
+        hint.textContent = msg;
+        hint.className = 'settings-row__hint' + (warn ? ' settings-row__hint--warn' : '');
+      }
+
+      async function refresh() {
+        if (!(window.SB && SB.isOn() && SB.myProfile)) {
+          box.disabled = true;
+          setHint('Bağlantı yok — ayar okunamadı.', true);
+          return;
+        }
+        try {
+          var p = await SB.myProfile();
+          if (!p) { box.disabled = true; setHint('Önce profilini oluştur.', true); return; }
+          box.disabled = false;
+          box.checked = !!p.yayinda;
+          setHint(box.checked
+            ? 'Profiliniz havuzda görünüyor.'
+            : 'Profiliniz havuzda görünmüyor; kimse size teklif gönderemez.');
+        } catch (e) {
+          box.disabled = true;
+          setHint('Ayar okunamadı.', true);
+        }
+      }
+
+      box.addEventListener('change', async function () {
+        var istenen = box.checked;
+        box.disabled = true;
+        setHint('Kaydediliyor…');
+        try {
+          await SB.updateMyProfile({ yayinda: istenen });
+          box.disabled = false;
+          setHint(istenen
+            ? 'Profiliniz artık havuzda görünüyor.'
+            : 'Profiliniz havuzdan gizlendi.');
+        } catch (e) {
+          /* Kaydedilemediyse anahtarı ESKİ HÂLİNE al — kullanıcı
+             kapattığını sanmasın. */
+          box.checked = !istenen;
+          box.disabled = false;
+          setHint((e && e.message) || 'Kaydedilemedi.', true);
+        }
+      });
+
       if (window.KB && typeof KB.ready === 'function') {
         KB.ready().then(refresh).catch(refresh);
       } else {

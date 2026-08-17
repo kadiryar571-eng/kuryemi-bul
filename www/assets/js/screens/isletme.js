@@ -656,12 +656,33 @@ window.IsletmeScreens = (function () {
     }
   }
 
-  function _kabul(id) {
-    if (window.SB && SB.isOn()) {
-      SB.updateApplication(id, 'reviewed').catch(function() {});
-      var idx = _basCache.findIndex(function(x) { return x.id === id; });
-      if (idx >= 0) _basCache[idx].durum = 'reviewed';
+  /* YANLIŞ DURUM YAZILIYORDU.
+     ============================================================
+     Bu fonksiyon "Aday kabul edildi! ✓" diyor ama veritabanına
+     'accepted' değil 'reviewed' yazıyordu. Sonuçları zincirleme:
+
+       • Başvuru "incelendi" durumunda kalıyor, kabul edilmiş sayılmıyor.
+       • migration-32'deki kb_sync_hiring_from_application trigger'ı
+         yalnız 'accepted'/'rejected' için çalıştığından işe alım kaydı
+         (hiring_decisions) HİÇ oluşmuyor.
+       • Dolayısıyla değerlendirme akışı da açılmıyor.
+       • Kurye "kabul edildin" bildirimini almıyor.
+
+     Yani mobil uygulamada bir esnafın kuryeyi işe alması mümkün
+     değildi; ekran işe alındığını söylüyordu. firma.js'teki eşdeğer
+     fonksiyon doğru değeri yazıyor — bu yalnız bu dosyada bozuktu.
+
+     Ayrıca hata yutuluyordu; mesaj artık yalnız yazma başarılıysa. */
+  async function _kabul(id) {
+    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return; }
+    try {
+      await SB.updateApplication(id, 'accepted');
+    } catch (e) {
+      toast('İşe alım kaydedilemedi — tekrar deneyin');
+      return;
     }
+    var idx = _basCache.findIndex(function(x) { return x.id === id; });
+    if (idx >= 0) _basCache[idx].durum = 'accepted';
     toast('Aday kabul edildi! ✓');
     setTimeout(function () { Router.back(); }, 700);
   }

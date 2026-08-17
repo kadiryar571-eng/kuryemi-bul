@@ -257,7 +257,7 @@
       /* Auto-status check */
       if (window.IlanStatus) {
         try {
-          var chkUid = 'demo';
+          var chkUid = null;   /* uydurma 'demo' kimligi kaldirildi */
           try { var chkS = window.KB && KB.session && KB.session(); if (chkS && chkS.user && chkS.user.id) chkUid = chkS.user.id; } catch(e) {}
           IlanStatus.autoCheck(chkUid);
         } catch(e) {}
@@ -266,7 +266,7 @@
       /* Unread messages badge */
       if (window.KBChat) {
         try {
-          var msgUid = 'demo';
+          var msgUid = null;   /* uydurma 'demo' kimligi kaldirildi */
           try { var ms = window.KB && KB.session && KB.session(); if (ms && ms.user && ms.user.id) msgUid = ms.user.id; } catch(e) {}
           var unreadCount = KBChat.getUnreadCount(msgUid, 'isletme');
           var badge = document.getElementById('panelMsgBadge');
@@ -277,7 +277,7 @@
       /* Comm status sync */
       if (window.KBCommStatus && window.KBChat) {
         try {
-          var csUid = 'demo';
+          var csUid = null;   /* uydurma 'demo' kimligi kaldirildi */
           try { var csS = window.KB && KB.session && KB.session(); if (csS && csS.user && csS.user.id) csUid = csS.user.id; } catch(e) {}
           KBCommStatus.observe(csUid);
         } catch(e) {}
@@ -303,7 +303,7 @@
       if (window.KBFeedback) {
         try {
           await KBFeedback.load();
-          var fbUid = 'demo';
+          var fbUid = null;   /* uydurma 'demo' kimligi kaldirildi */
           try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
           var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'isletme').length;
           var fbBadge = document.getElementById('panelFbBadge');
@@ -314,7 +314,7 @@
       /* Upcoming interviews widget */
       if (window.KBInterview) {
         try {
-          var ivUid = 'demo';
+          var ivUid = null;   /* uydurma 'demo' kimligi kaldirildi */
           try { var ivS = window.KB && KB.session && KB.session(); if (ivS && ivS.user && ivS.user.id) ivUid = ivS.user.id; } catch(e) {}
           await KBInterview.load(true);
           KBInterview.checkReminders();
@@ -409,7 +409,7 @@
 
       /* LocalStorage ilan listesi */
       try {
-        var lsUid = 'demo';
+        var lsUid = null;   /* uydurma 'demo' kimligi kaldirildi */
         try {
           var lsSess = window.KB && KB.session && KB.session();
           if (lsSess && lsSess.user && lsSess.user.id) lsUid = lsSess.user.id;

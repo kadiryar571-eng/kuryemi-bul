@@ -21,6 +21,16 @@
     if (!App) return;
 
     App.addListener('backButton', function () {
+      /* ÖNCE açık üst katmanı kapat.
+         Eskiden doğrudan Router.back() çağrılıyordu. Menü (drawer) veya
+         başvuru modalı açıkken geri tuşuna basınca alttaki ekran değişiyor
+         ama katman AÇIK KALIYORDU: ikisi de document.body'ye ekleniyor,
+         renderScreen ise yalnız #kb-screen'i değiştiriyor. Geriye kalan
+         tam ekran kaplayıcı (position:fixed; inset:0) bütün dokunuşları
+         yutuyor — uygulama kaydırmayı bırakıyor, donmuş gibi görünüyordu.
+         Android'de geri tuşunun beklenen davranışı da zaten budur. */
+      if (window.closeTopLayer && window.closeTopLayer()) return;
+
       var hash = location.hash || '#/';
       var isRoot = hash === '#/login' || hash === '#/' || !hash;
 

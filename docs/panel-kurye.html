@@ -699,6 +699,11 @@
       yeni:  '<span class="job-badge job-badge--new">Yeni</span>',
     };
 
+    /* Kaçış — merkezî uygulamaya delege eder (components.js → KB.esc).
+       Aşağıdaki kart alanlarının hepsi BAŞKA kullanıcıların yazdığı
+       ilan verisi ve ham basılıyordu. */
+    function E(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); }
+
     function buildSuggIlan(job) {
       var maas = (job.maas_min && job.maas_max)
         ? job.maas_min.toLocaleString('tr-TR') + ' – ' + job.maas_max.toLocaleString('tr-TR') + ' ₺'
@@ -708,19 +713,21 @@
       el.innerHTML =
         '<div class="ss-ilan-card__head">' +
           '<div class="ss-ilan-card__left">' +
-            '<div class="ss-ilan-card__company">' + job.sirket + '</div>' +
-            '<div class="ss-ilan-card__title">' + job.baslik + '</div>' +
-            '<div class="ss-ilan-card__loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + job.ilce + ', ' + job.sehir + '</div>' +
+            '<div class="ss-ilan-card__company">' + E(job.sirket) + '</div>' +
+            '<div class="ss-ilan-card__title">' + E(job.baslik) + '</div>' +
+            '<div class="ss-ilan-card__loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + E(job.ilce) + ', ' + E(job.sehir) + '</div>' +
           '</div>' +
           (SUGG_TAGS[job.tag] || '') +
         '</div>' +
         '<div class="ss-ilan-card__info">' +
-          '<div class="ss-ilan-drow"><span class="ss-ilan-dl">Maaş</span><span class="ss-ilan-dv">' + maas + '</span></div>' +
-          '<div class="ss-ilan-drow"><span class="ss-ilan-dl">Çalışma Tipi</span><span class="ss-ilan-dv">' + job.tip + '</span></div>' +
+          '<div class="ss-ilan-drow"><span class="ss-ilan-dl">Maaş</span><span class="ss-ilan-dv">' + E(maas) + '</span></div>' +
+          '<div class="ss-ilan-drow"><span class="ss-ilan-dl">Çalışma Tipi</span><span class="ss-ilan-dv">' + E(job.tip) + '</span></div>' +
         '</div>' +
         '<div class="ss-ilan-card__actions">' +
-          '<button class="btn btn--primary btn--sm sugg-apply-btn" data-sid="' + job.id + '">Başvur</button>' +
-          '<a href="ilanlar.html" class="btn btn--ghost btn--sm">Detay</a>' +
+          '<button class="btn btn--primary btn--sm sugg-apply-btn" data-sid="' + E(job.id) + '">Başvur</button>' +
+          /* "Detay" genel ilan listesine gidiyordu — kullanıcı baktığı
+             ilanı yeniden aramak zorunda kalıyordu. */
+          '<a href="ilan.html?id=' + encodeURIComponent(job.id) + '" class="btn btn--ghost btn--sm">Detay</a>' +
         '</div>';
       return el;
     }
@@ -730,16 +737,23 @@
       el.className = 'ss-biz-card';
       el.innerHTML =
         '<div class="ss-biz-card__top">' +
-          '<div class="ss-biz-ava">' + biz.ava + '</div>' +
-          '<div><div class="ss-biz-card__name">' + biz.ad + '</div><div class="ss-biz-card__ilan-count">' + biz.ilan + ' aktif ilan</div></div>' +
+          '<div class="ss-biz-ava">' + E(biz.ava) + '</div>' +
+          '<div><div class="ss-biz-card__name">' + E(biz.ad) + '</div><div class="ss-biz-card__ilan-count">' + (Number(biz.ilan) || 0) + ' aktif ilan</div></div>' +
         '</div>' +
         '<div class="ss-biz-card__info">' +
-          '<div class="ss-biz-drow"><span class="ss-biz-dl">Bölge</span><span class="ss-biz-dv">' + biz.bolge + '</span></div>' +
-          '<div class="ss-biz-drow"><span class="ss-biz-dl">Son aktif</span><span class="ss-biz-dv">' + relTime(biz.son) + '</span></div>' +
+          '<div class="ss-biz-drow"><span class="ss-biz-dl">Bölge</span><span class="ss-biz-dv">' + E(biz.bolge) + '</span></div>' +
+          /* "Son aktif" satırı KALDIRILDI — relTime(biz.son) gösteriyordu
+             ama biz.son loadRealSuggestions içinde Date.now() olarak
+             atanıyor, yani her esnaf için HER ZAMAN "az önce" yazıyordu.
+             Gerçek son aktiflik verisi presence'ta; bu senkron kart
+             oluşturucuda yok. Uydurma zaman göstermektense hiç
+             göstermiyoruz. */
         '</div>' +
         '<div class="ss-biz-card__actions">' +
-          '<a href="isletmeler.html" class="btn btn--primary btn--sm">Profili Gör</a>' +
-          '<a href="ilanlar.html" class="btn btn--ghost btn--sm">İlanları İncele</a>' +
+          /* Düğmeler genel listelere gidiyordu; kullanıcı baktığı esnafı
+             yeniden aramak zorunda kalıyordu. */
+          '<a href="profil-isletme.html?id=' + encodeURIComponent(biz.id) + '" class="btn btn--primary btn--sm">Profili Gör</a>' +
+          '<a href="ilanlar.html?q=' + encodeURIComponent(biz.ad || '') + '" class="btn btn--ghost btn--sm">İlanları İncele</a>' +
         '</div>';
       return el;
     }
@@ -797,13 +811,53 @@
         items.forEach(function(j) { frag.appendChild(buildSuggIlan(j)); });
         ilanList.appendChild(frag);
 
-        ilanList.addEventListener('click', function(e) {
+        /* BAŞVURU ARTIK GERÇEKTEN GÖNDERİLİYOR.
+           ============================================================
+           Bu dinleyici eskiden HİÇBİR ŞEY göndermiyordu: yalnız butonun
+           yazısını "✓ Başvuruldu" yapıp "Başvurunuz alındı! Esnaf en kısa
+           sürede iletişime geçecek." diyordu. public.applications'a kayıt
+           düşmüyor, işveren hiçbir şey görmüyordu.
+
+           Sonucu ağır: kurye başvurduğunu sanıp bekliyor, ilan başkasına
+           gidiyor. Kurye kendi "Başvurularım" listesinde de göremiyor
+           ama o ekranı açmadıysa fark etmesi mümkün değil.
+
+           Doğru akış app.js'teki başvuru modalıyla aynı uçtur:
+           SB.applyToListing(). Başarı mesajı YALNIZ yazma başarılıysa
+           gösterilir; hata olursa buton eski hâline döner. */
+        ilanList.addEventListener('click', async function(e) {
           var btn = e.target.closest('.sugg-apply-btn');
           if (!btn || btn.disabled) return;
+          var listingId = btn.getAttribute('data-sid');
+          if (!listingId) return;
+
+          if (!(window.SB && SB.isOn() && SB.applyToListing)) {
+            if (window.KBMotion) KBMotion.showErrorToast('Başvuru için bağlantı gerekiyor.');
+            return;
+          }
+
+          var eskiMetin = btn.textContent;
           btn.disabled = true;
-          btn.textContent = '✓ Başvuruldu';
-          btn.classList.replace('btn--primary', 'btn--secondary');
-          if (window.KBMotion) KBMotion.showSuccess('Başvurunuz alındı!', 'Esnaf en kısa sürede iletişime geçecek.', 2600);
+          btn.textContent = 'Gönderiliyor…';
+          try {
+            await SB.applyToListing(listingId, '');
+            btn.textContent = '✓ Başvuruldu';
+            btn.classList.replace('btn--primary', 'btn--secondary');
+            if (window.KBMotion) KBMotion.showSuccess('Başvurun gönderildi', 'İşveren başvurunu inceleyecek.', 2600);
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = eskiMetin;
+            var msg = (err && err.message) || 'Başvuru gönderilemedi.';
+            /* Aynı ilana ikinci kez başvurma denemesi anlaşılır olsun */
+            if (/duplicate|unique/i.test(msg)) {
+              btn.disabled = true;
+              btn.textContent = '✓ Başvuruldu';
+              btn.classList.replace('btn--primary', 'btn--secondary');
+              if (window.KBMotion) KBMotion.showErrorToast('Bu ilana zaten başvurmuşsun.');
+            } else if (window.KBMotion) {
+              KBMotion.showErrorToast(msg);
+            }
+          }
         });
       }
 
@@ -1069,7 +1123,7 @@
             window.KBHiring ? KBHiring.load() : Promise.resolve(),
             KBFeedback.load()
           ]);
-          var fbUid = 'demo';
+          var fbUid = null;   /* uydurma 'demo' kimligi kaldirildi */
           try { var fbS = window.KB && KB.session && KB.session(); if (fbS && fbS.user && fbS.user.id) fbUid = fbS.user.id; } catch(e) {}
           var pendingFb = KBFeedback.getPendingFeedbacks(fbUid, 'kurye').length;
           var fbBadge = document.getElementById('qaFbBadge');

@@ -36,21 +36,29 @@
 
   <div class="app-content">
 
-    <div class="page-header">
+    <!-- page-header--row EKLENDİ: bu sınıf olmadan .page-header'ın flex'i
+         yok (main.css:765 yalnız margin veriyor), dolayısıyla aksiyon
+         düğmeleri başlığın SAĞINA değil ALTINA düşüyordu. kuryeler.html'de
+         sınıf vardı, burada unutulmuş. -->
+    <div class="page-header page-header--row">
       <div>
         <h1>Esnaf Havuzu</h1>
         <p class="page-sub">Kurye arayan esnafları keşfet ve teklif gönder.</p>
       </div>
       <div class="page-header__actions">
         <a href="harita.html?type=isletme" class="btn btn--ghost btn--sm">🗺 Haritada Gör</a>
-        <button class="btn btn--ghost btn--sm" id="btnToggleView">⊟ Liste</button>
+        <button class="btn btn--ghost btn--sm" id="btnToggleView" title="Görünüm değiştir">⊟ Liste</button>
       </div>
     </div>
 
     <!-- Stats banner -->
     <div class="pool-stats-bar">
       <span class="pool-stats-bar__main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span id="resultCount">Yükleniyor…</span></span>
-      <span class="pool-stats-bar__note">Aktif ilan sayısına göre sıralanır</span>
+      <!-- "Aktif ilan sayısına göre sıralanır" yazıyordu — iki kez yanlıştı:
+           SB.pool() puana göre sıralıyor, üstelik sıralama menüsündeki
+           hiçbir seçenek çalışmıyordu. Ayrıca dayandığı acik_ilan sayacı
+           migration-33'e kadar hiç güncellenmiyordu. -->
+      <span class="pool-stats-bar__note">Yalnızca profilini tamamlamış esnaflar listelenir</span>
     </div>
 
     <div class="filter-bar">
@@ -63,11 +71,13 @@
       </div>
       <select id="fSelect1"><option value="">Tüm Şehirler</option></select>
       <select id="fSelect2"><option value="">Tüm Türler</option></select>
+      <!-- "Match Skoru" KALDIRILDI — esnaf kartları .match-score elemanı
+           basmıyor, arkasında hesap yok. VARSAYILAN seçenek olduğu için
+           sayfa hiçbir zaman sıralanmıyordu. -->
       <select id="fSort" onchange="sortPool(this.value)">
-        <option value="match">Match Skoru</option>
-        <option value="listings">Aktif İlanlar</option>
+        <option value="listings">En Çok Açık İlan</option>
         <option value="rating">En Yüksek Puan</option>
-        <option value="newest">En Yeni</option>
+        <option value="newest">En Yeni Üye</option>
       </select>
     </div>
 
@@ -109,26 +119,25 @@
       try { if (localStorage.getItem('kb_pool_view_isletme') === 'list') toggleBtn.click(); } catch (e) {}
     }
 
+    /* Sıralama app.js'e devredilir — veri üzerinde, tek render yolunda.
+       Burada eskiden render EDİLMİŞ kartları yeniden dizen bir kopya vardı
+       ve hiçbir şey yapmıyordu: yalnız 'match' dalını tanıyordu, o da
+       esnaf kartlarında bulunmayan .match-score elemanını arıyordu
+       (parseInt(undefined) → hepsi 0 → sıralama yok). Diğer üç seçenek
+       zaten `return 0` ile düşüyordu. Üstelik app.js grid'i her yeniden
+       yazdığında (arama, şehir/tür filtresi, canlı abonelik) sonuç
+       sessizce siliniyordu. Ayrıntı: app.js → POOLV. */
     window.sortPool = function (mode) {
-      var cards = Array.from(document.querySelectorAll('#poolGrid .talent-card'));
-      cards.sort(function (a, b) {
-        if (mode === 'match') {
-          var sa = parseInt((a.querySelector('.match-score') || {}).textContent || '0');
-          var sb = parseInt((b.querySelector('.match-score') || {}).textContent || '0');
-          return sb - sa;
-        }
-        return 0;
-      });
-      var grid = document.getElementById('poolGrid');
-      if (grid) cards.forEach(function (c) { grid.appendChild(c); });
+      if (window.KBApp && KBApp.setPoolSort) KBApp.setPoolSort(mode);
     };
 
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderPool) {
         /* Sonuç sayısını app.js doğrudan şeritteki #resultCount elemanına
            yazıyor; ayrı bir kopyalama gerekmiyor. Eskiden aynı cümle hem
-           şeritte hem filtrenin altında iki kez görünüyordu. */
-        KBApp.renderPool('isletme');
+           şeritte hem filtrenin altında iki kez görünüyordu.
+           İkinci argüman: menüde seçili gelen sıralama. */
+        KBApp.renderPool('isletme', 'listings');
       }
     });
   })();

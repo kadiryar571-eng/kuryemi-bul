@@ -161,7 +161,21 @@
         if (item) {
           var href = item.dataset.href;
           await KBNotif.markRead(item.dataset.nid);
-          if (href) window.location.href = href;
+          /* Bildirim bağlantısına yalnız SİTE İÇİNDE gidilir.
+             Bağlantıyı DB trigger'ları üretiyor, yani bugün güvenli; ama
+             window.location.href'e denetimsiz bir değer vermek, ileride
+             bağlantıyı üreten yeni bir yol eklendiğinde `javascript:` ya
+             da dış adres taşımaya açık bir kapı bırakır. Aynı sayfadan
+             ayrılmadan önce kaynağı doğruluyoruz. */
+          if (href) {
+            /* (?!\/) ŞART: "//evil.com/x.html" protokol-göreli bir adrestir
+               ve tarayıcı onu DIŞ SİTE olarak açar. Yalnız tek eğik
+               çizgiyle başlayan site-içi yollara izin veriyoruz. */
+            var guvenli = /^[a-z0-9._-]+\.html(\?[^#]*)?(#.*)?$/i.test(String(href)) ||
+                          /^\/(?!\/)[a-z0-9._/-]*\.html(\?[^#]*)?(#.*)?$/i.test(String(href));
+            if (guvenli) window.location.href = href;
+            else console.warn('Bildirim bağlantısı reddedildi:', href);
+          }
         }
       });
 

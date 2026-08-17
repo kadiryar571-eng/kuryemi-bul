@@ -86,8 +86,14 @@ a { color: inherit; text-decoration: none; }
 .kb-layout {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  height: 100vh;
+  /* SIRA ÖNEMLİ: geri dönüş ÖNCE, tercih edilen SONRA yazılır.
+     Burada tam tersi yazılmıştı (dvh önce, vh sonra) — CSS'te son geçerli
+     bildirim kazandığı için dvh hiç uygulanmıyordu, yani dinamik viewport
+     desteği ölü koddu. Fark klavye açıkken ve jest çubuğu olan cihazlarda
+     ortaya çıkar: 100vh sistem çubuklarını da sayar, layout ekrandan
+     taşar ve alt kısım erişilemez hale gelir. */
+  height: 100vh;              /* dvh desteklemeyen eski WebView'lar için */
+  height: 100dvh;             /* tercih edilen: dinamik viewport */
   overflow: hidden;
 }
 
@@ -688,8 +694,8 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Login screen ── */
 .login-wrap {
-  min-height: 100dvh;
-  min-height: 100vh;
+  min-height: 100vh;          /* geri dönüş */
+  min-height: 100dvh;         /* tercih edilen (sıra için bkz. .kb-layout) */
   display: flex;
   flex-direction: column;
   padding: 0 20px;

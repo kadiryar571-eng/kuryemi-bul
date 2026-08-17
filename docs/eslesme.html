@@ -71,12 +71,17 @@
           host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">🤝</div><div class="kb-empty__t">Henüz eşleşme yok</div><p style="color:var(--text-2);font-size:0.85rem;margin-top:6px">Teklifler kabul edildiğinde burada görünür.</p><a class="btn btn--primary btn--sm mt-24" href="kuryeler.html">Havuzu Keşfet</a></div>';
           return;
         }
+        /* Eşleşen kişinin adı/şehri BAŞKA bir kullanıcıdan gelir ve ham
+           basılıyordu; kimlikler de href içine kaçırılmadan giriyordu
+           (CLAUDE.md §1). */
+        var E = function (s) { return KB.esc(s); };
         host.innerHTML = '<div class="cards-grid">' + matches.map(function(m) {
           var page = m.role === 'kurye' ? 'profil-kurye.html' : m.role === 'isletme' ? 'profil-isletme.html' : 'profil-firma.html';
-          return '<div class="pcard"><div class="pcard__top"><div class="avatar">' + (window.KB ? KB.initials(m.ad || '?') : '?') + '</div>' +
-            '<div class="pcard__info"><div class="pcard__name">' + (m.ad || '') + '</div><div class="pcard__sub">' + (m.sehir || '') + '</div></div></div>' +
-            '<div class="pcard__foot"><a class="btn btn--primary btn--sm" href="mesajlar.html?to=' + m.id + '">Mesaj Gönder</a>' +
-            '<a class="btn btn--ghost btn--sm" href="' + page + '?id=' + m.id + '">Profil</a></div></div>';
+          var id = encodeURIComponent(m.id || '');
+          return '<div class="pcard"><div class="pcard__top"><div class="avatar">' + E(KB.initials(m.ad || '?')) + '</div>' +
+            '<div class="pcard__info"><div class="pcard__name">' + E(m.ad || '') + '</div><div class="pcard__sub">' + E(m.sehir || '') + '</div></div></div>' +
+            '<div class="pcard__foot"><a class="btn btn--primary btn--sm" href="mesajlar.html?to=' + id + '">Mesaj Gönder</a>' +
+            '<a class="btn btn--ghost btn--sm" href="' + page + '?id=' + id + '">Profil</a></div></div>';
         }).join('') + '</div>';
       } catch (e) {
         host.innerHTML = '<div class="kb-empty"><div class="kb-empty__ic">⚠️</div><div class="kb-empty__t">Eşleşmeler yüklenemedi</div></div>';

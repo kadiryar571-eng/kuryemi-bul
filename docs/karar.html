@@ -176,6 +176,11 @@
 (function () {
   'use strict';
 
+  /* Kaçış — merkezî uygulamaya delege eder (components.js → KB.esc).
+     Bu sayfada hiç kaçış YOKTU: aday adı ve işverenin yazdığı red
+     gerekçesi doğrudan innerHTML'e giriyordu (CLAUDE.md §1 ihlali). */
+  function E(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); }
+
   var UID = null;
   var ROLE = 'isletme';
   var JOB_ID = '';
@@ -187,7 +192,8 @@
       var s = JSON.parse(localStorage.getItem('kb_session') || 'null');
       if (s && s.user && s.user.id) return (UID = s.user.id);
     } catch (e) {}
-    return (UID = localStorage.getItem('kb_demo_uid') || ('demo_' + (localStorage.getItem('kb_rol') || 'isletme')));
+    /* Uydurma "demo_isletme" kimliği kaldırıldı — DB'de karşılığı yok. */
+    return (UID = null);
   }
 
   /* Rol gerçek profilden gelir; localStorage yalnız yedek. */
@@ -203,11 +209,11 @@
     var job  = dec ? dec.jobTitle : '';
     var date = dec ? KBHiring.fmtDate(dec.createdAt) : '';
     document.getElementById('hdApplicant').innerHTML =
-      '<div class="hd-applicant__avatar"><span>' + initials(name) + '</span></div>' +
+      '<div class="hd-applicant__avatar"><span>' + E(initials(name)) + '</span></div>' +
       '<div>' +
-        '<div class="hd-applicant__name">' + name + '</div>' +
-        '<div class="hd-applicant__job">' + (job || '—') + '</div>' +
-        '<div class="hd-applicant__date">Başvuru tarihi: ' + (date || '—') + '</div>' +
+        '<div class="hd-applicant__name">' + E(name) + '</div>' +
+        '<div class="hd-applicant__job">' + E(job || '—') + '</div>' +
+        '<div class="hd-applicant__date">Başvuru tarihi: ' + E(date || '—') + '</div>' +
       '</div>';
   }
 
@@ -287,7 +293,8 @@
       } else if (status === 'reddedildi') {
         html = '<div class="hd-rejected-notice" style="margin:0">❌ Bu başvurunuz değerlendirildi. Başarılar dileriz.</div>';
         if (dec && dec.reason) {
-          html += '<p style="font-size:0.78rem;color:var(--text-3);margin-top:8px;">Sebep: ' + dec.reason + '</p>';
+          /* Gerekçeyi İŞVEREN yazıyor, aday okuyor — kaçırılmadan basılıyordu. */
+          html += '<p style="font-size:0.78rem;color:var(--text-3);margin-top:8px;">Sebep: ' + E(dec.reason) + '</p>';
         }
       } else {
         html = '<div class="hd-chip hd-chip--' + status + '" style="font-size:0.82rem;padding:6px 14px;">' +

@@ -107,6 +107,17 @@
     .map-legend__dot--kurye { background: #22D3EE; }
     .map-legend__dot--esnaf { background: #4F8BFF; }
     .map-legend__dot--firma { background: #A855F7; }
+    /* Konumu işaretlenmiş hiç kayıt yoksa basılır (app.js → initMap).
+       Boş bir harita sebebini söylemeden duruyordu. */
+    .map-empty-note {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--text-2);
+      font-size: 0.83rem;
+    }
   </style>
 </head>
 <body>

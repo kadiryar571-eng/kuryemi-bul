@@ -32,6 +32,13 @@
     });
   }
 
+  /* Adres kaçışı — esc() yetmez, şema kontrolü gerekir. Bkz. KB.safeUrl. */
+  function safeUrl(u) {
+    if (window.KB && KB.safeUrl) return KB.safeUrl(u);
+    var s = String(u == null ? '' : u).trim();
+    return /^https?:\/\//i.test(s) ? s : '';
+  }
+
   function initials(name) {
     if (!name) return '?';
     var parts = String(name).trim().split(/\s+/);
@@ -252,13 +259,25 @@
     var canDecide = isBiz && iv.status === 'tamamlandi' && !iv.decision;
     var hasRescheduleReq = isBiz && iv.rescheduleRequest && iv.rescheduleRequest.status === 'pending';
 
-    var ava = otherAvatar
-      ? '<img src="' + esc(otherAvatar) + '" alt="' + esc(otherName) + '">'
+    var avaUrl = safeUrl(otherAvatar);
+    var ava = avaUrl
+      ? '<img src="' + esc(avaUrl) + '" alt="' + esc(otherName) + '">'
       : '<span class="iv-card__avatar-text">' + esc(initials(otherName)) + '</span>';
 
     var typeIcon = iv.type === 'online' ? '💻' : '📍';
+    /* Görüşme bağlantısını KARŞI TARAF yazıyor. esc() yalnız HTML
+       karakterlerini kaçırıyordu; `javascript:...` yazan bir işveren,
+       bağlantıya tıklayan kuryenin oturumunda kod çalıştırabilirdi
+       (CSP'de 'unsafe-inline' var, bu şemayı engellemiyor).
+       safeUrl() yalnız http(s)'e izin verir; geçersizse bağlantı hiç
+       basılmaz, düz metin gösterilir.
+       rel="noopener noreferrer": açılan sayfa window.opener ile bu
+       sekmeyi başka bir adrese yönlendiremesin (ters sekme kaçırma). */
+    var link = safeUrl(iv.meetingLink);
     var locationInfo = iv.type === 'online'
-      ? (iv.meetingLink ? '<a href="' + esc(iv.meetingLink) + '" class="iv-link" target="_blank">Bağlantıyı Aç</a>' : 'Online')
+      ? (link
+          ? '<a href="' + esc(link) + '" class="iv-link" target="_blank" rel="noopener noreferrer">Bağlantıyı Aç</a>'
+          : (iv.meetingLink ? 'Online (geçersiz bağlantı)' : 'Online'))
       : esc(iv.location || 'Konum belirtilmedi');
 
     var actions = '';

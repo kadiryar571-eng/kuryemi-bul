@@ -178,6 +178,7 @@
     if (window.KB && KB.takeAuthRequest) KB.takeAuthRequest();
 
     var qs = new URLSearchParams(href.split('?')[1] || '');
+    rolNiyetiniSakla(qs.get('rol'));
     open({
       mode: qs.get('auth') === 'register' ? 'register' : 'login',
       next: qs.get('next'),
@@ -185,11 +186,21 @@
     });
   }, true);
 
+  /* Rol kartlarından gelen ?rol= seçimini saklar.
+     Rol kayıt anında yazılamaz (profil e-posta doğrulanınca oluşur), o
+     yüzden bayrak bırakılır; components.js ilk oturumda uygular.
+     Bkz. components.js → applyPendingRole. */
+  function rolNiyetiniSakla(rol) {
+    if (['kurye', 'isletme', 'firma'].indexOf(rol) === -1) return;
+    try { localStorage.setItem('kb_pending_rol', rol); } catch (e) {}
+  }
+
   /* ─── Adresle açılış: index.html?auth=login|register ───────────
      Korumalı sayfalardan yönlendirilen kullanıcı buraya böyle gelir. */
   function openFromUrl() {
     var qs = new URLSearchParams(location.search);
     if (qs.get('code')) return;          // OAuth dönüşü: oturum akışına karışma
+    rolNiyetiniSakla(qs.get('rol'));
 
     /* next değerini kalıcılaştır — nextParam okurken sessionStorage'a yazar */
     if (window.KB && KB.nextParam) KB.nextParam();

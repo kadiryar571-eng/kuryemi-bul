@@ -137,8 +137,12 @@
       if (KB.getRole() === "ziyaretci") { KB.toast(T("modal.guest"), "error"); return; }
     }
     var fromRole = on ? KB.currentRole() : KB.getRole();
-    var target = on ? await SB.profileById(targetId)
-      : KB.findById(targetType === "kurye" ? D.kuryeler : targetType === "isletme" ? D.isletmeler : D.firmalar, targetId);
+    /* Çevrimdışıyken profil kaynağı yoktur (data.js kaldırıldı; burada
+       tanımsız `D` okunuyordu ve modal ReferenceError ile ölüyordu —
+       kullanıcı "Teklif Ver"e basıyor, hiçbir şey olmuyordu). Bağlantı
+       yoksa sebebini söyleyip çık. */
+    if (!on) { KB.toast(T("modal.offline"), "error"); return; }
+    var target = await SB.profileById(targetId);
     if (!target) return;
     ensureModal();
     var m = document.getElementById("offerModal");
@@ -568,6 +572,16 @@
       if (vehSel && savedF.veh) vehSel.value = savedF.veh;
       var so = document.getElementById("jobSort"); if (so && savedF.sort) so.value = savedF.sort;
     }
+    /* Adresten gelen arama: ilanlar.html?q=... — kayıtlı filtreyi EZER.
+       Kullanıcı belirli bir aramayla geldiyse niyeti odur. Başka
+       sayfalardan "şu işverenin ilanları" gibi derin bağlantı kurmayı
+       mümkün kılar; bu parametre okunmadığı için o bağlantılar sessizce
+       genel listeye düşüyordu. */
+    var urlQ = KB.getParam && KB.getParam("q");
+    if (urlQ) {
+      var seq = document.getElementById("jobSearch");
+      if (seq) seq.value = urlQ;
+    }
     ["jobSearch", "jobCity", "jobVehicle", "jobSort"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el && !el._wired) { el._wired = 1; el.addEventListener(el.tagName === "SELECT" ? "change" : "input", applyJobFilters); }
@@ -937,12 +951,18 @@
   }
   function isletmeCard(i) {
     var acikIlan = Number(i.acikIlan) || 0;
+    var puan = Number(i.puan) || 0;
     return '<article class="talent-card">' + poolStar(i.id) +
       onlineBadge(i.id) +
       '<div class="pcard__top"><div class="avatar avatar--blue">' + avInner(i) + '</div>' +
         '<div><div class="pcard__name">' + KB.esc(i.ad) + ' ' + verBadge(i.dogrulama) + '</div>' +
           altSatir(birlestir([i.tur, i.sehir])) + '</div></div>' +
       (i.aciklama ? '<p class="pcard__sub">' + KB.esc(i.aciklama) + '</p>' : '') +
+      /* Puan kartta HİÇ gösterilmiyordu — oysa esnaf havuzunda "En Yüksek
+         Puan" diye bir sıralama seçeneği var ve kurye kartı puanı basıyor.
+         Kullanıcı göremediği bir ölçüte göre sıralıyordu. Değerlendirme
+         yoksa satır hiç basılmaz (uydurma 0.0 gösterilmez). */
+      (puan > 0 ? '<div>' + KB.stars(puan) + '</div>' : '') +
       '<div class="pcard__meta">' +
         (i.bolge ? '<span class="chip">' + CIC.konum + ' ' + KB.esc(i.bolge) + '</span>' : '') +
         (acikIlan > 0 ? '<span class="chip">' + T("pcard.openListings", { n: acikIlan }) + '</span>' : '') +
@@ -969,7 +989,21 @@
   }
 
   // Havuz modül durumu — handler güncel veriyi okur (GROUP 3 deseni)
-  var POOLV = { src: [], type: "kurye", cardFn: null };
+  /* arac/sort DA burada tutulur — sayfanın kendi script'inde DEĞİL.
+     Eskiden kuryeler.html araç süzmesini ve sıralamayı render EDİLMİŞ
+     kartlar üzerinde yapıyordu (c.style.display + grid.appendChild).
+     Üç ayrı şekilde bozuktu:
+       1) poolApply() her arama/şehir değişiminde grid.innerHTML'i baştan
+          yazıyor → araç süzmesi ve sıralama sessizce siliniyor, ama
+          açılır menüler hâlâ eski seçimi gösteriyordu. Canlı abonelik
+          (wireLivePool) de aynı şeyi tetikliyordu.
+       2) Süzme kartın METNİNDE arama yapıyordu: "Bisiklet" seçilince
+          "Elektrikli Bisiklet" kuryeleri de eşleşiyordu.
+       3) Sıralama kart metninden regex ile puan çıkarmaya çalışıyordu
+          ama kartta sayısal puan metni yok (KB.stars yalnız ★ basar) —
+          dolayısıyla HİÇBİR sıralama seçeneği çalışmıyordu.
+     Artık ikisi de veri üzerinde, tek render yolunda yapılır. */
+  var POOLV = { src: [], type: "kurye", cardFn: null, arac: "", kapasite: "", sort: "" };
   function renderPoolChips() {
     var host = document.getElementById("poolChips"); if (!host) return;
     var search = document.getElementById("fSearch"), sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
@@ -985,12 +1019,18 @@
   }
   function poolApply() {
     var grid = document.getElementById("poolGrid"); if (!grid) return;
+    /* Havuz daha yüklenmeden kullanıcı sıralamayı değiştirirse cardFn
+       hâlâ null olur ve out.map(null) atardı. */
+    if (!POOLV.cardFn) return;
     renderPoolChips();
     var countEl = document.getElementById("resultCount");
     var search = document.getElementById("fSearch"), sel1 = document.getElementById("fSelect1"), sel2 = document.getElementById("fSelect2");
     var type = POOLV.type;
     var q = norm(search && search.value || ""), v1 = sel1 && sel1.value, v2 = sel2 && sel2.value;
-    if (window.KB && KB.saveView) KB.saveView("flt_pool_" + type, { q: (search && search.value) || "", v1: v1 || "", v2: v2 || "" });
+    if (window.KB && KB.saveView) KB.saveView("flt_pool_" + type, {
+      q: (search && search.value) || "", v1: v1 || "", v2: v2 || "",
+      arac: POOLV.arac || "", kapasite: POOLV.kapasite || "", sort: POOLV.sort || ""
+    });
     var out = POOLV.src.filter(function (x) {
       if (q) {
         var hay = norm(x.ad + " " + (x.sehir || "") + " " + (x.bolgeler ? x.bolgeler.join(" ") : "") + " " + (x.bolge || "") + " " + (x.tur || "") + " " + (x.aciklama || ""));
@@ -998,8 +1038,37 @@
       }
       if (v1) { if (type === "firma") { if (x.bolgeler.indexOf(v1) === -1) return false; } else if (x.sehir !== v1) return false; }
       if (v2) { if (type === "isletme" && x.tur !== v2) return false; }
+      /* Araç: TAM eşleşme. Metin içinde arama yapılsaydı "Bisiklet"
+         seçimi "Elektrikli Bisiklet"i de yakalardı. */
+      if (POOLV.arac && String(x.arac || "") !== POOLV.arac) return false;
+      /* Kapasite aralığı — SAYIDAN, kart metninden değil.
+         Eskiden kartın textContent'inde /(\d+)\s*kurye/i aranıyordu. İki
+         yönden bozuktu: (a) İngilizce'de rozet "{n} courier capacity"
+         olduğu için hiçbir şey eşleşmiyor, süzme tamamen ölüyordu;
+         (b) regex metindeki İLK sayıyı alıyor — adında sayı geçen bir
+         firma ("Hız 7 Kurye") kendi kapasitesi yerine adındaki sayıyla
+         süzülüyordu. */
+      if (POOLV.kapasite) {
+        var kap = Number(x.kapasite) || 0;
+        if (POOLV.kapasite === "small"  && !(kap >= 1 && kap <= 10)) return false;
+        if (POOLV.kapasite === "medium" && !(kap >= 11 && kap <= 50)) return false;
+        if (POOLV.kapasite === "large"  && !(kap > 50)) return false;
+      }
       return true;
     });
+
+    /* Sıralama — hepsi gerçek alanlar üzerinde.
+       Varsayılan (POOLV.sort boş) SB.pool()'un döndürdüğü sıradır:
+       puana göre azalan. */
+    var S = POOLV.sort;
+    if (S === "rating")          out.sort(function (a, b) { return (Number(b.puan) || 0) - (Number(a.puan) || 0); });
+    else if (S === "experience") out.sort(function (a, b) { return (Number(b.deneyim) || 0) - (Number(a.deneyim) || 0); });
+    else if (S === "deliveries") out.sort(function (a, b) { return (Number(b.tamamlanan) || 0) - (Number(a.tamamlanan) || 0); });
+    /* acikIlan sayacı migration-33'e kadar hiç güncellenmiyordu (hep 0). */
+    else if (S === "listings")   out.sort(function (a, b) { return (Number(b.acikIlan) || 0) - (Number(a.acikIlan) || 0); });
+    else if (S === "capacity")   out.sort(function (a, b) { return (Number(b.kapasite) || 0) - (Number(a.kapasite) || 0); });
+    else if (S === "newest")     out.sort(function (a, b) { return String(b.created_at || "").localeCompare(String(a.created_at || "")); });
+
     if (out.length) {
       grid.innerHTML = out.map(POOLV.cardFn).join("");
     } else if (POOLV.src.length) {
@@ -1044,7 +1113,9 @@
         g.items.map(function (v) { return '<button type="button" class="suggest__item" data-poolsugg="' + KB.esc(v) + '"><span class="suggest__ic">' + g.icon + '</span><span>' + KB.esc(v) + '</span></button>'; }).join("") + '</div>';
     }).join("");
   }
-  async function renderPool(type) {
+  /* defaultSort: sayfanın <select id="fSort"> içinde İLK (seçili) gelen
+     seçeneğin değeri. Bkz. aşağıdaki geri yükleme bloğu. */
+  async function renderPool(type, defaultSort) {
     var grid = document.getElementById("poolGrid");
     if (!grid) return;
     grid.innerHTML = skeletonCards(6);
@@ -1063,11 +1134,25 @@
     });
     // Filtre hafızası: geri dönünce son arama/filtre korunur (MP05 §4)
     var savedF = window.KB && KB.loadView && KB.loadView("flt_pool_" + type);
+    /* Varsayılan sıralama çağırandan gelir ve menüde SEÇİLİ görünen
+       seçenekle aynı olmalı. Aksi halde menü "En Çok Açık İlan" derken
+       liste puana göre sıralı gelir — kullanıcı gördüğü etikete
+       güvenemez. Kayıtlı bir tercih varsa o kazanır. */
+    POOLV.arac = "";
+    POOLV.kapasite = "";
+    POOLV.sort = defaultSort || "";
     if (savedF) {
       var se = document.getElementById("fSearch"); if (se && savedF.q) se.value = savedF.q;
       if (sel1 && savedF.v1) sel1.value = savedF.v1;
       if (sel2 && savedF.v2) sel2.value = savedF.v2;
+      POOLV.arac = savedF.arac || "";
+      POOLV.kapasite = savedF.kapasite || "";
+      if (savedF.sort) POOLV.sort = savedF.sort;
     }
+    /* İlgili <select>'ler yalnız bazı havuz sayfalarında var; yoksa atlanır. */
+    var selA = document.getElementById("fSelect3");  if (selA) selA.value = POOLV.arac;
+    var selK = document.getElementById("fCapacity"); if (selK) selK.value = POOLV.kapasite;
+    var selS = document.getElementById("fSort");     if (selS && POOLV.sort) selS.value = POOLV.sort;
     var search = document.getElementById("fSearch"), sugg = document.getElementById("poolSuggest");
     if (search && sugg && !search._poolSugg) {
       search._poolSugg = 1;
@@ -1510,14 +1595,40 @@
       addMarkers(iData, "isletme");
       addMarkers(fData, "firma");
 
-      document.querySelectorAll("[data-layer]").forEach(function (cb) {
-        cb.addEventListener("change", function () {
-          var type = cb.getAttribute("data-layer");
-          layers[type].forEach(function (m) {
-            m.getElement().style.display = cb.checked ? "" : "none";
-          });
+      function uygula(cb) {
+        var type = cb.getAttribute("data-layer");
+        if (!layers[type]) return;
+        layers[type].forEach(function (m) {
+          m.getElement().style.display = cb.checked ? "" : "none";
         });
+      }
+
+      /* ?type= parametresi ARTIK OKUNUYOR.
+         Havuz sayfaları "Haritada Gör" bağlantısını
+         harita.html?type=kurye|isletme|firma diye kuruyor ama initMap()
+         bu parametreye hiç bakmıyordu: hangi havuzdan gelirseniz gelin
+         üç katman birden açık geliyordu. Bağlantının vaat ettiği süzme
+         hiç gerçekleşmiyordu. */
+      var istenen = KB.getParam("type");
+      var gecerliTipler = { kurye: 1, isletme: 1, firma: 1 };
+
+      document.querySelectorAll("[data-layer]").forEach(function (cb) {
+        if (istenen && gecerliTipler[istenen]) {
+          cb.checked = (cb.getAttribute("data-layer") === istenen);
+        }
+        uygula(cb);
+        cb.addEventListener("change", function () { uygula(cb); });
       });
+
+      /* Koordinatı olan hiç kayıt yoksa boş bir harita sebebini
+         söylemiyordu — kullanıcı haritanın bozuk olduğunu sanıyor. */
+      var toplam = layers.kurye.length + layers.isletme.length + layers.firma.length;
+      if (!toplam) {
+        var not = document.createElement("div");
+        not.className = "map-empty-note";
+        not.textContent = "Haritada gösterilecek kayıt yok — profillerde henüz konum işaretlenmemiş.";
+        el.parentNode.appendChild(not);
+      }
     } catch (e) {
       console.error("Map error:", e);
     }
@@ -1706,19 +1817,28 @@
       var rows = online() ? offers : offers.filter(function (t) { return t.kimdenRol === roleKey || t.kimeTip === roleKey; });
       return renderOfferRows(rows);
     }
-    var offerCount = online() ? offers.length : (KB.getTeklifler().length + D.teklifler.length);
+    // data.js kaldırıldı (üretimde mock veri yok). Çevrimdışıyken teklif
+    // kaynağı da yoktur — loadOffers() zaten [] döner. Eskiden burada
+    // tanımsız bir `D` okunuyordu ve çevrimdışı panel ReferenceError atıyordu.
+    var offerCount = offers.length;
     var prof = (online() && KB.session()) ? KB.session().profile : null;
 
     if (role === "kurye") {
-      var pu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.9";
-      var tm = prof ? (prof.tamamlanan || 0) : "1.240";
-      var fill = xpFill(prof ? prof.puan : 4.9);
+      /* Profil okunamadıysa UYDURMA değer basılmaz.
+         Burada "4.9" puan ve "1.240" teslimat yazıyordu: hiç iş yapmamış
+         bir kurye bile panelinde bu sayıları görebiliyordu (profil geç
+         yüklendiğinde ya da session().profile boş geldiğinde). Bilinmeyen
+         değer "—" ile gösterilir (CLAUDE.md).
+         Profil gücü de aynı sebeple: veri yoksa 60 değil 0. */
+      var pu = prof ? (Number(prof.puan) || 0).toFixed(1) : "—";
+      var tm = prof ? (prof.tamamlanan || 0) : "—";
+      var fill = xpFill(prof ? prof.puan : 0);
       /* metrikler + profil gücü + insight (seviye sistemi kaldirildi) */
       var tips = [];
       if (prof && !prof.arac) tips.push("🛵 " + T("career.tipVehicle"));
       if (prof && !(prof.bolgeler && prof.bolgeler.length)) tips.push("📍 " + T("career.tipRegion"));
       if (prof && !prof.aciklama) tips.push("📝 " + T("career.tipBio"));
-      var strength = prof ? Math.min(100, 40 + (prof.arac ? 20 : 0) + (prof.bolgeler && prof.bolgeler.length ? 20 : 0) + (prof.aciklama ? 20 : 0)) : 60;
+      var strength = prof ? Math.min(100, 40 + (prof.arac ? 20 : 0) + (prof.bolgeler && prof.bolgeler.length ? 20 : 0) + (prof.aciklama ? 20 : 0)) : 0;
       var strengthHtml = '<div class="profile-strength">' +
         '<div class="profile-strength__h"><span>' + T("career.strength") + '</span><b>%' + strength + '</b></div>' +
         '<div class="profile-strength__track"><div class="profile-strength__fill" style="width:' + strength + '%"></div></div>' +
@@ -1726,10 +1846,8 @@
       '</div>';
       var insightHtml = '<div class="insight-card"><div class="insight-card__h">💡 ' + T("career.insight") + '</div><p>' + T("career.insightMsg") + '</p></div>';
       setHTML("kuryeMetrics", metric(pu, T("m.score")) + metric(tm, T("m.deliveries")) + metric(offerCount, T("m.offers")) + strengthHtml + insightHtml);
-      if (online()) renderMyApplications();
-      else setHTML("kuryeBasvuru", D.ilanlar.filter(function (i) { return i.tip === "kurye-ilani"; }).map(function (i) {
-        return listRow(KB.esc(i.baslik), KB.esc(i.sehir) + " · " + KB.esc(i.bolge), '<span class="chip">' + T("state.applied") + '</span>');
-      }).join(""));
+      // Çevrimdışıyken uydurma ilan basılmaz; setHTML("") boş durum render eder.
+      if (online()) renderMyApplications(); else setHTML("kuryeBasvuru", "");
       setHTML("kuryeTeklif", listFor("kurye"));
     } else if (role === "isletme") {
       if (online() && window.SB && SB.myListingStats) {
@@ -1760,19 +1878,24 @@
         var ai = prof ? (prof.acikIlan || 0) : "—";
         setHTML("isletmeMetrics", metric(ai, T("m.openListings")) + metric(offerCount, T("m.offers")) + metric("—", "Başvuru") + metric("—", "Kabul Oranı"));
       }
-      if (online()) renderMyListings();
-      else setHTML("isletmeIlan", D.ilanlar.filter(function (i) { return i.tip !== "ihale"; }).map(function (i) {
-        return listRow(KB.esc(i.baslik), T("soon.published") + " · " + KB.esc(i.tarih), '<span class="chip">' + T("state.active") + '</span>');
-      }).join(""));
+      if (online()) renderMyListings(); else setHTML("isletmeIlan", "");
       setHTML("isletmeBasvuru", listFor("isletme"));
     } else if (role === "firma") {
-      var kp = prof ? (prof.kapasite || 0) : "60";
-      var fpu = prof ? (Number(prof.puan) || 0).toFixed(1) : "4.8";
-      setHTML("firmaMetrics", metric(kp, T("m.capacity")) + metric(fpu, T("m.score")) + metric(offerCount, T("m.offers")));
-      var kuryeler = await loadPool("kurye");
-      setHTML("firmaPersonel", kuryeler.slice(0, 5).map(function (k) {
-        return listRow(KB.esc(k.ad), KB.esc(k.sehir) + " · " + k.deneyim + " " + T("unit.years"), "");
-      }).join(""));
+      /* DİKKAT — #firmaMetrics'e BURADAN YAZILMAZ.
+         Burada eskiden setHTML("firmaMetrics", metric(kapasite)+metric(puan)+
+         metric(teklif)) vardı ve panel-firma.html'in kendi metrik bloğunu
+         (#metAktif / #metIseAl / #metPuan) tamamen siliyordu. İkisi de
+         DOMContentLoaded'da yarışıyordu: hangisi sonra biterse o kazanıyordu,
+         yani "Aktif Üye / Bu Ay İşe Alım / Ortalama Puan" etiketleri bazen
+         "Kapasite / Puan / Teklif"e dönüşüyor ve sayfanın kendi sayaçları
+         yazacak element bulamıyordu. Üstelik yazdığı değerler uydurmaydı
+         (giriş yoksa "60" kapasite, "4.8" puan).
+         Metrikleri sayfanın kendisi doldurur — gerçek işe alım verisinden.
+
+         #firmaPersonel de kaldırıldı: o id hiçbir sayfada yok, dolayısıyla
+         setHTML sessizce hiçbir şey yapmıyordu — ama önündeki
+         loadPool("kurye") tüm kurye havuzunu boşuna çekip teklif
+         listesinin render'ını geciktiriyordu. */
       setHTML("firmaTeklif", listFor("firma"));
     }
   }
@@ -2067,9 +2190,16 @@
   }
 
   /* ============ KAYITLI İLANLAR (favoriler) ============ */
-  function savedEmpty() {
-    return '<div class="kb-empty grid-full"><div class="kb-empty__ic">🔖</div><div class="kb-empty__t">' + T("fav.empty") + '</div>' +
-      '<div class="kb-empty__d">' + T("fav.emptySub") + '</div>' +
+  /* kapandi=true: kullanıcının kaydı VAR ama hepsi yayından kalkmış.
+     Bu ayrım olmadan "henüz ilan kaydetmedin" deniyordu — kullanıcı
+     kaydettiğini bildiği için mesaj yanlış görünüyordu. */
+  function savedEmpty(kapandi) {
+    var baslik = kapandi ? "Kaydettiğin ilanlar yayından kalkmış" : T("fav.empty");
+    var alt = kapandi
+      ? "Kaydettiğin ilanların tamamı kapatılmış veya silinmiş. Yeni ilanlara göz at."
+      : T("fav.emptySub");
+    return '<div class="kb-empty grid-full"><div class="kb-empty__ic">🔖</div><div class="kb-empty__t">' + KB.esc(baslik) + '</div>' +
+      '<div class="kb-empty__d">' + KB.esc(alt) + '</div>' +
       '<a class="btn btn--primary btn--sm mt-24" href="ilanlar.html">' + T("fav.browse") + '</a></div>';
   }
   async function renderSavedJobs() {
@@ -2079,7 +2209,7 @@
     var sortSel = document.getElementById("savedSort");
     if (window.KB && KB.ready) await KB.ready();
     var ids = getSavedJobs();
-    if (!ids.length) { grid.innerHTML = savedEmpty(); if (countEl) countEl.textContent = ""; return; }
+    if (!ids.length) { grid.innerHTML = savedEmpty(false); if (countEl) countEl.textContent = ""; return; }
     grid.innerHTML = skeletonCards(Math.min(ids.length, 4));
     var jobs = [];
     if (online()) {
@@ -2094,7 +2224,8 @@
       jobs = results.filter(function (l) { return l && l.durum === "acik"; });
     }
     function render() {
-      if (!jobs.length) { grid.innerHTML = savedEmpty(); if (countEl) countEl.textContent = ""; return; }
+      /* ids.length > 0 ama jobs boşsa: kayıtlar var, hepsi kapanmış. */
+      if (!jobs.length) { grid.innerHTML = savedEmpty(ids.length > 0); if (countEl) countEl.textContent = ""; return; }
       var sort = (sortSel && sortSel.value) || "new";
       var arr = jobs.slice();
       arr.sort(function (a, b) {
@@ -2346,6 +2477,11 @@
   /* ============ DIŞA AÇIM ============ */
   window.KBApp = {
     renderPool: renderPool, renderProfile: renderProfile,
+    /* Havuz sayfaları araç/sıralama seçimini buradan bildirir; süzme ve
+       sıralama veri üzerinde, tek render yolunda yapılır (bkz. POOLV). */
+    setPoolArac: function (v) { POOLV.arac = v || ""; poolApply(); },
+    setPoolKapasite: function (v) { POOLV.kapasite = v || ""; poolApply(); },
+    setPoolSort: function (v) { POOLV.sort = v || ""; poolApply(); },
     initMap: initMap, initPanel: initPanel, openOfferModal: openOfferModal,
     renderMyPool: renderMyPool, renderListings: renderListings,
     renderJobDetail: renderJobDetail, buildJobDetailHtml: buildJobDetailHtml, renderSavedJobs: renderSavedJobs, renderMyApplications: renderMyApplications, renderMessages: renderMessages

@@ -59,7 +59,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         <span id="resultCount">Yükleniyor…</span>
       </span>
-      <span class="pool-stats-bar__note">Match skoru: Profilinize göre hesaplanır</span>
+      <!-- Burada "Match skoru: Profilinize göre hesaplanır" yazıyordu.
+           Böyle bir hesap YOK: kurye kartları .match-score elemanı hiç
+           basmıyor, KBPrefs.matchScore() ise iş ilanları için çalışıyor
+           (çalışma tipi/sektör/maaş/vardiya) ve prefs.js bu sayfaya zaten
+           yüklenmiyor. Kullanıcıya olmayan bir özellik vaat ediliyordu. -->
+      <span class="pool-stats-bar__note">Yalnızca profilini tamamlamış kuryeler listelenir</span>
     </div>
 
     <!-- Filter bar -->
@@ -82,11 +87,14 @@
         <option value="Araç">🚗 Araç</option>
         <option value="Yaya">🚶 Yaya</option>
       </select>
+      <!-- "Match Skoru" seçeneği KALDIRILDI — arkasında hesap yoktu ve
+           VARSAYILAN seçenek olduğu için sayfa hiçbir zaman sıralanmıyordu.
+           Kalan seçeneklerin hepsi gerçek profil alanlarına dayanır. -->
       <select id="fSort" onchange="sortPool(this.value)">
-        <option value="match">Match Skoru</option>
         <option value="rating">En Yüksek Puan</option>
-        <option value="experience">Deneyim</option>
-        <option value="newest">En Yeni</option>
+        <option value="experience">En Deneyimli</option>
+        <option value="deliveries">En Çok Teslimat</option>
+        <option value="newest">En Yeni Üye</option>
       </select>
     </div>
 
@@ -126,71 +134,58 @@
   <script src="assets/js/push.js"></script>
   <script>
   (function () {
-    var isListView = false;
-    var aracFilter = '';
-    var sortMode   = 'match';
+    'use strict';
 
-    /* View toggle */
-    var toggleBtn = document.getElementById('btnToggleView');
+    var isListView = false;
+
+    /* ── Görünüm değiştirici (grid ↔ liste) ────────────────
+       Buton metnini textContent ile yazmak İKONU SİLİYORDU: HTML'de
+       gelen <svg> ilk tıklamada yok oluyor, geri dönüşü olmuyordu.
+       Yalnız etiketi güncelliyoruz. */
+    var toggleBtn   = document.getElementById('btnToggleView');
+    var toggleLabel = null;
     if (toggleBtn) {
-      toggleBtn.addEventListener('click', function () {
-        isListView = !isListView;
+      /* Metin düğümünü bul (svg'den sonraki) */
+      [].forEach.call(toggleBtn.childNodes, function (n) {
+        if (n.nodeType === 3 && n.textContent.trim()) toggleLabel = n;
+      });
+
+      function setView(list) {
+        isListView = list;
         var grid = document.getElementById('poolGrid');
         if (grid) grid.classList.toggle('cards-grid--list', isListView);
-        toggleBtn.textContent = isListView ? '⊞ Grid' : '⊟ Liste';
+        if (toggleLabel) toggleLabel.textContent = isListView ? ' Grid' : ' Liste';
+        toggleBtn.setAttribute('aria-pressed', String(isListView));
         try { localStorage.setItem('kb_pool_view_kurye', isListView ? 'list' : 'grid'); } catch (e) {}
-      });
-      /* Restore saved view */
-      try { if (localStorage.getItem('kb_pool_view_kurye') === 'list') toggleBtn.click(); } catch (e) {}
+      }
+
+      toggleBtn.addEventListener('click', function () { setView(!isListView); });
+
+      /* Kayıtlı görünümü geri yükle.
+         Eskiden bunun için toggleBtn.click() çağrılıyordu; tıklama
+         localStorage'a yeniden yazdığı için zararsızdı ama niyeti
+         gizliyordu. Doğrudan uygula. */
+      try { if (localStorage.getItem('kb_pool_view_kurye') === 'list') setView(true); } catch (e) {}
     }
 
-    /* Araç filter (client-side, post-render) */
+    /* ── Araç süzmesi ve sıralama ──────────────────────────
+       İkisi de app.js'e devredilir. Burada eskiden render EDİLMİŞ kartlar
+       üzerinde çalışan bir kopya vardı; app.js grid'i her yeniden
+       yazdığında (arama, şehir filtresi, canlı abonelik) sessizce
+       siliniyordu. Ayrıntı: app.js → POOLV. */
     window.filterByArac = function (val) {
-      aracFilter = val;
-      applyClientFilters();
+      if (window.KBApp && KBApp.setPoolArac) KBApp.setPoolArac(val);
     };
-
-    /* Sort (client-side) */
     window.sortPool = function (mode) {
-      sortMode = mode;
-      applyClientFilters();
+      if (window.KBApp && KBApp.setPoolSort) KBApp.setPoolSort(mode);
     };
-
-    function applyClientFilters() {
-      var cards = document.querySelectorAll('#poolGrid .talent-card');
-      var arr = Array.from(cards);
-
-      /* Filter by araç */
-      arr.forEach(function (c) {
-        if (!aracFilter) { c.style.display = ''; return; }
-        var text = c.textContent || '';
-        c.style.display = text.indexOf(aracFilter) >= 0 ? '' : 'none';
-      });
-
-      /* Sort */
-      var visible = arr.filter(function (c) { return c.style.display !== 'none'; });
-      visible.sort(function (a, b) {
-        if (sortMode === 'match') {
-          var sa = parseInt((a.querySelector('.match-score') || {}).textContent || '0');
-          var sb = parseInt((b.querySelector('.match-score') || {}).textContent || '0');
-          return sb - sa;
-        }
-        if (sortMode === 'rating') {
-          var ra = parseFloat((a.textContent.match(/(\d\.\d)\s*\/\s*5/) || ['0','0'])[1]);
-          var rb = parseFloat((b.textContent.match(/(\d\.\d)\s*\/\s*5/) || ['0','0'])[1]);
-          return rb - ra;
-        }
-        return 0;
-      });
-      var grid = document.getElementById('poolGrid');
-      if (grid) visible.forEach(function (c) { grid.appendChild(c); });
-    }
 
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderPool) {
         /* Sonuç sayısını app.js doğrudan şeritteki #resultCount
            elemanına yazıyor; ayrı bir kopyalama gerekmiyor. */
-        KBApp.renderPool('kurye');
+        /* İkinci argüman: menüde seçili gelen sıralama. */
+        KBApp.renderPool('kurye', 'rating');
       }
     });
   })();

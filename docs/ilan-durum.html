@@ -161,10 +161,17 @@
     var IS         = window.IlanStatus;
 
     /* ── Helpers ── */
-    function esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    /* Merkezî kaçışa delege eder — yerel kopya tek tırnağı atlıyordu
+       (CLAUDE.md §1). */
+    function esc(s) {
+      if (window.KB && KB.esc) return KB.esc(s);
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
     function getUid() {
       try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
-      return 'demo';
+      return null;   // uydurma 'demo' kimliği kaldırıldı
     }
     function fmtDate(d) {
       if (!d) return '—';
@@ -315,27 +322,57 @@
       (rows.length > 5 ? '<a href="basvurular.html?job=' + esc(job.id) + '" class="btn btn--ghost btn--sm" style="margin-top:10px">Tüm ' + rows.length + ' başvuruyu gör →</a>' : '');
     }
 
-    /* ── Activity log ── */
+    /* ── Activity log ──
+       Ayrı bir olay tablosu yok; günlük ilanın KENDİ zaman damgalarından
+       türetilir. hiring.js ve feedback.js'teki getLog ile aynı yaklaşım.
+
+       Eskiden günlük boşsa iki kayıt UYDURULUYORDU:
+         { event:'published', date: new Date(Date.now() - 86400000) }
+       yani "1 gün önce yayınlandı" — ilan bugün açılmış olsa bile.
+       Tarih tamamen hayaliydi ve gerçek bir olaymış gibi gösteriliyordu
+       (CLAUDE.md: uydurma kayıt üretilmez).
+
+       IS.getLog() yalnız bu tarayıcının localStorage'ını okur; başka
+       cihazdan bakan aynı kullanıcı hiçbir şey göremez. O yüzden yerel
+       kayıtlar VARSA ek olarak gösterilir, yokluğu uydurmayla
+       kapatılmaz. */
     function renderLog(job) {
       var el = document.getElementById('ildsLog');
       if (!el) return;
-      var log = IS.getLog(job.id);
-      /* Add a seed log entry if empty */
-      if (!log.length) {
-        var seedDate = job.created_at || job.tarih || new Date(Date.now() - 2 * 86400000).toISOString();
-        log = [
-          { event:'created', note:'', date:seedDate },
-          { event:(job.durum === 'yayinda' ? 'published' : 'created'), note:'', date: new Date(Date.now() - 86400000).toISOString() }
-        ].filter(function(e, i, a) { return a.map(function(x){return x.event;}).indexOf(e.event) === i; });
+
+      var log = [];
+
+      /* 1) İlanın gerçek zaman damgaları */
+      var olusturma = job.created_at || job.tarih || '';
+      if (olusturma) log.push({ event: 'created', note: '', date: olusturma });
+
+      /* 2) Durum değişimi — yalnız gerçekten güncellenmişse.
+            updated_at ile created_at aynıysa hiç değişmemiş demektir. */
+      var guncelleme = job.updated_at || '';
+      if (guncelleme && String(guncelleme).slice(0, 19) !== String(olusturma).slice(0, 19)) {
+        var DURUM_OLAY = {
+          yayinda: 'published', acik: 'published', taslak: 'drafted',
+          duraklatildi: 'paused', doldu: 'filled', kapali: 'filled',
+          iptal: 'canceled', suresi_doldu: 'auto_expired'
+        };
+        log.push({ event: DURUM_OLAY[job.durum] || 'published', note: '', date: guncelleme });
       }
+
+      /* 3) Bu tarayıcıda tutulmuş gerçek yerel kayıtlar (varsa) */
+      (IS.getLog(job.id) || []).forEach(function (e) { if (e && e.date) log.push(e); });
+
+      /* En yeni üstte */
+      log.sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+
       el.innerHTML = log.map(function(entry) {
         var ev = IS.getEventLabel(entry.event);
+        var d  = String(entry.date || '');
         return '<div class="ilds-log-item">' +
           '<div class="ilds-log-ico">' + ev.ico + '</div>' +
           '<div class="ilds-log-body">' +
             '<div class="ilds-log-lbl">' + esc(ev.lbl) + '</div>' +
             (entry.note ? '<div class="ilds-log-note">' + esc(entry.note) + '</div>' : '') +
-            '<div class="ilds-log-date">' + IS.relTime(entry.date) + ' · ' + fmtDate(entry.date.slice(0, 10)) + '</div>' +
+            '<div class="ilds-log-date">' + IS.relTime(d) + (d ? ' · ' + fmtDate(d.slice(0, 10)) : '') + '</div>' +
           '</div>' +
         '</div>';
       }).join('') || '<div class="ilds-log-empty">Henüz aktivite yok.</div>';

@@ -58,6 +58,13 @@
 
   /* ── Helpers ──────────────────────────────────────────── */
   window.renderScreen = function (html) {
+    /* Ekran degisiminde acik haritayi YIK.
+       innerHTML'i degistirmek MapLibre nesnesini oldurmez: WebGL baglami,
+       render dongusu ve worker'lari yasamaya devam eder. Olculdu — 14
+       harita ziyaretinde 20 baglam olusup 12'si tarayici tarafindan zorla
+       kaybettirildi. Ayrinti: screens/shared.js -> destroyPremiumMap. */
+    if (window.destroyPremiumMap) window.destroyPremiumMap();
+
     $screen.classList.add('fading');
     setTimeout(function () {
       $screen.innerHTML = html;
@@ -186,7 +193,15 @@
         '<div class="kb-drawer__profile">' +
           '<div class="kb-avatar kb-avatar--lg" style="background:var(--c-accent)">' + initials(name) + '</div>' +
           '<div class="kb-drawer__name">' + esc(name) + '</div>' +
-          '<div class="kb-drawer__rating">' + ICON.star + '&nbsp;4.8 puan</div>' +
+          /* Puan GERÇEK profilden. Burada sabit "4.8 puan" yazıyordu:
+             hiç değerlendirilmemiş bir hesap bile menüsünde 4.8 görüyordu.
+             Değerlendirme yoksa rozet hiç basılmaz — uydurma sayı yerine
+             yokluk gösterilir (CLAUDE.md: mock veri yok). */
+          (Number(profile.degerlendirme) > 0
+            ? '<div class="kb-drawer__rating">' + ICON.star + '&nbsp;' +
+                esc(Number(profile.puan).toFixed(1)) + ' puan · ' +
+                esc(profile.degerlendirme) + ' değerlendirme</div>'
+            : '<div class="kb-drawer__rating">' + ICON.star + '&nbsp;Henüz değerlendirme yok</div>') +
           '<div class="kb-drawer__role-badge">' + roleLabel + '</div>' +
         '</div>' +
         '<button class="kb-drawer__view-btn" onclick="closeDrawer();Router.go(\'' + profilRoute + '\')">Profili Görüntüle →</button>' +
@@ -237,7 +252,23 @@
     }
     var overlay = document.getElementById('kb-drawer-overlay');
     var isOpen = drawer.classList.toggle('open');
+    /* İçerik her AÇILIŞTA yeniden kurulur. Menü eskiden yalnız ilk kez
+       kurulup önbellekte kalıyordu; artık başlıkta gerçek puan/değerlendirme
+       sayısı olduğu için bayat veri göstermesi kabul edilemez (kullanıcı
+       profilini düzenleyip menüyü açtığında eski adını görürdü). */
+    if (isOpen) drawer.innerHTML = _buildDrawer();
     if (overlay) overlay.style.display = isOpen ? '' : 'none';
+  };
+
+  /* Açık olan üst katman var mı? (geri tuşu önce onu kapatmalı)
+     Sırayla en üstteki kapatılır: modal → drawer. */
+  window.closeTopLayer = function () {
+    var ov = document.getElementById('apply-success-overlay') ||
+             document.getElementById('apply-overlay');
+    if (ov) { ov.remove(); return true; }
+    var drawer = document.getElementById('kb-drawer');
+    if (drawer && drawer.classList.contains('open')) { closeDrawer(); return true; }
+    return false;
   };
 
   window.closeDrawer = function () {

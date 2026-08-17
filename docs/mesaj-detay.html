@@ -142,9 +142,14 @@
   };
 
   /* ─── Helpers ───────────────────────────────────────────────── */
+  /* Merkezî kaçışa delege eder — yerel kopya tek tırnağı atlıyordu
+     (CLAUDE.md §1). Bu sayfa mesaj içeriği basıyor; kaçışın eksiksiz
+     olması burada kritik. */
   function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (window.KB && KB.esc) return KB.esc(s);
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
   }
   function initials(n) {
     return String(n||'?').split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0].toUpperCase();}).join('');
@@ -887,9 +892,13 @@
     TID = params.get('tid');
     if (!TID) { window.location.href = 'mesajlar.html'; return; }
 
-    role = (window.KB && KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme';
+    /* Rol ve kimlik OTURUMDAN gelir. Eskiden localStorage'daki kb_rol'e
+       (kullanıcının kendi yazabildiği bir değer) ve 'demo_<rol>' gibi
+       uydurma bir kimliğe düşüyordu; o kimlikle yapılan sorgular
+       veritabanında karşılıksız kalıyordu. */
+    role = (window.KB && KB.STATE && KB.STATE.role) || 'kurye';
     var user = window.KB && KB.STATE && KB.STATE.user;
-    uid  = user ? user.id : ('demo_' + role);
+    uid  = user ? user.id : null;
 
 
     if (window.KBCommStatus) {

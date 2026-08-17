@@ -161,10 +161,17 @@
     var CURRENT_JOB = null;
 
     /* ── Helpers ── */
-    function esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    /* Merkezî kaçışa delege eder — yerel kopya tek tırnağı atlıyordu
+       (CLAUDE.md §1). */
+    function esc(s) {
+      if (window.KB && KB.esc) return KB.esc(s);
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
     function getUid() {
       try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
-      return 'demo';
+      return null;   // uydurma 'demo' kimliği kaldırıldı
     }
 
     /* İlanlar yalnız veritabanından (kullanıcının kendi ilanları) */
@@ -314,25 +321,40 @@
         '<div class="ilq-title-cmp__box" style="border:1.5px solid var(--success)">' +
           '<div class="ilq-title-cmp__lbl" style="color:var(--success)">Önerilen Başlık</div>' +
           '<div class="ilq-title-cmp__val ilq-title-cmp__val--after">' + esc(suggested) + '</div>' +
-          '<div style="font-size:0.7rem;color:var(--success);margin-top:4px">+%30 daha fazla tıklanma bekleniyor</div>' +
+          /* "+%30 daha fazla tıklanma bekleniyor" KALDIRILDI — arkasında
+             hiçbir ölçüm yoktu, sabit bir sayıydı. Kullanıcı bu orana
+             bakıp başlığını değiştiriyor; uydurma oran tam olarak burada
+             zararlı (CLAUDE.md). Öneri kuralları zaten aşağıda listeli. */
+          '<div style="font-size:0.7rem;color:var(--text-3);margin-top:4px">' + suggested.length + ' karakter</div>' +
         '</div>';
 
       if (applyBtn) {
-        applyBtn.onclick = function() {
+        applyBtn.onclick = async function() {
           if (!job.id) return;
-          var jobs = IS ? IS.getJobs(getUid()) : [];
-          for (var i = 0; i < jobs.length; i++) {
-            if (jobs[i].id === job.id) {
-              jobs[i].baslik = suggested;
-              jobs[i].poz_baslik = suggested;
-              break;
-            }
+
+          /* GERÇEKTEN veritabanına yazar.
+             ÖNCEDEN: yalnız localStorage'a ve bellekteki CURRENT_JOB'a
+             yazıp koşulsuz "✅ Başlık güncellendi!" diyordu. İlanın
+             public.listings satırına HİÇ dokunmuyordu: işveren başlığı
+             değiştirdiğini sanıyor, ilan sayfasında ve arama sonuçlarında
+             eski başlık duruyordu. Başka bir cihazdan bakınca da eski
+             hâli görünüyordu. */
+          if (!(window.SB && SB.isOn() && SB.updateListing)) {
+            if (window.KBMotion) KBMotion.showErrorToast('Bu işlem için bağlantı gerekiyor.');
+            return;
           }
-          try { localStorage.setItem('kb_my_ilanlar_' + getUid(), JSON.stringify(jobs)); } catch(e) {}
-          CURRENT_JOB.baslik = suggested;
-          CURRENT_JOB.poz_baslik = suggested;
-          if (window.KBMotion) KBMotion.showSuccess('✅ Başlık güncellendi!', suggested, 2400);
-          selectJob(job.id);
+          applyBtn.disabled = true;
+          try {
+            await SB.updateListing(job.id, { baslik: suggested });
+            CURRENT_JOB.baslik = suggested;
+            CURRENT_JOB.poz_baslik = suggested;
+            if (window.KBMotion) KBMotion.showSuccess('Başlık güncellendi', suggested, 2400);
+            selectJob(job.id);
+          } catch (err) {
+            if (window.KBMotion) KBMotion.showErrorToast((err && err.message) || 'Başlık güncellenemedi.');
+          } finally {
+            applyBtn.disabled = false;
+          }
         };
       }
     }

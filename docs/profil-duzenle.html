@@ -1606,7 +1606,9 @@
     /* ── Depolama ── */
     function getUid() {
       try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch(e) {}
-      return 'demo';
+      /* 'demo' anahtarı kaldırıldı: aynı tarayıcıdaki farklı kullanıcılar
+         birbirinin belge/deneyim kayıtlarını görüyordu. */
+      return null;
     }
     function docsKey() { return 'kb_docs_' + getUid(); }
     function logKey()  { return 'kb_docs_log_' + getUid(); }
@@ -2007,7 +2009,7 @@
     var TAG_ICOS  = { 'Yemek Teslimatı':'🍔','Market Teslimatı':'🛒','E-Ticaret':'📦','Gece Vardiyası':'🌙','Yoğun Bölge Deneyimi':'🗺️' };
 
     /* ── Depolama ── */
-    function getUid() { try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch(e) {} return 'demo'; }
+    function getUid() { try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch(e) {} return null; }
     function expKey() { return 'kb_exp_' + getUid(); }
     function logKey() { return 'kb_exp_log_' + getUid(); }
     function loadExps() { try { return JSON.parse(localStorage.getItem(expKey())) || []; } catch(e) { return []; } }
@@ -2415,7 +2417,7 @@
     /* ── Storage ──────────────────────────────────────────── */
     function uid() {
       try { if (window.KB && KB.SESSION && KB.SESSION.user) return KB.SESSION.user.id; } catch (e) {}
-      return 'demo';
+      return null;
     }
     function loadPrefs() {
       try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('kb_prefs_' + uid()))) || DEFAULTS; } catch (e) { return Object.assign({}, DEFAULTS); }

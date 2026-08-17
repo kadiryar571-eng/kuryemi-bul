@@ -109,6 +109,10 @@
           <a href="profil-duzenle.html" class="btn btn--ghost btn--sm">Profili Düzenle</a>
         </div>
         <div class="panel-box__body">
+          <!-- DİKKAT: bu bloğu app.js DOLDURMAZ.
+               initPanel("firma") eskiden setHTML("firmaMetrics", …) ile burayı
+               tümden eziyor ve uydurma değerler (kapasite 60, puan 4.8)
+               basıyordu. Artık sayfanın kendi script'i dolduruyor. -->
           <div id="firmaMetrics" class="dash-stats-mini dash-stats-mini--inset">
             <div class="dash-stat dash-stat--static">
               <span class="dash-stat__label">Aktif Üye</span>
@@ -118,12 +122,12 @@
             <div class="dash-stat dash-stat--static">
               <span class="dash-stat__label">Bu Ay İşe Alım</span>
               <span class="dash-stat__value" id="metIseAl">—</span>
-              <span class="dash-stat__delta is-up">+bu ay</span>
+              <span class="dash-stat__delta is-neutral" id="metIseAlSub">bu ay</span>
             </div>
             <div class="dash-stat dash-stat--static">
               <span class="dash-stat__label">Ortalama Puan</span>
               <span class="dash-stat__value" id="metPuan">—</span>
-              <span class="dash-stat__delta is-neutral">/ 5.0</span>
+              <span class="dash-stat__delta is-neutral" id="metPuanSub">/ 5.0</span>
             </div>
           </div>
         </div>
@@ -135,7 +139,7 @@
         <div class="panel-box__body" style="display:flex;flex-wrap:wrap;gap:10px">
           <a href="kuryeler.html"    class="btn btn--primary">Kurye Bul</a>
           <!-- style="display:none" KALIR: rozetlerin başlangıç durumu odur,
-               JS sayı gelince 'inline' yazıyor (bkz. :450 civarı). -->
+               JS sayı gelince 'inline' yazıyor. -->
           <a href="basvurular.html"  class="btn btn--secondary">Başvurular <span id="panelHiringBadge" class="kb-badge kb-badge--primary" style="display:none"></span></a>
           <a href="mesajlar.html"    class="btn btn--ghost">Mesajlar <span id="panelMsgBadge" class="kb-badge kb-badge--error" style="display:none"></span></a>
           <a href="geri-bildirim.html" class="btn btn--ghost">Geri Bildirim <span id="panelFbBadge" class="kb-badge kb-badge--warning" style="display:none"></span></a>
@@ -178,14 +182,22 @@
         </div>
       </div>
 
+      <!-- İşe alım karar geçmişi.
+           Burada eskiden "Son Ayrılanlar / Son 30 gün" kutusu vardı ve içine
+           HİÇBİR JS yazmıyordu: sabit "Bu dönemde ayrılan kurye yok." metni
+           gerçek durumdan bağımsız olarak hep görünüyordu. Şemada ayrılma
+           kavramı da yok — hiring_decisions.status yalnız
+           beklemede/kisa_listede/mulakat_planli/kabul/reddedildi/tamamlandi
+           alabiliyor. Uydurulamayacak bir kutu yerine gerçekten var olan
+           veriyi gösteriyoruz. -->
       <div class="panel-box">
         <div class="panel-box__head">
-          <h3>Son Ayrılanlar</h3>
-          <span style="font-size:0.78rem;color:var(--text-3)">Son 30 gün</span>
+          <h3>İşe Alım Karar Geçmişi</h3>
+          <a href="karar.html" class="btn btn--ghost btn--sm">Karar Ver →</a>
         </div>
         <div class="panel-box__body">
-          <div id="filoAyrilanlar">
-            <p style="font-size:0.85rem;color:var(--text-3);">Bu dönemde ayrılan kurye yok.</p>
+          <div id="filoKararlar">
+            <p class="text-muted-xs">Yükleniyor…</p>
           </div>
         </div>
       </div>
@@ -216,14 +228,20 @@
         </div>
       </div>
 
-      <!-- Aktif Teklifler -->
+      <!-- Teklifler.
+           Başlık eskiden "Gönderilen Teklifler"di ama app.js çevrimiçiyken
+           listeyi HİÇ süzmüyor: SB.myOffers() RLS gereği taraf olduğumuz tüm
+           teklifleri döndürüyor, yani gelenler de bu kutuda listeleniyordu.
+           Satırlarda zaten ↓ Gelen / ↑ Giden rozeti var; doğru olan başlığı
+           gerçeğe uydurmak. -->
       <div class="panel-box">
         <div class="panel-box__head">
-          <h3>Gönderilen Teklifler</h3>
+          <h3>Teklifler</h3>
+          <span style="font-size:0.78rem;color:var(--text-3)">Gelen &amp; giden</span>
         </div>
         <div class="panel-box__body">
           <div id="firmaTeklif">
-            <p class="empty">Henüz gönderilen teklif yok.</p>
+            <p class="text-muted-xs">Yükleniyor…</p>
           </div>
         </div>
       </div>
@@ -251,6 +269,11 @@
   (function () {
     'use strict';
 
+    /* Kaçış — components.js'teki tek merkezî uygulamaya delege eder.
+       Yerel kopya TANIMLANMAZ (CLAUDE.md: eskiden 7 kopya vardı ve hepsi
+       tek tırnağı atlıyordu). */
+    function E(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); }
+
     /* ── Tab switching ────────────────────────────────────── */
     function switchTab(tabName) {
       document.querySelectorAll('.dash__nav button').forEach(function (b) {
@@ -262,29 +285,53 @@
     }
     window.switchTab = switchTab;
 
-    /* ── Profile completion engine ────────────────────────── */
-    function renderProfEngine(profile) {
+    /* ── Profil tamamlama motoru ───────────────────────────
+       Adımlar sunucudaki public.profile_completion() ile AYNI ölçütleri
+       kullanır. Eskiden burada şemada olmayan alanlar okunuyordu:
+         profile.hakkinda / profile.bio   → yok (doğrusu: aciklama)
+         profile.kurye_sayisi             → yok (doğrusu: kapasite)
+         profile.web / profile.telefon    → yok; telefon KVKK gereği
+                                            ayrı profile_contacts tablosunda
+       Bu üç adım hiçbir zaman tamamlanamıyordu: kullanıcı profilinin
+       tamamını doldursa bile motor %67'de takılı kalıyor, "Profilini
+       Tamamla" kutusu hiç kapanmıyordu. Ayrıca yüzde sunucunun
+       my_dashboard_stats().profil_tamamlanma değeriyle çelişiyordu.
+       Artık yüzde SUNUCUDAN gelir; adım listesi yalnız neyin eksik
+       olduğunu gösterir. */
+    function renderProfEngine(profile, hasPhone, serverPct) {
       var el = document.getElementById('profEngine');
       if (!el || !profile) return;
+
       var steps = [
-        { label: 'Temel bilgilerini tamamla',    done: !!(profile.ad && profile.ad.length > 1) },
-        { label: 'Faaliyet şehrini belirle',      done: !!(profile.sehir) },
-        { label: 'Kurye Firması hakkında bilgi ekle',      done: !!(profile.hakkinda || profile.bio) },
-        { label: 'Kurye ihtiyaçlarını belirle',  done: !!(profile.kurye_sayisi || profile.ihtiyac) },
-        { label: 'Logo yükle',                    done: !!(profile.avatar_url) },
-        { label: 'İletişim bilgilerini ekle',     done: !!(profile.web || profile.telefon) },
+        { label: 'Kurye Firması adını gir',        done: !!(profile.ad && profile.ad.length > 1),  },
+        { label: 'Faaliyet şehrini belirle',       done: !!profile.sehir },
+        { label: 'Kurye Firması hakkında bilgi ekle', done: !!profile.aciklama },
+        { label: 'Harita konumunu işaretle',       done: profile.lat != null && profile.lng != null },
+        { label: 'İletişim telefonu ekle',         done: !!hasPhone },
+        { label: 'Kurye kapasitesini belirle',     done: Number(profile.kapasite) > 0 },
+        { label: 'Verdiğiniz hizmetleri seçin',    done: !!(profile.hizmetler && profile.hizmetler.length) },
+        { label: 'Kimlik doğrulamasını tamamla',   done: profile.dogrulama === 'verified' }
       ];
+
       var doneCount = steps.filter(function (s) { return s.done; }).length;
-      var pct = Math.round((doneCount / steps.length) * 100);
+      /* Sunucu yüzdesi varsa o kazanır — tek kaynak ilkesi. */
+      var pct = (serverPct != null && !isNaN(serverPct))
+        ? Number(serverPct)
+        : Math.round((doneCount / steps.length) * 100);
+
       if (pct >= 100) { el.style.display = 'none'; return; }
       el.style.display = '';
       document.getElementById('profPct').textContent = '%' + pct;
-      requestAnimationFrame(function () { document.getElementById('profBarFill').style.width = pct + '%'; });
+      requestAnimationFrame(function () {
+        document.getElementById('profBarFill').style.width = pct + '%';
+      });
+
       var stepsEl = document.getElementById('profSteps');
       stepsEl.innerHTML = '';
       steps.forEach(function (step) {
         var a = document.createElement('a');
-        a.href = 'profil-duzenle.html';
+        /* Kimlik doğrulama profil düzenleme sayfasından yapılmıyor. */
+        a.href = step.label.indexOf('Kimlik') === 0 ? 'ayarlar.html' : 'profil-duzenle.html';
         a.className = 'prof-step' + (step.done ? ' is-done' : '');
         a.innerHTML =
           '<div class="prof-step__ic ' + (step.done ? 'prof-step__ic--done' : 'prof-step__ic--pending') + '">' +
@@ -292,7 +339,7 @@
               ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
               : '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>') +
           '</div>' +
-          '<span class="prof-step__label">' + step.label + '</span>' +
+          '<span class="prof-step__label">' + E(step.label) + '</span>' +
           '<span class="prof-step__arr">' + (step.done ? '✓' : '→') + '</span>';
         stepsEl.appendChild(a);
       });
@@ -318,7 +365,12 @@
       setTimeout(function () { if (!bitti) el.textContent = target; }, duration + 400);
     }
 
-    /* ── Demo filo data ───────────────────────────────────── */
+    function initialsOf(ad) {
+      return String(ad || '?').split(' ')
+        .map(function (w) { return w[0] || ''; })
+        .slice(0, 2).join('').toUpperCase() || '?';
+    }
+
     /* ── Filo: GERÇEK işe alımlar ──────────────────────────
        Filo = kendi ilanlarına kabul edilmiş başvuru sahipleri.
        Uydurma kadro listesi yoktur; kayıt yoksa boş durum gösterilir.
@@ -333,9 +385,29 @@
       animateCount(document.getElementById('statFilo'), list.length);
       animateCount(document.getElementById('metAktif'), list.length);
 
+      /* "Bu Ay İşe Alım" — filo kayıtlarının başlangıç tarihinden sayılır.
+         Buraya eskiden my_dashboard_stats().kabul_basvurum yazılıyordu ama o
+         alan "BENİM gönderdiğim ve kabul edilen başvurularım" demek
+         (applications.applicant_user = auth.uid()). Bir kurye firması ilana
+         başvurmaz — dolayısıyla değer HER ZAMAN 0'dı. Üstelik alanın hiçbir
+         tarih süzgeci yok, etiket ise "bu ay" diyordu. */
+      var now = new Date();
+      var buAy = list.filter(function (k) {
+        if (!k.baslangic) return false;
+        var d = new Date(k.baslangic);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      }).length;
+      animateCount(document.getElementById('metIseAl'), buAy);
+      /* Alt etiket hangi ay olduğunu söylesin — "bu ay" tek başına
+         belirsizdi ve id'ye hiç yazılmıyordu (ölü yer tutucu). */
+      var subEl = document.getElementById('metIseAlSub');
+      if (subEl) subEl.textContent = now.toLocaleDateString('tr-TR', { month: 'long' });
+
       if (!list.length) {
         document.getElementById('statFiloSub').textContent = 'Henüz işe alım yok';
-        el.innerHTML = '<div class="empty" style="text-align:center;padding:32px 0"><p style="color:var(--text-3)">Filonuzda henüz kurye yok. Bir ilana gelen başvuruyu kabul ettiğinizde kurye burada görünür.</p><a href="kuryeler.html" class="btn btn--primary btn--sm" style="margin-top:12px">Kurye Bul</a></div>';
+        el.innerHTML = '<div class="empty" style="text-align:center;padding:32px 0">' +
+          '<p style="color:var(--text-3)">Filonuzda henüz kurye yok. Bir ilana gelen başvuruyu kabul ettiğinizde kurye burada görünür.</p>' +
+          '<a href="kuryeler.html" class="btn btn--primary btn--sm" style="margin-top:12px">Kurye Bul</a></div>';
         return;
       }
 
@@ -348,26 +420,30 @@
       document.getElementById('statFiloSub').textContent =
         list.length + ' kurye · ' + online + ' çevrimiçi';
 
+      /* Kullanıcıdan gelen HER değer kaçırılır (CLAUDE.md §1).
+         Burada k.ad / k.sehir / k.arac / k.avatar_url ham basılıyordu;
+         adına <img onerror=…> yazan bir kurye bu paneli ele geçirebilirdi. */
       el.innerHTML = list.map(function (k) {
         var isOn = !!pres[k.id];
-        var ava = (k.ad || '?').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
         var avaHtml = k.avatar_url
-          ? '<div class="hd-applicant__avatar"><img src="' + k.avatar_url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
-          : '<div class="hd-applicant__avatar" style="background:var(--primary-light);color:var(--primary)">' + ava + '</div>';
-        var baslangic = k.baslangic ? new Date(k.baslangic).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-        return '<a class="hd-applicant" href="profil-kurye.html?id=' + k.id + '" style="text-decoration:none;color:inherit">' + avaHtml +
+          ? '<div class="hd-applicant__avatar"><img src="' + E(k.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
+          : '<div class="hd-applicant__avatar" style="background:var(--primary-light);color:var(--primary)">' + E(initialsOf(k.ad)) + '</div>';
+        var baslangic = k.baslangic
+          ? new Date(k.baslangic).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '—';
+        return '<a class="hd-applicant" href="profil-kurye.html?id=' + encodeURIComponent(k.id) + '" style="text-decoration:none;color:inherit">' + avaHtml +
           '<div style="flex:1;min-width:0">' +
-            '<div class="hd-applicant__name">' + k.ad + '</div>' +
-            '<div class="hd-applicant__job">' + (k.sehir || '—') + (k.arac ? ' · ' + k.arac : '') + '</div>' +
-            '<div style="font-size:0.75rem;color:var(--text-3)">Başlangıç: ' + baslangic +
-              (k.puan ? ' · ⭐ ' + k.puan.toFixed(1) : '') + '</div>' +
+            '<div class="hd-applicant__name">' + E(k.ad) + '</div>' +
+            '<div class="hd-applicant__job">' + E(k.sehir || '—') + (k.arac ? ' · ' + E(k.arac) : '') + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--text-3)">Başlangıç: ' + E(baslangic) +
+              (k.puan ? ' · ⭐ ' + E(Number(k.puan).toFixed(1)) : '') + '</div>' +
           '</div>' +
-          '<span class="hd-chip hd-chip--' + (isOn ? 'is-active' : 'is-muted') + '">' + (isOn ? 'Çevrimiçi' : 'Çevrimdışı') + '</span>' +
+          '<span class="hd-chip hd-chip--' + (isOn ? 'online' : 'offline') + '">' + (isOn ? 'Çevrimiçi' : 'Çevrimdışı') + '</span>' +
         '</a>';
       }).join('');
     }
 
-    /* ── Pending decisions ────────────────────────────────── */
+    /* ── Bekleyen kararlar ────────────────────────────────── */
     async function renderPendingDecisions() {
       var el = document.getElementById('firmaPendingDecisions');
       if (!el) return;
@@ -378,14 +454,49 @@
         return;
       }
       el.innerHTML = pending.map(function (d) {
-        var ava = (d.kuryeAd || 'K').split(' ').map(function (w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
         return '<div class="hd-applicant">' +
-          '<div class="hd-applicant__avatar" style="background:var(--warning-bg,#FFF3CD);color:var(--warning)">' + ava + '</div>' +
+          '<div class="hd-applicant__avatar" style="background:var(--warning-bg,#FFF3CD);color:var(--warning)">' + E(initialsOf(d.kuryeAd || 'K')) + '</div>' +
           '<div style="flex:1;min-width:0">' +
-            '<div class="hd-applicant__name">' + (d.kuryeAd || 'Aday') + '</div>' +
-            '<div class="hd-applicant__job">' + (d.jobTitle || 'İş İlanı') + '</div>' +
+            '<div class="hd-applicant__name">' + E(d.kuryeAd || 'Aday') + '</div>' +
+            '<div class="hd-applicant__job">' + E(d.jobTitle || 'İş İlanı') + '</div>' +
           '</div>' +
           '<a href="karar.html?job=' + encodeURIComponent(d.jobId || '') + '&kid=' + encodeURIComponent(d.kuryeId || '') + '" class="btn btn--primary btn--sm">Karar Ver</a>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ── İşe alım karar geçmişi ────────────────────────────
+       Yalnız İŞVEREN olduğumuz kararlar. KBHiring.load() hem işveren hem
+       aday tarafını çekiyor (or(employer_id, applicant_id)); süzülmezse
+       firma kendi başvurularını da "verdiği karar" sanırdı. */
+    function renderKararGecmisi(myPid) {
+      var el = document.getElementById('filoKararlar');
+      if (!el) return;
+      var all = window.KBHiring ? KBHiring.getDecisionsRaw() : [];
+      var mine = all.filter(function (d) {
+        return String(d.employerId) === String(myPid) &&
+               d.status !== 'beklemede' && d.status !== 'kisa_listede';
+      }).slice(0, 6);
+
+      if (!mine.length) {
+        el.innerHTML = '<p class="text-muted-xs">Henüz sonuçlanmış bir işe alım kararınız yok. ' +
+          'Başvuruları inceleyip karar verdiğinizde geçmiş burada birikir.</p>';
+        return;
+      }
+
+      var LBL = {
+        kabul: 'Kabul edildi', reddedildi: 'Reddedildi',
+        tamamlandi: 'Tamamlandı', mulakat_planli: 'Mülakat planlandı'
+      };
+      el.innerHTML = mine.map(function (d) {
+        var tarih = (window.KBHiring && KBHiring.fmtDate) ? KBHiring.fmtDate(d.updatedAt || d.createdAt) : '';
+        return '<div class="hd-applicant">' +
+          '<div class="hd-applicant__avatar" style="background:var(--primary-light);color:var(--primary)">' + E(initialsOf(d.kuryeAd || 'K')) + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="hd-applicant__name">' + E(d.kuryeAd || 'Aday') + '</div>' +
+            '<div class="hd-applicant__job">' + E(d.jobTitle || 'İş İlanı') + (tarih ? ' · ' + E(tarih) : '') + '</div>' +
+          '</div>' +
+          '<span class="hd-chip hd-chip--' + E(d.status) + '">' + E(LBL[d.status] || d.status) + '</span>' +
         '</div>';
       }).join('');
     }
@@ -396,7 +507,7 @@
 
       switchTab('ana');
 
-      var uid = 'demo_firma';
+      var uid = null, myPid = null;
       try {
         await (window.KB && KB.ready ? KB.ready() : Promise.resolve());
         try { if (window.KBChat) await KBChat.ready; } catch (e) {}
@@ -404,32 +515,45 @@
         if (s && s.id) uid = s.id;
       } catch (e) {}
 
-      /* Profile */
+      /* Profil — TEK sefer çekilir.
+         Eskiden SB.myProfile() bu fonksiyonda iki kez çağrılıyordu
+         (bir selamlama için, bir de ortalama puan için): aynı veri için
+         iki ağ gidiş-dönüşü. */
+      var profile = null;
       try {
-        var profile = window.SB && SB.isOn() ? await SB.myProfile() : null;
+        profile = window.SB && SB.isOn() ? await SB.myProfile() : null;
+      } catch (e) {}
+
+      if (profile) {
+        myPid = profile.id;
         var greet = document.getElementById('welcomeGreeting');
         var sub   = document.getElementById('welcomeSub');
         var av    = document.getElementById('welcomeAvatar');
+        var ad    = profile.ad || 'Kurye Firması';
+        var h     = new Date().getHours();
 
-        if (profile) {
-          var ad  = profile.ad || 'Kurye Firması';
-          var fn  = ad.split(' ')[0];
-          var h   = new Date().getHours();
-          greet.textContent = (h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar') + ', ' + fn + '!';
-          /* profil_guc ile beslenen ilerleme çubuğu kaldırıldı — tek yüzde
-             kaynağı renderProfEngine(). Bkz. hoşgeldin bloğundaki not. */
-          sub.textContent = 'Filo yönetiminizi ve kurye havuzunuzu buradan takip edin.';
-          renderProfEngine(profile);
-          if (profile.avatar_url) {
-            var img = document.createElement('img'); img.src = profile.avatar_url; img.alt = ad;
-            av.innerHTML = ''; av.appendChild(img);
-          } else {
-            av.textContent = ad.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || ad[0].toUpperCase();
-          }
+        greet.textContent = (h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar') +
+                            ', ' + ad.split(' ')[0] + '!';
+        sub.textContent = 'Filo yönetiminizi ve kurye havuzunuzu buradan takip edin.';
+
+        if (profile.avatar_url) {
+          var img = document.createElement('img'); img.src = profile.avatar_url; img.alt = ad;
+          av.innerHTML = ''; av.appendChild(img);
+        } else {
+          av.textContent = initialsOf(ad);
         }
-      } catch (e) {}
 
-      /* Filo — gerçek işe alımlar */
+        /* Ortalama puan — gerçek değerlendirmelerden.
+           Değerlendirme yoksa 0.0 yazmak yanıltıcı olur ("kötü puan" gibi
+           okunuyor); CLAUDE.md gereği bilinmeyen değer "—" gösterilir. */
+        var pEl = document.getElementById('metPuan');
+        var pSub = document.getElementById('metPuanSub');
+        var adet = Number(profile.degerlendirme) || 0;
+        if (pEl) pEl.textContent = adet > 0 ? Number(profile.puan).toFixed(1) : '—';
+        if (pSub) pSub.textContent = adet > 0 ? (adet + ' değerlendirme') : 'değerlendirme yok';
+      }
+
+      /* Filo — gerçek işe alımlar (metAktif + metIseAl burada dolar) */
       await renderFilo();
 
       /* CANLI SAYAÇLAR — hepsi veritabanından, hiçbiri sabit değil */
@@ -443,7 +567,19 @@
           var ds = await SB.myDashboardStats();
           if (ds) {
             animateCount(document.getElementById('statBasvuru'), ds.yeni_basvuru || 0);
-            animateCount(document.getElementById('metIseAl'), ds.kabul_basvurum != null ? ds.kabul_basvurum : 0);
+
+            /* Profil tamamlama motorunu sunucu yüzdesiyle besle. */
+            if (profile) {
+              var tel = false;
+              try {
+                if (SB.contactOf && profile.id) {
+                  var c = await SB.contactOf(profile.id);
+                  tel = !!(c && c.telefon);
+                }
+              } catch (e) {}
+              renderProfEngine(profile, tel, ds.profil_tamamlanma);
+            }
+
             var hb = document.getElementById('panelHiringBadge');
             if (hb) {
               if (ds.yeni_basvuru > 0) { hb.textContent = ds.yeni_basvuru; hb.style.display = 'inline'; }
@@ -459,13 +595,6 @@
       }
       await refreshStats();
 
-      /* Firma puanı — gerçek değerlendirmelerden */
-      try {
-        var mp = window.SB && SB.isOn() ? await SB.myProfile() : null;
-        var pEl = document.getElementById('metPuan');
-        if (pEl) pEl.textContent = (mp && mp.puan) ? Number(mp.puan).toFixed(1) : '—';
-      } catch (e) {}
-
       /* CANLI: yeni başvuru / ilan olayında sayaçlar kendini tazeler */
       if (window.SB && SB.isOn()) {
         var deb = null;
@@ -477,9 +606,15 @@
         if (SB.subscribeListings)     SB.subscribeListings(live);
       }
 
-      /* Hiring — bekleyen kararlar */
+      /* Hiring — bekleyen kararlar + karar geçmişi (tek load) */
       if (window.KBHiring) {
-        try { await renderPendingDecisions(); } catch (e) {}
+        try {
+          await renderPendingDecisions();   // içeride KBHiring.load(true) çağırır
+          renderKararGecmisi(myPid);
+        } catch (e) {
+          var kg = document.getElementById('filoKararlar');
+          if (kg) kg.innerHTML = '<p class="text-muted-xs">Karar geçmişi yüklenemedi.</p>';
+        }
       }
 
       /* Feedback badge
@@ -506,7 +641,10 @@
               if (e.target.closest('.iv-mini-card')) window.location.href = 'gorusmeler.html';
             });
           }
-        } catch (e) {}
+        } catch (e) {
+          var iv2 = document.getElementById('panelIvUpcoming');
+          if (iv2) iv2.innerHTML = '<p class="text-muted-xs">Görüşmeler yüklenemedi.</p>';
+        }
       }
 
       /* Comm status */

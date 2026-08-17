@@ -141,7 +141,9 @@
         <div id="obLocationBlock" style="display:flex;align-items:center;gap:12px">
           <span style="font-size:1.5rem">📍</span>
           <div id="obLocationText" style="font-size:0.9rem;color:var(--text-2)">Başlangıç noktası girilmemiş.</div>
-          <a id="obMapLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display:none;margin-left:auto">Haritada Gör →</a>
+          <!-- rel="noopener noreferrer": dış siteye açılıyor; açılan sayfa
+               window.opener ile bu sekmeyi başka adrese yönlendiremesin. -->
+          <a id="obMapLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--sm" style="display:none;margin-left:auto">Haritada Gör →</a>
         </div>
       </div>
     </div>

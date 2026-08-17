@@ -394,7 +394,9 @@
         var sess = window.KB && KB.session && KB.session();
         if (sess && sess.user && sess.user.id) return sess.user.id;
       } catch (e) {}
-      return 'demo';
+      /* Oturum yoksa 'demo' anahtarına yazılıyordu; farklı kullanıcılar
+         aynı tarayıcıda aynı taslak kutusunu paylaşıyordu. */
+      return null;
     }
     function loadMyJobs() {
       try { return JSON.parse(localStorage.getItem('kb_my_ilanlar_' + uid())) || []; } catch (e) { return []; }
@@ -412,8 +414,15 @@
       var el = document.getElementById(id);
       if (el) el.value = val != null ? val : '';
     }
+    /* Merkezî kaçışa delege eder (components.js → KB.esc).
+       Burada kendi kopyası vardı ve TEK TIRNAĞI kaçırmıyordu — CLAUDE.md
+       bunu adıyla yasaklıyor ("eskiden 7 kopya vardı ve hepsi ' karakterini
+       atlıyordu"). Yedek dal da tam listeyi uygular. */
     function esc(s) {
-      return (s + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      if (window.KB && KB.esc) return KB.esc(s);
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
     }
     function parseTL(s) {
       var n = parseInt((s + '').replace(/[^0-9]/g,''), 10);
@@ -694,11 +703,16 @@
           '<div class="jc-my-job-right">' +
             (window.IlanStatus ? IlanStatus.renderBadge(j.durum || 'taslak') : '<span class="jc-job-status jc-job-status--' + (j.durum || 'taslak') + '">' + statusLabel(j.durum) + '</span>') +
             '<div class="jc-my-job-acts">' +
-              '<a class="jc-my-job-btn" href="ilan-durum.html?job=' + j.id + '" title="Durum Yönet">📊</a>' +
-              '<button class="jc-my-job-btn" data-edit="' + j.id + '" title="Düzenle">✏️</button>' +
+              /* ilan-durum.html ilanları VERİTABANINDAN okur (IS.syncFromDb),
+                 yani oradaki kimlikler Supabase UUID'leri. Buraya yerel
+                 taslak kimliği ('ilan_<zaman>') gönderiliyordu; sayfa o
+                 kimliği bulamıyor, düğme boş bir ekrana götürüyordu.
+                 Yayınlanmış ilan için sbId, taslak için yerel id gider. */
+              '<a class="jc-my-job-btn" href="ilan-durum.html?job=' + encodeURIComponent(j.sbId || j.id) + '" title="Durum Yönet">📊</a>' +
+              '<button class="jc-my-job-btn" data-edit="' + esc(j.id) + '" title="Düzenle">✏️</button>' +
               (j.durum === 'yayinda' || j.durum === 'durduruldu' || j.durum === 'doldu' || j.durum === 'suresi_doldu' ? '' :
-               j.durum === 'taslak'  ? '<button class="jc-my-job-btn" data-publish-id="' + j.id + '" title="Yayınla">🚀</button>' : '') +
-              '<button class="jc-my-job-btn jc-my-job-btn--del" data-delete="' + j.id + '" title="Sil">🗑️</button>' +
+               j.durum === 'taslak'  ? '<button class="jc-my-job-btn" data-publish-id="' + esc(j.id) + '" title="Yayınla">🚀</button>' : '') +
+              '<button class="jc-my-job-btn jc-my-job-btn--del" data-delete="' + esc(j.id) + '" title="Sil">🗑️</button>' +
             '</div>' +
           '</div>' +
         '</div>';

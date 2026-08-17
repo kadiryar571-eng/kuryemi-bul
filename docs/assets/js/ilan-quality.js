@@ -16,15 +16,17 @@ window.IlanQuality = (function () {
 
   /* ─── Checklist definitions ──────────────────────────────────── */
   var CHECKS = [
-    { id:'has_salary',    lbl:'Maaş bilgisi eklendi',           icon:'💰', dim:'salary',   critical:true,  anchor:'jcMaasMin',       tip:'Maaş belirtmek başvuru sayısını %40 artırır.' },
+    /* tip metinlerindeki uydurma oranlar (%40, %25, %30) kaldırıldı —
+       arkalarında ölçüm yoktu. Bkz. aşağıdaki SUGG bloğundaki not. */
+    { id:'has_salary',    lbl:'Maaş bilgisi eklendi',           icon:'💰', dim:'salary',   critical:true,  anchor:'jcMaasMin',       tip:'Ücreti belirtilmemiş ilanlar daha az başvuru alıyor.' },
     { id:'has_city',      lbl:'Şehir bilgisi eklendi',          icon:'📍', dim:'location', critical:true,  anchor:'jcSehir',         tip:'Şehir olmadan kuryeler bulamaz.' },
     { id:'has_vehicle',   lbl:'Araç tipi belirtildi',           icon:'🛵', dim:'reqs',     critical:true,  anchor:'jcArac',          tip:'Araç gereksinimi başvuru kalitesini artırır.' },
     { id:'has_desc',      lbl:'Görev açıklaması eklendi',       icon:'📝', dim:'desc',     critical:false, anchor:'jcGorev',         tip:'En az 50 karakter açıklama önerilir.' },
     { id:'good_desc',     lbl:'Açıklama yeterince detaylı',     icon:'📋', dim:'desc',     critical:false, anchor:'jcGorev',         tip:'200+ karakter güven oluşturur.' },
-    { id:'has_benefits',  lbl:'Yan haklar belirtildi',          icon:'🎁', dim:'benefits', critical:false, anchor:'jcFaydalar',      tip:'Yan hak eklemek başvuruları %25 artırır.' },
+    { id:'has_benefits',  lbl:'Yan haklar belirtildi',          icon:'🎁', dim:'benefits', critical:false, anchor:'jcFaydalar',      tip:'Yan hak eklemek güven oluşturur.' },
     { id:'good_benefits', lbl:'3+ yan hak listelendi',          icon:'⭐', dim:'benefits', critical:false, anchor:'jcFaydalar',      tip:'3+ yan hak en yüksek etki sağlar.' },
     { id:'has_district',  lbl:'Bölge / mahalle eklendi',        icon:'🗺', dim:'location', critical:false, anchor:'jcBolge',         tip:'Bölge bilgisi uyum oranını artırır.' },
-    { id:'good_title',    lbl:'Başlık açıklayıcı (20+ karakter)',icon:'✍️',dim:'title',    critical:false, anchor:'jcPozBaslik',     tip:'Detaylı başlık %30 daha fazla tıklanır.' },
+    { id:'good_title',    lbl:'Başlık açıklayıcı (20+ karakter)',icon:'✍️',dim:'title',    critical:false, anchor:'jcPozBaslik',     tip:'Bölge ve iş türünü içeren başlıklar daha anlaşılır.' },
     { id:'has_schedule',  lbl:'Çalışma saatleri / tipi eklendi',icon:'⏰', dim:'schedule', critical:false, anchor:'jcCalisma',       tip:'Çalışma saati belirsiz ilanlar daha az başvuru alır.' },
     { id:'has_shifts',    lbl:'Vardiya bilgisi eklendi',        icon:'🕐', dim:'schedule', critical:false, anchor:'jcVardiya',       tip:'Vardiya bilgisi uyum oranını artırır.' },
     { id:'has_deadline',  lbl:'Başvuru tarihi eklendi',         icon:'📅', dim:'deadline', critical:false, anchor:'jcSonBasvuru',    tip:'Son tarih belirtmek aciliyet hissi yaratır.' },
@@ -94,19 +96,30 @@ window.IlanQuality = (function () {
     var checks = runChecks(job);
     var failed  = checks.filter(function (c) { return !c.pass; });
 
+    /* UYDURMA ORANLAR KALDIRILDI.
+       Her öneride "+40% başvuru", "+60% başvuru", "+30% dönüşüm" gibi
+       değerler vardı ve bazı etiketlerin içine de gömülmüştü ("Boş ilanlar
+       %60 daha az başvuru alır"). Bu sayıların arkasında HİÇBİR ölçüm yok
+       — platform başvuru/görüntülenme ilişkisini hiç hesaplamıyor. Sabit
+       yazılmış, olgu gibi sunulan tahminlerdi.
+
+       Öğütlerin kendisi doğru ve işe yarar; kaldırılan yalnız sahte
+       kesinlik. `gain` yalnızca GERÇEKTEN doğrulanabilir bir şey söylerken
+       kalıyor (örn. alanın zorunlu olması).
+       Bkz. CLAUDE.md — bilinmeyen oran uydurulmaz. */
     var SUGG = {
-      has_salary:    { lbl:'Maaş bilgisi eklemek daha fazla başvuru almanı sağlar.', ico:'💰', anchor:'jcMaasMin', gain:'+40% başvuru' },
-      has_district:  { lbl:'Çalışma bölgesini belirterek uygun kurye bulma şansını artır.', ico:'📍', anchor:'jcBolge', gain:'+25% uyum' },
-      has_desc:      { lbl:'Görev tanımı ekle. Boş ilanlar %60 daha az başvuru alır.', ico:'📝', anchor:'jcGorev', gain:'+60% başvuru' },
-      good_desc:     { lbl:'Açıklamanı biraz daha detaylandır — 200+ karakter önerilir.', ico:'📋', anchor:'jcGorev', gain:'+20% güven' },
-      has_benefits:  { lbl:'Yan hakları belirtmek güven oluşturur ve kaliteli adaylar çeker.', ico:'🎁', anchor:'jcFaydalar', gain:'+25% kalite' },
-      good_benefits: { lbl:'3 veya daha fazla yan hak ekle. En yüksek etki için 5+ önerilir.', ico:'⭐', anchor:'jcFaydalar', gain:'+15% oran' },
-      has_deadline:  { lbl:'Başvuru süresi eklemek dönüşüm oranını %30 artırır.', ico:'📅', anchor:'jcSonBasvuru', gain:'+30% dönüşüm' },
-      good_title:    { lbl:'Başlığını daha açıklayıcı yap — bölge ve iş türünü ekle.', ico:'✍️', anchor:'jcPozBaslik', gain:'+30% tıklama' },
-      has_schedule:  { lbl:'Çalışma saatlerini belirtmek uyum oranını önemli ölçüde artırır.', ico:'⏰', anchor:'jcCalisma', gain:'+20% uyum' },
-      has_vehicle:   { lbl:'Araç gereksinimini belirt — bu sayede uygun adaylar başvurur.', ico:'🛵', anchor:'jcArac', gain:'+35% kalite' },
-      has_experience:{ lbl:'Deneyim şartı eklemek daha hedefli başvurular çeker.', ico:'🎓', anchor:'jcDeneyim', gain:'+20% kalite' },
-      has_city:      { lbl:'Şehir bilgisini ekle — bu alan zorunlu.', ico:'📍', anchor:'jcSehir', gain:'Zorunlu alan' }
+      has_salary:    { lbl:'Maaş bilgisi ekle — kuryeler ücreti belirtilmemiş ilanlara daha az başvuruyor.', ico:'💰', anchor:'jcMaasMin' },
+      has_district:  { lbl:'Çalışma bölgesini belirt — kuryeler bölgeye göre filtreliyor.', ico:'📍', anchor:'jcBolge' },
+      has_desc:      { lbl:'Görev tanımı ekle — ne iş yapılacağı yazmayan ilanlar boş görünüyor.', ico:'📝', anchor:'jcGorev' },
+      good_desc:     { lbl:'Açıklamanı biraz daha detaylandır — 200+ karakter önerilir.', ico:'📋', anchor:'jcGorev' },
+      has_benefits:  { lbl:'Yan hakları belirtmek güven oluşturur ve kaliteli adaylar çeker.', ico:'🎁', anchor:'jcFaydalar' },
+      good_benefits: { lbl:'3 veya daha fazla yan hak ekle.', ico:'⭐', anchor:'jcFaydalar' },
+      has_deadline:  { lbl:'Başvuru son tarihi ekle — süresi belli ilanlar daha güvenilir görünür.', ico:'📅', anchor:'jcSonBasvuru' },
+      good_title:    { lbl:'Başlığını daha açıklayıcı yap — bölge ve iş türünü ekle.', ico:'✍️', anchor:'jcPozBaslik' },
+      has_schedule:  { lbl:'Çalışma saatlerini belirt — kuryeler vardiyaya göre seçim yapıyor.', ico:'⏰', anchor:'jcCalisma' },
+      has_vehicle:   { lbl:'Araç gereksinimini belirt — kuryeler araç tipine göre filtreliyor.', ico:'🛵', anchor:'jcArac' },
+      has_experience:{ lbl:'Deneyim şartı eklemek daha hedefli başvurular çeker.', ico:'🎓', anchor:'jcDeneyim' },
+      has_city:      { lbl:'Şehir bilgisini ekle.', ico:'📍', anchor:'jcSehir', gain:'Zorunlu alan' }
     };
 
     failed.forEach(function (c) {
@@ -247,9 +260,10 @@ window.IlanQuality = (function () {
       '<div class="ilq-widget__head">' +
         '<div>' +
           '<div class="ilq-widget__title">İlan Kalitesi</div>' +
-          '<div class="ilq-widget__sub">Optimize et, daha fazla başvur al</div>' +
+          /* "daha fazla başvur al" yazım hatasıydı (başvuru). */
+          '<div class="ilq-widget__sub">Eksikleri tamamla, ilanın daha anlaşılır olsun</div>' +
         '</div>' +
-        '<a href="ilan-kalite.html" class="ilq-widget__link" id="ilqFullLink" target="_blank">Tam Analiz →</a>' +
+        '<a href="ilan-kalite.html" class="ilq-widget__link" id="ilqFullLink" target="_blank" rel="noopener">Tam Analiz →</a>' +
       '</div>' +
       '<div class="ilq-widget__score">' +
         renderScoreRing(score, 76) +

@@ -36,21 +36,27 @@
 
   <div class="app-content">
 
-    <div class="page-header">
+    <!-- page-header--row EKLENDİ — bu sınıf olmadan .page-header'ın flex'i
+         yok (main.css:765 yalnız margin veriyor), aksiyon düğmeleri
+         başlığın sağına değil ALTINA düşüyordu. -->
+    <div class="page-header page-header--row">
       <div>
         <h1>Kurye Firmaları</h1>
         <p class="page-sub">Toplu kurye hizmeti veren firmaları keşfet.</p>
       </div>
       <div class="page-header__actions">
         <a href="harita.html?type=firma" class="btn btn--ghost btn--sm">🗺 Haritada Gör</a>
-        <button class="btn btn--ghost btn--sm" id="btnToggleView">⊟ Liste</button>
+        <button class="btn btn--ghost btn--sm" id="btnToggleView" title="Görünüm değiştir">⊟ Liste</button>
       </div>
     </div>
 
     <!-- Stats banner -->
     <div class="pool-stats-bar">
       <span class="pool-stats-bar__main"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span id="resultCount">Yükleniyor…</span></span>
-      <span class="pool-stats-bar__note">Kapasiteye ve değerlendirmeye göre sıralanır</span>
+      <!-- "Kapasiteye ve değerlendirmeye göre sıralanır" yazıyordu —
+           SB.pool() yalnız puana göre sıralıyor ve sıralama menüsündeki
+           seçeneklerin hiçbiri zaten çalışmıyordu. -->
+      <span class="pool-stats-bar__note">Yalnızca profilini tamamlamış firmalar listelenir</span>
     </div>
 
     <div class="filter-bar">
@@ -62,17 +68,22 @@
         <div class="suggest-box" id="poolSuggest"></div>
       </div>
       <select id="fSelect1"><option value="">Tüm Bölgeler</option></select>
-      <select id="fSelect2" style="display:none"></select>
+      <!-- Boş, gizli #fSelect2 KALDIRILDI: app.js onu yalnız type==="isletme"
+           iken dolduruyor, burada hep boş kalıyordu. Var olan her element
+           app.js'te sorgulanıp dinleyici bağlanıyordu — hiçbir işe yaramayan
+           ölü işaretleme. -->
       <select id="fCapacity" onchange="filterByCapacity(this.value)">
         <option value="">Tüm Kapasiteler</option>
         <option value="small">1–10 Kurye</option>
         <option value="medium">11–50 Kurye</option>
         <option value="large">50+ Kurye</option>
       </select>
+      <!-- "Match Skoru" KALDIRILDI — firma kartları .match-score elemanı
+           basmıyor, arkasında hesap yok; üstelik VARSAYILAN seçenekti,
+           yani sayfa hiçbir zaman sıralanmıyordu. -->
       <select id="fSort" onchange="sortPool(this.value)">
-        <option value="match">Match Skoru</option>
         <option value="rating">En Yüksek Puan</option>
-        <option value="capacity">Kapasite</option>
+        <option value="capacity">En Yüksek Kapasite</option>
       </select>
     </div>
 
@@ -100,7 +111,6 @@
   <script>
   (function () {
     var isListView = false;
-    var capFilter  = '';
     var toggleBtn  = document.getElementById('btnToggleView');
 
     if (toggleBtn) {
@@ -114,44 +124,36 @@
       try { if (localStorage.getItem('kb_pool_view_firma') === 'list') toggleBtn.click(); } catch (e) {}
     }
 
+    /* Kapasite süzmesi ve sıralama app.js'e devredildi — ikisi de artık
+       profilin `kapasite` SAYISINI okuyor, kartın metnini değil.
+
+       Eski kod kart metninde /(\d+)\s*kurye/i arıyordu ve üç ayrı şekilde
+       bozuktu:
+         1) Rozet i18n'den geliyor. İngilizce'de "{n} courier capacity"
+            yazdığı için regex hiçbir şey bulamıyor, hem süzme hem
+            sıralama sessizce ölüyordu.
+         2) Regex metindeki İLK sayıyı alıyor. Adında sayı geçen bir firma
+            ("Hız 7 Kurye Lojistik") kendi kapasitesi yerine adındaki
+            sayıyla süzülüp sıralanıyordu.
+         3) app.js grid'i her yeniden yazdığında (arama, bölge filtresi,
+            canlı abonelik) sonuç siliniyor ama açılır menü eski seçimi
+            göstermeye devam ediyordu.
+       Ayrıntı: app.js → POOLV. */
     window.filterByCapacity = function (val) {
-      capFilter = val;
-      document.querySelectorAll('#poolGrid .talent-card').forEach(function (c) {
-        if (!val) { c.style.display = ''; return; }
-        var numMatch = (c.textContent.match(/(\d+)\s*kurye/i) || [])[1];
-        var n = numMatch ? parseInt(numMatch) : 0;
-        var show = (val === 'small' && n >= 1  && n <= 10)
-                || (val === 'medium' && n >= 11 && n <= 50)
-                || (val === 'large'  && n > 50);
-        c.style.display = show ? '' : 'none';
-      });
+      if (window.KBApp && KBApp.setPoolKapasite) KBApp.setPoolKapasite(val);
     };
 
     window.sortPool = function (mode) {
-      var cards = Array.from(document.querySelectorAll('#poolGrid .talent-card'));
-      cards.sort(function (a, b) {
-        if (mode === 'match') {
-          var sa = parseInt((a.querySelector('.match-score') || {}).textContent || '0');
-          var sb = parseInt((b.querySelector('.match-score') || {}).textContent || '0');
-          return sb - sa;
-        }
-        if (mode === 'capacity') {
-          var na = parseInt(((a.textContent.match(/(\d+)\s*kurye/i) || [])[1]) || 0);
-          var nb = parseInt(((b.textContent.match(/(\d+)\s*kurye/i) || [])[1]) || 0);
-          return nb - na;
-        }
-        return 0;
-      });
-      var grid = document.getElementById('poolGrid');
-      if (grid) cards.forEach(function (c) { grid.appendChild(c); });
+      if (window.KBApp && KBApp.setPoolSort) KBApp.setPoolSort(mode);
     };
 
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KBApp && KBApp.renderPool) {
         /* Sonuç sayısını app.js doğrudan şeritteki #resultCount elemanına
            yazıyor; ayrı bir kopyalama gerekmiyor. Eskiden aynı cümle hem
-           şeritte hem filtrenin altında iki kez görünüyordu. */
-        KBApp.renderPool('firma');
+           şeritte hem filtrenin altında iki kez görünüyordu.
+           İkinci argüman: menüde seçili gelen sıralama. */
+        KBApp.renderPool('firma', 'rating');
       }
     });
   })();

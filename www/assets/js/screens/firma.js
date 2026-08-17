@@ -105,8 +105,24 @@ window.FirmaScreens = (function () {
 
   /* CANLI panel sayaçları + son başvuru/mesaj listeleri — hepsi veritabanından */
   async function _loadFirmaPanelStats() {
-    if (!window.SB || !SB.isOn()) return;
     var set = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+
+    /* Bağlantı yoksa DÖNMEDEN ÖNCE spinner'ları temizle.
+       Burada eskiden koşulsuz `return` vardı: "Son Başvurular" ve
+       "Son Mesajlar" kutuları sonsuza kadar dönen spinner'da kalıyor,
+       kullanıcı hiç bitmeyen bir yükleme izliyordu. Boş durum göstermek
+       hem dürüst hem de dönen animasyonu durdurur. */
+    if (!window.SB || !SB.isOn()) {
+      var offline = '<div class="kb-empty" style="padding:16px">' +
+        '<div class="kb-empty__icon">📡</div>' +
+        '<div class="kb-empty__title">Bağlantı kurulamadı</div>' +
+        '<div class="kb-empty__sub">İnternet bağlantını kontrol et.</div></div>';
+      var b = document.getElementById('firma-son-basvuru');
+      var m = document.getElementById('firma-son-mesaj');
+      if (b) b.innerHTML = offline;
+      if (m) m.innerHTML = '<div style="padding:16px 0;color:var(--muted);font-size:.82rem;text-align:center">Bağlantı kurulamadı</div>';
+      return;
+    }
 
     /* Sayaçlar — tek RPC ile gerçek değerler */
     try {
@@ -141,7 +157,14 @@ window.FirmaScreens = (function () {
             : '<div class="kb-empty" style="padding:16px"><div class="kb-empty__icon">📋</div>' +
               '<div class="kb-empty__title">Henüz başvuru yok</div></div>');
       }
-    } catch (e) { console.warn('son basvuru:', e); }
+    } catch (e) {
+      /* Sorgu patlarsa spinner ekranda kalmasın. */
+      console.warn('son basvuru:', e);
+      var eb = document.getElementById('firma-son-basvuru');
+      if (eb) eb.innerHTML = '<div class="kb-empty" style="padding:16px">' +
+        '<div class="kb-empty__icon">⚠️</div>' +
+        '<div class="kb-empty__title">Başvurular yüklenemedi</div></div>';
+    }
 
     /* Son mesajlar — gerçek konuşmalar */
     try {
@@ -159,18 +182,19 @@ window.FirmaScreens = (function () {
             }).join('')
           : '<div style="padding:16px 0;color:var(--muted);font-size:.82rem;text-align:center">Henüz mesajınız yok</div>';
       }
-    } catch (e) { console.warn('son mesaj:', e); }
+    } catch (e) {
+      console.warn('son mesaj:', e);
+      var em = document.getElementById('firma-son-mesaj');
+      if (em) em.innerHTML = '<div style="padding:16px 0;color:var(--muted);font-size:.82rem;text-align:center">Mesajlar yüklenemedi</div>';
+    }
   }
 
   /* ── Kurye Firması dashboard helpers ─────────────────────────────── */
-  function _fMCard(icon, val, lbl, iconBg, iconColor, route) {
-    return '<div class="metric-card" onclick="Router.go(\'' + escJs(route) + '\')">' +
-      '<div class="metric-card__icon" style="background:' + escAttr(iconBg) + ';color:' + escAttr(iconColor) + '">' + ICON[icon] + '</div>' +
-      '<div class="metric-card__val">' + esc(val) + '</div>' +
-      '<div class="metric-card__lbl">' + esc(lbl) + '</div>' +
-    '</div>';
-  }
-
+  /* NOT: _fMCard / _fBar / _fBarToday kaldırıldı — hiçbir yerden
+     çağrılmıyorlardı. _fBar ikilisi "haftalık performans" çubuklarını
+     çiziyordu ama besleyecek veri hiç bağlanmamıştı (yüzdeler çağıranın
+     uyduracağı sayılardı). Ölçülmeyen bir metriği çizmektense hiç
+     göstermemek doğru. */
   function _fCandCard(id, name, exp, loc, score) {
     return '<div class="rec-cand-card" onclick="Router.go(\'/firma/aday/' + escJs(id) + '\')">' +
       '<div class="kb-avatar" style="background:var(--c-firma)">' + initials(name) + '</div>' +
@@ -189,15 +213,6 @@ window.FirmaScreens = (function () {
       '<div class="mini-msg__info"><div class="mini-msg__name">' + esc(name) + '</div><div class="mini-msg__preview">' + esc(preview) + '</div></div>' +
       '<div class="mini-msg__meta"><span class="mini-msg__time">' + esc(time) + '</span>' + (unread > 0 ? '<span class="mini-msg__badge">' + unread + '</span>' : '') + '</div>' +
     '</div>';
-  }
-
-  function _fBar(pct, day) {
-    var h = Math.max(4, Math.round(pct * 0.44));
-    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--fill" style="height:' + h + 'px;background:rgba(34,197,94,.35)"></div><div class="perf-week__day">' + day + '</div></div>';
-  }
-  function _fBarToday(pct, day) {
-    var h = Math.max(4, Math.round(pct * 0.44));
-    return '<div class="perf-week__col"><div class="perf-week__bar perf-week__bar--today" style="height:' + h + 'px;background:var(--c-firma);box-shadow:0 0 10px rgba(34,197,94,.4)"></div><div class="perf-week__day" style="color:var(--c-firma);font-weight:700">' + day + '</div></div>';
   }
 
   /* ── 2. HARİTA ──────────────────────────────────────────── */
@@ -723,24 +738,40 @@ window.FirmaScreens = (function () {
     }
   }
 
-  function _degerlendir(id) {
-    if (window.SB && SB.isOn()) {
-      SB.updateApplication(id, 'reviewed').catch(function() {});
-      var idx = _basCache.findIndex(function(x) { return x.id === id; });
-      if (idx >= 0) _basCache[idx].durum = 'reviewed';
+  /* Başarı mesajı YALNIZ veritabanı yazması başarılıysa gösterilir.
+     Eskiden .catch(function(){}) ile hata yutuluyor, ardından koşulsuz
+     "Aday değerlendirmeye alındı." deniyor ve ekrandan çıkılıyordu:
+     yazma başarısız olsa bile işveren işlemin tamamlandığını sanıyordu.
+     Bağlantı yokken de aynı mesaj çıkıyordu. */
+  async function _degerlendir(id) {
+    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return; }
+    try {
+      await SB.updateApplication(id, 'reviewed');
+    } catch (e) {
+      toast('İşlem başarısız — tekrar deneyin');
+      return;
     }
+    var idx = _basCache.findIndex(function(x) { return x.id === id; });
+    if (idx >= 0) _basCache[idx].durum = 'reviewed';
     toast('Aday değerlendirmeye alındı.');
     setTimeout(function () { Router.back(); }, 700);
   }
 
-  function _kabul(id) {
-    if (window.SB && SB.isOn()) {
-      SB.updateApplication(id, 'accepted').catch(function() {});
-      var idx = _basCache.findIndex(function(x) { return x.id === id; });
-      if (idx >= 0) _basCache[idx].durum = 'accepted';
-    } else {
-
+  /* İşe alım — mesaj yalnız yazma başarılıysa.
+     Eskiden hata yutuluyor ve boş bir else dalı vardı; bağlantı yokken
+     bile "Kurye ekibinize katıldı! ✓" deniyordu. Bu işlem migration-32
+     trigger'ı üzerinden işe alım kaydı da açtığı için sessiz başarısızlık
+     değerlendirme akışını da bozuyordu. */
+  async function _kabul(id) {
+    if (!(window.SB && SB.isOn())) { toast('Bu işlem için bağlantı gerekiyor'); return; }
+    try {
+      await SB.updateApplication(id, 'accepted');
+    } catch (e) {
+      toast('İşe alım kaydedilemedi — tekrar deneyin');
+      return;
     }
+    var idx = _basCache.findIndex(function(x) { return x.id === id; });
+    if (idx >= 0) _basCache[idx].durum = 'accepted';
     toast('Kurye ekibinize katıldı! ✓');
     setTimeout(function () { Router.back(); }, 700);
   }
@@ -918,7 +949,9 @@ window.FirmaScreens = (function () {
 
   function _saveHizmetler() {
     var secilen = _readChecks('fb-hizmet-', HIZMET_LIST.length);
-    if (!window.SB || !SB.isOn()) { toast('Hizmetler kaydedildi ✓'); return; }
+    /* Bağlantı yokken "Hizmetler kaydedildi ✓" deniyordu — hiçbir yere
+       yazılmadan. Kullanıcı kaydettiğini sanıp ekrandan çıkıyordu. */
+    if (!window.SB || !SB.isOn()) { toast('Bağlantı yok — kaydedilemedi'); return; }
     SB.updateMyProfile({ hizmetler: secilen }).then(function (updated) {
       APP.profile = updated;
       toast('Hizmetler kaydedildi ✓');
@@ -949,7 +982,8 @@ window.FirmaScreens = (function () {
   function _saveAdres() {
     var el = document.getElementById('fb-adres');
     var adres = el ? el.value.trim() : '';
-    if (!window.SB || !SB.isOn()) { toast('Adres kaydedildi ✓'); return; }
+    /* Bkz. _saveHizmetler — aynı yalan başarı mesajı. */
+    if (!window.SB || !SB.isOn()) { toast('Bağlantı yok — kaydedilemedi'); return; }
     SB.updateMyProfile({ adres: adres }).then(function (updated) {
       APP.profile = updated;
       toast('Adres kaydedildi ✓');

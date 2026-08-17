@@ -143,10 +143,19 @@
       for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c >= 0x300 && c <= 0x36f) continue; o += s.charAt(i); }
       return o.toLowerCase().trim();
     }
-    function esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    /* Merkezî kaçışa delege eder (components.js → KB.esc).
+       Yerel kopya TEK TIRNAĞI kaçırmıyordu — CLAUDE.md §1 bunu adıyla
+       yasaklıyor. Bu sayfa kaçırdığı değerleri data-* niteliklerine de
+       yazıyor, o yüzden eksik kaçış burada gerçekten önemliydi. */
+    function esc(s) {
+      if (window.KB && KB.esc) return KB.esc(s);
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
     function getUid() {
       try { if (window.KB && KB.session) { var s = KB.session(); if (s && s.user && s.user.id) return s.user.id; } } catch(e) {}
-      return 'demo';
+      return null;   // uydurma 'demo' kimliği kaldırıldı
     }
     function relTime(dateStr) {
       if (!dateStr) return '';
@@ -547,7 +556,7 @@
 
         /* ─ Footer ─ */
         '<div class="apc-mfoot">' +
-          '<a class="btn btn--ghost btn--sm" href="profil-kurye.html?id=' + esc(k.id) + '" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Profil Sayfası</a>' +
+          '<a class="btn btn--ghost btn--sm" href="profil-kurye.html?id=' + esc(k.id) + '" target="_blank" rel="noopener"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Profil Sayfası</a>' +
           '<button class="btn btn--ghost btn--sm" data-modal-action="message" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">💬 Mesaj Gönder</button>' +
           '<button class="btn btn--ghost btn--sm" data-modal-action="shortlist" data-kid="' + esc(k.id) + '" data-jobid="' + esc(jobId) + '">' + (app.shortlisted ? '★ Listeden Çıkar' : '☆ Kısa Listeye Ekle') + '</button>' +
           (app.status !== 'kabul' && app.status !== 'red' ?

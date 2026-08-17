@@ -165,12 +165,23 @@
 
   var CUR_JOB = null, CUR_KID = null, CUR_IID = null;
 
+  /* Kaçış — merkezî uygulamaya delege eder (components.js → KB.esc).
+     Yerel kopya TANIMLANMAZ (CLAUDE.md §1). */
+  function E(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); }
+
   function getUid() {
     try { var s = window.KB && KB.STATE && KB.STATE.user; if (s && s.id) return s.id; } catch(e) {}
     try { var s2 = JSON.parse(localStorage.getItem('kb_session')||'null'); if (s2&&s2.user&&s2.user.id) return s2.user.id; } catch(e) {}
-    return localStorage.getItem('kb_demo_uid') || ('demo_' + (localStorage.getItem('kb_rol')||'isletme'));
+    /* Eskiden burada "demo_isletme" gibi UYDURMA bir kimlik dönüyordu.
+       O kimlik isletmeId olarak forma ve itibar sorgusuna giriyordu;
+       veritabanında karşılığı olmadığı için sessizce yanlış kayda
+       bakılıyordu. Oturum yoksa kimlik de yoktur. */
+    return null;
   }
-  function getRole() { return (window.KB && KB.STATE && KB.STATE.role) || localStorage.getItem('kb_rol') || 'isletme'; }
+  /* Rol OTURUMDAN gelir. localStorage'daki kb_rol kullanıcının kendi
+     yazabildiği bir değer; ona göre form seçmek kuryeye işveren formunu
+     açardı (yazma DB'de reddedilir ama arayüz yanıltıcı olurdu). */
+  function getRole() { return (window.KB && KB.STATE && KB.STATE.role) || 'kurye'; }
   function isBiz()  { var r = getRole(); return r === 'isletme' || r === 'firma'; }
 
   /* ── Hire list ── */
@@ -203,11 +214,14 @@
         ? '<span class="fb-status-done">✓ Değerlendirildi</span>'
         : '<span class="fb-status-pending">● Bekliyor</span>';
       var active = (dec.jobId === CUR_JOB && dec.kuryeId === CUR_KID);
+      /* İlan başlığı ve karşı tarafın adı BAŞKA bir kullanıcıdan gelir;
+         ham basılıyordu. İlanına <img onerror=…> yazan bir işveren bu
+         sayfayı açan kuryenin oturumunu ele geçirebilirdi (CLAUDE.md §1). */
       return '<div class="fb-hire-item' + (active ? ' active' : '') + '" ' +
-        'data-job="' + dec.jobId + '" data-kid="' + dec.kuryeId + '" data-iid="' + (dec.isletmeId||uid) + '">' +
+        'data-job="' + E(dec.jobId) + '" data-kid="' + E(dec.kuryeId) + '" data-iid="' + E(dec.isletmeId || uid || '') + '">' +
         '<div class="fb-hire-item-info">' +
-          '<div class="fb-hire-item-name">' + (dec.jobTitle||'İş İlanı') + '</div>' +
-          '<div class="fb-hire-item-sub">' + name + '</div>' +
+          '<div class="fb-hire-item-name">' + E(dec.jobTitle || 'İş İlanı') + '</div>' +
+          '<div class="fb-hire-item-sub">' + E(name) + '</div>' +
         '</div>' +
         statusHtml + '</div>';
     }).join('');
@@ -448,10 +462,21 @@
       myRepEl.innerHTML = '<p class="fb-empty">Henüz değerlendirme yok.</p>';
     }
 
-    /* If URL had params, also directly show the forms */
+    /* URL'den gelen işe alım GERÇEKTEN listede mi?
+       Doğrulanmazsa uydurma bir ?job=&kid= ile var olmayan bir işe alım
+       için form açılıyor, kullanıcı dolduruyor ve gönderim ancak
+       veritabanında reddediliyordu. */
     if (CUR_JOB) {
-      document.getElementById('fbForms').style.display = 'flex';
-      selectHire(CUR_JOB, CUR_KID, CUR_IID || uid);
+      var gecerli = getCompletedHires().some(function (d) {
+        return String(d.jobId) === String(CUR_JOB) && String(d.kuryeId) === String(CUR_KID);
+      });
+      if (gecerli) {
+        document.getElementById('fbForms').style.display = 'flex';
+        selectHire(CUR_JOB, CUR_KID, CUR_IID || uid);
+      } else {
+        CUR_JOB = CUR_KID = CUR_IID = null;
+        renderHireList();          // ilkini otomatik seçsin
+      }
     }
   }
 

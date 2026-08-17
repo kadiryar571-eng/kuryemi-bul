@@ -37,7 +37,12 @@
       seviye: p.seviye || "standart", puan: Number(p.puan) || 0, degerlendirme: p.degerlendirme || 0, dogrulama: p.dogrulama || "none", tamamlanan: p.tamamlanan || 0,
       sertifikalar: p.sertifikalar || [], calistigi: p.calistigi || [], referanslar: [],
       bolge: (p.bolgeler && p.bolgeler[0]) || "", tur: p.tur, acikIlan: p.acik_ilan || 0, ihtiyac: p.ihtiyac,
-      kapasite: p.kapasite || 0, hizmetler: p.hizmetler || []
+      kapasite: p.kapasite || 0, hizmetler: p.hizmetler || [],
+      /* Havuzdaki "En Yeni" sıralaması bunu kullanır.
+         Misafir kaynağı profiles_public view'ında created_at YOKTUR
+         (KVKK daraltması, migration-20) — o yüzden boş olabilir;
+         sıralama bunu sona atar, patlamaz. */
+      created_at: p.created_at || ""
     };
   }
 
@@ -212,7 +217,15 @@
     delete fields.tamamlanan;
     delete fields.seviye;
     delete fields.dogrulama;
-    fields.yayinda = true; // profil kaydedildi -> havuzda görünür
+    /* Profil kaydedilince havuzda görünür — AMA kullanıcı görünürlüğü
+       açıkça belirttiyse ona dokunma.
+       Burada koşulsuz `fields.yayinda = true` yazıyordu: çağıran
+       { yayinda: false } gönderse bile true'ya çevriliyordu. İki sonucu
+       vardı: (1) ayarlar.html'deki "Profili Herkese Açık" anahtarı
+       kapatılamıyordu, (2) havuzdan gizlenmiş bir kullanıcı profilinde
+       herhangi bir alanı düzenlediğinde sessizce yeniden yayına
+       alınıyordu. İkincisi bir gizlilik ihlali. */
+    if (fields.yayinda === undefined) fields.yayinda = true;
     var r = await client.from("profiles").update(fields).eq("user_id", u.id).select().maybeSingle();
     if (r.error) throw r.error;
     if (telefon !== undefined) {

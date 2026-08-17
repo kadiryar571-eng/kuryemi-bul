@@ -4,7 +4,8 @@
 
   function uid() {
     try { if (window.KB && KB.session && KB.session().user) return KB.session().user.id; } catch (e) {}
-    return 'demo';
+    /* Oturum yoksa tercihler paylaşılan 'demo' anahtarına yazılıyordu. */
+    return null;
   }
 
   function loadPrefs() {
