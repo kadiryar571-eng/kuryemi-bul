@@ -6050,3 +6050,16 @@ a.dash-stat:hover {
   .cv-steps { overflow-x: auto; flex-wrap: nowrap; }
   .cv-step { white-space: nowrap; }
 }
+
+/* -- Ozgecmis bolumu (profil-kurye, isveren tarafi) -------------- */
+.prf-cv-ozet { font-size: .92rem; line-height: 1.65; margin: 0 0 14px; }
+.prf-cv-blok { margin-top: 16px; }
+.prf-cv-blok__t { font-size: .78rem; font-weight: 700; text-transform: uppercase;
+                  letter-spacing: .05em; color: var(--text-3); margin-bottom: 6px; }
+.prf-cv-satir { display: flex; flex-direction: column; padding: 6px 0; }
+.prf-cv-satir span { font-size: .8rem; color: var(--text-3); }
+.prf-cv-not { font-size: .76rem; color: var(--text-3); margin-top: 18px; }
+/* SRC belge rozeti — onay/basari rengi. --success* token'lari
+   [data-theme="dark"] altinda zaten yeniden tanimli (main.css:68-69),
+   .chip--green (main.css:379) ile ayni desen; ayrica dark override gerekmez. */
+.chip--ok { background: var(--success-bg); color: var(--success); border-color: transparent; }

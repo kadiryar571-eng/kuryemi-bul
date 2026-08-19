@@ -1241,6 +1241,45 @@
     }).join("") + '</div>';
   }
 
+  /* Kurye özgeçmişi (migration-36). Kayıt yoksa veya yayınlanmamışsa
+     BÖLÜM HİÇ BASILMAZ — "CV yok" kutusu da göstermeyiz. */
+  function renderCv(cv) {
+    if (!cv) return '';
+    var h = '';
+    if (cv.ozet) h += '<p class="prf-cv-ozet">' + KB.esc(cv.ozet) + '</p>';
+
+    var rozet = [];
+    (cv.ehliyetSinifi || []).forEach(function (s) {
+      rozet.push('<span class="chip">' + KB.esc(s) + ' ehliyet</span>');
+    });
+    if (cv.srcBelge) rozet.push('<span class="chip chip--ok">SRC Kurye Belgesi</span>');
+    if (rozet.length) h += '<div class="prf-chips">' + rozet.join('') + '</div>';
+
+    if (cv.egitim && cv.egitim.length) {
+      h += '<div class="prf-cv-blok"><div class="prf-cv-blok__t">Eğitim</div>';
+      cv.egitim.forEach(function (e) {
+        h += '<div class="prf-cv-satir"><b>' + KB.esc(e.okul || '—') + '</b>' +
+             '<span>' + KB.esc(e.derece || '') +
+             (e.yil ? ' · ' + KB.esc(e.yil) : '') + '</span></div>';
+      });
+      h += '</div>';
+    }
+
+    if (cv.tercihBolgeler && cv.tercihBolgeler.length) {
+      h += '<div class="prf-cv-blok"><div class="prf-cv-blok__t">Çalışmak istediği bölgeler</div>' +
+           '<div class="prf-chips">' + cv.tercihBolgeler.map(function (b) {
+             return '<span class="chip">' + KB.esc(b) + '</span>';
+           }).join('') + '</div></div>';
+    }
+    if (cv.musaitlik) {
+      h += '<div class="prf-cv-blok"><div class="prf-cv-blok__t">Müsaitlik</div>' +
+           '<p>' + KB.esc(cv.musaitlik) + '</p></div>';
+    }
+    h += '<p class="prf-cv-not">Adli sicil, sağlık raporu ve psikoteknik ' +
+         'platformda tutulmaz — görüşmede talep edebilirsiniz.</p>';
+    return h;
+  }
+
   function reviewsBox(targetId, reviews, canRev, myRev) {
     var inner = "";
     if (canRev) {
@@ -1504,6 +1543,15 @@
         } catch (e) { console.warn('workExperienceFor:', e); }
       }
       if (weHtml) sections += prfSection("İş Deneyimi", weHtml);
+
+      /* Özgeçmiş — yalnız kurye dalında. Yayınlanmamışsa hiç basılmaz. */
+      if (online() && SB.cvFor) {
+        try {
+          var cvRow = await SB.cvFor(x.id);
+          var cvHtml = renderCv(cvRow);
+          if (cvHtml) sections += prfSection("Özgeçmiş", cvHtml);
+        } catch (e) { console.warn('cvFor:', e); }
+      }
 
       /* "Referanslar" bölümü KALDIRILDI — arkasındaki alan hayaletti.
          supabase.js/fromDb `referanslar` diye sabit boş bir dizi
