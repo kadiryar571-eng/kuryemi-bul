@@ -277,13 +277,17 @@ Bilinmeyen bir sayı/oran varsa `—` gösterilir; hash'ten türetilmiş sahte
 
 `components.js` sayfaya inject ederek çalışır — HTML sayfasında placeholder elementler gerekir:
 
-- `<div id="app-header"></div>` — Sayfa tipine göre farklı şey render eder:
-  - Landing (`index.html`) ve yasal sayfalar: public navbar
-  - Auth sayfaları (`verify-email.html` vb.): hiçbir şey (kendi header'larını yönetirler)
-  - Diğer tüm sayfalar: sidebar + topbar
-- `<div id="app-footer"></div>` — Footer (auth flow'da gereksiz)
-- `<nav id="kb-bottomnav">` — `renderBottomNav()` tarafından body'ye append edilir, placeholder gerekmez
-- `<header id="mob-app-bar">` — Panel olmayan sayfalarda `renderMobileAppBar()` tarafından eklenir
+- `<div id="app-topbar"></div>`, `<nav id="app-sidebar"></nav>`, `<div id="sidebar-overlay"></div>` —
+  `renderHeader()` bu üçünü birlikte yönetir, sayfa tipine göre farklı şey render eder:
+  - Auth sayfaları (`isAuthPage()`): erken döner, hiçbir şey render etmez (kendi header'larını yönetirler)
+  - Landing (`index.html`, `isLandingPage()`): erken döner, dokunmaz
+  - Yasal/statik sayfalar (`isPublicPage()`): üç eleman DOM'dan kaldırılır, yerine `renderPublicNav()` render edilir
+  - Diğer tüm sayfalar: topbar + sidebar + overlay render edilir; placeholder HTML'de yoksa
+    `renderHeader()` kendisi oluşturup body'ye ekler
+- `<div id="app-footer"></div>` — `renderFooter()` render eder (auth sayfalarında boş bırakılır)
+
+> Not: `app-header` diye bir placeholder **yoktur** — `components.js` o id'yi hiç
+> işlemez. Yeni bir sayfaya eklerse ölü markup olur.
 
 ### State Yönetimi
 

@@ -29,7 +29,6 @@
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-  <div id="app-header"></div>
   <div id="app-topbar"></div>
   <div id="sidebar-overlay"></div>
   <nav id="app-sidebar"></nav>
@@ -37,14 +36,14 @@
   <div class="app-content">
     <div class="cv-wrap" id="cvRoot">
       <div class="cv-head">
-        <h1 class="cv-title">Özgeçmişini Oluştur</h1>
+        <h1 class="cv-title" data-i18n="cv.title">Özgeçmişini Oluştur</h1>
         <div class="cv-progress"><div class="cv-progress__fill" id="cvProgress"></div></div>
         <div class="cv-steps" id="cvSteps"></div>
       </div>
       <div class="cv-body" id="cvBody"></div>
       <div class="cv-foot">
-        <button type="button" class="btn btn--ghost" id="cvGeri">Geri</button>
-        <button type="button" class="btn btn--primary" id="cvIleri">İleri</button>
+        <button type="button" class="btn btn--ghost" id="cvGeri" data-i18n="cv.back">Geri</button>
+        <button type="button" class="btn btn--primary" id="cvIleri" data-i18n="cv.next">İleri</button>
       </div>
     </div>
   </div>
@@ -62,7 +61,16 @@
   <script>
   (function () {
     'use strict';
-    var ADIMLAR = ['Özet', 'Ehliyet & Belge', 'Eğitim', 'Deneyim', 'Tercihler', 'Önizleme'];
+
+    /* Gezinme metinleri sözlükten gelir (CLAUDE.md i18n kuralı). Sihirbaz
+       içindeki yardım/ipucu metinleri bilinçli olarak Türkçe sabit kalır —
+       komşu sayfalar (panel-kurye, basvurular) da öyle yapıyor; tam i18n
+       geçişi ayrı bir iştir ve bu planın kapsamı dışındadır. */
+    function T(k) { return (window.KBI18N && KBI18N.t) ? KBI18N.t(k) : k; }
+    function adimAdlari() {
+      return [T('cv.s1'), T('cv.s2'), T('cv.s3'), T('cv.s4'), T('cv.s5'), T('cv.s6')];
+    }
+
     var adim = 1;
 
     function E(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); }
@@ -72,7 +80,7 @@
     }
 
     function cizAdimlar() {
-      document.getElementById('cvSteps').innerHTML = ADIMLAR.map(function (ad, i) {
+      document.getElementById('cvSteps').innerHTML = adimAdlari().map(function (ad, i) {
         var n = i + 1;
         return '<button type="button" class="cv-step' + (n === adim ? ' is-on' : '') +
                (n < adim ? ' is-done' : '') + '" data-adim="' + n + '">' +
@@ -85,7 +93,8 @@
       var body = document.getElementById('cvBody');
       if (adim === 4) await KBCV.deneyimYukle();
       body.innerHTML = (adim === 6) ? onizleme() : KBCV.renderStep(adim);
-      document.getElementById('cvIleri').textContent = (adim === 6) ? 'Yayınla' : 'İleri';
+      document.getElementById('cvIleri').textContent = (adim === 6) ? T('cv.publish') : T('cv.next');
+      document.getElementById('cvGeri').textContent = T('cv.back');
       document.getElementById('cvGeri').style.visibility = (adim === 1) ? 'hidden' : 'visible';
       cizAdimlar();
     }
@@ -123,6 +132,22 @@
     document.getElementById('cvGeri').addEventListener('click', async function () {
       KBCV.collectStep(adim);
       if (adim > 1) { adim--; await ciz(); }
+    });
+
+    /* Adım rozetine tıklama — ileri atlarken mevcut adım doğrulanır,
+       geri dönerken doğrulama aranmaz. */
+    document.getElementById('cvSteps').addEventListener('click', async function (e) {
+      var t = e.target.closest('[data-adim]');
+      if (!t) return;
+      var hedef = parseInt(t.getAttribute('data-adim'), 10);
+      if (!(hedef >= 1 && hedef <= 6) || hedef === adim) return;
+      KBCV.collectStep(adim);
+      if (hedef > adim) {
+        var g = KBCV.gecerliMi(adim);
+        if (!g.ok) { hata(g.mesaj); return; }
+      }
+      adim = hedef;
+      await ciz();
     });
 
     /* Çip ve satır tıklamaları — tek delege dinleyici */

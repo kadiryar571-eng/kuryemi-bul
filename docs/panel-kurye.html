@@ -286,6 +286,14 @@
           </div>
         </div>
       </div>
+      <div class="panel-box mb-16">
+        <div class="panel-box__head">
+          <h3>Özgeçmiş</h3>
+        </div>
+        <div class="panel-box__body">
+          <div id="cvPromo"></div>
+        </div>
+      </div>
       <div class="panel-box">
         <div class="panel-box__head">
           <h3>Hızlı Erişim</h3>
@@ -1242,6 +1250,7 @@
         initSmartSugg(profile ? profile.sehir : '');
         initNotifCenter();
         renderAppliedJobs();
+        cizCvKart();
 
       } catch(err) {
         console.warn('Welcome block error:', err);
@@ -1250,8 +1259,32 @@
         initSmartSugg('');
         initNotifCenter();
         renderAppliedJobs();
+        cizCvKart();
       }
     });
+
+    /* ── Özgeçmiş giriş kartı — CV var mı yayında mı bakar, yoksa
+       oluşturmaya yönlendirir. cv.js'in KBCV.myCv()'i CV kaydı yoksa
+       null döner; uydurma "CV yok" metni basılmaz, kart Başla haline döner. */
+    async function cizCvKart() {
+      var el = document.getElementById('cvPromo');
+      if (!el || !(window.SB && SB.isOn() && SB.myCv)) return;
+      var cv = null;
+      try { cv = await SB.myCv(); } catch (e) { return; }
+      if (cv && cv.yayinlandi) {
+        el.innerHTML = '<div class="ilds-applied-item">' +
+          '<div class="ilds-applied-ico">📄</div>' +
+          '<div class="ilds-applied-body"><div class="ilds-applied-title">Özgeçmişin yayında</div>' +
+          '<div class="ilds-applied-meta"><span>İşverenler profilinde görebiliyor</span></div></div>' +
+          '<a href="cv-olustur.html" class="btn btn--ghost btn--sm">Düzenle</a></div>';
+      } else {
+        el.innerHTML = '<div class="ilds-applied-item">' +
+          '<div class="ilds-applied-ico">📄</div>' +
+          '<div class="ilds-applied-body"><div class="ilds-applied-title">Özgeçmişini oluştur</div>' +
+          '<div class="ilds-applied-meta"><span>İşverenler başvurunda görsün</span></div></div>' +
+          '<a href="cv-olustur.html" class="btn btn--primary btn--sm">Başla</a></div>';
+      }
+    }
 
     /* ── Başvurduğum ilanlar — TAMAMI VERİTABANINDAN ──
        Örnek/demo ilan gösterilmez. Kullanıcının gerçek başvuruları

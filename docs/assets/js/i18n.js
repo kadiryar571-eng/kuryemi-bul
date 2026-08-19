@@ -371,6 +371,11 @@
       "pe.certs": "Sertifikalar (virgülle ayır)", "pe.completed": "Tamamlanan teslimat",
       "pe.type": "Tür", "pe.openListing": "Açık ilan sayısı", "pe.need": "Kurye ihtiyacı",
       "pe.capacity": "Kapasite (kurye)", "pe.services": "Hizmetler (virgülle ayır)",
+      "cv.title": "Özgeçmişini Oluştur",
+      "cv.s1": "Özet", "cv.s2": "Ehliyet & Belge", "cv.s3": "Eğitim",
+      "cv.s4": "Deneyim", "cv.s5": "Tercihler", "cv.s6": "Önizleme",
+      "cv.next": "İleri", "cv.back": "Geri", "cv.publish": "Yayınla",
+      "cv.section": "Özgeçmiş",
       "pe.loginRequired": "Bu sayfa için giriş yapmalısın."
     },
 
@@ -734,6 +739,11 @@
       "pe.certs": "Certificates (comma separated)", "pe.completed": "Completed deliveries",
       "pe.type": "Type", "pe.openListing": "Open listings", "pe.need": "Courier need",
       "pe.capacity": "Capacity (couriers)", "pe.services": "Services (comma separated)",
+      "cv.title": "Build Your CV",
+      "cv.s1": "Summary", "cv.s2": "Licence & Docs", "cv.s3": "Education",
+      "cv.s4": "Experience", "cv.s5": "Preferences", "cv.s6": "Preview",
+      "cv.next": "Next", "cv.back": "Back", "cv.publish": "Publish",
+      "cv.section": "CV",
       "pe.loginRequired": "You must sign in for this page."
     }
   };

@@ -9,6 +9,8 @@
   guvenlik.html KALDIRILDI: sayfa henüz içeriksiz ("yakında"). Boş sayfayı
   indekslemek zarar verir; içerik yazılınca geri eklenmeli.
 
+  cv-olustur.html YOK: kurye girişi gerektiriyor, taranabilir değil.
+
   Taranabilir olan yalnız ana sayfa ve yasal metinlerdir.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

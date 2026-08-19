@@ -3747,6 +3747,11 @@ a.dash-stat:hover {
   background:var(--surface-2); border-radius:var(--radius); padding:10px 14px; margin-bottom:12px;
 }
 .apc-detail { display:flex; align-items:center; gap:5px; }
+/* CV çipleri karta SONRADAN (async) yazılır. Slot boşken düzende yer
+   kaplamamalı — .apc-card__details bir flex satırı ve 20px sütun boşluğu
+   veriyor, boş bir <span> her kartta hayalet boşluk açardı. display:contents
+   slot'u düzenden siler, çipler doğrudan flex öğesi olur. */
+.apc-cv-slot { display:contents; }
 
 /* Status row */
 .apc-card__status { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }

@@ -1549,7 +1549,7 @@
         try {
           var cvRow = await SB.cvFor(x.id);
           var cvHtml = renderCv(cvRow);
-          if (cvHtml) sections += prfSection("Özgeçmiş", cvHtml);
+          if (cvHtml) sections += prfSection(T("cv.section"), cvHtml);
         } catch (e) { console.warn('cvFor:', e); }
       }
 

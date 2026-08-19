@@ -182,6 +182,45 @@
       return score >= 70 ? 'match-high' : score >= 45 ? 'match-mid' : 'match-low';
     }
 
+    /* ── CV çipleri (SRC / ehliyet) — profil başına önbelleklenir.
+       CV yoksa veya yayınlanmamışsa boş döner; uydurma "CV yok" metni
+       basılmaz, çip alanı sessizce boş kalır. */
+    var _cvOnbellek = {};
+    async function cvCipleri(profilId) {
+      if (!(window.SB && SB.isOn() && SB.cvFor)) return '';
+      if (_cvOnbellek[profilId] !== undefined) return _cvOnbellek[profilId];
+      var h = '';
+      try {
+        var cv = await SB.cvFor(profilId);
+        if (cv) {
+          if (cv.srcBelge) h += '<span class="chip chip--ok">SRC ✓</span>';
+          (cv.ehliyetSinifi || []).forEach(function (s) {
+            h += '<span class="chip">' + esc(s) + ' ehliyet</span>';
+          });
+        }
+      } catch (e) {}
+      _cvOnbellek[profilId] = h;
+      return h;
+    }
+
+    /* Grid çizildikten SONRA her kart için CV çiplerini async doldurur.
+       renderCard senkron string döner (map().join('')); CV isteği
+       kart DOM'a girdikten sonra tamamlanır, sonuç ilgili slot'a yazılır. */
+    function doldurCvCipleri(filtered) {
+      filtered.forEach(function (a) {
+        var kid = a.k && a.k.id;
+        if (!kid) return;
+        cvCipleri(kid).then(function (html) {
+          if (!html) return;
+          /* CSS selector'a gömmek yerine attribute karşılaştırması — kid
+             veritabanından gelir, seçici enjeksiyonuna açık bırakmayalım. */
+          document.querySelectorAll('.apc-cv-slot').forEach(function (slot) {
+            if (slot.getAttribute('data-cv-kid') === String(kid)) slot.innerHTML = html;
+          });
+        });
+      });
+    }
+
     /* ── Data helpers — TAMAMI VERİTABANINDAN ──
        Bu ekranda üretilmiş/örnek aday YOKTUR. İlanlar SB.myListings(),
        başvuranlar SB.listingApplications() ile gerçek kayıtlardan gelir. */
@@ -424,6 +463,7 @@
 
         '<div class="apc-card__details">' +
           (k.arac      ? '<div class="apc-detail"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h7.5"/><path d="M5.5 15L9 7h4.5l3 5.5-4.5 2.5"/></svg> <span>' + esc(k.arac) + '</span></div>' : '') +
+          '<span class="apc-cv-slot" data-cv-kid="' + esc(k.id) + '"></span>' +
           (bTxt        ? '<div class="apc-detail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> <span>' + esc(bTxt) + '</span></div>' : '') +
           (k.deneyim   ? '<div class="apc-detail">⏱ <span>' + k.deneyim + ' yıl deneyim</span></div>' : '') +
           (k.tamamlanan? '<div class="apc-detail"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jc-ico"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/></svg> <span>' + k.tamamlanan + ' teslimat</span></div>' : '') +
@@ -473,6 +513,7 @@
         return;
       }
       el.innerHTML = filtered.map(renderCard).join('');
+      doldurCvCipleri(filtered);
     }
 
     /* ── Profile modal ── */
