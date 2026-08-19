@@ -255,9 +255,9 @@ window.SharedScreens = (function () {
               '<div class="job-card__avatar">🏢</div>' +
               '<div class="job-card__info">' +
                 '<div class="job-card__title">' + esc(l.baslik || 'İlan') + '</div>' +
-                '<div class="job-card__company">' + (l.sahip || 'Esnaf') + '</div>' +
+                '<div class="job-card__company">' + esc(l.sahip || 'Esnaf') + '</div>' +
               '</div>' +
-              '<div class="job-card__salary">' + (l.maas_aralik || '—') + '</div>' +
+              '<div class="job-card__salary">' + esc(l.maas_aralik || '—') + '</div>' +
             '</div>' +
           '</div>';
         }).join('');
@@ -561,8 +561,14 @@ window.SharedScreens = (function () {
 
     var faqs = [
       { q: 'Nasıl iş ilanına başvurabilirim?',       a: 'İlanlar sekmesinden ilgilendiğiniz ilanı açıp "Başvur" butonuna basın.' },
-      { q: 'Profilimi nasıl doğrulatırım?',          a: 'Kimlik & Belgeler menüsünden belgelerinizi yükleyin. 24 saat içinde doğrulanır.' },
-      { q: 'Bir firmayı nasıl şikayet edebilirim?',  a: 'İlan veya profil sayfasında "Şikayet Et" seçeneğini kullanın.' },
+      /* Bu iki cevap uygulamada karşılığı OLMAYAN şeyler tarif ediyordu:
+         • "Şikayet Et" diye bir seçenek mobil uygulamada hiç yok — kullanıcı
+           ilan ve profil sayfalarını boşuna arıyordu.
+         • "24 saat içinde doğrulanır" verilmeyen bir söz; KYC incelemesi
+           elle yapılıyor ve süre garanti edilmiyor.
+         Cevaplar gerçekten var olan yollara indirildi. */
+      { q: 'Profilimi nasıl doğrulatırım?',          a: 'Kimlik & Belgeler menüsünden belgelerinizi yükleyin. Belgeleriniz incelendikten sonra profilinize doğrulama rozeti eklenir.' },
+      { q: 'Bir firmayı nasıl şikayet edebilirim?',  a: 'destek@kuryemibul.com adresine firma adı ve ilan bağlantısıyla birlikte yazın. Aşağıdaki "E-posta Gönder" düğmesi doğrudan bu adresi açar.' },
       { q: 'Mesajlaşma ücretsiz mi?',                a: 'Evet, tüm mesajlaşma özellikleri ücretsizdir.' },
       { q: 'Bildirimler neden gelmiyor?',            a: 'Ayarlar > Bildirim Ayarları bölümünden kontrol edin.' }
     ];
@@ -671,9 +677,9 @@ window.SharedScreens = (function () {
         '</div>' +
         '<div class="msg-conv__job">' +
           '<span class="msg-conv__badge--standart">Başvuru</span>' +
-          ' ' + (c.listingTitle || 'İlan') +
+          ' ' + esc(c.listingTitle || 'İlan') +
         '</div>' +
-        '<div class="msg-conv__preview">' + (c.lastMessage || 'Yeni konuşma') + '</div>' +
+        '<div class="msg-conv__preview">' + esc(c.lastMessage || 'Yeni konuşma') + '</div>' +
         (c.listingSehir ? '<div class="msg-conv__meta">📍 ' + esc(c.listingSehir)+ '</div>' : '') +
       '</div>' +
       (c.unread > 0 ? '<div class="msg-conv__unread">' + esc(c.unread)+ '</div>' : '') +

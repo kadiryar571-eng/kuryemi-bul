@@ -976,11 +976,11 @@ window.KuryeScreens = (function () {
         '</div>' +
         '<div class="msg-conv__job">' +
           '<span class="msg-conv__badge--standart">Başvuru</span>' +
-          ' ' + (c.listingTitle || 'İlan') +
+          ' ' + esc(c.listingTitle || 'İlan') +
         '</div>' +
-        '<div class="msg-conv__preview">' + (c.lastMessage || 'Yeni konuşma') + '</div>' +
+        '<div class="msg-conv__preview">' + esc(c.lastMessage || 'Yeni konuşma') + '</div>' +
         '<div class="msg-conv__meta">' +
-          (c.listingSehir ? '📍 ' + c.listingSehir : '') +
+          (c.listingSehir ? '📍 ' + esc(c.listingSehir) : '') +
         '</div>' +
       '</div>' +
       (c.unread > 0

@@ -850,7 +850,7 @@ window.FirmaScreens = (function () {
             '<div class="kb-stars">' + ICON.star + ' ' + esc(r.puan)+ '</div>' +
           '</div>' +
           (r.yorum ? '<div style="font-size:.86rem;color:var(--text2);line-height:1.5">' + _esc(r.yorum) + '</div>' : '') +
-          '<div style="font-size:.7rem;color:var(--muted);margin-top:6px">' + (r.tarih || '') + '</div>' +
+          '<div style="font-size:.7rem;color:var(--muted);margin-top:6px">' + esc(r.tarih || '') + '</div>' +
         '</div>';
       }).join('') : empty;
     } catch (e) {

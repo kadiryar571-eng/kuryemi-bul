@@ -1407,7 +1407,9 @@
         if (p && p.plaka_gizli) {
           plakaEl.innerHTML = '<span class="wi-val-chip">Gizli</span>';
         } else if (p && p.plaka) {
-          plakaEl.innerHTML = '<span class="wi-val-chip">' + p.plaka + '</span>';
+          /* KB.esc: bu blokta yerel esc() yok (1671'deki tanım bir sonraki
+             <script> bloğunda, buradan görünmez). Kaçış global üzerinden. */
+          plakaEl.innerHTML = '<span class="wi-val-chip">' + KB.esc(p.plaka) + '</span>';
         } else {
           plakaEl.innerHTML = '<span class="wi-val-empty">Eklenmedi</span>';
         }

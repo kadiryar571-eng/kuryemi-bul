@@ -414,13 +414,13 @@
 
     function buildJobCard(job) {
       var saved = getSaved().indexOf(job.id) > -1;
-      var initials = job.sirket.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+      var initials = E(job.sirket.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase());
       var badgeHtml = '';
       if (job.badge === 'yeni')  badgeHtml = '<span class="job-badge job-badge--new">Yeni</span>';
       if (job.badge === 'uygun') badgeHtml = '<span class="job-badge job-badge--match">Sana Uygun</span>';
       if (job.badge === 'acil')  badgeHtml = '<span class="job-badge job-badge--urgent">Acil Alım</span>';
-      var tagsHtml = job.tipler.map(function(t){ return '<span class="job-tag">' + t + '</span>'; }).join('') +
-                     '<span class="job-tag">' + job.odeme + '</span>';
+      var tagsHtml = job.tipler.map(function(t){ return '<span class="job-tag">' + E(t) + '</span>'; }).join('') +
+                     '<span class="job-tag">' + E(job.odeme) + '</span>';
       var saveSvgFill = saved ? 'currentColor' : 'none';
       var el = document.createElement('div');
       el.className = 'job-card';
@@ -429,31 +429,31 @@
         '<div class="job-card__row">' +
           '<div class="job-card__ava">' + initials + '</div>' +
           '<div class="job-card__main">' +
-            '<div class="job-card__company">' + job.sirket + '</div>' +
-            '<div class="job-card__title">' + job.baslik + '</div>' +
+            '<div class="job-card__company">' + E(job.sirket) + '</div>' +
+            '<div class="job-card__title">' + E(job.baslik) + '</div>' +
             '<div class="job-card__loc">' +
               '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-              job.ilce + ', ' + job.sehir +
+              E(job.ilce) + ', ' + E(job.sehir) +
             '</div>' +
           '</div>' +
           '<div class="job-card__side">' +
             badgeHtml +
-            '<button class="job-card__save' + (saved ? ' is-saved' : '') + '" data-jid="' + job.id + '" title="Kaydet">' +
+            '<button class="job-card__save' + (saved ? ' is-saved' : '') + '" data-jid="' + E(job.id) + '" title="Kaydet">' +
               '<svg width="13" height="13" viewBox="0 0 24 24" fill="' + saveSvgFill + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' +
             '</button>' +
           '</div>' +
         '</div>' +
         '<div class="job-card__tags">' + tagsHtml + '</div>' +
         '<div class="job-card__details">' +
-          '<div class="job-drow"><span class="job-dlabel">Maaş</span><span class="job-dval">' + (job.maas_txt || fmtMaas(job.maas_min, job.maas_max)) + '</span></div>' +
-          '<div class="job-drow"><span class="job-dlabel">Çalışma Saati</span><span class="job-dval">' + job.saat + '</span></div>' +
-          '<div class="job-drow"><span class="job-dlabel">Bölge</span><span class="job-dval">' + job.bolge + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Maaş</span><span class="job-dval">' + E(job.maas_txt || fmtMaas(job.maas_min, job.maas_max)) + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Çalışma Saati</span><span class="job-dval">' + E(job.saat) + '</span></div>' +
+          '<div class="job-drow"><span class="job-dlabel">Bölge</span><span class="job-dval">' + E(job.bolge) + '</span></div>' +
           '<div class="job-drow"><span class="job-dlabel">Prim</span>' +
             (job.prim ? '<span class="job-dval job-dval--yes">Var</span>' : '<span class="job-dval job-dval--no">Yok</span>') +
           '</div>' +
         '</div>' +
         '<div class="job-card__actions">' +
-          '<button class="btn btn--primary btn--sm job-apply-btn" data-jid="' + job.id + '">Başvur</button>' +
+          '<button class="btn btn--primary btn--sm job-apply-btn" data-jid="' + E(job.id) + '">Başvur</button>' +
           '<a href="ilanlar.html" class="btn btn--ghost btn--sm">Detay</a>' +
         '</div>';
       return el;
@@ -1275,15 +1275,15 @@
         return '<div class="ilds-applied-item">' +
           '<div class="ilds-applied-ico">🛵</div>' +
           '<div class="ilds-applied-body">' +
-            '<div class="ilds-applied-title">' + (a.baslik || 'İsimsiz İlan') + '</div>' +
+            '<div class="ilds-applied-title">' + E(a.baslik || 'İsimsiz İlan') + '</div>' +
             '<div class="ilds-applied-meta">' +
-              (a.firma ? '<span>' + a.firma + '</span>' : '') +
-              (a.ilanSehir ? '<span>📍 ' + a.ilanSehir + '</span>' : '') +
+              (a.firma ? '<span>' + E(a.firma) + '</span>' : '') +
+              (a.ilanSehir ? '<span>📍 ' + E(a.ilanSehir) + '</span>' : '') +
               (kapali ? '<span class="ilds-alert ilds-alert--closed" style="margin:0;padding:3px 8px;font-size:0.73rem">İlan kapandı</span>' : '') +
             '</div>' +
-            '<div style="font-size:0.78rem;color:var(--text-2);margin-top:4px">' + (LBL[a.durum] || a.durum) + ' · ' + a.tarih + '</div>' +
+            '<div style="font-size:0.78rem;color:var(--text-2);margin-top:4px">' + E(LBL[a.durum] || a.durum) + ' · ' + E(a.tarih) + '</div>' +
           '</div>' +
-          '<a href="ilan.html?id=' + a.listingId + '" class="btn btn--ghost btn--sm">İncele</a>' +
+          '<a href="ilan.html?id=' + encodeURIComponent(a.listingId || '') + '" class="btn btn--ghost btn--sm">İncele</a>' +
         '</div>';
       }).join('');
     }
