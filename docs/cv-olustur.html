@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <!-- Content-Security-Policy — host allow-list.
+       'unsafe-inline' kaldırılamaz (site inline onclick= handler'larına dayanır);
+       asıl XSS savunması KB.esc()'tir. CSP burada veri sızdırmayı engeller:
+       enjekte edilen kod çalınan oturum jetonunu dış sunucuya POST edemez. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+    style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src    'self' https://fonts.gstatic.com data:;
+    img-src     'self' data: blob: https://fdszypytpodndtlbuzuz.supabase.co;
+    media-src   'self' blob: mediastream:;
+    connect-src 'self' https://fdszypytpodndtlbuzuz.supabase.co wss://fdszypytpodndtlbuzuz.supabase.co;
+    frame-src   'none';
+    object-src  'none';
+    base-uri    'self';
+    form-action 'self';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Özgeçmişimi Oluştur · KuryemiBul</title>
+  <meta name="description" content="Kurye özgeçmişini adım adım oluştur ve işverenlere yayınla.">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png">
+  <link rel="icon" href="assets/logo.png" sizes="any">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="app-topbar"></div>
+  <div id="sidebar-overlay"></div>
+  <nav id="app-sidebar"></nav>
+
+  <div class="app-content">
+    <div class="cv-wrap" id="cvRoot">
+      <div class="cv-head">
+        <h1 class="cv-title">Özgeçmişini Oluştur</h1>
+        <div class="cv-progress"><div class="cv-progress__fill" id="cvProgress"></div></div>
+        <div class="cv-steps" id="cvSteps"></div>
+      </div>
+      <div class="cv-body" id="cvBody"></div>
+      <div class="cv-foot">
+        <button type="button" class="btn btn--ghost" id="cvGeri">Geri</button>
+        <button type="button" class="btn btn--primary" id="cvIleri">İleri</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.js" integrity="sha384-OUpie84zd1LdwNlK9uJJQRwab0BLqo3eKYKFh7hSVL58FSk7wPp2l0kfUMIIoaQd" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/presence.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/cv.js"></script>
+  <script src="assets/js/motion.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var ADIMLAR = ['Özet', 'Ehliyet & Belge', 'Eğitim', 'Deneyim', 'Tercihler', 'Önizleme'];
+    var adim = 1;
+
+    function E(s) { return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s); }
+    function hata(m) {
+      if (window.KBMotion && KBMotion.showErrorToast) KBMotion.showErrorToast(m);
+      else alert(m);
+    }
+
+    function cizAdimlar() {
+      document.getElementById('cvSteps').innerHTML = ADIMLAR.map(function (ad, i) {
+        var n = i + 1;
+        return '<button type="button" class="cv-step' + (n === adim ? ' is-on' : '') +
+               (n < adim ? ' is-done' : '') + '" data-adim="' + n + '">' +
+               n + '. ' + E(ad) + '</button>';
+      }).join('');
+      document.getElementById('cvProgress').style.width = KBCV.tamamlanma() + '%';
+    }
+
+    async function ciz() {
+      var body = document.getElementById('cvBody');
+      if (adim === 4) await KBCV.deneyimYukle();
+      body.innerHTML = (adim === 6) ? onizleme() : KBCV.renderStep(adim);
+      document.getElementById('cvIleri').textContent = (adim === 6) ? 'Yayınla' : 'İleri';
+      document.getElementById('cvGeri').style.visibility = (adim === 1) ? 'hidden' : 'visible';
+      cizAdimlar();
+    }
+
+    function onizleme() {
+      var s = KBCV.state();
+      var h = '<div class="cv-preview">';
+      h += '<p class="cv-hint">İşveren profilinde bunu görecek.</p>';
+      if (s.ozet) h += '<p class="cv-preview__ozet">' + E(s.ozet) + '</p>';
+      if (s.ehliyetSinifi.length) {
+        h += '<div class="cv-chips">' + s.ehliyetSinifi.map(function (x) {
+          return '<span class="chip">' + E(x) + ' ehliyet</span>';
+        }).join('') + '</div>';
+      }
+      if (s.srcBelge) h += '<p><span class="chip chip--ok">SRC Kurye Belgesi ✓</span></p>';
+      if (!s.ozet && !s.ehliyetSinifi.length) {
+        h += '<p class="cv-empty">Henüz doldurulmuş bir alan yok.</p>';
+      }
+      return h + '</div>';
+    }
+
+    document.getElementById('cvIleri').addEventListener('click', async function () {
+      KBCV.collectStep(adim);
+      var g = KBCV.gecerliMi(adim);
+      if (!g.ok) { hata(g.mesaj); return; }
+      if (adim < 6) { adim++; await ciz(); return; }
+      var r = await KBCV.kaydet(true);
+      if (r.error) { hata(r.error); return; }
+      if (window.KBMotion && KBMotion.showSuccess) {
+        KBMotion.showSuccess('Özgeçmişin yayınlandı', 'İşverenler artık görebilir', 2200);
+      }
+      setTimeout(function () { location.href = 'profil-kurye.html'; }, 1200);
+    });
+
+    document.getElementById('cvGeri').addEventListener('click', async function () {
+      KBCV.collectStep(adim);
+      if (adim > 1) { adim--; await ciz(); }
+    });
+
+    /* Çip ve satır tıklamaları — tek delege dinleyici */
+    document.getElementById('cvBody').addEventListener('click', async function (e) {
+      var t = e.target.closest('[data-ehliyet],[data-musaitlik],[data-egitim-sil],[data-deneyim-sil]');
+      if (!t) return;
+      var s = KBCV.state();
+      if (t.hasAttribute('data-ehliyet')) {
+        var v = t.getAttribute('data-ehliyet');
+        var i = s.ehliyetSinifi.indexOf(v);
+        if (i > -1) s.ehliyetSinifi.splice(i, 1); else s.ehliyetSinifi.push(v);
+        await ciz(); return;
+      }
+      if (t.hasAttribute('data-musaitlik')) {
+        s.musaitlik = t.getAttribute('data-musaitlik');
+        await ciz(); return;
+      }
+      if (t.hasAttribute('data-egitim-sil')) {
+        s.egitim.splice(parseInt(t.getAttribute('data-egitim-sil'), 10), 1);
+        await ciz(); return;
+      }
+      if (t.hasAttribute('data-deneyim-sil')) {
+        var r = await KBCV.deneyimSil(t.getAttribute('data-deneyim-sil'));
+        if (r.error) hata(r.error);
+        await ciz();
+      }
+    });
+
+    document.getElementById('cvBody').addEventListener('change', function (e) {
+      if (e.target && e.target.id === 'cvSrc') {
+        var w = document.getElementById('cvSrcTarihWrap');
+        if (w) w.style.display = e.target.checked ? '' : 'none';
+      }
+    });
+
+    /* Ekle düğmeleri */
+    document.getElementById('cvBody').addEventListener('click', async function (e) {
+      if (e.target && e.target.id === 'cvEgitimEkle') {
+        var okul = (document.getElementById('cvOkul').value || '').trim();
+        if (!okul) { hata('Okul adı gerekli.'); return; }
+        KBCV.state().egitim.push({
+          okul: okul,
+          derece: (document.getElementById('cvDerece').value || '').trim(),
+          yil: (document.getElementById('cvYil').value || '').trim()
+        });
+        await ciz();
+      }
+      if (e.target && e.target.id === 'cvDeneyimEkle') {
+        var r = await KBCV.deneyimKaydet();
+        if (r.error) hata(r.error);
+        await ciz();
+      }
+    });
+
+    /* Başlat — YALNIZ KURYE. Diğer roller kendi paneline gider. */
+    KB.ready().then(async function () {
+      var rol = KB.getRole ? KB.getRole() : 'guest';
+      if (rol !== 'kurye') {
+        location.replace(rol === 'firma' ? 'panel-firma.html'
+                       : rol === 'isletme' ? 'panel-isletme.html' : 'index.html');
+        return;
+      }
+      await KBCV.load();
+      var q = parseInt(new URLSearchParams(location.search).get('adim') || '1', 10);
+      adim = (q >= 1 && q <= 6) ? q : 1;
+      await ciz();
+    });
+  })();
+  </script>
+</body>
+</html>

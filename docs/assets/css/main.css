@@ -6012,3 +6012,41 @@ a.dash-stat:hover {
   border-top: 1px dashed var(--border);
   font-size: 0.8rem; color: var(--text-2);
 }
+
+/* -- CV sihirbazi ----------------------------------------------- */
+.cv-wrap { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
+.cv-title { font-size: 1.5rem; font-weight: 800; margin: 0 0 12px; }
+.cv-progress { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.cv-progress__fill { height: 100%; background: var(--primary); transition: width .3s ease; }
+.cv-steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 20px; }
+.cv-step { padding: 6px 10px; border-radius: 99px; border: 1px solid var(--border);
+           background: transparent; color: var(--text-2); font-size: .78rem; cursor: pointer; }
+.cv-step.is-on   { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cv-step.is-done { color: var(--success); border-color: var(--success); }
+.cv-field { margin-bottom: 18px; }
+.cv-label { display: block; font-weight: 600; font-size: .88rem; margin-bottom: 6px; }
+.cv-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+            border-radius: 10px; background: var(--surface); color: var(--text);
+            font: inherit; }
+.cv-hint { font-size: .78rem; color: var(--text-3); margin: 6px 0 0; }
+.cv-note { font-size: .78rem; color: var(--text-3); border-left: 3px solid var(--border);
+           padding-left: 10px; margin-top: 18px; }
+.cv-empty { font-size: .85rem; color: var(--text-3); padding: 10px 0; }
+.cv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cv-chip { padding: 7px 14px; border-radius: 99px; border: 1px solid var(--border);
+           background: transparent; color: var(--text-2); cursor: pointer; font-size: .84rem; }
+.cv-chip.is-on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cv-check { display: flex; align-items: center; gap: 8px; font-size: .88rem; }
+.cv-row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+          padding: 10px 0; border-bottom: 1px solid var(--border); }
+.cv-row__main { display: flex; flex-direction: column; min-width: 0; }
+.cv-row__main span { font-size: .8rem; color: var(--text-3); }
+.cv-inline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cv-inline .cv-input { flex: 1; min-width: 120px; }
+.cv-subform { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.cv-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 26px; }
+.cv-preview__ozet { font-size: .92rem; line-height: 1.6; }
+@media (max-width: 680px) {
+  .cv-steps { overflow-x: auto; flex-wrap: nowrap; }
+  .cv-step { white-space: nowrap; }
+}
