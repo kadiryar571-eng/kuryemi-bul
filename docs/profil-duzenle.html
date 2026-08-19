@@ -2374,7 +2374,13 @@
     function getDate(ayId, yilId) {
       var ay = document.getElementById(ayId).value, yil = document.getElementById(yilId).value;
       if (!ay || !yil) return null;
-      return yil + '-' + String(ay).padStart(2, '0');
+      /* GUN BILESENI ZORUNLU. work_experience.baslangic/bitis `date` tipinde;
+         PostgREST "2020-01" degerini 22007 ile reddediyordu ve bu sayfadan
+         deneyim eklemek HIC calismiyordu (kullaniciya ham Postgres hatasi
+         dusuyordu). cv.js ayni isi zaten `bas + '-01'` ile yapiyor.
+         parseDateStr geri okurken yalniz [0] ve [1]'i aldigi icin gun
+         eklemek duzenleme yolunu bozmaz. */
+      return yil + '-' + String(ay).padStart(2, '0') + '-01';
     }
 
     function showFormErr(msg) {
