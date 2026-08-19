@@ -361,6 +361,23 @@ değişiklikler numaralı `migration-NN-*.sql` dosyalarıyla yapılır (idempote
 - `admins` ve `admin_audit_log`: RLS açık, **hiç policy yok** → yalnız
   `service_role` erişir (migration-28).
 
+> **`security_invoker = false` görünümde RLS DEVREDE DEĞİLDİR — tek kapı
+> GRANT'tır, ve `grant … to authenticated` bir kısıtlama değildir.**
+> Supabase'in varsayılan yetkileri `anon`'a yeni görünümler dahil SELECT
+> veriyor; `grant` yalnız yetki *ekler*, var olanı geri almaz. Misafire
+> kapalı kalması gereken bir görünüm için **açıkça `revoke all … from anon`**
+> yazılmalıdır.
+>
+> Bu tuzak arka arkaya iki kez kuruldu: migration-34 (`work_experience_public`)
+> ve migration-36 (`courier_cv_public`). İkisinin de yorumu "misafire kapalı"
+> diyordu, ikisi de anon key ile HTTP 200 dönüyordu. migration-37 kapattı.
+>
+> **Ölçmeden "kapalı" demeyin.** Kapalı olan böyle görünür:
+> `curl ".../admins?select=user_id" -H "apikey: <ANON>"` → **401 / 42501**.
+> `200` + `[]` kapalı DEĞİL, yalnızca boş demektir. Ayrıca olmayan bir kolon
+> adıyla test etmeyin — PostgREST kolonu yetkiden önce denetler, yetkisiz
+> tablo bile `42703` döndürür.
+
 > **İki guard trigger'ı `auth.uid()` NULL iken TERS davranır** — admin-api
 > yazarken bu belirleyicidir:
 > - `guard_dogrulama` (migration-21): `auth.uid()` NULL ise **reddeder**.
