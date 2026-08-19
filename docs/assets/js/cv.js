@@ -19,7 +19,11 @@
 
   var _cv = null;        // DB'den gelen CV
   var _profil = null;    // DB'den gelen profil
-  var _taslak = null;    // sihirbazın üzerinde çalıştığı nesne
+  /* BOŞ NESNEYLE başlar, null ile DEĞİL. cv-olustur.html'deki İleri/Geri
+     düğmeleri statik HTML'dedir ve dinleyicileri hemen bağlanır; load() ise
+     KB.ready() çözülene kadar (Supabase oturumu) bekler. Arada dokunulursa
+     collectStep() null üzerinde yazmaya çalışıp çökerdi. */
+  var _taslak = bosTaslak();
   var _yuklendi = false;
 
   var TASLAK_KEY = 'kb_draft:cv';
@@ -237,18 +241,30 @@
     return el ? el.value : '';
   }
 
+  /* HER ALAN VARLIK KONTROLÜNDEN GEÇER. Adım henüz çizilmemişken val()
+     boş string döner; kontrolsüz atama DOLU TASLAĞI SİLERDİ. İleri/Geri
+     düğmeleri statik HTML'de olduğu için load() bitmeden tıklanabilir. */
   function collectStep(n) {
-    if (n === 1) _taslak.ozet = val('cvOzet').trim();
+    if (n === 1) {
+      var oz = document.getElementById('cvOzet');
+      if (oz) _taslak.ozet = oz.value.trim();
+    }
     if (n === 2) {
-      _taslak.ehliyetTarihi = val('cvEhliyetTarih') || null;
+      var et = document.getElementById('cvEhliyetTarih');
+      if (et) _taslak.ehliyetTarihi = et.value || null;
       var src = document.getElementById('cvSrc');
-      _taslak.srcBelge = !!(src && src.checked);
-      _taslak.srcGecerlilik = _taslak.srcBelge ? (val('cvSrcGecerlilik') || null) : null;
+      if (src) {
+        _taslak.srcBelge = !!src.checked;
+        _taslak.srcGecerlilik = src.checked ? (val('cvSrcGecerlilik') || null) : null;
+      }
     }
     if (n === 5) {
-      _taslak.tercihBolgeler = val('cvBolgeler').split(',')
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return s.length > 0; });
+      var bl = document.getElementById('cvBolgeler');
+      if (bl) {
+        _taslak.tercihBolgeler = bl.value.split(',')
+          .map(function (s) { return s.trim(); })
+          .filter(function (s) { return s.length > 0; });
+      }
     }
     taslagiYaz();
   }

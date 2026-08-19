@@ -26,7 +26,10 @@ window.CvScreens = (function () {
   var ADIMLAR   = ['Özet', 'Ehliyet', 'Eğitim', 'Deneyim', 'Tercihler', 'Önizleme'];
   var TASLAK_KEY = 'kb_cv_taslak';
 
-  var _taslak      = null;
+  /* BOŞ NESNEYLE başlar, null ile DEĞİL. renderScreen alt düğmeleri hemen
+     basar ama load() 120 ms + whenEl beklemesi sonra biter; arada "İleri"ye
+     dokunulursa collectStep() null üzerinde yazmaya çalışıp çökerdi. */
+  var _taslak      = bosTaslak();
   var _adim        = 1;
   var _yuklendi    = false;
   var _deneyimler  = [];
@@ -82,19 +85,33 @@ window.CvScreens = (function () {
   function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
 
   /* Ekrandaki alanları taslağa al. Çip/satır seçimleri zaten anında
-     taslağa yazıldığı için burada yalnız serbest metin alanları var. */
+     taslağa yazıldığı için burada yalnız serbest metin alanları var.
+
+     HER ALAN VARLIK KONTROLÜNDEN GEÇER. Adım henüz render edilmemişken
+     (renderScreen alt düğmeleri load()'dan önce basar) val() boş string
+     döner ve kontrolsüz atama DOLU TASLAĞI SİLERDİ — kurye özetini
+     kaybederdi. Alan yoksa o alana dokunulmaz. */
   function collectStep(n) {
-    if (n === 1) _taslak.ozet = val('cv-ozet').trim();
+    if (n === 1) {
+      var oz = document.getElementById('cv-ozet');
+      if (oz) _taslak.ozet = oz.value.trim();
+    }
     if (n === 2) {
-      _taslak.ehliyetTarihi = val('cv-ehliyet-tarih') || null;
+      var et = document.getElementById('cv-ehliyet-tarih');
+      if (et) _taslak.ehliyetTarihi = et.value || null;
       var src = document.getElementById('cv-src');
-      _taslak.srcBelge = !!(src && src.checked);
-      _taslak.srcGecerlilik = _taslak.srcBelge ? (val('cv-src-gecerlilik') || null) : null;
+      if (src) {
+        _taslak.srcBelge = !!src.checked;
+        _taslak.srcGecerlilik = src.checked ? (val('cv-src-gecerlilik') || null) : null;
+      }
     }
     if (n === 5) {
-      _taslak.tercihBolgeler = val('cv-bolgeler').split(',')
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return s.length > 0; });
+      var bl = document.getElementById('cv-bolgeler');
+      if (bl) {
+        _taslak.tercihBolgeler = bl.value.split(',')
+          .map(function (s) { return s.trim(); })
+          .filter(function (s) { return s.length > 0; });
+      }
     }
     taslagiYaz();
   }
@@ -534,7 +551,11 @@ window.CvScreens = (function () {
 
     if (r.error) { toast(r.error); return; }
     toast('Özgeçmişin yayınlandı — işverenler artık görebilir.');
-    _yuklendi = false;                       /* profile dönünce tazelensin */
+    /* Sihirbaz tek route olduğu için modül durumu ekrandan sağ kalır.
+       İkisi de sıfırlanmazsa kurye sihirbaza yeniden girdiğinde 6. adımda
+       (Önizleme) açılır ve eski taslağı görür. */
+    _adim = 1;
+    _yuklendi = false;
     setTimeout(function () { Router.go('/kurye/profil'); }, 900);
   }
 
