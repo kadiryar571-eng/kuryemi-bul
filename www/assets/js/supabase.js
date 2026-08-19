@@ -350,6 +350,149 @@
     return esle(v.data);
   }
 
+  /* ---------- İŞ DENEYİMİ YAZMA (mobilde CV sihirbazının 4. adımı) ----------
+     Mobil bu tabloya eskiden HİÇ yazmıyordu; yalnız okuma yolu vardı.
+     Sihirbazın 4. adımı burayı kullanır ve web ile AYNI tabloya yazar —
+     kayıt kopyalanmaz, iki yüzey tek kaynağı paylaşır. */
+  async function myPid() {
+    var u = await getUser(); if (!u) return null;
+    var r = await client.from("profiles").select("id").eq("user_id", u.id).maybeSingle();
+    return r.data ? r.data.id : null;
+  }
+
+  async function myWorkExperience() {
+    var u = await getUser(); if (!u) return [];
+    var r = await client.from("work_experience").select("*")
+      .eq("user_id", u.id).order("baslangic", { ascending: false, nullsFirst: false });
+    if (r.error) { console.warn("myWorkExperience:", r.error); return []; }
+    return (r.data || []).map(function (w) {
+      return {
+        id: w.id, sirket: w.sirket || "", pozisyon: w.pozisyon || "",
+        model: w.model || "", sehir: w.sehir || "",
+        baslangic: w.baslangic || "", bitis: w.bitis || "",
+        aktif: !!w.aktif, aciklama: w.aciklama || "",
+        etiketler: w.etiketler || [],
+        referansAd: w.referans_ad || "", referansTel: w.referans_tel || ""
+      };
+    });
+  }
+
+  /* baslangic/bitis TAM TARİH olmalı ("2020-01" değil) — kolon date tipinde
+     ve PostgREST eksik günü 22007 ile reddeder. Ay girdisi veren çağıran
+     "-01" eklemekle yükümlüdür; docs/ tarafında tam olarak bu eksikti. */
+  function _weRow(d) {
+    return {
+      sirket: d.sirket || "", pozisyon: d.pozisyon || "",
+      model: d.model || "", sehir: d.sehir || "",
+      baslangic: d.baslangic || null,
+      bitis: d.aktif ? null : (d.bitis || null),
+      aktif: !!d.aktif, aciklama: d.aciklama || "",
+      etiketler: d.etiketler || [],
+      referans_ad: d.referansAd || "", referans_tel: d.referansTel || ""
+    };
+  }
+
+  async function addWorkExperience(data) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var pid = await myPid(); if (!pid) throw new Error("Önce profilini oluştur.");
+    var row = Object.assign(_weRow(data), { profile_id: pid, user_id: u.id });
+    var r = await client.from("work_experience").insert(row).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+
+  async function updateWorkExperience(id, data) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var r = await client.from("work_experience").update(_weRow(data))
+      .eq("id", id).eq("user_id", u.id).select().maybeSingle();
+    if (r.error) throw r.error;
+    return r.data;
+  }
+
+  async function deleteWorkExperience(id) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var r = await client.from("work_experience").delete().eq("id", id).eq("user_id", u.id);
+    if (r.error) throw r.error;
+    return true;
+  }
+
+  /* ---------- KURYE ÖZGEÇMİŞİ (migration-36) ----------
+     Okuma iki yollu, work_experience ile aynı desen:
+       courier_cv        — sahibi kendi satırını okur/yazar (RLS)
+       courier_cv_public — yalnız yayinlandi=true olanlar; oturum açmış
+                           herkes okur, misafire KAPALI (migration-37)
+     migration-36 çalıştırılmadıysa tablo yoktur; bir kez işaretle ve sus,
+     yoksa her aday görüntülemede boşa istek gider. */
+  var _cvYok = false;
+  function _cvEksikMi(err) {
+    if (!err) return false;
+    var m = (err.message || "") + " " + (err.code || "");
+    return /Could not find the table|does not exist|42P01|PGRST205/i.test(m);
+  }
+
+  function cvFromDb(r) {
+    if (!r) return null;
+    return {
+      id: r.id, profileId: r.profile_id,
+      ozet: r.ozet || "",
+      ehliyetSinifi: r.ehliyet_sinifi || [],
+      ehliyetTarihi: r.ehliyet_tarihi || null,
+      srcBelge: !!r.src_belge,
+      srcGecerlilik: r.src_gecerlilik || null,
+      egitim: Array.isArray(r.egitim) ? r.egitim : [],
+      tercihBolgeler: r.tercih_bolgeler || [],
+      musaitlik: r.musaitlik || "",
+      yayinlandi: !!r.yayinlandi,
+      updatedAt: r.updated_at || null
+    };
+  }
+
+  function _cvRow(d) {
+    return {
+      ozet: (d.ozet || "").slice(0, 600),
+      ehliyet_sinifi: d.ehliyetSinifi || [],
+      ehliyet_tarihi: d.ehliyetTarihi || null,
+      src_belge: !!d.srcBelge,
+      src_gecerlilik: d.srcGecerlilik || null,
+      egitim: Array.isArray(d.egitim) ? d.egitim : [],
+      tercih_bolgeler: d.tercihBolgeler || [],
+      musaitlik: d.musaitlik || "",
+      yayinlandi: !!d.yayinlandi
+    };
+  }
+
+  async function myCv() {
+    if (_cvYok) return null;
+    var u = await getUser(); if (!u) return null;
+    var r = await client.from("courier_cv").select("*").eq("user_id", u.id).maybeSingle();
+    if (r.error) {
+      if (_cvEksikMi(r.error)) { _cvYok = true; return null; }
+      console.warn("myCv:", r.error); return null;
+    }
+    return cvFromDb(r.data);
+  }
+
+  async function cvFor(profileId) {
+    if (!profileId || _cvYok) return null;
+    var r = await client.from("courier_cv_public").select("*")
+      .eq("profile_id", profileId).maybeSingle();
+    if (r.error) {
+      if (_cvEksikMi(r.error)) { _cvYok = true; return null; }
+      console.warn("cvFor:", r.error); return null;
+    }
+    return cvFromDb(r.data);
+  }
+
+  async function saveCv(data) {
+    var u = await getUser(); if (!u) throw new Error("oturum yok");
+    var pid = await myPid(); if (!pid) throw new Error("Önce profilini oluştur.");
+    var row = Object.assign(_cvRow(data), { profile_id: pid, user_id: u.id });
+    var r = await client.from("courier_cv")
+      .upsert(row, { onConflict: "profile_id" }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return cvFromDb(r.data);
+  }
+
   /* ---------- HAVUZUM (kayıtlı profiller) ---------- */
   async function poolIds() {
     var u = await getUser();
@@ -1051,6 +1194,9 @@
     poolIds: poolIds, addToPool: addToPool, removeFromPool: removeFromPool, myPool: myPool,
     pool: pool, profileById: profileById, poolCounts: poolCounts, recentReviews: recentReviews,
     workExperienceFor: workExperienceFor,
+    myWorkExperience: myWorkExperience, addWorkExperience: addWorkExperience,
+    updateWorkExperience: updateWorkExperience, deleteWorkExperience: deleteWorkExperience,
+    myCv: myCv, cvFor: cvFor, saveCv: saveCv,
     sendOffer: sendOffer, myOffers: myOffers, updateOffer: updateOffer, pendingOffersCount: pendingOffersCount,
     myNotifications: myNotifications, unreadCount: unreadCount, markNotificationRead: markNotificationRead,
     markAllNotificationsRead: markAllNotificationsRead, subscribeNotifications: subscribeNotifications,

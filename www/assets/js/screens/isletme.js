@@ -662,6 +662,10 @@ window.IsletmeScreens = (function () {
           }
           /* Ayrıntılı iş deneyimi (migration-34) — bkz. firma.js'teki eşi. */
           SharedScreens.loadIsDeneyimi(a.applicantId, 'aday-profil-extra');
+          /* Ozgecmis (migration-36) — yalniz kurye YAYINLADIYSA doner.
+             courier_cv_public gorunumu yayinlandi=false olanlari zaten
+             suzer; kayit yoksa hicbir sey basilmaz. */
+          if (window.CvScreens) CvScreens.loadCv(a.applicantId, 'aday-profil-extra');
         });
       }).catch(function() {});
     }

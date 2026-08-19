@@ -268,6 +268,11 @@
     if (ov) { ov.remove(); return true; }
     var drawer = document.getElementById('kb-drawer');
     if (drawer && drawer.classList.contains('open')) { closeDrawer(); return true; }
+    /* CV sihirbazi tek route'tur (/kurye/cv), adim ekranin icinde tutulur.
+       Kanca olmadan geri tusu 4. adimdayken sihirbazdan TAMAMEN cikardi.
+       Modal ve drawer'dan SONRA gelir: sihirbaz uzerinde acik bir katman
+       varsa once o kapanmali. Sihirbaz ekranda degilse false doner. */
+    if (window.CvScreens && CvScreens.geriAdim && CvScreens.geriAdim()) return true;
     return false;
   };
 
@@ -416,6 +421,7 @@
     Router.define('/kurye/mesajlar',    KuryeScreens.mesajlar);
     Router.define('/kurye/mesaj/:id',   KuryeScreens.mesajChat);
     Router.define('/kurye/profil',      KuryeScreens.profil);
+    Router.define('/kurye/cv',          CvScreens.sihirbaz);
 
     /* Kurye Firması */
     Router.define('/firma/panel',       FirmaScreens.panel);

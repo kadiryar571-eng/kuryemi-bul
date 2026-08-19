@@ -1598,6 +1598,16 @@ window.KuryeScreens = (function () {
           '</div>' +
         '</div>' +
 
+        /* ── Ozgecmis — sihirbaza giris. Durum myCv() ile sonradan
+           doldurulur (whenEl); uydurma durum metni basilmaz. ── */
+        '<div class="pr-section">' +
+          '<div class="pr-section__hd">' +
+            '<div class="pr-section__title">Özgeçmişim</div>' +
+            '<button class="pr-section__edit" onclick="Router.go(\x27/kurye/cv\x27)">Aç</button>' +
+          '</div>' +
+          '<div id="pr-cv-durum"></div>' +
+        '</div>' +
+
         /* ── Deneyim — profildeki gerçek "çalıştığı yerler" ── */
         '<div class="pr-section">' +
           '<div class="pr-section__hd">' +
@@ -1685,7 +1695,30 @@ window.KuryeScreens = (function () {
       '</div>'
     );
 
-    setTimeout(function () { _loadProfilMetrics(); }, 130);
+    setTimeout(function () { _loadProfilMetrics(); _loadCvDurum(); }, 130);
+  }
+
+  /* Ozgecmis durum karti — GERCEK duruma gore iki dal.
+     Kayit yoksa myCv() null doner ve "olustur" dali cizilir; uydurma
+     ilerleme yuzdesi ya da sahte durum metni basilmaz. */
+  async function _loadCvDurum() {
+    var el = document.getElementById('pr-cv-durum');
+    if (!el || !(window.SB && SB.isOn() && SB.myCv)) return;
+    var cv = null;
+    try { cv = await SB.myCv(); } catch (e) { return; }
+    var yayinda = !!(cv && cv.yayinlandi);
+    el.innerHTML =
+      '<div class="cv-durum" onclick="Router.go(\x27/kurye/cv\x27)">' +
+        '<div class="cv-durum__ico">' + (yayinda ? '✓' : '📄') + '</div>' +
+        '<div class="cv-durum__body">' +
+          '<div class="cv-durum__t">' +
+            (yayinda ? 'Özgeçmişin yayında' : 'Özgeçmişini oluştur') + '</div>' +
+          '<div class="cv-durum__s">' +
+            (yayinda ? 'İşverenler başvurunda görebiliyor'
+                     : 'İşverenler başvurunda görsün') + '</div>' +
+        '</div>' +
+        '<div class="cv-durum__ok">›</div>' +
+      '</div>';
   }
 
   /* Profil metrikleri — gerçek başvuru sayıları (uydurma oran yok) */
