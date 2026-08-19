@@ -79,20 +79,21 @@ Kaynaklar:
 
 ---
 
-## KVKK kararı — bilerek saklanmayan üç alan
+## Saklanmayan üç alan — adli sicil, sağlık raporu, psikoteknik
 
-İşe alımda istendiğini bildiğimiz hâlde **adli sicil, sağlık raporu ve
-psikoteknik** CV'de saklanmayacak.
+**Karar (onaylandı):** bu üçü CV'de yer almaz. Platformun ilgi alanına
+girmiyorlar.
 
-Gerekçe: üçü de KVKK m.6 kapsamında **özel nitelikli kişisel veri** (sağlık
-bilgisi ve ceza mahkûmiyeti). Bunları işlemek açık rıza, ayrı saklama ve ek
-güvenlik tedbirleri gerektirir; ihlalin yaptırımı ağırdır. Kazanç küçük, risk
-büyük.
+İki gerekçe aynı yöne işaret ediyor. Birincisi kapsam: bunlar işveren ile kurye
+arasındaki görüşmenin konusu, platformun tutacağı bir kayıt değil. İkincisi
+hukuki: üçü de KVKK m.6 kapsamında **özel nitelikli kişisel veri** (sağlık
+bilgisi ve ceza mahkûmiyeti); işlenmeleri açık rıza, ayrı saklama ve ek güvenlik
+tedbiri gerektirir.
 
 Yerine CV'de nötr bir satır: **"İşveren görüşmede belge talep edebilir."**
 
-Bu karar geri alınabilir, ama geri alınırsa rıza akışının da tasarlanması
-gerekir — kolon eklemek tek başına yeterli değildir.
+Sonradan eklenmek istenirse kolon eklemek yeterli değildir; rıza akışının da
+tasarlanması gerekir.
 
 ---
 
@@ -169,13 +170,35 @@ gerekti). Büyüyen dosyayı büyütmek yerine kendi sınırı olan bir birim.
 | 1 | Özet | Boşsa `profiles.aciklama`'dan ön-doldurulur |
 | 2 | Ehliyet & Belge | Yeni veri — sihirbaz sorar |
 | 3 | Eğitim | Yeni veri, eklenebilir satırlar |
-| 4 | Deneyim | **Salt okunur** — `work_experience`'tan gelir |
+| 4 | Deneyim | **Tam düzenleme** — `work_experience` üzerinde ekle/düzenle/sil |
 | 5 | Tercih & Müsaitlik | Kısmen profilden |
 | 6 | Önizleme | İşverenin göreceği hâl + "Yayınla" |
 
-4. adım melez kararının can alıcı yeri: iş geçmişi zaten `work_experience`'ta.
-Sihirbaz onu **ikinci kez sormaz**, gösterir ve `profil-duzenle.html`'e
-yönlendirir. İki kaynak ayrışmaz.
+### 4. adım — tek sihirbazda her şey, ama tek kaynak
+
+Sihirbaz iş deneyimini **tam düzenler**: ekle, düzenle, sil. Kurye CV'yi
+tamamlamak için başka bir sayfaya gitmez.
+
+Ayrışma riski şuradan kalkıyor: sihirbaz veriyi **kopyalamaz**. Doğrudan
+`work_experience` tablosuna, `supabase.js`'te zaten var olan fonksiyonlarla
+yazar:
+
+```
+SB.myWorkExperience()      SB.addWorkExperience(data)
+SB.workExperienceFor(pid)  SB.updateWorkExperience(id, data)
+                           SB.deleteWorkExperience(id)
+```
+
+Yeni bir yazma yolu, yeni bir tablo, yeni bir kolon yok. `profil-duzenle.html`
+ve `cv-olustur.html` aynı satırları düzenler; hangisinden girilirse girilsin
+sonuç aynı yerdedir ve profil sayfasındaki "İş Deneyimi" bölümü ikisini de
+gösterir.
+
+**Bilinçli ödünç:** form arayüzü iki yerde durur (o sayfadaki mevcut form
+çalışıyor, onu sökmek gereksiz risk). Çoğaltma yalnız **sunumda**; veri
+mantığı tek yerde. Ayrışmanın gerçekten zarar verdiği yer veri katmanıdır ve
+orası tek. Üçüncü bir yüzey ihtiyaç duyarsa form o zaman ortak modüle çıkarılır
+— şimdi çıkarmak, çalışan bir sayfayı sebepsiz elden geçirmek olur.
 
 Adımlar arası taslak `sessionStorage` → `kb_draft:cv` (projede kullanılan
 kalıp). Veritabanına yazma yalnız "Kaydet"te.
@@ -280,5 +303,6 @@ gerektirmiyor.
 - **Paylaşılabilir genel bağlantı** (`/cv/<id>`) — KVKK yükü ayrı tasarım ister
 - **Mobil uygulama** — `www/` bu turda değişmez, APK derlemesi yok
 - **Belge yükleme + yönetici onayı** — beyan + mevcut KYC rozeti yeterli görüldü
+- **`work_experience` formunun ortak modüle çıkarılması** — iki yüzey için erken
 - **Adli sicil / sağlık raporu / psikoteknik alanları** — KVKK m.6 gerekçesiyle
 - **Dil / yetenek matrisi** — kurye işi için karşılığı yok (YAGNI)
