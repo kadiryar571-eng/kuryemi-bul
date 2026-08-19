@@ -1260,6 +1260,80 @@
     return true;
   }
 
+  /* ── Kurye özgeçmişi (migration-36) ───────────────────────── */
+  /* migration-36 çalıştırılmadıysa tablo/görünüm yoktur. _weYok
+     deseniyle aynı: bir kez işaretle, bir daha isteme. */
+  var _cvYok = false;
+  function _cvEksikMi(err) {
+    if (!err) return false;
+    var m = (err.message || '') + ' ' + (err.code || '');
+    return /Could not find the table|does not exist|42P01|PGRST205/i.test(m);
+  }
+
+  function cvFromDb(r) {
+    if (!r) return null;
+    return {
+      id:             r.id,
+      profileId:      r.profile_id,
+      ozet:           r.ozet || '',
+      ehliyetSinifi:  r.ehliyet_sinifi || [],
+      ehliyetTarihi:  r.ehliyet_tarihi || null,
+      srcBelge:       !!r.src_belge,
+      srcGecerlilik:  r.src_gecerlilik || null,
+      egitim:         Array.isArray(r.egitim) ? r.egitim : [],
+      tercihBolgeler: r.tercih_bolgeler || [],
+      musaitlik:      r.musaitlik || '',
+      yayinlandi:     !!r.yayinlandi,
+      updatedAt:      r.updated_at || null
+    };
+  }
+
+  function _cvRow(d) {
+    return {
+      ozet:            (d.ozet || '').slice(0, 600),
+      ehliyet_sinifi:  d.ehliyetSinifi || [],
+      ehliyet_tarihi:  d.ehliyetTarihi || null,
+      src_belge:       !!d.srcBelge,
+      src_gecerlilik:  d.srcGecerlilik || null,
+      egitim:          Array.isArray(d.egitim) ? d.egitim : [],
+      tercih_bolgeler: d.tercihBolgeler || [],
+      musaitlik:       d.musaitlik || '',
+      yayinlandi:      !!d.yayinlandi
+    };
+  }
+
+  async function myCv() {
+    if (_cvYok) return null;
+    var u = await getUser(); if (!u) return null;
+    var r = await client.from('courier_cv').select('*').eq('user_id', u.id).maybeSingle();
+    if (r.error) {
+      if (_cvEksikMi(r.error)) { _cvYok = true; return null; }
+      console.warn('myCv:', r.error); return null;
+    }
+    return cvFromDb(r.data);
+  }
+
+  async function cvFor(profileId) {
+    if (!profileId || _cvYok) return null;
+    var r = await client.from('courier_cv_public').select('*')
+      .eq('profile_id', profileId).maybeSingle();
+    if (r.error) {
+      if (_cvEksikMi(r.error)) { _cvYok = true; return null; }
+      console.warn('cvFor:', r.error); return null;
+    }
+    return cvFromDb(r.data);
+  }
+
+  async function saveCv(data) {
+    var u = await getUser(); if (!u) throw new Error('oturum yok');
+    var pid = await myPid2(); if (!pid) throw new Error('Önce profilini oluştur.');
+    var row = Object.assign(_cvRow(data), { profile_id: pid, user_id: u.id });
+    var r = await client.from('courier_cv')
+      .upsert(row, { onConflict: 'profile_id' }).select().maybeSingle();
+    if (r.error) throw r.error;
+    return cvFromDb(r.data);
+  }
+
   // Görüşme satırı → ekranların (KBInterview.renderCard) beklediği nesne
   function interviewFromDb(r) {
     var er = r.interviewer || {}, ee = r.interviewee || {}, l = r.listing || {};
@@ -1709,6 +1783,7 @@
     myWorkExperience: myWorkExperience, workExperienceFor: workExperienceFor,
     addWorkExperience: addWorkExperience, updateWorkExperience: updateWorkExperience,
     deleteWorkExperience: deleteWorkExperience,
+    myCv: myCv, cvFor: cvFor, saveCv: saveCv,
     createInterview: createInterview, myInterviews: myInterviews, updateInterview: updateInterview,
     interviewById: interviewById, subscribeInterviews: subscribeInterviews,
     createHiringDecision: createHiringDecision, myHiringDecisions: myHiringDecisions,
