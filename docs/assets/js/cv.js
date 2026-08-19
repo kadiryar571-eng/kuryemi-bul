@@ -148,6 +148,90 @@
     return h + '</div></div>';
   }
 
+  var _deneyim = [];
+
+  async function deneyimYukle() {
+    if (!on() || !SB.myWorkExperience) { _deneyim = []; return _deneyim; }
+    try { _deneyim = (await SB.myWorkExperience()) || []; }
+    catch (e) { console.warn('deneyimYukle:', e); _deneyim = []; }
+    return _deneyim;
+  }
+
+  function weTarih(d) {
+    if (!d) return '';
+    var p = String(d).split('-');
+    return p.length >= 2 ? p[1] + '.' + p[0] : String(d);
+  }
+
+  function stepDeneyim() {
+    var h = '<div id="cvDeneyimListe">';
+    if (!_deneyim.length) {
+      h += '<p class="cv-empty">Henüz iş deneyimi eklenmedi.</p>';
+    } else {
+      _deneyim.forEach(function (d) {
+        var bit = d.aktif ? 'Devam ediyor' : weTarih(d.bitis);
+        h += '<div class="cv-row"><div class="cv-row__main">' +
+             '<b>' + esc(d.pozisyon || '—') + '</b>' +
+             '<span>' + esc(d.sirket || '') + ' · ' +
+             esc(weTarih(d.baslangic)) + ' – ' + esc(bit) + '</span>' +
+             '</div><button type="button" class="btn btn--ghost btn--sm" ' +
+             'data-deneyim-sil="' + esc(d.id) + '">Sil</button></div>';
+      });
+    }
+    h += '</div><div class="cv-subform">' +
+      '<input type="text" id="cvExpSirket"   class="cv-input" placeholder="Şirket adı *" maxlength="80">' +
+      '<input type="text" id="cvExpPozisyon" class="cv-input" placeholder="Pozisyon *" maxlength="80">' +
+      '<input type="text" id="cvExpSehir"    class="cv-input" placeholder="Şehir" maxlength="60">' +
+      '<div class="cv-inline">' +
+        '<input type="month" id="cvExpBas" class="cv-input">' +
+        '<input type="month" id="cvExpBit" class="cv-input">' +
+        '<label class="cv-check"><input type="checkbox" id="cvExpAktif"> <span>Devam ediyor</span></label>' +
+      '</div>' +
+      '<textarea id="cvExpAciklama" class="cv-input" rows="2" maxlength="400" ' +
+        'placeholder="Ne yaptın? (isteğe bağlı)"></textarea>' +
+      '<button type="button" class="btn btn--primary btn--sm" id="cvDeneyimEkle">Deneyim Ekle</button>' +
+      '</div>';
+    return h;
+  }
+
+  /* AYNI TABLOYA yazar: public.work_experience. Kopya tutulmaz, bu
+     yüzden profil-duzenle.html ile ayrışma imkânsızdır. */
+  async function deneyimKaydet() {
+    var sirket   = (val('cvExpSirket')   || '').trim();
+    var pozisyon = (val('cvExpPozisyon') || '').trim();
+    if (!sirket || !pozisyon) return { error: 'Şirket ve pozisyon zorunlu.' };
+
+    var aktifEl = document.getElementById('cvExpAktif');
+    var aktif   = !!(aktifEl && aktifEl.checked);
+    var bas     = val('cvExpBas');
+    var bit     = val('cvExpBit');
+
+    try {
+      await SB.addWorkExperience({
+        sirket: sirket, pozisyon: pozisyon,
+        sehir: (val('cvExpSehir') || '').trim(),
+        baslangic: bas ? bas + '-01' : null,
+        bitis: (!aktif && bit) ? bit + '-01' : null,
+        aktif: aktif,
+        aciklama: (val('cvExpAciklama') || '').trim()
+      });
+      await deneyimYukle();
+      return { ok: true };
+    } catch (e) {
+      return { error: (e && e.message) || 'Deneyim eklenemedi.' };
+    }
+  }
+
+  async function deneyimSil(id) {
+    try {
+      await SB.deleteWorkExperience(id);
+      await deneyimYukle();
+      return { ok: true };
+    } catch (e) {
+      return { error: (e && e.message) || 'Deneyim silinemedi.' };
+    }
+  }
+
   function val(id) {
     var el = document.getElementById(id);
     return el ? el.value : '';
@@ -218,12 +302,16 @@
       if (n === 1) return stepOzet();
       if (n === 2) return stepEhliyet();
       if (n === 3) return stepEgitim();
+      if (n === 4) return stepDeneyim();
       if (n === 5) return stepTercih();
       return '';
     },
     collectStep: collectStep,
     gecerliMi: gecerliMi,
     tamamlanma: tamamlanma,
-    kaydet: kaydet
+    kaydet: kaydet,
+    deneyimYukle: deneyimYukle,
+    deneyimKaydet: deneyimKaydet,
+    deneyimSil: deneyimSil
   };
 })();
