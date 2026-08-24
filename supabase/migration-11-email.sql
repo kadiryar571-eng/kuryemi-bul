@@ -1,4 +1,15 @@
 -- ============================================================
+-- ⚠ BU DOSYA ARTIK GEÇERLİ DEĞİL — migration-38 devraldı.
+-- Anahtarı gövdeye gömme yöntemi 2026-08-24'te sessiz bir hataya yol açtı:
+-- api_key satırına yanlış değer yapıştırıldı, Resend 400 döndü, hiçbir mail
+-- gitmedi ve hiçbir yerde hata görünmedi. Anahtar artık Supabase Vault'ta.
+-- BU DOSYAYI YENİDEN ÇALIŞTIRMA — notify_via_email()'i Vault sürümünün
+-- üzerine yazar ve hatayı geri getirir. Bunun yerine:
+--   supabase/migration-38-email-vault.sql
+-- Bu dosya yalnız tarihçe için duruyor.
+-- ============================================================
+
+-- ============================================================
 -- Kuryemi Bul — Migration 11: Tek e-posta omurgası (Resend)
 -- Tüm transactional e-postalar Resend HTTP API'si ile gönderilir.
 -- notify_via_email(to_email, subject, html) — her yerden çağrılır (migration-12 trigger'ları dahil).
@@ -19,6 +30,7 @@ declare
   api_key   text := 'RESEND_API_KEY_BURAYA';
   from_mail text := 'bildirim@kuryemibul.com';   -- Resend'de doğrulanmış gönderen (domain)
   from_name text := 'Kuryemi Bul';
+  reply_to  text := 'operasyon@kuryemibul.com';  -- kullanıcı "Yanıtla" derse buraya düşer
 begin
   if to_email is null or to_email = '' or api_key = 'RESEND_API_KEY_BURAYA' then
     return;  -- alıcı yok ya da key ayarlanmamış → sessizce çık (in-app bildirim yine de oluşur)
@@ -32,6 +44,7 @@ begin
     ),
     body    := jsonb_build_object(
       'from',    from_name || ' <' || from_mail || '>',
+      'reply_to', reply_to,
       'to',      jsonb_build_array(to_email),
       'subject', subject,
       'html',    html

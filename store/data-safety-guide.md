@@ -102,7 +102,7 @@ Google Play, Kasım 2023'ten itibaren hesap silme mekanizması zorunlu kılıyor
 Şu an `ayarlar.html`'de hesap silme yok. İki seçenek:
 
 **Seçenek A (Hızlı):** Data Safety formunda "Hayır, kullanıcılar veri silemez" işaretle → açıklama kutusuna yaz:
-> "Hesap silme talebi için destek@kuryemibul.com ile iletişime geçin. 30 gün içinde tüm veriler silinir."
+> "Hesap silme talebi için info@kuryemibul.com ile iletişime geçin. 30 gün içinde tüm veriler silinir."
 
 **Seçenek B (Doğru):** `ayarlar.html`'e hesap silme butonu ekle → `SB.deleteAccount()` işlevi oluştur. (Sonraki sprint'e ekle)
 

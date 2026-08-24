@@ -568,7 +568,7 @@ window.SharedScreens = (function () {
            elle yapılıyor ve süre garanti edilmiyor.
          Cevaplar gerçekten var olan yollara indirildi. */
       { q: 'Profilimi nasıl doğrulatırım?',          a: 'Kimlik & Belgeler menüsünden belgelerinizi yükleyin. Belgeleriniz incelendikten sonra profilinize doğrulama rozeti eklenir.' },
-      { q: 'Bir firmayı nasıl şikayet edebilirim?',  a: 'destek@kuryemibul.com adresine firma adı ve ilan bağlantısıyla birlikte yazın. Aşağıdaki "E-posta Gönder" düğmesi doğrudan bu adresi açar.' },
+      { q: 'Bir firmayı nasıl şikayet edebilirim?',  a: 'operasyon@kuryemibul.com adresine firma adı ve ilan bağlantısıyla birlikte yazın. Aşağıdaki "E-posta Gönder" düğmesi doğrudan bu adresi açar.' },
       { q: 'Mesajlaşma ücretsiz mi?',                a: 'Evet, tüm mesajlaşma özellikleri ücretsizdir.' },
       { q: 'Bildirimler neden gelmiyor?',            a: 'Ayarlar > Bildirim Ayarları bölümünden kontrol edin.' }
     ];
@@ -596,7 +596,7 @@ window.SharedScreens = (function () {
 
         '<div class="kb-card" style="margin-top:16px;text-align:center">' +
           '<div style="font-weight:700;margin-bottom:8px">Hâlâ yardıma mı ihtiyacınız var?</div>' +
-          '<a href="mailto:destek@kuryemibul.com" class="btn btn--outline" style="--c-accent:var(--c-kurye)">E-posta Gönder</a>' +
+          '<a href="mailto:operasyon@kuryemibul.com" class="btn btn--outline" style="--c-accent:var(--c-kurye)">E-posta Gönder</a>' +
         '</div>' +
       '</div>'
     );

@@ -10,10 +10,6 @@
   var T = (window.KBI18N && window.KBI18N.t) || function (k) { return k; };
   function lang() { return window.KBI18N ? window.KBI18N.lang : 'tr'; }
 
-  var WA_NUMBER  = '905455960360';
-  var TEL_DISPLAY = '0545 596 0360';
-  var EMAIL       = 'kadiryar571@gmail.com';
-
   /* ─── SESSION & STATE ──────────────────────────────────────── */
   var SESSION = { user: null, profile: null };
 
