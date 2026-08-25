@@ -57,6 +57,25 @@
   var $bottomnav = document.getElementById('kb-bottomnav');
 
   /* ── Helpers ──────────────────────────────────────────── */
+  /* Ekran degisiminde ACIK KALMIS ust katmanlari temizle.
+     BULUNAN HATA: modal ve drawer document.body'ye ekleniyor, renderScreen ise
+     yalniz #kb-screen icerigini degistiriyordu. Basvuru modali veya menu acikken
+     ALT MENUDEN baska bir sayfaya gecince katman body'de asili kaliyor; tam ekran
+     kaplayici (position:fixed; inset:0) butun dokunuslari yutuyor ve uygulama
+     KAYDIRILAMAZ hale geliyordu. Uygulamayi tamamen kapatip acmak temizledigi
+     icin "kapatinca duzeliyor, bir sure sonra tekrar donuyor" seklinde
+     goruluyordu. Geri tusu icin closeTopLayer() ile cozulmustu, ama programatik
+     gezinme (Router.go / alt menu) o yoldan gecmiyor.
+     kb-call-overlay BILEREK haric: aktif gorusme ekran degisince kapanmamali. */
+  window.closeAllLayers = function () {
+    ['apply-overlay', 'apply-success-overlay'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.remove();
+    });
+    var drawer = document.getElementById('kb-drawer');
+    if (drawer && drawer.classList.contains('open') && window.closeDrawer) window.closeDrawer();
+  };
+
   window.renderScreen = function (html) {
     /* Ekran degisiminde acik haritayi YIK.
        innerHTML'i degistirmek MapLibre nesnesini oldurmez: WebGL baglami,
@@ -64,6 +83,22 @@
        harita ziyaretinde 20 baglam olusup 12'si tarayici tarafindan zorla
        kaybettirildi. Ayrinti: screens/shared.js -> destroyPremiumMap. */
     if (window.destroyPremiumMap) window.destroyPremiumMap();
+
+    /* Acik kalmis modal/menu katmanlarini da temizle — yoksa dokunuslari yutar. */
+    window.closeAllLayers();
+
+    /* Sohbet ekrani #kb-screen e kb-screen--chat ekler; o sinif CSS de
+       overflow:hidden !important demek, yani uygulamanin TEK kaydirma kabini
+       kapatir. Sinif 130 ms gecikmeli ekleniyor ve temizligi tek seferlik bir
+       hashchange dinleyicisine bagliydi: sohbete girip 130 ms dolmadan baska
+       sayfaya gecilirse dinleyici bosa tetiklenip tukeniyor, ardindan bekleyen
+       zamanlayici sinifi YENI ekrana ekliyordu. Sonuc: hicbir sayfa kaydirilamiyor,
+       yalnizca uygulamayi tamamen kapatip acmak duzeltiyordu.
+       Her ekran degisiminde sifirla; ihtiyaci olan ekran kendisi geri ekler. */
+    $screen.classList.remove('kb-screen--chat');
+    /* Harita ekrani ayni isi SATIR ICI stille yapiyordu ve geri almiyordu;
+       o da her ekrani kaydirilamaz birakiyordu. Ikisini de sifirla. */
+    $screen.style.overflow = '';
 
     $screen.classList.add('fading');
     setTimeout(function () {
@@ -169,11 +204,13 @@
       { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'      }
     ] : role === 'firma' ? [
       { icon: 'list',    label: 'İlanlarım',         route: '/firma/ilanlarim'  },
+      { icon: 'search',  label: 'Tüm İlanlar',       route: '/ilanlar-tumu'     },
       { icon: 'check',   label: 'Başvurular',        route: '/firma/basvurular' },
       { icon: 'heart',   label: 'Kaydedilenler',     route: '/favoriler'         },
       { icon: 'bell',    label: 'Bildirimler',       route: '/bildirimler'      }
     ] : [
       { icon: 'list',    label: 'İlanlarım',         route: '/isletme/ilanlarim' },
+      { icon: 'search',  label: 'Tüm İlanlar',       route: '/ilanlar-tumu'      },
       { icon: 'check',   label: 'Başvurular',        route: '/isletme/basvurular' },
       { icon: 'heart',   label: 'Kaydedilenler',     route: '/favoriler'           },
       { icon: 'map',     label: 'Yakın Kuryeler',    route: '/isletme/harita'     },
@@ -341,7 +378,19 @@
       }
       APP.user = user;
 
-      var profile = await SB.myProfile();
+      /* Profil okunamazsa ROLU TAHMIN ETME. Eskiden hata sessizce yutulup
+         'kurye' varsayiliyordu: isletme/firma kullanicisi yanlis panele dusuyor,
+         adi bos goruluyordu. Oturum gecerli oldugu icin /login'e de atmiyoruz —
+         o da "cikis yapmis" gibi gorunurdu. Bilgilendir + tekrar deneme sun. */
+      var profile;
+      try {
+        profile = await SB.myProfile();
+      } catch (e) {
+        console.warn('[App] profil okunamadi:', e);
+        hideSplash();
+        showBootError();
+        return;
+      }
       APP.profile = profile;
       APP.role    = (profile && profile.role) || 'kurye';
 
@@ -366,6 +415,20 @@
      Giriş yapılınca ve uygulama önplandayken heartbeat atılır.
      Çıkış, arka plana alma ve kapanışta offline'a düşülür.
      Sunucuda 2 dk heartbeat gelmezse otomatik offline sayılır. */
+  /* Oturum var ama profil cekilemedi (ag yok / token yenilenemedi).
+     Kullaniciyi cikis yapmis gibi gostermeden tekrar deneme sunar.
+     UYARI: bu dosya UTF-8; buraya emoji YAZMA, HTML entity kullan. */
+  function showBootError() {
+    hideBottomNav();
+    $screen.innerHTML =
+      '<div class="kb-empty" style="padding:48px 24px;text-align:center">' +
+        '<div style="font-size:44px;margin-bottom:12px">&#9888;</div>' +
+        '<div style="font-weight:700;margin-bottom:8px">Profil bilgileri al&#305;namad&#305;</div>' +
+        '<div style="opacity:.7;margin-bottom:20px">&#304;nternet ba&#287;lant&#305;n&#305;z&#305; kontrol edip tekrar deneyin. Oturumunuz a&#231;&#305;k kald&#305;.</div>' +
+        '<button class="btn btn--primary" onclick="location.reload()">Tekrar dene</button>' +
+      '</div>';
+  }
+
   var _hb = null;
   function startPresence() {
     if (!window.SB || !SB.isOn() || !SB.presencePing) return;
@@ -455,6 +518,17 @@
        Mobilde bu ekran HİÇ YOKTU: haritada Esnaf/Firma işaretçisine
        dokunan kullanıcı adından başka bir şey göremiyordu. */
     Router.define('/isveren/:id',    SharedScreens.isverenProfil);
+
+    /* Kurye profili — haritadaki kurye isaretcisi buraya gelir.
+       Eskiden /firma/aday/:id ve /isletme/aday/:id kullaniliyordu; o ekran
+       BASVURU id'si bekliyor, harita ise PROFIL id'si yolluyordu -> ekran
+       'Aday bulunamadi' deyip geri firlatiyordu. */
+    Router.define('/aday/:id',       SharedScreens.kuryeProfil);
+
+    /* Tum acik ilanlar — firma/esnaf mobilde yalniz KENDI ilanlarini
+       gorebiliyordu; sitede (ilanlar.html) tum ilanlar listeleniyor. */
+    Router.define('/ilanlar-tumu',   SharedScreens.tumIlanlar);
+    Router.define('/ilan/:id',       SharedScreens.ilanDetayGenel);
 
     Router.define('/bildirimler',    SharedScreens.bildirimler);
     Router.define('/favoriler',      SharedScreens.favoriler);

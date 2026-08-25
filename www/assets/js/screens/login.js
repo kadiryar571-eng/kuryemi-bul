@@ -116,8 +116,9 @@ window.LoginScreens = (function () {
   function _buildRegisterForm() {
     return '' +
       '<div class="kb-form-group">' +
-        '<label class="kb-label">Ad Soyad</label>' +
+        '<label class="kb-label" id="reg-name-label">Ad Soyad</label>' +
         '<input class="kb-input" type="text" id="reg-name" placeholder="Ahmet Yılmaz" autocomplete="name">' +
+        '<div id="reg-name-hint" class="kb-input-hint" style="font-size:.74rem;color:var(--muted);margin-top:5px">Bu ad profilinde ve ilanlarında görünür.</div>' +
       '</div>' +
       '<div class="kb-form-group">' +
         '<label class="kb-label">E-posta</label>' +
@@ -132,7 +133,7 @@ window.LoginScreens = (function () {
       '</div>' +
       '<div class="kb-form-group">' +
         '<label class="kb-label">Rol</label>' +
-        '<select class="kb-select" id="reg-role">' +
+        '<select class="kb-select" id="reg-role" onchange="LoginScreens._regRolDegisti()">' +
           '<option value="kurye">Kurye</option>' +
           '<option value="firma">Kurye Firması</option>' +
           '<option value="isletme">Esnaf</option>' +
@@ -147,6 +148,34 @@ window.LoginScreens = (function () {
       '</button>';
   }
 
+  /* Kayit formundaki ad alani ROLE GORE degisir.
+     Eskiden rol ne olursa olsun "Ad Soyad / Ahmet Yilmaz" yaziyordu: Esnaf ve
+     Kurye Firmasi olarak kayit olan kullanicilar kendi SAHIS adlarini giriyor,
+     o ad profiles.ad'a yaziliyor ve havuzda, haritada, ilan kartlarinda
+     isletme adi yerine kisi adi gorunuyordu. Profil duzenleme ekrani zaten
+     "Esnaf Adi" / "Kurye Firmasi Adi" diyor; kayit formu onunla ayni olmali. */
+  var _AD_ETIKET = {
+    kurye:   { label: 'Ad Soyad',           ph: 'Ahmet Yılmaz',              hint: 'Bu ad profilinde ve başvurularında görünür.' },
+    firma:   { label: 'Kurye Firması Adı',  ph: 'Örn. Hız Kurye Lojistik',   hint: 'Firmanızın ticari adı — kuryeler bu adı görür.' },
+    isletme: { label: 'İşletme Adı',        ph: 'Örn. Lezzet Pide Salonu',   hint: 'İşletmenizin adı — kuryeler bu adı görür, şahıs adınızı değil.' }
+  };
+
+  function _regRolDegisti() {
+    var sel = document.getElementById('reg-role');
+    var rol = (sel && sel.value) || 'kurye';
+    var cfg = _AD_ETIKET[rol] || _AD_ETIKET.kurye;
+    var lab = document.getElementById('reg-name-label');
+    var inp = document.getElementById('reg-name');
+    var hnt = document.getElementById('reg-name-hint');
+    if (lab) lab.textContent = cfg.label;
+    if (inp) {
+      inp.placeholder = cfg.ph;
+      /* Sahis adi otomatik tamamlamasi yalniz kurye icin anlamli. */
+      inp.setAttribute('autocomplete', rol === 'kurye' ? 'name' : 'organization');
+    }
+    if (hnt) hnt.textContent = cfg.hint;
+  }
+
   /* Register shortcut from entry screen */
   function register(ctx) {
     showLogin();
@@ -155,6 +184,7 @@ window.LoginScreens = (function () {
       setTimeout(function () {
         var sel = document.getElementById('reg-role');
         if (sel) sel.value = ctx.query.role;
+        _regRolDegisti();
       }, 200);
     }
   }
@@ -186,6 +216,7 @@ window.LoginScreens = (function () {
       _tab('kayit');
       var sel = document.getElementById('reg-role');
       if (sel) sel.value = role;
+      _regRolDegisti();   /* ad etiketini secilen role gore duzelt */
     }, 150);
   }
 
@@ -302,7 +333,9 @@ window.LoginScreens = (function () {
     _togglePass : _togglePass,
     _doLogin    : _doLogin,
     _doRegister : _doRegister,
-    _googleLogin: _googleLogin
+    _googleLogin: _googleLogin,
+    _regRolDegisti: _regRolDegisti,
+    _afterLogin : _afterLogin   /* supabase.js OAuth donusu de bunu cagirir */
   };
 
 })();

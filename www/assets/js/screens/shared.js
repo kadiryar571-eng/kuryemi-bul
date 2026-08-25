@@ -612,7 +612,10 @@ window.SharedScreens = (function () {
   function premDashPanel(cfg) {
     var stats = (cfg.stats || []).map(function (s) {
       var numHtml = s.id ? '<span id="' + escAttr(s.id) + '">' + esc(s.num) + '</span>' : esc(s.num);
-      return '<div class="prem-stat prem-stat--' + escAttr(s.color) + '" onclick="Router.go(\'' + escJs(s.route) + '\')">' +
+      /* wide:true -> kart iki sutunu birden kaplar. Ayni gorsel dil, tek fark
+         genislik; 2 sutunlu izgarada 5. kart yalniz basina kalmasin diye. */
+      var genis = s.wide ? ' prem-stat--wide' : '';
+      return '<div class="prem-stat prem-stat--' + escAttr(s.color) + genis + '" onclick="Router.go(\'' + escJs(s.route) + '\')">' +
         '<div class="prem-stat__top">' +
           '<div class="prem-stat__num prem-stat__num--' + escAttr(s.color) + '">' + numHtml + '</div>' +
           '<div class="prem-stat__icon prem-stat__icon--' + escAttr(s.color) + '">' + ICON[s.icon] + '</div>' +
@@ -1013,7 +1016,13 @@ window.SharedScreens = (function () {
     hideBottomNav();
 
     /* kb-screen must not scroll itself — chat-msgs handles internal scroll */
+    /* Ikinci savunma katmani: bu sinif 130 ms gecikmeli ekleniyor. Kullanici o
+       arada baska bir sayfaya gectiyse sinif YANLIS ekrana yapisiyor ve
+       overflow:hidden !important orada asili kaliyordu (bkz. app.js renderScreen
+       yorumu). Ates ederken hala ayni rotada miyiz diye bakiyoruz. */
+    var _chatHash = location.hash;
     function _enableChatLayout() {
+      if (location.hash !== _chatHash) return;   /* ekran degismis — dokunma */
       var ks = document.getElementById('kb-screen');
       if (ks) ks.classList.add('kb-screen--chat');
     }
@@ -1343,6 +1352,28 @@ window.SharedScreens = (function () {
             '<textarea id="pd-aciklama" class="kb-input" rows="4" style="resize:none;height:auto" placeholder="Kendinizden kısaca bahsedin…">' + _pdEsc(p.aciklama || '') + '</textarea>' +
           '</div>' +
 
+          /* KONUM — bu alan iki uygulamada da HIC doldurulamiyordu.
+             profiles.lat/lng bos oldugu icin harita neredeyse bostu: 8 yayinda
+             profilden yalnizca 1'inde koordinat vardi, 4 acik ilanin hicbirinde
+             yoktu (ilanin koordinati sahibinin profilinden gelir).
+             KVKK: lat/lng misafire kapali kolonlardir (migration-20), yalniz
+             giris yapmis kullanicilar gorur. Konum ISTEGE BAGLI, silinebilir. */
+          '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+            '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Konum</label>' +
+            '<div id="pd-konum-durum" style="font-size:.82rem;margin-bottom:8px">' +
+              (p.lat != null && p.lng != null
+                ? '<span style="color:var(--c-success,#22C55E)">✓ Konum kayıtlı</span>'
+                : '<span style="color:var(--muted)">Konum eklenmedi — haritada görünmüyorsunuz</span>') +
+            '</div>' +
+            '<div style="display:flex;gap:8px">' +
+              '<button type="button" id="pd-konum-btn" class="btn btn--outline btn--sm" style="flex:1" onclick="SharedScreens._pdKonumAl()">Konumumu Kullan</button>' +
+              (p.lat != null && p.lng != null
+                ? '<button type="button" class="btn btn--ghost btn--sm" onclick="SharedScreens._pdKonumSil()">Kaldır</button>'
+                : '') +
+            '</div>' +
+            '<div style="font-size:.72rem;color:var(--muted);margin-top:6px">Konumunuz yalnızca üye kullanıcılara, haritada yaklaşık konum olarak gösterilir.</div>' +
+          '</div>' +
+
         '</div>' +
 
         '<button id="pd-save-btn" class="btn btn--primary" style="background:' + accent + ';border-color:' + accent + '" onclick="SharedScreens._saveProfilDuzenle()">Kaydet</button>' +
@@ -1377,6 +1408,44 @@ window.SharedScreens = (function () {
     }, function(){});
   }
 
+  /* Profil konumu — kullanicinin GPS'ini alip profiles.lat/lng'ye yazar.
+     Bu alan daha once HIC doldurulamiyordu; harita bu yuzden bostu.
+     _pdKonum yalnizca form acikken yasar, Kaydet'e basilinca gonderilir. */
+  var _pdKonum = null;   /* {lat,lng} | 'sil' | null */
+
+  function _pdKonumDurum(html) {
+    var el = document.getElementById('pd-konum-durum');
+    if (el) el.innerHTML = html;
+  }
+
+  function _pdKonumAl() {
+    var btn = document.getElementById('pd-konum-btn');
+    if (!navigator.geolocation) { toast('Cihaz konum desteklemiyor'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Alınıyor…'; }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var lat = Number(pos.coords.latitude), lng = Number(pos.coords.longitude);
+      if (!isFinite(lat) || !isFinite(lng)) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Konumumu Kullan'; }
+        toast('Konum okunamadı');
+        return;
+      }
+      _pdKonum = { lat: lat, lng: lng };
+      if (btn) { btn.disabled = false; btn.textContent = 'Konumumu Kullan'; }
+      _pdKonumDurum('<span style="color:var(--c-success,#22C55E)">✓ Konum alındı — Kaydet\'e basın</span>');
+    }, function (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Konumumu Kullan'; }
+      /* 1 = PERMISSION_DENIED — kullaniciya ne yapacagini soyle, sessiz kalma. */
+      toast(err && err.code === 1
+        ? 'Konum izni verilmedi. Ayarlar > Uygulama izinleri bölümünden açabilirsiniz.'
+        : 'Konum alınamadı, tekrar deneyin.');
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  }
+
+  function _pdKonumSil() {
+    _pdKonum = 'sil';
+    _pdKonumDurum('<span style="color:var(--muted)">Konum kaldırılacak — Kaydet\'e basın</span>');
+  }
+
   async function _saveProfilDuzenle() {
     var btn   = document.getElementById('pd-save-btn');
     var errEl = document.getElementById('pd-error');
@@ -1398,6 +1467,13 @@ window.SharedScreens = (function () {
       aciklama  : acEl    ? acEl.value.trim()   : ''
     };
 
+    /* Konum: yalnizca kullanici bu formda acikca istediyse gonderilir.
+       Dokunulmadiysa lat/lng hic gonderilmez -> mevcut deger korunur. */
+    if (_pdKonum === 'sil') { fields.lat = null; fields.lng = null; }
+    else if (_pdKonum && isFinite(_pdKonum.lat) && isFinite(_pdKonum.lng)) {
+      fields.lat = _pdKonum.lat; fields.lng = _pdKonum.lng;
+    }
+
     if (isKurye) {
       var aracEl    = document.getElementById('pd-arac');
       var deneyimEl = document.getElementById('pd-deneyim');
@@ -1414,6 +1490,7 @@ window.SharedScreens = (function () {
     try {
       var updated = await SB.updateMyProfile(fields);
       APP.profile = updated;
+      _pdKonum = null;   /* kaydedildi -- bayragi temizle */
       toast('Profil güncellendi ✓');
       setTimeout(function(){ Router.back(); }, 700);
     } catch(e) {
@@ -1525,6 +1602,251 @@ window.SharedScreens = (function () {
     });
   }
 
+  /* ── KURYE PROFILI (profil id ile, veritabanindan) ───────
+     Haritadaki kurye isaretcisi eskiden /firma/aday/:id veya
+     /isletme/aday/:id rotasina gidiyordu. O ekran adayi _basCache
+     icinde -- yani BASVURULAR listesinde -- ariyor; harita ise havuzdan
+     gelen PROFIL id'si yolluyor. Ikisi farkli kimlik oldugu icin eslesme
+     hic bulunamiyor, ekran "Aday bulunamadi" deyip Router.back() cagiriyordu:
+     kullanici haritaya geri firliyor ve "tiklayinca hicbir sey olmuyor"
+     goruyordu. Ustelik _basCache yalniz Basvurular ekranina girilince
+     doluyor; dogrudan haritaya gidildiginde HER ZAMAN bostu.
+     Bu ekran profili id ile DB'den yukler ve basvuru baglami gerektirmez;
+     uc rol de (kurye, isletme, firma) ayni yeri kullanir. */
+  function kuryeProfil(ctx) {
+    var id = ctx && ctx.params ? ctx.params.id : null;
+    if (!id) { toast('Profil bulunamadı'); Router.back(); return; }
+
+    showAppBar('Kurye', true);
+    showBottomNav();
+    renderScreen('<div id="kp-root"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>');
+
+    if (!(window.SB && SB.isOn() && SB.profileById)) {
+      whenEl('kp-root', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">📡</div>' +
+          '<div class="kb-empty__title">Bağlantı kurulamadı</div></div>';
+      });
+      return;
+    }
+
+    SB.profileById(id).then(function (p) {
+      whenEl('kp-root', function (el) {
+        if (!p) {
+          el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">🔍</div>' +
+            '<div class="kb-empty__title">Profil bulunamadı</div></div>';
+          return;
+        }
+        showAppBar(p.ad || 'Kurye', true);
+
+        /* Puan yalniz GERCEK degerlendirme varsa; yoksa "0.0" kotu puan gibi okunur. */
+        var puanVar = Number(p.degerlendirme) > 0;
+        var puanHtml = puanVar
+          ? '<div class="kb-stars">' + ICON.star + ' ' + esc(Number(p.puan).toFixed(1)) +
+            ' <span style="color:var(--muted);font-weight:500">(' + esc(p.degerlendirme) + ' değerlendirme)</span></div>'
+          : '<div style="font-size:.8rem;color:var(--muted)">Henüz değerlendirilmemiş</div>';
+
+        var satirlar = [];
+        if (p.sehir)             satirlar.push('<div class="detail-row">' + ICON.pin + esc(p.sehir) + '</div>');
+        if (Number(p.deneyim) > 0) satirlar.push('<div class="detail-row">' + ICON.briefcase + esc(p.deneyim) + ' yıl deneyim</div>');
+        if (p.arac)              satirlar.push('<div class="detail-row">' + ICON.pin + 'Araç: ' + esc(p.arac) + '</div>');
+        if (Number(p.tamamlanan) > 0) satirlar.push('<div class="detail-row">' + ICON.list + esc(p.tamamlanan) + ' tamamlanan iş</div>');
+
+        var bolge = (p.bolgeler || []).filter(Boolean);
+        var sert  = (p.sertifikalar || []).filter(Boolean);
+        function cipler(baslik, arr) {
+          if (!arr.length) return '';
+          return '<div class="detail-section"><div class="detail-section__title">' + baslik + '</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+            arr.map(function (s) { return '<span class="kb-chip">' + esc(s) + '</span>'; }).join('') +
+            '</div></div>';
+        }
+
+        el.innerHTML =
+          '<div class="detail-hero">' +
+            '<div style="display:flex;align-items:center;gap:16px">' +
+              '<div class="kb-avatar kb-avatar--xl" style="background:var(--c-kurye)">' + initials(p.ad || '?') + '</div>' +
+              '<div style="min-width:0">' +
+                '<div style="font-size:1.1rem;font-weight:800">' + esc(p.ad || '—') + '</div>' +
+                '<div style="font-size:.8rem;color:var(--muted);margin:2px 0 6px">Kurye</div>' +
+                puanHtml +
+              '</div>' +
+            '</div>' +
+            (p.dogrulama === 'verified'
+              ? '<div style="margin-top:12px">' + _dogrulamaRozet() + '</div>' : '') +
+          '</div>' +
+          (satirlar.length ? '<div class="detail-section">' + satirlar.join('') + '</div>' : '') +
+          (p.aciklama ? '<div class="detail-section"><div class="detail-section__title">Hakkında</div>' +
+            '<div style="font-size:.86rem;color:var(--text);line-height:1.6">' + escLines(p.aciklama) + '</div></div>' : '') +
+          cipler('Çalıştığı Bölgeler', bolge) +
+          cipler('Sertifikalar', sert) +
+          '<div id="kp-extra"></div>' +
+          '<div class="detail-cta">' +
+            '<button class="btn btn--primary" style="width:100%" onclick="SharedScreens._isverenMesaj(\'' + escJs(id) + '\')">Mesaj Gönder</button>' +
+          '</div>';
+
+        /* Is deneyimi (migration-34) ve ozgecmis (migration-36).
+           Ikisi de RLS ile korunuyor: yalniz yayinlanmis/iliskili kayit doner. */
+        loadIsDeneyimi(id, 'kp-extra');
+        if (window.CvScreens) CvScreens.loadCv(id, 'kp-extra');
+      });
+    }).catch(function (e) {
+      console.warn('kuryeProfil:', e);
+      whenEl('kp-root', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">⚠️</div>' +
+          '<div class="kb-empty__title">Profil yüklenemedi</div></div>';
+      });
+    });
+  }
+
+  /* ── TUM ILANLAR (paylasilan, salt-okunur) ───────────────
+     Mobilde firma/esnaf kullanicisi SADECE kendi ilanlarini gorebiliyordu
+     ("Ilanlarim" sekmesi -> SB.myListings). Sitede ise ilanlar.html tum acik
+     ilanlari listeliyor (SB.openListings). Kullanici bu farki "sitede 4 ilan
+     var, APK'da 3" diye fark etti. Bu ekran o eksigi kapatir.
+     Kurye rolu kendi zengin ekranini (/kurye/ilanlar) kullanir; burada
+     BASVURU YOK — isveren baskasinin ilanina basvurmaz. */
+  var _tiCache = [];
+
+  function tumIlanlar() {
+    showAppBar('Tüm İlanlar', true);
+    showBottomNav();
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        '<div class="kb-form-group" style="margin-bottom:12px">' +
+          '<input id="ti-q" class="kb-input" placeholder="İlan, işveren veya şehir ara…" oninput="SharedScreens._tiAra()">' +
+        '</div>' +
+        '<div id="ti-say" style="font-size:.76rem;color:var(--muted);margin-bottom:10px"></div>' +
+        '<div id="ti-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
+      '</div>'
+    );
+
+    if (!(window.SB && SB.isOn())) {
+      whenEl('ti-list', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">📡</div>' +
+          '<div class="kb-empty__title">Bağlantı kurulamadı</div></div>';
+      });
+      return;
+    }
+
+    SB.openListings().then(function (list) {
+      _tiCache = list || [];
+      whenEl('ti-list', function () { _tiCiz(); });
+    }).catch(function (e) {
+      console.warn('tumIlanlar:', e);
+      whenEl('ti-list', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">⚠️</div>' +
+          '<div class="kb-empty__title">İlanlar yüklenemedi</div></div>';
+      });
+    });
+  }
+
+  function _tiNorm(s) {
+    var o = ''; s = String(s == null ? '' : s).normalize('NFD');
+    for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c < 0x300 || c > 0x36f) o += s[i].toLowerCase(); }
+    return o;
+  }
+
+  function _tiAra() { _tiCiz(); }
+
+  function _tiCiz() {
+    var el = document.getElementById('ti-list');
+    if (!el) return;
+    var qEl = document.getElementById('ti-q');
+    var q = _tiNorm(qEl && qEl.value || '');
+    var benim = (window.APP && APP.profile && APP.profile.id) || null;
+
+    var list = _tiCache.filter(function (l) {
+      if (!q) return true;
+      return _tiNorm([l.baslik, l.sahip, l.sehir, l.bolge].join(' ')).indexOf(q) !== -1;
+    });
+
+    var sayEl = document.getElementById('ti-say');
+    if (sayEl) sayEl.textContent = list.length ? list.length + ' açık ilan' : '';
+
+    if (!list.length) {
+      el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">🔍</div>' +
+        '<div class="kb-empty__title">' + (q ? 'Aramanla eşleşen ilan yok' : 'Açık ilan yok') + '</div></div>';
+      return;
+    }
+
+    el.innerHTML = list.map(function (l) {
+      var benimMi = benim && l.owner_id === benim;
+      var ucret = (l.maas_min || l.maas_max)
+        ? esc([l.maas_min, l.maas_max].filter(Boolean).join(' - ')) + ' ₺'
+        : '';
+      var satir = [l.sehir, l.bolge, l.arac].filter(Boolean).map(esc).join(' · ');
+      return '<div class="kb-card" style="margin-bottom:10px;cursor:pointer" onclick="Router.go(\'/ilan/' + escJs(l.id) + '\')">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">' +
+          '<div style="min-width:0">' +
+            '<div style="font-weight:700;margin-bottom:3px">' + esc(l.baslik || '—') + '</div>' +
+            '<div style="font-size:.8rem;color:var(--muted)">' + esc(l.sahip || '—') +
+              (benimMi ? ' <span class="kb-chip" style="font-size:.68rem">Sizin ilanınız</span>' : '') + '</div>' +
+          '</div>' +
+          (ucret ? '<div style="font-weight:700;white-space:nowrap;font-size:.85rem">' + ucret + '</div>' : '') +
+        '</div>' +
+        (satir ? '<div style="font-size:.78rem;color:var(--muted);margin-top:6px">' + satir + '</div>' : '') +
+        (l.son_basvuru ? '<div style="font-size:.74rem;color:var(--muted);margin-top:4px">Son başvuru: ' + esc(l.son_basvuru) + '</div>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  /* Salt-okunur ilan detayi. Kuryenin /kurye/ilan/:id ekraninda "Basvur"
+     dugmesi var; isveren baskasinin ilanina basvurmayacagi icin burada yok. */
+  function ilanDetayGenel(ctx) {
+    var id = ctx && ctx.params ? ctx.params.id : null;
+    if (!id) { toast('İlan bulunamadı'); Router.back(); return; }
+    showAppBar('İlan', true);
+    showBottomNav();
+    renderScreen('<div id="ig-root"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>');
+
+    if (!(window.SB && SB.isOn() && SB.listingById)) {
+      whenEl('ig-root', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">📡</div>' +
+          '<div class="kb-empty__title">Bağlantı kurulamadı</div></div>';
+      });
+      return;
+    }
+
+    SB.listingById(id).then(function (l) {
+      whenEl('ig-root', function (el) {
+        if (!l) {
+          el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">🔍</div>' +
+            '<div class="kb-empty__title">İlan bulunamadı</div></div>';
+          return;
+        }
+        showAppBar(l.baslik || 'İlan', true);
+        var satirlar = [];
+        if (l.sehir || l.bolge) satirlar.push('<div class="detail-row">' + ICON.pin + esc([l.sehir, l.bolge].filter(Boolean).join(' · ')) + '</div>');
+        if (l.arac)             satirlar.push('<div class="detail-row">' + ICON.briefcase + 'Araç: ' + esc(l.arac) + '</div>');
+        if (l.maas_min || l.maas_max) satirlar.push('<div class="detail-row">' + ICON.list + esc([l.maas_min, l.maas_max].filter(Boolean).join(' - ')) + ' ₺ ' + esc(l.maas_modeli || '') + '</div>');
+        if (l.calisma_sekli)    satirlar.push('<div class="detail-row">' + ICON.clock + esc(l.calisma_sekli) + '</div>');
+        if (l.son_basvuru)      satirlar.push('<div class="detail-row">' + ICON.clock + 'Son başvuru: ' + esc(l.son_basvuru) + '</div>');
+
+        el.innerHTML =
+          '<div class="detail-hero">' +
+            '<div style="font-size:1.1rem;font-weight:800">' + esc(l.baslik || '—') + '</div>' +
+            '<div style="font-size:.82rem;color:var(--muted);margin-top:4px">' + esc(l.sahip || '') + '</div>' +
+          '</div>' +
+          (satirlar.length ? '<div class="detail-section">' + satirlar.join('') + '</div>' : '') +
+          (l.aciklama ? '<div class="detail-section"><div class="detail-section__title">Açıklama</div>' +
+            '<div style="font-size:.86rem;line-height:1.6">' + escLines(l.aciklama) + '</div></div>' : '') +
+          (l.gorev_tanimi ? '<div class="detail-section"><div class="detail-section__title">Görev Tanımı</div>' +
+            '<div style="font-size:.86rem;line-height:1.6">' + escLines(l.gorev_tanimi) + '</div></div>' : '') +
+          (l.owner_id
+            ? '<div class="detail-cta">' +
+                '<button class="btn btn--outline" style="width:100%" onclick="Router.go(\'/isveren/' + escJs(l.owner_id) + '\')">İşvereni Gör</button>' +
+              '</div>'
+            : '');
+      });
+    }).catch(function (e) {
+      console.warn('ilanDetayGenel:', e);
+      whenEl('ig-root', function (el) {
+        el.innerHTML = '<div class="kb-empty" style="padding:32px"><div class="kb-empty__icon">⚠️</div>' +
+          '<div class="kb-empty__title">İlan yüklenemedi</div></div>';
+      });
+    });
+  }
+
   function _dogrulamaRozet() {
     return '<span class="kb-chip kb-chip--success">' + ICON.shield + ' Doğrulandı</span>';
   }
@@ -1600,6 +1922,12 @@ window.SharedScreens = (function () {
   return {
     bildirimler : bildirimler,
     isverenProfil : isverenProfil,
+    kuryeProfil   : kuryeProfil,
+    tumIlanlar    : tumIlanlar,
+    ilanDetayGenel: ilanDetayGenel,
+    _tiAra        : _tiAra,
+    _pdKonumAl    : _pdKonumAl,
+    _pdKonumSil   : _pdKonumSil,
     _isverenMesaj : _isverenMesaj,
     renderIsDeneyimi : renderIsDeneyimi,
     loadIsDeneyimi   : loadIsDeneyimi,
@@ -1820,15 +2148,54 @@ window.initPremiumMap = async function(role) {
   if (gpuFailed) return;   /* WebGL yok — hata mesaji basildi, devami anlamsiz */
 
   var items = [];
-  function pushItem(type, x, lat, lng, ad, sub) {
-    if (lat == null || lng == null) return;
-    items.push({ key: type + '-' + x.id, type: type, id: x.id, lat: +lat, lng: +lng, ad: ad || '', sub: sub || '', acil: !!(x.acil || x.acil_alinacak), premium: !!x.premium, maas: x.maas || x.ucret_min || x.ucret || null });
+  /* Il merkezleri — koordinati OLMAYAN kayitlari haritada gosterebilmek icin.
+     Olculdu (2026-08-25): yayindaki 8 profilden yalnizca 1'inde lat/lng vardi,
+     4 acik ilanin hicbirinde yoktu; harita neredeyse tamamen bostu. Sebep,
+     profil konumunun HIC girilemiyor olmasiydi (artik Profili Duzenle'de var).
+     Buradaki koordinatlar SEHIR MERKEZIDIR, kisinin gercek konumu DEGILDIR:
+     bu yuzden isaretci soluk/kesikli cizilir, kartta "yaklasik" yazar ve
+     "5 km yakinimda" suzgeci bu kayitlari ELER — yoksa uydurma bir mesafe
+     hesaplanmis olurdu (CLAUDE.md: uydurma sayi uretmek yasak). */
+  var IL_MERKEZ = {
+    'istanbul':[41.0082,28.9784], 'ankara':[39.9334,32.8597], 'izmir':[38.4237,27.1428],
+    'bursa':[40.1885,29.0610], 'antalya':[36.8969,30.7133], 'adana':[37.0000,35.3213],
+    'konya':[37.8746,32.4932], 'gaziantep':[37.0662,37.3833], 'sanliurfa':[37.1591,38.7969],
+    'kocaeli':[40.8533,29.8815], 'mersin':[36.8121,34.6415], 'diyarbakir':[37.9144,40.2306],
+    'hatay':[36.2025,36.1606], 'manisa':[38.6191,27.4289], 'kayseri':[38.7312,35.4787],
+    'samsun':[41.2867,36.3300], 'balikesir':[39.6484,27.8826], 'kahramanmaras':[37.5858,36.9371],
+    'van':[38.4891,43.4089], 'aydin':[37.8560,27.8416], 'denizli':[37.7765,29.0864],
+    'sakarya':[40.7569,30.3783], 'tekirdag':[40.9833,27.5167], 'mugla':[37.2153,28.3636],
+    'eskisehir':[39.7767,30.5206], 'mardin':[37.3212,40.7245], 'trabzon':[41.0015,39.7178],
+    'malatya':[38.3552,38.3095], 'erzurum':[39.9000,41.2700], 'ordu':[40.9839,37.8764]
+  };
+
+  function _ilKoordinat(sehir) {
+    if (!sehir) return null;
+    var k = normText(sehir).replace(/[^a-z]/g, '');
+    return IL_MERKEZ[k] || null;
   }
 
-  listings.forEach(function(l) { pushItem('ilan', l, l.lat, l.lng, l.baslik, [l.sahip, l.sehir, l.bolge].filter(Boolean).join(' · ')); });
-  kur.forEach(function(k) { pushItem('kurye', k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler||[])[0]].filter(Boolean).join(' · ')); });
-  isl.forEach(function(i) { pushItem('isletme', i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(' · ')); });
-  frm.forEach(function(f) { pushItem('firma', f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(', ')); });
+  function pushItem(type, x, lat, lng, ad, sub, sehir) {
+    var yaklasik = false;
+    if (lat == null || lng == null) {
+      var m = _ilKoordinat(sehir || x.sehir);
+      if (!m) return;                 /* sehri de bilinmiyor -> haritada yeri yok */
+      lat = m[0]; lng = m[1]; yaklasik = true;
+    }
+    /* ACIL: semada `acil` / `acil_alinacak` diye bir kolon YOK — gercek alan
+       listings.oncelik ('normal' | 'acil'). Eski kod olmayan iki alani okudugu
+       icin it.acil HER ZAMAN false'tu: haritadaki "Acil" cipi hicbir seyle
+       eslesmiyor, acildigi anda liste bombos kaliyordu (olculdu: 4 ilanin
+       3'u oncelik='acil' oldugu halde cip sifir sonuc veriyordu). */
+    var acilMi = !!(x.acil || x.acil_alinacak || x.oncelik === 'acil');
+    items.push({ key: type + '-' + x.id, type: type, id: x.id, lat: +lat, lng: +lng, ad: ad || '', sub: sub || '', yaklasik: yaklasik, acil: acilMi, premium: !!x.premium, maas: x.maas || x.ucret_min || x.ucret || null });
+  }
+
+  /* 7. arguman = sehir. Koordinat yoksa il merkezine dusulur (yaklasik isaretiyle). */
+  listings.forEach(function(l) { pushItem('ilan', l, l.lat, l.lng, l.baslik, [l.sahip, l.sehir, l.bolge].filter(Boolean).join(' · '), l.sehir); });
+  kur.forEach(function(k) { pushItem('kurye', k, k.lat, k.lng, k.ad, [k.sehir, (k.bolgeler||[])[0]].filter(Boolean).join(' · '), k.sehir); });
+  isl.forEach(function(i) { pushItem('isletme', i, i.lat, i.lng, i.ad, [i.tur, i.sehir].filter(Boolean).join(' · '), i.sehir); });
+  frm.forEach(function(f) { pushItem('firma', f, f.lat, f.lng, f.ad, (f.bolgeler||[]).slice(0,2).join(', '), f.sehir); });
 
   /* premium KALDIRILDI: onu açacak bir çip hiç yoktu ve süzdüğü `it.premium`
      alanı şemada da yok (profiles.seviye='premium' AYRI bir alan). Yani
@@ -1860,9 +2227,19 @@ window.initPremiumMap = async function(role) {
 
   function isVisible(it, q) {
     if (q && normText(it.ad + ' ' + it.sub).indexOf(q) === -1) return false;
+    /* "5 km yakinimda" suzgeci: konumu YAKLASIK (il merkezinden turetilmis)
+       kayitlar elenir. Sehir merkezine gore mesafe hesaplamak uydurma bir sayi
+       uretmek olurdu ve kullanici ona bakip yola cikiyor. */
+    if (activeLayers.yakin && it.yaklasik) return false;
     if (activeLayers.yakin && userLat !== null && distKm(userLat, userLng, it.lat, it.lng) > 5) return false;
-    if (activeLayers.acil && it.type === 'ilan' && it.acil) return true;
-    if (activeLayers.ilan && it.type === 'ilan' && !it.acil) return true;
+    /* Ilan gorunurlugu: "Acil" cipi bir VURGU suzgecidir, ilanlari gizlemez.
+       Eski kosul `activeLayers.ilan && it.type === 'ilan' && !it.acil` idi:
+       cip KAPALIYKEN acil ilanlar da eleniyordu. it.acil dogru hesaplandigi an
+       (bkz. pushItem) acil ilanlarin tamami haritadan kaybolacakti. */
+    if (it.type === 'ilan') {
+      if (activeLayers.acil) return !!it.acil;      /* cip acik: yalniz acil olanlar */
+      return !!activeLayers.ilan;                   /* cip kapali: tum ilanlar */
+    }
     if (activeLayers.kurye && it.type === 'kurye') return true;
     if (activeLayers.firma && (it.type === 'firma' || it.type === 'isletme')) return true;
     return false;
@@ -1875,11 +2252,12 @@ window.initPremiumMap = async function(role) {
 
   function pinEl(it, sel) {
     var cfg = PIN[it.type], s = sel ? 56 : 44, r = sel ? 17 : 13, c = s / 2;
+    var yak = !!it.yaklasik;   /* yaklasik konum: soluk govde + kesikli halka */
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + s + '">' +
       '<circle cx="' + c + '" cy="' + c + '" r="' + (r+9) + '" fill="' + cfg.color + '" fill-opacity="0.15"/>' +
       (sel ? '<circle cx="' + c + '" cy="' + c + '" r="' + (r+16) + '" fill="' + cfg.color + '" fill-opacity="0.07"/>' : '') +
-      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="' + cfg.color + '" fill-opacity="' + (sel ? '1' : '0.88') + '"/>' +
-      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="' + (sel ? '2.5' : '2') + '"/>' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="' + cfg.color + '" fill-opacity="' + (yak ? '0.45' : (sel ? '1' : '0.88')) + '"/>' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="white" stroke-opacity="' + (yak ? '0.6' : '0.85') + '" stroke-width="' + (sel ? '2.5' : '2') + '"' + (yak ? ' stroke-dasharray="3 3"' : '') + '/>' +
       '<text x="' + c + '" y="' + c + '" font-size="' + (sel ? 14 : 11) + '" text-anchor="middle" dominant-baseline="central">' + cfg.emoji + '</text>' +
       '</svg>';
     var el = document.createElement('div');
@@ -1933,15 +2311,22 @@ window.initPremiumMap = async function(role) {
 
   function bcard(it) {
     var cfg = PIN[it.type];
-    var dist = (userLat !== null) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + ' km' : null;
+    /* Yaklasik konumda mesafe YAZILMAZ — il merkezine olan uzaklik yaniltir. */
+    var dist = (userLat !== null && !it.yaklasik) ? distKm(userLat, userLng, it.lat, it.lng).toFixed(1) + ' km' : null;
+    var yaklasikNot = it.yaklasik
+      ? '<div class="spm-bcard__meta-item" style="opacity:.75">Yaklaşık konum · şehir merkezi</div>'
+      : '';
     var r = window.APP && APP.role || role;
     var actionHtml = '';
     if (it.type === 'ilan' && r === 'kurye') {
       actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/kurye/ilan/' + escJs(it.id)+ '\')">Hızlı Başvur</button>';
-    } else if (it.type === 'kurye' && r === 'firma') {
-      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/firma/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
-    } else if (it.type === 'kurye' && r === 'isletme') {
-      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/isletme/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
+    } else if (it.type === 'kurye') {
+      /* Rol farketmeksizin ayni ekran. Eskiden firma -> /firma/aday/:id,
+         isletme -> /isletme/aday/:id gidiyordu; o iki ekran BASVURU id'si
+         bekliyor, harita ise PROFIL id'si yolluyordu -> 'Aday bulunamadi'
+         deyip geri firlatiyorlardi. Kurye rolunde ise buton HIC yoktu.
+         /aday/:id profili id ile DB'den yukler, basvuru baglami gerekmez. */
+      actionHtml = '<button class="spm-bcard__btn spm-bcard__btn--primary" onclick="event.stopPropagation();Router.go(\'/aday/' + escJs(it.id)+ '\')">Profili Gör</button>';
     } else if (it.type === 'isletme' || it.type === 'firma') {
       /* ESKİDEN BURADA HİÇBİR ŞEY YOKTU.
          Esnaf ve Kurye Firması işaretçilerine dokunan kullanıcı, adından
@@ -1957,7 +2342,7 @@ window.initPremiumMap = async function(role) {
         '<div class="spm-bcard__info"><div class="spm-bcard__title">' + esc(it.ad || '') + '</div><div class="spm-bcard__sub">' + esc(it.sub || '') + '</div></div>' +
         '<span class="spm-bcard__badge spm-bcard__badge--' + escAttr(it.type)+ '">' + cfg.label + '</span>' +
       '</div>' +
-      '<div class="spm-bcard__meta">' + maasHtml + distHtml + '</div>' +
+      '<div class="spm-bcard__meta">' + maasHtml + distHtml + yaklasikNot + '</div>' +
       /* Eşleşme yüzdesi ve çubuğu KALDIRILDI — sayı uydurmaydı
          (bkz. matchScore yorumu). */
       (actionHtml ? '<div class="spm-bcard__action">' + actionHtml + '</div>' : '') +

@@ -315,9 +315,16 @@ window.KuryeScreens = (function () {
     if (bar) bar.style.display = 'none';
     showBottomNav();
     setActiveNav('harita');
+    /* SIRA ONEMLI: overflow ARTIK renderScreen SONRASINDA veriliyor.
+       Eskiden once satir ici stil yaziliyor ve HIC geri alinmiyordu: harita
+       alt menudeki bes sekmeden biri, bir kez acan kullanicinin #kb-screen i
+       kalici olarak overflow:hidden kaliyor ve BUTUN sayfalar kaydirilamaz
+       hale geliyordu. Uygulamayi tamamen kapatmak disinda cikisi yoktu.
+       renderScreen artik satir ici overflow u sifirliyor; harita kendi
+       ihtiyacini ondan SONRA yeniden veriyor. */
+    renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
     var kbScreen = document.getElementById('kb-screen');
     if (kbScreen) kbScreen.style.overflow = 'hidden';
-    renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
     if (window.initPremiumMap) {
       setTimeout(function() { window.initPremiumMap('kurye'); }, 200);
     }
@@ -657,8 +664,18 @@ window.KuryeScreens = (function () {
       return;
     }
 
-    var j = ILANLAR_BASIT.find(function (x) { return x.id === id; }) || ILANLAR_BASIT[0];
-    _renderIlanDetay(j.id, j.title, j.company, '', j.location, j.type);
+    /* Buraya yalniz UUID olmayan bir id ile ya da baglanti yokken dusulur.
+       ILANLAR_BASIT demo verisi kaldirilinca bos dizi olarak kaldi; eski kod
+       ILANLAR_BASIT[0] okuyup undefined aliyor ve hemen ardindan j.id diyerek
+       TypeError firlatiyordu -> ilan detayi CEVRIMDISI iken bembeyaz ekran.
+       Uydurma icerik basmak yasak (CLAUDE.md), o yuzden bos durum gosteriyoruz. */
+    renderScreen(
+      '<div class="kb-empty" style="padding:48px 24px;text-align:center">' +
+        '<div class="kb-empty__icon">📡</div>' +
+        '<div class="kb-empty__title">İlan açılamadı</div>' +
+        '<div class="kb-empty__sub">Bağlantınızı kontrol edip tekrar deneyin.</div>' +
+      '</div>'
+    );
   }
 
   function _renderIlanDetay(id, title, company, aciklama, konum, tip) {

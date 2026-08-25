@@ -69,7 +69,10 @@ window.FirmaScreens = (function () {
         { id: 'fps-ilan',    num: '—', label: 'Açık İlan',          icon: 'list',  color: 'green',  route: '/firma/ilanlarim',  action: 'Yönet'    },
         { id: 'fps-bas',     num: '—', label: 'Yeni Başvuru',        icon: 'check', color: 'blue',   route: '/firma/basvurular', action: 'İncele'   },
         { id: 'fps-mesaj',   num: '—', label: 'Okunmamış Mesaj',     icon: 'msg',   color: 'orange', route: '/firma/mesajlar',   action: 'Detaylar' },
-        { id: 'fps-goruntu', num: '—', label: 'Profil Görüntülenme', icon: 'eye',   color: 'purple', route: '/firma/profil',     action: 'Detaylar' }
+        { id: 'fps-goruntu', num: '—', label: 'Profil Görüntülenme', icon: 'eye',   color: 'purple', route: '/firma/profil',     action: 'Detaylar' },
+        /* Tum acik ilanlar. Bu panelin "Acik Ilan" sayaci yalniz KENDI
+           ilanlarini sayiyor; kullanici sitede 4, APK'da 3 gorup sordu. */
+        { id: 'fps-tumilan', num: '—', label: 'Tüm İlanlar', icon: 'search', color: 'purple', route: '/ilanlar-tumu', action: 'Gözat', wide: true }
       ],
 
       contentHtml: (
@@ -133,6 +136,15 @@ window.FirmaScreens = (function () {
         set('fps-mesaj',   ds.okunmamis_mesaj || 0);
         set('fps-goruntu', ds.goruntulenme || 0);
       }
+    } catch (e) {}
+
+    /* "Tum Ilanlar" sayaci AYRI sorgudur: my_dashboard_stats() yalniz
+       kullanicinin KENDI ilanlarini sayar, bu kart platformdaki tum acik
+       ilanlari gosterir (sitede 4 / APK'da 3 farkinin sebebi buydu).
+       Sorgu basarisiz olursa kart '—' kalir; uydurma sayi basilmaz. */
+    try {
+      var tumIlan = (await SB.openListings()) || [];
+      set('fps-tumilan', tumIlan.length);
     } catch (e) {}
 
     /* Son başvurular — gerçek adaylar */
@@ -221,9 +233,16 @@ window.FirmaScreens = (function () {
     if (bar) bar.style.display = 'none';
     showBottomNav();
     setActiveNav('harita');
+    /* SIRA ONEMLI: overflow ARTIK renderScreen SONRASINDA veriliyor.
+       Eskiden once satir ici stil yaziliyor ve HIC geri alinmiyordu: harita
+       alt menudeki bes sekmeden biri, bir kez acan kullanicinin #kb-screen i
+       kalici olarak overflow:hidden kaliyor ve BUTUN sayfalar kaydirilamaz
+       hale geliyordu. Uygulamayi tamamen kapatmak disinda cikisi yoktu.
+       renderScreen artik satir ici overflow u sifirliyor; harita kendi
+       ihtiyacini ondan SONRA yeniden veriyor. */
+    renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
     var kbScreen = document.getElementById('kb-screen');
     if (kbScreen) kbScreen.style.overflow = 'hidden';
-    renderScreen(window._spmShell ? window._spmShell() : '<div id="spm-map" style="height:100%;background:#0f0b1e"></div>');
     if (window.initPremiumMap) {
       setTimeout(function() { window.initPremiumMap('firma'); }, 200);
     }
@@ -232,6 +251,10 @@ window.FirmaScreens = (function () {
   /* ── 3. İLANLARIM ──────────────────────────────────────── */
   function ilanlarim() {
     showAppBar('İlanlarım', false,
+      /* Tum acik ilanlara hizli erisim. Bu sekme yalniz KENDI ilanlarini
+         gosteriyor; sitede (ilanlar.html) tum ilanlar listeleniyor ve fark
+         "sitede 4 ilan var, APK'da 3" seklinde sikayet olarak geldi. */
+      '<button class="kb-appbar__action" onclick="Router.go(\'/ilanlar-tumu\')" title="Tüm ilanlar">' + ICON.search + '</button>' +
       '<button class="kb-appbar__action" onclick="Router.go(\'/firma/ilan/yeni\')">' + ICON.plus + '</button>'
     );
     showBottomNav();

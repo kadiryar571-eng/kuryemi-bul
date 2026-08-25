@@ -200,7 +200,17 @@
   async function myProfile() {
     var u = await getUser();
     if (!u) return null;
+    /* Sorgu HATASI ile "satir yok" AYRI seylerdir. Ikisi ayni sayilirsa hata
+       durumunda adi bos, rolu "kurye" olan SAHTE profil doner: kullanici isimsiz
+       gorunur ve isletme/firma ise yanlis panele yonlendirilir. Token suresi
+       dolmus olabilir -> bir kez yenileyip tekrar dene, yine olmazsa FIRLAT.
+       (Ayni duzeltme www/assets/js/supabase.js icinde de var.) */
     var r = await client.from("profiles").select("*").eq("user_id", u.id).maybeSingle();
+    if (r.error) {
+      try { await client.auth.refreshSession(); } catch (e) {}
+      r = await client.from("profiles").select("*").eq("user_id", u.id).maybeSingle();
+      if (r.error) throw r.error;
+    }
     var base = r.data ? fromDb(r.data)
       : { id: null, user_id: u.id, role: (u.user_metadata && u.user_metadata.role) || "kurye", ad: (u.user_metadata && u.user_metadata.ad) || "", telefon: "", email: "" };
     // İletişim bilgisi korumalı tablodan (sahip kendi satırını okur)
@@ -234,7 +244,19 @@
        kapatılamıyordu, (2) havuzdan gizlenmiş bir kullanıcı profilinde
        herhangi bir alanı düzenlediğinde sessizce yeniden yayına
        alınıyordu. İkincisi bir gizlilik ihlali. */
-    if (fields.yayinda === undefined) fields.yayinda = true;
+    /* Ek kural: ADI OLMAYAN profil yayina alinmaz. Eskiden ad bos olsa da
+       true yaziliyordu ve havuzda ISIMSIZ kart olusuyordu (mobilde olculdu).
+       CLAUDE.md: "Profil tamamlanmadan yayinda: false". */
+    var _adVar;
+    if (fields.ad !== undefined) {
+      _adVar = !!String(fields.ad || '').trim();
+    } else {
+      try {
+        var _cur = await client.from("profiles").select("ad").eq("user_id", u.id).maybeSingle();
+        _adVar = !!(_cur.data && String(_cur.data.ad || '').trim());
+      } catch (e) { _adVar = false; }
+    }
+    if (fields.yayinda === undefined) fields.yayinda = _adVar;
     var r = await client.from("profiles").update(fields).eq("user_id", u.id).select().maybeSingle();
     if (r.error) throw r.error;
     if (telefon !== undefined) {

@@ -74,7 +74,7 @@
   var LEGACY_REDIRECT = "com.kuryemibul.app://";   // yalnız geriye dönük yakalama
 
   // Google ile giriş/kayıt (OAuth).
-  // Web: aynı sekmede redirect → giris.html oturum tespiti.
+  // Web: ayni sekmede redirect -> index.html (SPA acilista oturumu algilar).
   // Native (Capacitor app): Google WebView'i engellediği için sistem tarayıcısında aç,
   //   dönüşü deep-link (com.kuryemibul.app://callback) ile yakala (initNativeAuth).
   async function signInWithGoogle() {
@@ -92,7 +92,7 @@
     }
     return client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: location.origin + "/giris.html" }
+      options: { redirectTo: location.origin + "/index.html" }   /* SPA: giris.html YOK */
     });
   }
   // Native deep-link dönüşü: Google'dan gelen code'u oturuma çevir + yönlendir
@@ -138,8 +138,15 @@
         if (result.error) throw result.error;
         var prof = null;
         try { prof = await myProfile(); } catch (e) {}
-        location.href = (!prof || !prof.ad) ? "onboarding.html"
-          : (window.KB && KB.roleToPanel ? KB.roleToPanel(prof.role) : "index.html");
+        /* SPA: onboarding.html ve KB.roleToPanel BURADA YOK - ikisi de docs/ tarafina ait.
+           Normal girisin kullandigi yolun aynisi kullanilir: rol -> #/rol/panel + reload. */
+        if (window.LoginScreens && LoginScreens._afterLogin) {
+          await LoginScreens._afterLogin();
+        } else {
+          var _rol = (prof && prof.role) || "kurye";
+          if (window.Router) Router.go("/" + _rol + "/panel");
+          location.reload();
+        }
       } catch (e) {
         console.error("native oauth hatası:", e);
         var errMsg = (e && e.message) || "Bilinmeyen hata";
@@ -190,11 +197,32 @@
     if (client) client.auth.onAuthStateChange(function (event, session) { cb(event, session && session.user); });
   }
 
+  /* Capacitor WebView'i arka plandayken JS zamanlayicilarini dondurur; supabase-js'in
+     token yenileme sayaci da durur. Uygulama on plana gelince yeniden baslatilmazsa
+     access token suresi dolmus halde kalir ve ilk sorgu 401 alir (bkz. myProfile).
+     Supabase'in native istemciler icin onerdigi yasam dongusu: native.js cagirir. */
+  function startAutoRefresh() {
+    try { if (client && client.auth.startAutoRefresh) return client.auth.startAutoRefresh(); } catch (e) {}
+  }
+  function stopAutoRefresh() {
+    try { if (client && client.auth.stopAutoRefresh) return client.auth.stopAutoRefresh(); } catch (e) {}
+  }
+
   /* ---------- PROFİL ---------- */
   async function myProfile() {
     var u = await getUser();
     if (!u) return null;
+    /* Sorgu HATASI ile "satir yok" AYRI seylerdir. Eskiden ikisi de ayni sayiliyordu:
+       hata durumunda adi bos, rolu "kurye" olan SAHTE bir profil donuyordu -> kullanici
+       arka plandan donunce isimsiz gorunuyor, isletme/firma ise yanlis panele dusuyordu.
+       Capacitor WebView'i arka planda zamanlayicilari dondurdugu icin access token
+       suresi dolmus olabilir: bir kez oturumu yenileyip tekrar dene, yine olmazsa FIRLAT. */
     var r = await client.from("profiles").select("*").eq("user_id", u.id).maybeSingle();
+    if (r.error) {
+      try { await client.auth.refreshSession(); } catch (e) {}
+      r = await client.from("profiles").select("*").eq("user_id", u.id).maybeSingle();
+      if (r.error) throw r.error;
+    }
     var base = r.data ? fromDb(r.data)
       : { id: null, user_id: u.id, role: (u.user_metadata && u.user_metadata.role) || "kurye", ad: (u.user_metadata && u.user_metadata.ad) || "", telefon: "", email: "" };
     // İletişim bilgisi korumalı tablodan (sahip kendi satırını okur)
@@ -212,7 +240,23 @@
     var telefon = fields.telefon;
     delete fields.telefon;
     delete fields.email;
-    fields.yayinda = true; // profil kaydedildi -> havuzda görünür
+    /* yayinda = HAVUZDA GORUNUR demek. Eskiden her guncellemede kosulsuz true
+       yapiliyordu; adini bos birakip kaydeden kullanici havuza ISIMSIZ bir kart
+       olarak dusuyordu (olculdu: pool('kurye') icinde ad:"" olan kayit vardi).
+       Avatar gibi tek alanlik bir guncelleme de tamamlanmamis profili yayina
+       aliyordu. CLAUDE.md: "Profil tamamlanmadan yayinda: false".
+       Kural: adi olan yayinda, olmayan degil — adini silen havuzdan da cikar. */
+    var _adVar;
+    if (fields.ad !== undefined) {
+      _adVar = !!String(fields.ad || '').trim();
+    } else {
+      try {
+        var _cur = await client.from("profiles").select("ad").eq("user_id", u.id).maybeSingle();
+        _adVar = !!(_cur.data && String(_cur.data.ad || '').trim());
+      } catch (e) { _adVar = false; }
+    }
+    /* Cagiran acikca yayinda:false derse (gizlilik anahtari) ona dokunma. */
+    if (fields.yayinda === undefined) fields.yayinda = _adVar;
     var r = await client.from("profiles").update(fields).eq("user_id", u.id).select().maybeSingle();
     if (r.error) throw r.error;
     if (telefon !== undefined) {
@@ -750,7 +794,15 @@
     return (r.data || []).map(listingFromDb);
   }
   async function openListings() {
-    var r = await client.from("listings").select("*, owner:owner_id(ad,lat,lng,sehir)").eq("durum", "acik").order("created_at", { ascending: false });
+    /* PARITE: docs/ tarafi suresi gecmis ilani gizliyor, mobil gizlemiyordu.
+       Sonucu: son_basvuru tarihi gecen bir ilan sitede kaybolurken APK'da
+       gorunmeye devam ediyor ve kurye KAPANMIS ilana basvurabiliyordu.
+       Filtre docs/assets/js/supabase.js ile birebir ayni tutulmali. */
+    var today = new Date().toISOString().slice(0, 10);
+    var r = await client.from("listings").select("*, owner:owner_id(ad,role,lat,lng,sehir)")
+      .eq("durum", "acik")
+      .or("son_basvuru.is.null,son_basvuru.gte." + today)
+      .order("created_at", { ascending: false });
     if (r.error) { console.warn("openListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
@@ -1186,6 +1238,7 @@
     canMessage: canMessage, sendMessage: sendMessage, myConversations: myConversations,
     threadWith: threadWith, markThreadRead: markThreadRead, unreadMessageCount: unreadMessageCount, subscribeMessages: subscribeMessages,
     signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
+    startAutoRefresh: startAutoRefresh, stopAutoRefresh: stopAutoRefresh,
     resetPassword: resetPassword, updatePassword: updatePassword,
     verifyEmail: verifyEmail, resendVerification: resendVerification,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,

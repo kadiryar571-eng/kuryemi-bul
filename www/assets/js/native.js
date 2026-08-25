@@ -49,7 +49,14 @@
     if (!App) return;
 
     App.addListener('appStateChange', function (state) {
-      if (!state.isActive) return;
+      /* Arka plana gecerken token yenileme sayacini durdur, on plana gelince
+         yeniden baslat. Yoksa WebView zamanlayicilari dondurdugu icin token
+         suresi dolmus halde kalir ve ilk sorgu 401 doner (isimsiz profil hatasi). */
+      if (!state.isActive) {
+        if (window.SB && SB.stopAutoRefresh) SB.stopAutoRefresh();
+        return;
+      }
+      if (window.SB && SB.startAutoRefresh) SB.startAutoRefresh();
       // Harita ekranı açıkken (konum izni dialogu) navigate etme
       if (document.getElementById('spm-map')) return;
       if (window.SB && SB.getUser) {
