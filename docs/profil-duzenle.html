@@ -1234,11 +1234,11 @@
         kapasite: parseInt(document.getElementById('editKapasite').value) || 0,
       };
       try {
-        if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+        await bolumKaydet(fields);
         var ok = document.getElementById('roleOk');
         ok.style.display = 'flex';
         setTimeout(function(){ ok.style.display = 'none'; }, 2500);
-      } catch(e) {}
+      } catch(e) { bolumHata(e); }
       btn.disabled = false; btn.textContent = 'Kaydet';
     });
 
@@ -1247,6 +1247,24 @@
       if (!val) return [];
       if (Array.isArray(val)) return val;
       try { return JSON.parse(val); } catch(e) { return String(val).split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+    }
+
+    /* Bölüm formlarının (rol, çalışma, araç) ortak kaydı. Eskiden her biri
+       `if (SB.isOn()) await updateMyProfile(...)` + `catch(e) {}` idi:
+       bağlantı yoksa kaydetmeden "kaydedildi" gösteriyor, sunucu reddederse
+       (ör. eksik kolon — 12 alan yüzünden iki form HİÇ kaydetmiyordu,
+       migration-39) hatayı yutuyordu. */
+    async function bolumKaydet(fields) {
+      if (!(window.SB && SB.isOn())) throw new Error('baglanti-yok');
+      await SB.updateMyProfile(fields);
+    }
+    function bolumHata(err) {
+      var msg = (err && err.message === 'baglanti-yok')
+        ? 'Sunucuya bağlanılamadı — değişiklikler kaydedilmedi.'
+        : 'Değişiklikler kaydedilemedi. Lütfen tekrar deneyin.';
+      console.warn('profil kaydı:', err);
+      if (window.KBMotion && KBMotion.showErrorToast) KBMotion.showErrorToast(msg);
+      else alert(msg);
     }
 
     function wiGetVals(groupEl) {
@@ -1359,14 +1377,14 @@
         btn.disabled = true; btn.textContent = 'Kaydediliyor…';
         var fields = wiCollect();
         try {
-          if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+          await bolumKaydet(fields);
           if (profile) Object.assign(profile, fields);
           wiPopulateView(profile);
           wiExitEdit();
           var fb = document.getElementById('wiFeedback');
           fb.style.display = 'flex';
           setTimeout(function(){ fb.style.display = 'none'; }, 3500);
-        } catch(err) {}
+        } catch(err) { bolumHata(err); }
         btn.disabled = false; btn.textContent = 'Kaydet';
       });
 
@@ -1551,10 +1569,10 @@
           abAutoTimer = setTimeout(async function() {
             var fields = abCollect();
             try {
-              if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+              await bolumKaydet(fields);
               if (profile) Object.assign(profile, fields);
               abPopulateView(profile);
-            } catch(e) {}
+            } catch(e) { bolumHata(e); }
             if (as) as.style.display = 'none';
           }, 2500);
         });
@@ -1577,14 +1595,14 @@
         btn.disabled = true; btn.textContent = 'Kaydediliyor…';
         var fields = abCollect();
         try {
-          if (window.SB && SB.isOn()) await SB.updateMyProfile(fields);
+          await bolumKaydet(fields);
           if (profile) Object.assign(profile, fields);
           abPopulateView(profile);
           abExitEdit();
           var fb = document.getElementById('abFeedback');
           fb.style.display = 'flex';
           setTimeout(function(){ fb.style.display = 'none'; }, 3500);
-        } catch(err) {}
+        } catch(err) { bolumHata(err); }
         btn.disabled = false; btn.textContent = 'Kaydet';
       });
 
@@ -1628,7 +1646,9 @@
 
     var STATUS_MAP = {
       eksik:             { badge: '● Eksik',               hint: '' },
-      yuklendi:          { badge: '↑ Yüklendi',            hint: 'Belgeniz alındı, admin incelemesi bekleniyor.' },
+      /* "admin incelemesi bekleniyor" diyordu — bu belgeler hiçbir inceleme
+         kuyruğuna düşmüyor (kimlik doğrulama başvurusu ayrı: mobil uygulama). */
+      yuklendi:          { badge: '↑ Yüklendi',            hint: 'Belgeniz güvenli alana yüklendi.' },
       inceleniyor:       { badge: '🔍 İnceleniyor',        hint: 'Belgeniz inceleme sürecindedir.' },
       onaylandi:         { badge: '✓ Onaylandı',           hint: '' },
       reddedildi:        { badge: '✗ Reddedildi',          hint: 'Belge reddedildi. Lütfen geçerli bir belge yeniden yükleyin.' },
@@ -1922,11 +1942,17 @@
       if (!cfg) return;
       var card = document.getElementById('docCard_' + docId);
       if (card) card.style.opacity = '0.6';
+      /* Eskiden yükleme başarısız olsa (veya bağlantı olmasa) da kart
+         "Yüklendi" oluyor ve başarı bildirimi çıkıyordu — dosya sunucuya
+         hiç gitmeden. Artık yükleme olmadan kayıt da bildirim de yok. */
+      function basarisiz(msg) {
+        if (card) card.style.opacity = '';
+        showToast(msg, 'error');
+      }
+      if (!(window.SB && SB.isOn())) { basarisiz('Sunucuya bağlanılamadı — belge yüklenmedi.'); return; }
       genThumb(file).then(function(thumbUrl) {
-        var storageP = (window.SB && SB.isOn())
-          ? SB.uploadKycDoc(file).catch(function(){ return null; })
-          : Promise.resolve(null);
-        storageP.then(function(storageUrl) {
+        SB.uploadKycDoc(file).then(function(storageUrl) {
+          if (!storageUrl) { basarisiz(cfg.title + ' yüklenemedi. Tekrar deneyin.'); return; }
           var docs = loadDocs();
           var now  = new Date().toISOString();
           docs[docId] = {
@@ -1945,6 +1971,9 @@
           addLog(docId, isReplace ? 'replace' : 'upload', isReplace ? 'Belge güncellendi.' : 'Belge yüklendi.');
           renderDocGrid();
           showToast(cfg.title + (isReplace ? ' güncellendi.' : ' yüklendi.'), 'success');
+        }).catch(function(e) {
+          console.warn('belge yüklenemedi:', e);
+          basarisiz(cfg.title + ' yüklenemedi. Tekrar deneyin.');
         });
       });
     }
