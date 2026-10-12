@@ -391,7 +391,7 @@ window.FirmaScreens = (function () {
           '<option>Market / Alışveriş</option><option>Motokurye</option><option>Genel Kurye</option>' +
         '</select></div>' +
       '<div class="kb-form-group"><label class="kb-label">Şehir *</label>' +
-        '<input class="kb-input" id="il-sehir" type="text" placeholder="İstanbul"></div>' +
+        '<select class="kb-input" id="il-sehir">' + ilOptions('') + '</select></div>' +
       '<div class="kb-form-group"><label class="kb-label">İlçe / Bölge</label>' +
         '<input class="kb-input" id="il-bolge" type="text" placeholder="Kadıköy"></div>' +
       '<div class="kb-form-group"><label class="kb-label">Mahalle / Teslimat Bölgesi</label>' +
@@ -506,7 +506,7 @@ window.FirmaScreens = (function () {
       if (!il) return;
       function set(elId, val) { var el = document.getElementById(elId); if (el) el.value = (val == null ? '' : val); }
       set('il-poz', il.baslik); set('il-kat', il.kategori);
-      set('il-sehir', il.sehir); set('il-bolge', il.bolge); set('il-mahalle', il.mahalle);
+      set('il-sehir', ilBul(il.sehir)); set('il-bolge', il.bolge); set('il-mahalle', il.mahalle);
       set('il-sekli', il.calisma_sekli); set('il-vardiya', il.vardiya_tipi);
       set('il-maas-model', il.maas_modeli); set('il-maas-min', il.maas_min); set('il-maas-max', il.maas_max);
       set('il-saat', il.calisma_saatleri); set('il-arac', il.arac); set('il-deneyim', il.deneyim);

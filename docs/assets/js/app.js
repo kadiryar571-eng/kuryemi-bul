@@ -779,7 +779,7 @@
         '<div class="li-create-form" id="liForm" style="display:none">' +
           '<div class="form-grid">' +
             '<div class="field field--required"><label>' + T("ilan.baslik") + '</label><input id="liBaslik" placeholder="' + T("ilan.baslikPh") + '" autocomplete="off"></div>' +
-            '<div class="field"><label>' + T("ilan.sehir") + '</label><input id="liSehir" autocomplete="off"></div>' +
+            '<div class="field"><label>' + T("ilan.sehir") + '</label><select id="liSehir">' + KB.ilOptions('') + '</select></div>' +
             '<div class="field"><label>' + T("ilan.bolge") + '</label><input id="liBolge" autocomplete="off"></div>' +
             '<div class="field"><label>' + T("ilan.arac") + '</label>' +
               '<select id="liArac"><option value="">— Seçiniz —</option>' +

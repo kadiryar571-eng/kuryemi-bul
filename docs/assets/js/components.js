@@ -140,6 +140,39 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  /* ── İller ─────────────────────────────────────────────────────────
+     Şehir eskiden serbest metindi ("İstanbul", "Istanbul", "dsadad" yan
+     yana). Profil ve ilan formlarında artık yalnız 81 il seçilebilir.
+     www/assets/js/util.js'te aynı liste var — değiştirirseniz ikisini birden. */
+  var ILLER = ['Adana','Adıyaman','Afyonkarahisar','Ağrı','Aksaray','Amasya','Ankara','Antalya',
+    'Ardahan','Artvin','Aydın','Balıkesir','Bartın','Batman','Bayburt','Bilecik','Bingöl','Bitlis',
+    'Bolu','Burdur','Bursa','Çanakkale','Çankırı','Çorum','Denizli','Diyarbakır','Düzce','Edirne',
+    'Elazığ','Erzincan','Erzurum','Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkari','Hatay',
+    'Iğdır','Isparta','İstanbul','İzmir','Kahramanmaraş','Karabük','Karaman','Kars','Kastamonu',
+    'Kayseri','Kilis','Kırıkkale','Kırklareli','Kırşehir','Kocaeli','Konya','Kütahya','Malatya',
+    'Manisa','Mardin','Mersin','Muğla','Muş','Nevşehir','Niğde','Ordu','Osmaniye','Rize','Sakarya',
+    'Samsun','Şanlıurfa','Siirt','Sinop','Şırnak','Sivas','Tekirdağ','Tokat','Trabzon','Tunceli',
+    'Uşak','Van','Yalova','Yozgat','Zonguldak'];
+  var IL_TAKMA = { afyon: 'Afyonkarahisar', maras: 'Kahramanmaraş', kmaras: 'Kahramanmaraş',
+    urfa: 'Şanlıurfa', antep: 'Gaziantep', icel: 'Mersin', izmit: 'Kocaeli',
+    adapazari: 'Sakarya', antakya: 'Hatay' };
+  function _ilAnahtar(s) {
+    return String(s == null ? '' : s).toLocaleLowerCase('tr-TR').replace(/ı/g, 'i')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]/g, '');
+  }
+  var _IL_INDEX = {};
+  ILLER.forEach(function (il) { _IL_INDEX[_ilAnahtar(il)] = il; });
+  Object.keys(IL_TAKMA).forEach(function (k) { _IL_INDEX[k] = IL_TAKMA[k]; });
+  /* Serbest metni resmi il adına çevirir; tanınmıyorsa '' */
+  function ilBul(s) { return _IL_INDEX[_ilAnahtar(s)] || ''; }
+  /* <select> içeriği; eski kayıt tanınırsa seçili gelir */
+  function ilOptions(secili) {
+    var cur = ilBul(secili);
+    return '<option value="">Şehir seçin</option>' + ILLER.map(function (il) {
+      return '<option' + (il === cur ? ' selected' : '') + '>' + il + '</option>';
+    }).join('');
+  }
+
   function initials(name) {
     var parts = String(name || '?').trim().split(/\s+/);
     var i = parts[0][0] || '?';
@@ -673,6 +706,9 @@
     gotoAuth:       gotoAuth,
 
     /* helpers */
+    ILLER:          ILLER,
+    ilBul:          ilBul,
+    ilOptions:      ilOptions,
     esc:            esc,
     safeUrl:        safeUrl,
     initials:       initials,

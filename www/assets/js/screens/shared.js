@@ -1336,7 +1336,7 @@ window.SharedScreens = (function () {
 
           '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
             '<label style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">Şehir</label>' +
-            '<input id="pd-sehir" class="kb-input" value="' + _pdEsc(p.sehir || '') + '" placeholder="İstanbul">' +
+            '<select id="pd-sehir" class="kb-input">' + ilOptions(p.sehir) + '</select>' +
           '</div>' +
 
           (isKurye
@@ -2367,7 +2367,10 @@ window.initPremiumMap = async function(role) {
 
   function _ilKoordinat(sehir) {
     if (!sehir) return null;
-    var k = normText(sehir).replace(/[^a-z]/g, '');
+    /* "ı" NFD'de ayrışmaz; eskiden [^a-z] onu SİLİYORDU: "Şanlıurfa" →
+       "sanlurfa" eşleşmiyor, Diyarbakır/Balıkesir/Aydın kayıtları haritaya
+       hiç düşmüyordu. Önce ı→i. */
+    var k = normText(sehir).replace(/ı/g, 'i').replace(/[^a-z]/g, '');
     return IL_MERKEZ[k] || null;
   }
 

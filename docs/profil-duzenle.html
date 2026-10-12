@@ -135,7 +135,8 @@
 
           <div class="pf-field">
             <label class="pf-label" for="piSehir">Şehir</label>
-            <input class="pf-input" type="text" id="piSehir" autocomplete="address-level2" placeholder="İstanbul">
+            <!-- Seçenekler KB.ilOptions() ile populateForm'da dolar (81 il) -->
+            <select class="pf-input" id="piSehir" autocomplete="address-level1"><option value="">Şehir seçin</option></select>
           </div>
 
           <div class="pf-field">
@@ -1020,7 +1021,9 @@
       setVal('vIlce',  p && p.ilce);
       setVal('vBio',   p && p.aciklama);
       document.getElementById('piDisplayName').textContent = (p && p.ad) || '—';
-      if (p && p.kimlik_dogrulandi) document.getElementById('piVerified').style.display = '';
+      /* Eskiden p.kimlik_dogrulandi okunuyordu — şemada böyle alan YOK,
+         rozet hiç görünmüyordu. Gerçek alan profiles.dogrulama. */
+      if (p && p.dogrulama === 'verified') document.getElementById('piVerified').style.display = '';
     }
 
     /* ── Edit mode ────────────────────────────── */
@@ -1030,7 +1033,8 @@
       document.getElementById('piDogum').value = (p && p.dogum_tarihi) || '';
       document.getElementById('piTel').value   = (p && p.telefon)      || '';
       document.getElementById('piEmailDisp').textContent = email || '—';
-      document.getElementById('piSehir').value = (p && p.sehir)        || '';
+      /* Eski serbest metin ("istanbul") tanınırsa seçili gelir, tanınmazsa boş */
+      document.getElementById('piSehir').innerHTML = KB.ilOptions(p && p.sehir);
       document.getElementById('piIlce').value  = (p && p.ilce)         || '';
       document.getElementById('piBio').value   = (p && p.aciklama)     || '';
       updateCharCount();

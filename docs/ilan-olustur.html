@@ -113,7 +113,8 @@
           <div class="form-grid">
             <div class="jc-field">
               <label for="jcSehir">İl *</label>
-              <input class="jc-input" id="jcSehir" type="text" placeholder="İstanbul">
+              <!-- 81 il; seçenekler sayfa betiğinde KB.ilOptions() ile dolar -->
+              <select class="jc-input" id="jcSehir"><option value="">Şehir seçin</option></select>
               <span class="jc-err" id="errSehir"></span>
             </div>
             <div class="jc-field">
@@ -380,6 +381,9 @@
   <!-- ── İlan Oluşturma Modülü ─────────────────────────────────── -->
   <script>
   (function () {
+    /* Şehir artık serbest metin değil: 81 il (KB.ilOptions, components.js).
+       Taslak/düzenleme doldurmadan ÖNCE seçenekler hazır olmalı. */
+    document.getElementById('jcSehir').innerHTML = KB.ilOptions('');
     'use strict';
 
     /* ── Sabitler ────────────────────────────────────────────── */
@@ -499,7 +503,7 @@
     function fillForm(job) {
       sv('jcPozBaslik', job.poz_baslik || job.baslik || '');
       sv('jcKategori',  job.kategori || '');
-      sv('jcSehir',     job.sehir || '');
+      sv('jcSehir',     KB.ilBul(job.sehir));
       sv('jcBolge',     job.bolge || '');
       sv('jcMahalle',   job.mahalle || job.teslimat_bolge || '');
       sv('jcCalismaSekli', job.calisma_sekli || '');
