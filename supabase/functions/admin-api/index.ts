@@ -43,6 +43,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { purgeUserFiles } from "../_shared/purge-user-files.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -406,10 +407,14 @@ async function dispatch(action: string, ctx: Ctx): Promise<ActionResult> {
       if (!user_id) throw new Error("user_id gerekli");
       // Çift onay: panelde yanlış satıra tıklamak hesabı silmesin.
       if (onay !== "SIL") throw new Error("onay alanı 'SIL' olmalı");
+      // Önce Storage: tablolar cascade ile gider ama dosyalar (KYC belgeleri
+      // dahil) gitmez ve SQL'den silinemez. Bkz. _shared/purge-user-files.ts.
+      // Dosya silme başarısızsa FIRLATIR → hesap silinmez, panel tekrar dener.
+      const files = await purgeUserFiles(svc, user_id);
       // profiles ve bağlı her şey `on delete cascade` ile gider.
       const res = await svc.auth.admin.deleteUser(user_id);
       if (res.error) throw new Error(res.error.message);
-      return { data: { ok: true }, targetTable: "auth.users", targetId: user_id };
+      return { data: { ok: true, files }, targetTable: "auth.users", targetId: user_id, auditPayload: { user_id, files } };
     }
 
     case "users.resetPassword": {
