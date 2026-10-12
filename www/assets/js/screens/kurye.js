@@ -1671,7 +1671,13 @@ window.KuryeScreens = (function () {
         '<div class="pr-section">' +
           '<div class="pr-section__title">Belgelerim</div>' +
           '<div class="pr-docs">' +
-            _prDoc('🪪', 'Kimlik Doğrulama', prDogru ? 'Onaylandı' : 'Yüklenmedi', prDogru) +
+            /* Eskiden yalnız Onaylandı/Yüklenmedi vardı: başvuru incelemedeyken
+               de "Yüklenmedi" diyordu. Satır artık başvuru ekranını açar. */
+            '<div onclick="Router.go(\'/kimlik-dogrulama\')" style="cursor:pointer">' +
+              _prDoc('🪪', 'Kimlik Doğrulama',
+                { verified: 'Onaylandı', pending: 'İncelemede', rejected: 'Reddedildi' }[p.dogrulama] || 'Yüklenmedi',
+                prDogru) +
+            '</div>' +
             (prSert.length
               ? prSert.map(function (c) { return _prDoc('📄', c, 'Yüklendi', true); }).join('')
               : _prDoc('📄', 'Sertifika', 'Yüklenmedi', false)) +
@@ -1687,9 +1693,8 @@ window.KuryeScreens = (function () {
 
         /* ── Settings menu ── */
         '<div class="pr-section pr-section--menu">' +
-          /* "Kimlik & Belgeler" KALDIRILDI — Ayarlar'a düşen yer tutucuydu;
-             uygulamada KYC yükleme ekranı yok (SB.submitKyc kullanılmıyor). */
           _prMenuItem('Profil Bilgileri',    'user',     '/profil-duzenle') +
+          _prMenuItem('Kimlik Doğrulama',    'shield',   '/kimlik-dogrulama') +
           _prMenuItem('Puanlamalarım',       'star',     '/kurye/puanlamalar') +
           _prMenuItem('Favori İlanlarım',    'heart',    '/favoriler') +
           _prMenuItem('Bildirimler',         'bell',     '/bildirimler') +

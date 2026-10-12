@@ -784,8 +784,10 @@ window.IsletmeScreens = (function () {
 
         '<div class="kb-card" style="margin:0 16px 16px;padding:0">' +
           _mi('Profil Düzenle',    'user',       '/profil-duzenle') +
-          _mi('Esnaf Bilgileri', 'briefcase', '/ayarlar') +
-          _mi('Puanlamalar',       'star',       '/ayarlar') +
+          /* "Esnaf Bilgileri" KALDIRILDI — Ayarlar'a düşen yer tutucuydu;
+             esnaf alanları zaten Profil Düzenle'de. */
+          _mi('Kimlik Doğrulama',  'shield',     '/kimlik-dogrulama') +
+          _mi('Puanlamalar',       'star',       '/isletme/puanlamalar') +
           _mi('Bildirimler',       'bell',       '/bildirimler') +
           _mi('Ayarlar',           'settings',   '/ayarlar') +
           _mi('Yardım & Destek',   'help',       '/yardim') +

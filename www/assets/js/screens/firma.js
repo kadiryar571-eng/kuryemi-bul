@@ -848,7 +848,7 @@ window.FirmaScreens = (function () {
     renderScreen(
       '<div class="kb-screen-inner">' +
         '<div class="kb-card" style="text-align:center;margin-bottom:16px">' +
-          '<div style="font-size:2.2rem;font-weight:800;color:var(--c-' + (APP.role === 'kurye' ? 'kurye' : 'firma') + ')">' + (puan > 0 ? Number(puan).toFixed(1) : '—') + '</div>' +
+          '<div style="font-size:2.2rem;font-weight:800;color:var(--c-' + ({ kurye: 'kurye', isletme: 'isletme' }[APP.role] || 'firma') + ')">' + (puan > 0 ? Number(puan).toFixed(1) : '—') + '</div>' +
           '<div class="kb-stars" style="justify-content:center;margin:4px 0">' + ICON.star + ' ' + esc(adet) + ' değerlendirme</div>' +
         '</div>' +
         '<div id="firma-puan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +
@@ -929,6 +929,7 @@ window.FirmaScreens = (function () {
         '<div class="kb-card" style="margin:0 16px 16px;padding:0 0 0 0">' +
           _mi('Profil Düzenle',      'user',        '/profil-duzenle') +
           _mi('Kurye Firması Bilgileri',     'briefcase',  '/firma/bilgiler') +
+          _mi('Kimlik Doğrulama',    'shield',      '/kimlik-dogrulama') +
           _mi('Çalışanlar',          'users',       '/firma/calisanlar') +
           _mi('Puanlamalar',         'star',        '/firma/puanlamalar') +
           _mi('Bildirimler',         'bell',        '/bildirimler') +
@@ -1057,7 +1058,7 @@ window.FirmaScreens = (function () {
     inp.onchange = function () {
       if (!inp.files || !inp.files[0]) return;
       var file = inp.files[0];
-      if (!window.SB || !SB.isOn()) { toast('Belge yüklendi ✓'); return; }
+      if (!window.SB || !SB.isOn()) { toast('Bu işlem çevrimiçi mod gerektirir'); return; }
       toast('Belge yükleniyor…');
       SB.uploadFirmaBelge(file).then(function (path) {
         var arr = (APP.profile.belgeler || []).concat([path]);

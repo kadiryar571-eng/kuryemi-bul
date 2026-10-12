@@ -437,9 +437,10 @@ window.SharedScreens = (function () {
     var btn = document.getElementById(isResend ? 'sd-resend-btn' : 'sd-send-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Gönderiliyor…'; }
 
+    /* Eskiden çevrimdışıyken "kod gönderildi" deyip 2. adımı açıyordu —
+       kod hiç gönderilmeden. */
     if (!window.SB || !SB.isOn()) {
-      toast('Doğrulama kodu gönderildi');
-      document.getElementById('sd-step2').style.display = '';
+      _sdShowError('Bu işlem çevrimiçi mod gerektirir.');
       if (btn) { btn.disabled = false; btn.textContent = isResend ? 'Kodu Tekrar Gönder' : 'Doğrulama Kodu Gönder'; }
       return;
     }
@@ -1923,7 +1924,198 @@ window.SharedScreens = (function () {
     }
   }
 
+  /* ── Kimlik Doğrulama (KYC) ─────────────────────────────────────────
+     Veritabanı (kyc_submissions, kyc_documents kovası, review_kyc) ve
+     yönetim panelindeki onay ekranı vardı ama kullanıcının başvuru
+     yapabileceği HİÇBİR ekran yoktu — kimse doğrulanamıyordu.
+
+     Akış: belge fotoğrafları → kyc_documents/<uid>/ (admin-api kyc.doc bu
+     klasörü listeler) → kyc_submissions upsert → on_kyc_submit trigger'ı
+     profili 'pending' yapar → yönetici karar verince trg_dogrulama_notify
+     kullanıcıya bildirim gönderir. Kullanıcı kendini 'verified' yapamaz
+     (guard_dogrulama). */
+  var _kyc = { on: null, arka: null, busy: false };
+  var KYC_BELGE = ['Kimlik Kartı', 'Sürücü Belgesi', 'Pasaport'];
+
+  /* T.C. / yabancı kimlik no (99 ile başlar) — resmi kontrol hanesi algoritması.
+     Yazım hatasını sunucuya gitmeden yakalar; gerçekliği yönetici doğrular. */
+  function _tcGecerli(s) {
+    if (!/^[1-9][0-9]{10}$/.test(s)) return false;
+    var d = s.split('').map(Number);
+    var tek = d[0] + d[2] + d[4] + d[6] + d[8];
+    var cift = d[1] + d[3] + d[5] + d[7];
+    if ((((tek * 7 - cift) % 10) + 10) % 10 !== d[9]) return false;
+    var top = 0;
+    for (var i = 0; i < 10; i++) top += d[i];
+    return top % 10 === d[10];
+  }
+
+  function _kycDurumKart(ikon, renk, baslik, metin, ekId) {
+    return '<div class="kb-card" style="text-align:center;padding:28px 20px">' +
+      '<div style="font-size:2.4rem;margin-bottom:8px">' + ikon + '</div>' +
+      '<div style="font-weight:800;font-size:1.05rem;color:' + renk + ';margin-bottom:6px">' + baslik + '</div>' +
+      '<div style="font-size:.86rem;color:var(--text2);line-height:1.5">' + metin + '</div>' +
+      (ekId ? '<div id="' + ekId + '" style="margin-top:14px;font-size:.8rem;color:var(--muted)"></div>' : '') +
+    '</div>';
+  }
+
+  function _kycSlot(taraf, etiket) {
+    return '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:6px">' + etiket + '</div>' +
+      '<div id="kyc-' + taraf + '-slot" onclick="SharedScreens._kycPick(\'' + taraf + '\')" ' +
+        'style="height:110px;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;' +
+        'justify-content:center;flex-direction:column;gap:4px;cursor:pointer;overflow:hidden;color:var(--muted);font-size:.78rem">' +
+        '<span style="font-size:1.5rem">📷</span>Fotoğraf ekle' +
+      '</div>' +
+    '</div>';
+  }
+
+  function kimlikDogrulama() {
+    showAppBar('Kimlik Doğrulama', true);
+    hideBottomNav();
+    _kyc = { on: null, arka: null, busy: false };
+
+    var p      = APP.profile || {};
+    var durum  = p.dogrulama || 'none';
+    var role   = APP.role || 'kurye';
+    var accent = role === 'kurye' ? '#6C4DFF' : role === 'firma' ? '#22C55E' : '#F97316';
+
+    if (durum === 'verified') {
+      renderScreen('<div class="kb-screen-inner">' +
+        _kycDurumKart('✅', '#15803D', 'Kimliğin doğrulandı',
+          'Profilinde "Doğrulanmış" rozeti görünüyor. Başka bir işlem yapmana gerek yok.') +
+      '</div>');
+      return;
+    }
+    if (durum === 'pending') {
+      renderScreen('<div class="kb-screen-inner">' +
+        _kycDurumKart('⏳', '#B45309', 'Başvurun inceleniyor',
+          'Belgelerin ekibimize ulaştı. İnceleme tamamlanınca bildirim alacaksın.', 'kyc-ozet') +
+      '</div>');
+      if (window.SB && SB.isOn()) {
+        SB.myKycSubmission().then(function (k) {
+          if (!k) return;
+          whenEl('kyc-ozet', function (el) {
+            el.textContent = 'Gönderilen belge: ' + (k.belge_turu || '—') + ' · ' + (k.ad_soyad || '');
+          });
+        }).catch(function () {});
+      }
+      return;
+    }
+
+    var lbl = 'font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px';
+    renderScreen(
+      '<div class="kb-screen-inner">' +
+        (durum === 'rejected'
+          ? '<div style="padding:12px 14px;margin-bottom:12px;background:rgba(239,68,68,.1);border-radius:12px;color:#B91C1C;font-size:.84rem;line-height:1.45">' +
+              'Önceki başvurun onaylanmadı. Fotoğrafların net ve bilgilerin belgeyle aynı olduğundan emin olup tekrar gönderebilirsin.</div>'
+          : '') +
+
+        '<div class="kb-card" style="margin-bottom:12px">' +
+          '<div style="font-weight:700;margin-bottom:6px">Neden doğrulama?</div>' +
+          '<div style="font-size:.84rem;color:var(--text2);line-height:1.5">Doğrulanmış hesaplar profilde rozetle gösterilir ve karşı tarafa güven verir. ' +
+            'Belgelerin yalnız doğrulama ekibimiz tarafından görülür, profilinde yayınlanmaz.</div>' +
+        '</div>' +
+
+        '<div class="kb-card" style="margin-bottom:12px">' +
+          '<div style="padding-bottom:14px">' +
+            '<label for="kyc-ad" style="' + lbl + '">Ad Soyad (belgede yazdığı gibi)</label>' +
+            '<input id="kyc-ad" class="kb-input" autocomplete="name" value="' + escAttr(role === 'kurye' ? (p.ad || '') : '') + '" placeholder="Ad Soyad">' +
+          '</div>' +
+          '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+            '<label for="kyc-tc" style="' + lbl + '">T.C. / Yabancı Kimlik No</label>' +
+            '<input id="kyc-tc" class="kb-input" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="11 haneli numara">' +
+          '</div>' +
+          '<div style="padding:14px 0;border-top:1px solid var(--border)">' +
+            '<label for="kyc-tur" style="' + lbl + '">Belge Türü</label>' +
+            '<select id="kyc-tur" class="kb-input" onchange="SharedScreens._kycTurDegisti()">' +
+              KYC_BELGE.map(function (b) { return '<option>' + esc(b) + '</option>'; }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div style="padding-top:14px;border-top:1px solid var(--border);display:flex;gap:10px">' +
+            _kycSlot('on', 'Ön yüz') + _kycSlot('arka', 'Arka yüz') +
+          '</div>' +
+          '<div id="kyc-arka-not" style="display:none;margin-top:6px;font-size:.74rem;color:var(--muted)">Pasaportta arka yüz gerekmez.</div>' +
+        '</div>' +
+
+        '<label style="display:flex;gap:10px;align-items:flex-start;margin:4px 2px 14px;font-size:.8rem;color:var(--text2);line-height:1.45">' +
+          '<input type="checkbox" id="kyc-onay" style="margin-top:2px;width:18px;height:18px;flex-shrink:0">' +
+          '<span>Kimlik bilgilerimin ve belge fotoğraflarımın yalnız hesap doğrulaması amacıyla işlenmesini kabul ediyorum. ' +
+            '<a href="#" onclick="event.preventDefault();KBOpenUrl(\'https://kuryemibul.com/kvkk.html\')" style="color:' + accent + '">KVKK Aydınlatma Metni</a></span>' +
+        '</label>' +
+
+        '<button id="kyc-gonder" class="btn btn--primary" style="background:' + accent + ';border-color:' + accent + '" onclick="SharedScreens._kycSubmit()">Doğrulamaya Gönder</button>' +
+        '<div id="kyc-error" role="alert" style="display:none;margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border-radius:10px;color:#DC2626;font-size:.84rem;text-align:center"></div>' +
+      '</div>'
+    );
+  }
+
+  function _kycTurDegisti() {
+    var pas = (document.getElementById('kyc-tur') || {}).value === 'Pasaport';
+    var not = document.getElementById('kyc-arka-not');
+    if (not) not.style.display = pas ? 'block' : 'none';
+  }
+
+  function _kycPick(taraf) {
+    if (typeof KBPickPhoto !== 'function') { toast('Kamera erişimi yok'); return; }
+    KBPickPhoto(function (dataUrl) {
+      _kyc[taraf] = dataUrl;
+      var el = document.getElementById('kyc-' + taraf + '-slot');
+      if (el) el.innerHTML = '<img src="' + escAttr(safeUrl(dataUrl)) + '" alt="" style="width:100%;height:100%;object-fit:cover">';
+    }, function () { toast('Fotoğraf alınamadı'); }, { edit: false });
+  }
+
+  function _kycHata(msg) {
+    var el = document.getElementById('kyc-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  async function _kycSubmit() {
+    if (_kyc.busy) return;
+    var val = function (id) { return ((document.getElementById(id) || {}).value || '').trim(); };
+    var ad  = val('kyc-ad').replace(/\s+/g, ' ');
+    var tc  = val('kyc-tc').replace(/\D/g, '');
+    var tur = val('kyc-tur');
+    var onay = (document.getElementById('kyc-onay') || {}).checked;
+
+    if (ad.length < 5 || ad.indexOf(' ') === -1) return _kycHata('Adını ve soyadını belgede yazdığı gibi gir.');
+    if (!_tcGecerli(tc))                         return _kycHata('Kimlik numarası geçersiz. 11 haneyi kontrol et.');
+    if (KYC_BELGE.indexOf(tur) === -1)           return _kycHata('Belge türünü seç.');
+    if (!_kyc.on)                                return _kycHata('Belgenin ön yüzünün fotoğrafını ekle.');
+    if (tur !== 'Pasaport' && !_kyc.arka)        return _kycHata('Belgenin arka yüzünün fotoğrafını ekle.');
+    if (!onay)                                   return _kycHata('Devam etmek için onay kutusunu işaretle.');
+    if (!window.SB || !SB.isOn())                return _kycHata('Bu işlem çevrimiçi mod gerektirir.');
+    _kycHata('');
+
+    var btn = document.getElementById('kyc-gonder');
+    _kyc.busy = true;
+    if (btn) { btn.disabled = true; btn.textContent = 'Gönderiliyor…'; }
+    try {
+      var onYol = await SB.uploadKycDoc(await imageToFile(_kyc.on, 'on.jpg'));
+      if (_kyc.arka && tur !== 'Pasaport') await SB.uploadKycDoc(await imageToFile(_kyc.arka, 'arka.jpg'));
+      await SB.submitKyc({ ad_soyad: ad, tc_no: tc, belge_turu: tur, belge_url: onYol });
+      /* Durumu tahmin etme — trigger'ın yazdığını oku */
+      var guncel = await SB.myProfile();
+      if (guncel) APP.profile = guncel;
+      toast('Başvurun alındı ✓');
+      kimlikDogrulama();
+    } catch (e) {
+      console.warn('KYC gönderilemedi:', e);
+      _kycHata('Başvuru gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.');
+    } finally {
+      _kyc.busy = false;
+      var b = document.getElementById('kyc-gonder');
+      if (b) { b.disabled = false; b.textContent = 'Doğrulamaya Gönder'; }
+    }
+  }
+
   return {
+    kimlikDogrulama : kimlikDogrulama,
+    _kycPick        : _kycPick,
+    _kycSubmit      : _kycSubmit,
+    _kycTurDegisti  : _kycTurDegisti,
     bildirimler : bildirimler,
     isverenProfil : isverenProfil,
     kuryeProfil   : kuryeProfil,

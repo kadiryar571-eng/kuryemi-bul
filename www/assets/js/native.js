@@ -77,7 +77,11 @@
   };
 
   /* ── Kamera — Profil fotoğrafı ─────────────────────────── */
-  window.KBPickPhoto = function (onSuccess, onError) {
+  /* opts.edit === false → kırpma/düzenleme adımı yok. Belge fotoğrafında
+     kapalı olmalı: Android "Şununla düzenle" uygulama seçicisi açıyor ve
+     kırpılan kimlik belgesi okunaksız kalabiliyor. Varsayılan açık (avatar). */
+  window.KBPickPhoto = function (onSuccess, onError, opts) {
+    opts = opts || {};
     var Camera = plug('Camera');
     if (!Camera) {
       /* Web fallback: file input */
@@ -96,9 +100,14 @@
 
     Camera.getPhoto({
       quality      : 85,
-      allowEditing : true,
+      allowEditing : opts.edit !== false,
       resultType   : 'dataUrl',
-      source       : 'PROMPT'
+      source       : 'PROMPT',
+      /* Varsayılanlar İngilizce ("Photo / From Photos / Take Picture") */
+      promptLabelHeader  : 'Fotoğraf',
+      promptLabelPhoto   : 'Galeriden Seç',
+      promptLabelPicture : 'Fotoğraf Çek',
+      promptLabelCancel  : 'Vazgeç'
     }).then(function (photo) {
       if (onSuccess) onSuccess(photo.dataUrl || ('data:image/jpeg;base64,' + photo.base64String));
     }).catch(function (err) {

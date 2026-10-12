@@ -258,11 +258,11 @@
         '</div>' +
         '<div class="kb-drawer__section" style="margin-top:8px">' +
           '<div class="kb-drawer__section-title">Hesabım</div>' +
-          /* "Kimlik Bilgilerim" ve "Referanslarım" KALDIRILDI: ikisi de
-             profil sayfasına düşen yer tutucuydu; uygulamada KYC yükleme
-             ekranı da referans özelliği de yok. Gelince geri eklenir. */
+          /* "Referanslarım" KALDIRILDI: profil sayfasına düşen yer tutucuydu,
+             referans özelliği yok. */
           item('user',    'Profil Düzenle',    '/profil-duzenle') +
           item('camera',  'Profil Fotoğrafı',  '/profil-duzenle') +
+          item('shield',  'Kimlik Doğrulama',  '/kimlik-dogrulama') +
           item('settings','Ayarlar',           '/ayarlar')  +
         '</div>' +
         '<div class="kb-drawer__section" style="margin-top:8px">' +
@@ -496,6 +496,8 @@
     Router.define('/kurye/cv',          CvScreens.sihirbaz);
     /* Puanlama ekranı role bağlı değil (APP.profile'ı okur); firma.js'teki paylaşılır */
     Router.define('/kurye/puanlamalar', FirmaScreens.puanlamalar);
+    Router.define('/isletme/puanlamalar', FirmaScreens.puanlamalar);
+    Router.define('/kimlik-dogrulama',  SharedScreens.kimlikDogrulama);
 
     /* Kurye Firması */
     Router.define('/firma/panel',       FirmaScreens.panel);
@@ -567,10 +569,18 @@
       var PushNotifications = Capacitor.Plugins.PushNotifications;
       if (!PushNotifications) return;
 
-      PushNotifications.requestPermissions().then(function (result) {
-        if (result.receive !== 'granted') return;
-        PushNotifications.register();
-      }).catch(function () {});
+      /* İzin YALNIZ oturum varken istenir. Eskiden uygulama açılır açılmaz,
+         giriş ekranında, bağlamsız soruluyordu (Play'in önerdiği pratiğe
+         aykırı; kullanıcı çoğunlukla reddeder ve bir daha sorulamaz).
+         Ayrıca girişten önce gelen token kaydedilemiyordu (SB.getUser null).
+         Girişten sonra login.js sayfayı yeniler → boot() → buraya oturumla
+         gelinir. */
+      if (APP.user) {
+        PushNotifications.requestPermissions().then(function (result) {
+          if (result.receive !== 'granted') return;
+          PushNotifications.register();
+        }).catch(function () {});
+      }
 
       PushNotifications.addListener('registration', function (token) {
         if (!token || !token.value) return;
