@@ -2572,9 +2572,8 @@
       return '<span class="pref-chip' + (primary ? ' pref-chip--primary' : '') + '">' + escHtml(label) + '</span>';
     }
 
-    function escHtml(s) {
-      return (s + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    /* Tek kaynak KB.esc (CLAUDE.md: yerel kaçış kopyası tanımlamayın) */
+    function escHtml(s) { return KB.esc(s); }
 
     function buildRow(ico, label, valHtml) {
       return '<div class="pref-row"><span class="pref-row__label">' + ico + ' ' + escHtml(label) + '</span><div class="pref-row__val">' + valHtml + '</div></div>';

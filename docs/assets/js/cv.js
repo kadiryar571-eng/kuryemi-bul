@@ -29,7 +29,11 @@
   var TASLAK_KEY = 'kb_draft:cv';
 
   function esc(s) {
-    return (window.KB && KB.esc) ? KB.esc(s) : String(s == null ? '' : s);
+    /* Yedek yol da kaçırmalı — eskiden KB yoksa metni ham döndürüyordu */
+    if (window.KB && KB.esc) return KB.esc(s);
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
   function on() { return !!(window.SB && SB.isOn && SB.isOn()); }
 
