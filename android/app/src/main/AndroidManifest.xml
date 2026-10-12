@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
@@ -58,18 +58,11 @@
             </intent-filter>
 
             <!--
-                Eski özel şema — GEÇİŞ DÖNEMİ İÇİN bırakıldı.
-                Artık hiçbir yerden buraya redirect YAPILMIYOR (redirectTo
-                https adresine taşındı), dolayısıyla kullanılmıyor.
-                App Links doğrulaması sahada teyit edildikten sonra bu
-                blok tamamen silinmelidir.
+                Eski com.kuryemibul.app:// özel şeması KALDIRILDI (v1.0.166
+                sonrası). Google girişi App Link ile sahada doğrulandı;
+                şemayı her uygulama kaydedebildiği için açık bırakmak
+                OAuth code'unu yakalanabilir kılıyordu. Geri EKLEMEYİN.
             -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.kuryemibul.app" />
-            </intent-filter>
         </activity>
 
         <provider
@@ -96,5 +89,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- READ_MEDIA_IMAGES BİLEREK YOK. Galeri seçimi @capacitor/camera 8'in
+         kullandığı Android Photo Picker ile yapılır, izin gerektirmez.
+         Google Play'in Fotoğraf/Video İzinleri politikası bu izni yalnız
+         galeriye sürekli erişim gerektiren uygulamalara tanır; avatar/belge
+         seçimi için beyan edilirse uygulama reddedilir. -->
 </manifest>

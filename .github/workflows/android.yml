@@ -66,11 +66,12 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Java (JDK 17) kur
+      # Capacitor 7+ (AGP 8.13) JDK 21 ister; 17 ile derleme açılmaz.
+      - name: Java (JDK 21) kur
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Android SDK yolunu ayarla
         run: |
@@ -80,8 +81,8 @@ jobs:
       - name: Build tools / platform yükle
         run: |
           yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
-            "build-tools;35.0.0" \
-            "platforms;android-35" \
+            "build-tools;36.0.0" \
+            "platforms;android-36" \
             "platform-tools" || true
 
       - name: Bağımlılıkları yükle
