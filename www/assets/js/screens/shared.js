@@ -805,7 +805,7 @@ window.SharedScreens = (function () {
           '</div>' +
           '<div class="chat-pcard__actions">' +
             '<button class="chat-pcard__btn chat-pcard__btn--sec" onclick="SharedScreens.chatQuick(\'gorusme\')">Görüşmeye Davet</button>' +
-            '<button class="chat-pcard__btn" onclick="Router.go(\'/profil-kurye?id=' + (meta.profile_id || '') + '\')">Profili İncele →</button>' +
+            '<button class="chat-pcard__btn" onclick="Router.go(\'/aday/' + escJs(meta.profile_id || '') + '\')">Profili İncele →</button>' +
           '</div>' +
         '</div>' +
       '</div>';

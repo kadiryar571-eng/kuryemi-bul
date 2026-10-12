@@ -806,8 +806,14 @@
     if (r.error) { console.warn("openListings:", r.error); return []; }
     return (r.data || []).map(listingFromDb);
   }
+  // supabase-js hata FIRLATMAZ, {error} döner; RLS'in elediği satırda ise
+  // error bile yoktur, yalnız 0 satır. Çağıranlar try/catch ile "İlan
+  // yayınlandı" diyor — ikisinde de fırlatmazsak başarısız işlem başarılı görünür.
   async function updateListingStatus(id, durum) {
-    return client.from("listings").update({ durum: durum }).eq("id", id);
+    var r = await client.from("listings").update({ durum: durum }).eq("id", id).select("id");
+    if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error("ilan güncellenemedi");
+    return r;
   }
   async function deleteListing(id) {
     return client.from("listings").delete().eq("id", id);
