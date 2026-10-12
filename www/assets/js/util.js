@@ -76,10 +76,37 @@
     })();
   }
 
+  /* KBPickPhoto'nun verdiği data: URL'yi yüklenebilir JPEG File'a çevirir.
+     fetch(dataUrl) KULLANMAYIN: CSP connect-src data:'yı içermez, istek
+     "Failed to fetch" ile düşer (emülatörde ölçüldü — avatar ve firma
+     fotoğrafı yüklemesi bu yüzden hiç çalışmıyordu). Burada ağ yok; görüntü
+     canvas'a çizilir (img-src data: izinli), uzun kenar maxSide'a küçültülür.
+     Telefon fotoğrafları 5-10 MB olabilir; 1600 px JPEG ~300-600 KB. */
+  function imageToFile(dataUrl, name, maxSide) {
+    maxSide = maxSide || 1600;
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        var k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * k);
+        c.height = Math.round(img.naturalHeight * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(function (blob) {
+          if (!blob) { reject(new Error('görüntü işlenemedi')); return; }
+          resolve(new File([blob], name || 'foto.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { reject(new Error('görüntü okunamadı')); };
+      img.src = dataUrl;
+    });
+  }
+
   window.esc      = esc;
   window.escAttr  = escAttr;
   window.escLines = escLines;
   window.escJs    = escJs;
   window.safeUrl  = safeUrl;
   window.whenEl   = whenEl;
+  window.imageToFile = imageToFile;
 })();

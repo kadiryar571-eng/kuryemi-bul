@@ -1074,10 +1074,10 @@ window.FirmaScreens = (function () {
   function _pickFoto() {
     if (typeof KBPickPhoto !== 'function') { toast('Kamera erişimi yok'); return; }
     KBPickPhoto(function (dataUrl) {
-      if (!window.SB || !SB.isOn()) { toast('Fotoğraf yüklendi ✓'); return; }
+      /* Eskiden çevrimdışıyken "Fotoğraf yüklendi ✓" diyordu — hiçbir şey yüklenmeden. */
+      if (!window.SB || !SB.isOn()) { toast('Bu işlem çevrimiçi mod gerektirir'); return; }
       toast('Fotoğraf yükleniyor…');
-      fetch(dataUrl).then(function (r) { return r.blob(); }).then(function (blob) {
-        var file = new File([blob], 'foto.jpg', { type: blob.type || 'image/jpeg' });
+      imageToFile(dataUrl, 'foto.jpg').then(function (file) {
         return SB.uploadFirmaFoto(file);
       }).then(function (url) {
         if (!url) return;

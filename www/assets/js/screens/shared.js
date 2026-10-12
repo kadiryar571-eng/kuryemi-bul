@@ -1396,8 +1396,7 @@ window.SharedScreens = (function () {
       var saving = document.getElementById('pd-av-saving');
       if (saving) saving.style.display = 'block';
 
-      fetch(dataUrl).then(function(r){ return r.blob(); }).then(function(blob) {
-        var file = new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' });
+      imageToFile(dataUrl, 'avatar.jpg', 800).then(function(file) {
         return SB.uploadAvatar(file);
       }).then(function(url) {
         if (saving) saving.style.display = 'none';
