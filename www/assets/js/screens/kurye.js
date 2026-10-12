@@ -1687,9 +1687,10 @@ window.KuryeScreens = (function () {
 
         /* ── Settings menu ── */
         '<div class="pr-section pr-section--menu">' +
-          _prMenuItem('Profil Bilgileri',    'user',     '/ayarlar') +
-          _prMenuItem('Kimlik & Belgeler',   'doc',      '/ayarlar') +
-          _prMenuItem('Puanlamalarım',       'star',     '/ayarlar') +
+          /* "Kimlik & Belgeler" KALDIRILDI — Ayarlar'a düşen yer tutucuydu;
+             uygulamada KYC yükleme ekranı yok (SB.submitKyc kullanılmıyor). */
+          _prMenuItem('Profil Bilgileri',    'user',     '/profil-duzenle') +
+          _prMenuItem('Puanlamalarım',       'star',     '/kurye/puanlamalar') +
           _prMenuItem('Favori İlanlarım',    'heart',    '/favoriler') +
           _prMenuItem('Bildirimler',         'bell',     '/bildirimler') +
           _prMenuItem('Ayarlar',             'settings', '/ayarlar') +

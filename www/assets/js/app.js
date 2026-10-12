@@ -224,6 +224,14 @@
         ICON.chevron +
       '</div>';
     }
+    /* Canlı sitedeki bir sayfayı uygulama içi tarayıcıda açar (Ayarlar ile aynı). */
+    function extItem(icon, label, url) {
+      return '<div class="kb-drawer__item" onclick="closeDrawer();KBOpenUrl(\'' + url + '\')">' +
+        '<div class="kb-drawer__item__icon">' + ICON[icon] + '</div>' +
+        '<span class="kb-drawer__item__label">' + label + '</span>' +
+        ICON.chevron +
+      '</div>';
+    }
 
     return (
       '<div class="kb-drawer__head">' +
@@ -250,10 +258,11 @@
         '</div>' +
         '<div class="kb-drawer__section" style="margin-top:8px">' +
           '<div class="kb-drawer__section-title">Hesabım</div>' +
-          item('user',    'Profil Düzenle',    profilRoute) +
-          item('camera',  'Profil Fotoğrafı',  profilRoute) +
-          item('id',      'Kimlik Bilgilerim', profilRoute) +
-          item('ref',     'Referanslarım',     profilRoute) +
+          /* "Kimlik Bilgilerim" ve "Referanslarım" KALDIRILDI: ikisi de
+             profil sayfasına düşen yer tutucuydu; uygulamada KYC yükleme
+             ekranı da referans özelliği de yok. Gelince geri eklenir. */
+          item('user',    'Profil Düzenle',    '/profil-duzenle') +
+          item('camera',  'Profil Fotoğrafı',  '/profil-duzenle') +
           item('settings','Ayarlar',           '/ayarlar')  +
         '</div>' +
         '<div class="kb-drawer__section" style="margin-top:8px">' +
@@ -261,8 +270,8 @@
           item('help', 'Yardım Merkezi',         '/yardim') +
           item('help', 'Sık Sorulan Sorular',    '/yardim') +
           item('msg',  'Bize Ulaşın',            '/yardim') +
-          item('doc',  'Gizlilik Politikası',    '/ayarlar') +
-          item('doc',  'Kullanım Şartları',      '/ayarlar') +
+          extItem('doc', 'Gizlilik Politikası',  'https://kuryemibul.com/gizlilik.html') +
+          extItem('doc', 'Kullanım Şartları',    'https://kuryemibul.com/sartlar.html') +
         '</div>' +
       '</div>' +
       '<div class="kb-drawer__footer">' +
@@ -485,6 +494,8 @@
     Router.define('/kurye/mesaj/:id',   KuryeScreens.mesajChat);
     Router.define('/kurye/profil',      KuryeScreens.profil);
     Router.define('/kurye/cv',          CvScreens.sihirbaz);
+    /* Puanlama ekranı role bağlı değil (APP.profile'ı okur); firma.js'teki paylaşılır */
+    Router.define('/kurye/puanlamalar', FirmaScreens.puanlamalar);
 
     /* Kurye Firması */
     Router.define('/firma/panel',       FirmaScreens.panel);

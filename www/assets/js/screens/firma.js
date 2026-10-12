@@ -848,7 +848,7 @@ window.FirmaScreens = (function () {
     renderScreen(
       '<div class="kb-screen-inner">' +
         '<div class="kb-card" style="text-align:center;margin-bottom:16px">' +
-          '<div style="font-size:2.2rem;font-weight:800;color:var(--c-firma)">' + (puan > 0 ? Number(puan).toFixed(1) : '—') + '</div>' +
+          '<div style="font-size:2.2rem;font-weight:800;color:var(--c-' + (APP.role === 'kurye' ? 'kurye' : 'firma') + ')">' + (puan > 0 ? Number(puan).toFixed(1) : '—') + '</div>' +
           '<div class="kb-stars" style="justify-content:center;margin:4px 0">' + ICON.star + ' ' + esc(adet) + ' değerlendirme</div>' +
         '</div>' +
         '<div id="firma-puan-list"><div style="padding:32px 0;text-align:center"><div class="kb-spinner"></div></div></div>' +

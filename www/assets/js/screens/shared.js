@@ -343,9 +343,12 @@ window.SharedScreens = (function () {
   function _deleteAccount() {
     if (!confirm('Hesabını kalıcı olarak silmek istediğine emin misin? Bu işlem geri alınamaz.')) return;
     if (!confirm('Son onay: profilin, ilanların, mesajların ve tüm verilerin silinecek. Devam edilsin mi?')) return;
+    if (_deleteAccount._busy) return;   /* dosya silme birkaç sn sürer; çift dokunuş */
     (async function () {
+      _deleteAccount._busy = true;
       try {
         if (!window.SB || !SB.isOn()) { toast('Bu işlem çevrimiçi mod gerektirir'); return; }
+        toast('Hesabın siliniyor…');
         await SB.deleteMyData();
         toast('Hesabın silindi');
         APP.user = APP.profile = APP.role = null;
@@ -353,6 +356,8 @@ window.SharedScreens = (function () {
         Router.go('/login');
       } catch (e) {
         toast('Hesap silinemedi, tekrar dene');
+      } finally {
+        _deleteAccount._busy = false;
       }
     })();
   }

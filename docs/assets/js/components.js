@@ -247,7 +247,10 @@
      formunda herkese açık URL olarak verildi; giriş isterse o bağlantı kırılır.
      KVKK/şartlar/çerez sayfalarının da kimlik doğrulaması istemesi yanlış olur. */
   var PUBLIC_PAGES  = ['404.html', 'kvkk.html', 'gizlilik.html', 'sartlar.html',
-                       'cerez.html', 'guvenlik.html'];
+                       'cerez.html', 'guvenlik.html',
+                       // Google Play: silme adımları girişsiz OKUNABİLMELİ.
+                       // Silme butonu sayfada yalnız oturum varsa görünür.
+                       'hesap-sil.html'];
 
   /* Sayfa adını HER ZAMAN ".html" uzantılı döndür.
      serve.json'daki cleanUrls yerelde uzantıyı düşürüyor (/ilanlar.html → /ilanlar);

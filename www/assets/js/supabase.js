@@ -71,12 +71,11 @@
      NOT: Supabase → Authentication → URL Configuration → Redirect URLs
      listesinde bu adres EKLİ olmalı, yoksa Supabase redirect'i reddeder. */
   var NATIVE_REDIRECT = "https://kuryemibul.com/auth-callback.html";
-  var LEGACY_REDIRECT = "com.kuryemibul.app://";   // yalnız geriye dönük yakalama
 
   // Google ile giriş/kayıt (OAuth).
   // Web: ayni sekmede redirect -> index.html (SPA acilista oturumu algilar).
   // Native (Capacitor app): Google WebView'i engellediği için sistem tarayıcısında aç,
-  //   dönüşü deep-link (com.kuryemibul.app://callback) ile yakala (initNativeAuth).
+  //   dönüşü App Link (NATIVE_REDIRECT) ile yakala (initNativeAuth).
   async function signInWithGoogle() {
     if (isNative()) {
       var r = await client.auth.signInWithOAuth({
@@ -104,12 +103,10 @@
     App.addListener("appUrlOpen", async function (ev) {
       var url = ev && ev.url;
       if (!url) return;
-      /* Hem yeni App Link'i hem eski özel şemayı kabul et. Eski şema
-         geçiş dönemi içindir; App Links sahada teyit edilince
-         LEGACY_REDIRECT kontrolü ve manifest'teki blok silinmelidir. */
+      /* Yalnız doğrulanmış App Link. Eski com.kuryemibul.app:// şeması
+         manifest'ten kaldırıldı; burada da kabul edilmez. */
       var isCallback = url.indexOf(NATIVE_REDIRECT) === 0 ||
-                       url.indexOf("https://www.kuryemibul.com/auth-callback.html") === 0 ||
-                       url.indexOf(LEGACY_REDIRECT) === 0;
+                       url.indexOf("https://www.kuryemibul.com/auth-callback.html") === 0;
       if (!isCallback) return;
 
       // Browser plugin'i kapat
@@ -659,12 +656,18 @@
     return client.auth.verifyOtp({ email: email, token: code, type: "email" });
   }
   // Hesabı tamamen sil (auth.users + cascade ile tüm profil/ilan/mesaj/token verisi). Sonra çıkış.
+  // Hesap + TÜM dosyalar (kimlik belgeleri, fotoğraflar, sohbet ekleri).
+  // Eski delete_own_account RPC'si dosyaları silemiyordu (Storage SQL'den
+  // silinmez) — bkz. supabase/functions/delete-account. RPC'ye GERİ DÖNMEYİN:
+  // fonksiyon hata verirse hesap bilerek yerinde kalır, kullanıcı tekrar dener.
   async function deleteMyData() {
     var u = await getUser();
     if (!u) throw new Error("oturum yok");
-    var r = await client.rpc("delete_own_account");
+    var r = await client.functions.invoke("delete-account", { method: "POST" });
     if (r.error) throw r.error;
-    await client.auth.signOut();
+    if (!r.data || !r.data.ok) throw new Error((r.data && r.data.error) || "hesap silinemedi");
+    // Sunucuda kullanıcı artık yok; signOut'un uyarısı önemsiz, yerel oturumu temizler.
+    try { await client.auth.signOut({ scope: "local" }); } catch (e) {}
     return true;
   }
 

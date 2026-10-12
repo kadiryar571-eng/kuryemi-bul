@@ -170,6 +170,16 @@
     return client.auth.signInWithPassword({ email: email, password: password });
   }
   async function signOut() { return client.auth.signOut(); }
+  // Hesap + TÜM dosyalar kalıcı silinir (supabase/functions/delete-account).
+  // Google Play'in "uygulama dışından hesap silme" şartı → hesap-sil.html.
+  async function deleteMyAccount() {
+    if (!client) throw new Error("bağlantı yok");
+    var r = await client.functions.invoke("delete-account", { method: "POST" });
+    if (r.error) throw r.error;
+    if (!r.data || !r.data.ok) throw new Error((r.data && r.data.error) || "hesap silinemedi");
+    try { await client.auth.signOut({ scope: "local" }); } catch (e) {}
+    return true;
+  }
   // Şifre sıfırlama: e-postaya bağlantı gönderir (kullanıcı sifre-sifirla.html'e döner)
   async function resetPassword(email) {
     return client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + "/sifre-sifirla.html" });
@@ -1780,6 +1790,7 @@
     setConvStatus: setConvStatus, setApplicationStatus: setApplicationStatus,
     upsertInterview: upsertInterview, upsertDecision: upsertDecision,
     signUp: signUp, signIn: signIn, signInWithGoogle: signInWithGoogle, signOut: signOut, getUser: getUser, onAuthChange: onAuthChange,
+    deleteMyAccount: deleteMyAccount,
     resetPassword: resetPassword, updatePassword: updatePassword,
     verifyEmail: verifyEmail, resendVerification: resendVerification,
     myProfile: myProfile, updateMyProfile: updateMyProfile, contactOf: contactOf,
