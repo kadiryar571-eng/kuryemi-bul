@@ -27,7 +27,13 @@
     form-action 'self';
   ">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- viewport-fit=cover BİLEREK YOK. Capacitor 8 SystemBars, WebView >= 140
+       VE cover varsa WebView'i sistem çubuklarının ALTINA yayar ve boşluğu
+       CSS'e bırakır; < 140'ta (veya cover yoksa) WebView'i çubukların arasına
+       yerleştirir. İki davranış birden test edilemiyor (emülatör WebView 133)
+       ve güncel telefonlarda içerik durum çubuğunun altına girebiliyordu.
+       Cover'sız: her sürümde aynı, ölçülmüş davranış. iOS uygulaması yok. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#2563EB">
   <title>KuryemiBul</title>
   <link rel="stylesheet" href="assets/css/app.css">
