@@ -228,6 +228,22 @@
       base.telefon = (c.data && c.data.telefon) || "";
       base.email = (c.data && c.data.email) || u.email || "";
     } catch (e) { base.email = base.email || u.email || ""; }
+    await _mergePrivate(base, u);
+    return base;
+  }
+  /* Doğum tarihi / plaka / adres profiles'ta DEĞİL, yalnız sahibinin
+     okuyabildiği profile_private'ta durur (migration-40, KVKK). profiles
+     tüm girişli kullanıcılara açık olduğu için orada başkası okuyabiliyordu.
+     (Aynı kod docs/assets/js/supabase.js içinde de var.) */
+  var PRIVATE_KEYS = ["dogum_tarihi", "plaka", "adres"];
+  async function _mergePrivate(base, u) {
+    try {
+      var pr = await client.from("profile_private").select("dogum_tarihi,plaka,adres").eq("user_id", u.id).maybeSingle();
+      var d = pr.data || {};
+      base.dogum_tarihi = d.dogum_tarihi || null;
+      base.plaka = d.plaka || "";
+      base.adres = d.adres || "";
+    } catch (e) {}
     return base;
   }
   async function updateMyProfile(fields) {
@@ -237,6 +253,11 @@
     var telefon = fields.telefon;
     delete fields.telefon;
     delete fields.email;
+    // Gizli alanları ayır → profile_private'a gider (migration-40)
+    var priv = null;
+    PRIVATE_KEYS.forEach(function (k) {
+      if (fields[k] !== undefined) { priv = priv || {}; priv[k] = fields[k]; delete fields[k]; }
+    });
     /* yayinda = HAVUZDA GORUNUR demek. Eskiden her guncellemede kosulsuz true
        yapiliyordu; adini bos birakip kaydeden kullanici havuza ISIMSIZ bir kart
        olarak dusuyordu (olculdu: pool('kurye') icinde ad:"" olan kayit vardi).
@@ -263,9 +284,17 @@
       );
       if (up.error) throw up.error;
     }
+    if (priv) {
+      var pv = await client.from("profile_private").upsert(
+        Object.assign({ profile_id: r.data.id, user_id: u.id, updated_at: new Date().toISOString() }, priv),
+        { onConflict: "profile_id" }
+      );
+      if (pv.error) throw pv.error;
+    }
     var out = fromDb(r.data);
     out.telefon = telefon || "";
     out.email = u.email || "";
+    await _mergePrivate(out, u);
     return out;
   }
   /* ---------- DOSYA YÜKLEME (Storage) ---------- */

@@ -327,14 +327,18 @@ async function dispatch(action: string, ctx: Ctx): Promise<ActionResult> {
       ) as any;
       if (!profile) throw new Error("profil bulunamadı");
 
-      const [contacts, kyc, listings, authUser] = await Promise.all([
+      const [contacts, priv, kyc, listings, authUser] = await Promise.all([
         svc.from("profile_contacts").select("telefon,email,updated_at").eq("profile_id", profile_id).maybeSingle(),
+        svc.from("profile_private").select("dogum_tarihi,plaka,adres").eq("profile_id", profile_id).maybeSingle(),
         svc.from("kyc_submissions").select("*").eq("profile_id", profile_id).maybeSingle(),
         svc.from("listings").select("id,baslik,durum,created_at").eq("owner_id", profile_id).order("created_at", { ascending: false }).limit(20),
         profile.user_id ? svc.auth.admin.getUserById(profile.user_id) : Promise.resolve({ data: { user: null }, error: null }),
       ]);
 
       const au = (authUser as any)?.data?.user ?? null;
+      // Gizli alanlar profiles'ta boş durur (migration-40) — panel eskisi
+      // gibi profile.adres okuyabilsin diye üzerine yazılır.
+      Object.assign(profile, priv.data ?? { dogum_tarihi: null, plaka: "", adres: "" });
       return {
         data: {
           profile,
@@ -361,11 +365,33 @@ async function dispatch(action: string, ctx: Ctx): Promise<ActionResult> {
       const clean = pickEditable(patch ?? {});
       if (Object.keys(clean).length === 0) throw new Error("değiştirilebilir alan yok");
 
+      // adres profiles'a değil profile_private'a yazılır (migration-40).
+      // Trigger dolu değeri zaten yönlendirir ama SİLMEYİ (boş yazmayı)
+      // göremez — o yüzden burada açıkça ayrılıyor.
+      const hasAdres = Object.prototype.hasOwnProperty.call(clean, "adres");
+      const adres = hasAdres ? String(clean.adres ?? "") : "";
+      delete clean.adres;
+
       // service_role ile: guard_profile_metrics auth.uid() NULL olduğunda
       // serbest bırakır, yani puan/seviye/tamamlanan buradan düzeltilebilir.
       const data = unwrap(
-        await svc.from("profiles").update(clean).eq("id", profile_id).select().maybeSingle(),
-      );
+        Object.keys(clean).length
+          ? await svc.from("profiles").update(clean).eq("id", profile_id).select().maybeSingle()
+          : await svc.from("profiles").select("*").eq("id", profile_id).maybeSingle(),
+      ) as any;
+      if (!data) throw new Error("profil bulunamadı");
+
+      if (hasAdres) {
+        if (!data.user_id) throw new Error("hesabı olmayan profile adres yazılamaz");
+        unwrap(
+          await svc.from("profile_private").upsert(
+            { profile_id, user_id: data.user_id, adres, updated_at: new Date().toISOString() },
+            { onConflict: "profile_id" },
+          ),
+        );
+        data.adres = adres;
+        clean.adres = adres; // denetim günlüğünde görünsün
+      }
       return { data, targetTable: "profiles", targetId: profile_id, auditPayload: clean };
     }
 

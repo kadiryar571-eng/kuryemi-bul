@@ -47,6 +47,19 @@
          kolon (ya da ayrı tablo) + kaydetme yolu gerekir — ayrı bir iş. */
       bolge: (p.bolgeler && p.bolgeler[0]) || "", tur: p.tur, acikIlan: p.acik_ilan || 0, ihtiyac: p.ihtiyac,
       kapasite: p.kapasite || 0, hizmetler: p.hizmetler || [],
+      /* Çalışma / Araç Bilgileri (migration-35, -39). Eskiden burada YOKTU:
+         profil-duzenle.html kaydediyor ama yeniden yüklenince boş görüyordu;
+         kullanıcı bölümü tekrar kaydettiğinde boş form DB'deki değeri
+         eziyordu. Ham değer geçer — sayfa kendi varsayılanını uygular.
+         (dogum_tarihi / plaka burada değil: profile_private'tan gelir.) */
+      ilce: p.ilce, gunluk_saat: p.gunluk_saat,
+      arac_marka: p.arac_marka, arac_model: p.arac_model, plaka_gizli: p.plaka_gizli,
+      calisma_modeli: p.calisma_modeli, teslimat_turu: p.teslimat_turu,
+      deneyim_seviye: p.deneyim_seviye, mevcut_durum: p.mevcut_durum,
+      vardiya_tercihi: p.vardiya_tercihi, arac_tipi: p.arac_tipi,
+      ehliyet_sinifi: p.ehliyet_sinifi, arac_sahiplik: p.arac_sahiplik,
+      sigorta_durumu: p.sigorta_durumu, belge_ruhsat: p.belge_ruhsat,
+      belge_sigorta: p.belge_sigorta, belge_ehliyet: p.belge_ehliyet,
       /* Havuzdaki "En Yeni" sıralaması bunu kullanır.
          Misafir kaynağı profiles_public view'ında created_at YOKTUR
          (KVKK daraltması, migration-20) — o yüzden boş olabilir;
@@ -229,6 +242,22 @@
       base.telefon = (c.data && c.data.telefon) || "";
       base.email = (c.data && c.data.email) || u.email || "";
     } catch (e) { base.email = base.email || u.email || ""; }
+    await _mergePrivate(base, u);
+    return base;
+  }
+  /* Doğum tarihi / plaka / adres profiles'ta DEĞİL, yalnız sahibinin
+     okuyabildiği profile_private'ta durur (migration-40, KVKK). profiles
+     herkese açık olduğu için orada başkası okuyabiliyordu.
+     (Aynı kod www/assets/js/supabase.js içinde de var.) */
+  var PRIVATE_KEYS = ["dogum_tarihi", "plaka", "adres"];
+  async function _mergePrivate(base, u) {
+    try {
+      var pr = await client.from("profile_private").select("dogum_tarihi,plaka,adres").eq("user_id", u.id).maybeSingle();
+      var d = pr.data || {};
+      base.dogum_tarihi = d.dogum_tarihi || null;
+      base.plaka = d.plaka || "";
+      base.adres = d.adres || "";
+    } catch (e) {}
     return base;
   }
   async function updateMyProfile(fields) {
@@ -238,6 +267,11 @@
     var telefon = fields.telefon;
     delete fields.telefon;
     delete fields.email;
+    // Gizli alanları ayır → profile_private'a gider (migration-40)
+    var priv = null;
+    PRIVATE_KEYS.forEach(function (k) {
+      if (fields[k] !== undefined) { priv = priv || {}; priv[k] = fields[k]; delete fields[k]; }
+    });
     /* Sistem tarafından üretilen itibar alanları kullanıcıdan gelmez.
        Sunucuda guard_profile_metrics trigger'ı da engelliyor (migration-20);
        burada temizleyerek gereksiz/yanıltıcı istek atmıyoruz. */
@@ -276,9 +310,17 @@
       );
       if (up.error) throw up.error;
     }
+    if (priv) {
+      var pv = await client.from("profile_private").upsert(
+        Object.assign({ profile_id: r.data.id, user_id: u.id, updated_at: new Date().toISOString() }, priv),
+        { onConflict: "profile_id" }
+      );
+      if (pv.error) throw pv.error;
+    }
     var out = fromDb(r.data);
     out.telefon = telefon || "";
     out.email = u.email || "";
+    await _mergePrivate(out, u);
     return out;
   }
   /* ---------- DOSYA YÜKLEME (Storage) ---------- */
